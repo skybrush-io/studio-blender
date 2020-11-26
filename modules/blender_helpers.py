@@ -15,12 +15,7 @@ def _get_menu_by_name(menu):
 
 
 def make_annotations(cls):
-    """Converts class fields to annotations if running with Blender 2.80 or
-    above.
-    """
-    if bpy.app.version < (2, 80):
-        return cls
-
+    """Converts class fields to annotations."""
     bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
 
     if bl_props:
@@ -39,9 +34,7 @@ def register_in_menu(menu, func):
 
 
 def register_operator(cls):
-    """Registers the given Blender operator in a way that is compatible
-    with both Blender 2.79 and 2.80.
-    """
+    """Registers the given Blender operator."""
     make_annotations(cls)
     bpy.utils.register_class(cls)
 
@@ -51,7 +44,5 @@ def unregister_from_menu(menu, func):
 
 
 def unregister_operator(cls):
-    """Unregisters the given Blender operator in a way that is compatible
-    with both Blender 2.79 and 2.80.
-    """
+    """Unregisters the given Blender operator."""
     bpy.utils.unregister_class(cls)

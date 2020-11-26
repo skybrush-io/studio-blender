@@ -12,6 +12,7 @@ bl_info = {
 }
 
 import bpy
+import logging
 import os
 
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
@@ -19,10 +20,12 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
 from collections import defaultdict
+from fnmatch import fnmatch
 from math import isinf
 from operator import attrgetter
 from pathlib import Path
 from time import clock
+from typing import Dict
 
 from blender_helpers import (
     register_in_menu,
@@ -40,6 +43,9 @@ from skybrush_converter import (
 )
 
 SUPPORTED_TYPES = ("MESH",)  # ,'CURVE','EMPTY','TEXT','CAMERA','LAMP')
+SUPPORTED_NAMES = "drone_*"
+
+log = logging.getLogger(__name__)
 
 
 def _create_lightcode_from_light_dict_data(light: dict, fps: float) -> LightCode:
@@ -75,8 +81,8 @@ def _create_lightcode_from_light_dict_data(light: dict, fps: float) -> LightCode
             is_fade = True
         elif oldip == "BEZIER":
             if bezier_warning is False:
-                print(
-                    "WARNING: 'BEZIER' interpolation in color is treated as 'LINEAR' so far. Implement better method!"
+                log.warning(
+                    "'BEZIER' interpolation in color is treated as 'LINEAR' so far. Implement better method!"
                 )
                 bezier_warning = True
             # TODO: this is not good, how should we treat BEZIER?
@@ -90,35 +96,53 @@ def _create_lightcode_from_light_dict_data(light: dict, fps: float) -> LightCode
 
 
 def _get_objects(context, settings):
-    """Return generator for objects to export."""
+    """Return generator for objects to export.
+
+    Parameters:
+        context - the main Blender context
+        settings - export settings
+
+    Yields:
+        objects passing all specified filters sorted by their name
+
+    """
+    # TODO: use natsort instead of sort
     for ob in sorted(context.scene.objects, key=attrgetter("name")):
-        if (
-            ob.visible_get()
-            and (
-                ob.select_get()
-                if settings["export_selected"]
-                else getattr(ob, "name", "").startswith("drone_")
-            )
-            and ob.type in SUPPORTED_TYPES
+        if ob.visible_get() and (
+            ob.select_get()
+            if settings["export_selected"]
+            else (fnmatch(ob.name, SUPPORTED_NAMES) and ob.type in SUPPORTED_TYPES)
         ):
             yield ob
 
 
 def _get_location(object):
-    """Return global location of an object at the actual frame."""
+    """Return global location of an object at the actual frame.
+
+    Parameters:
+        object - a Blender object
+
+    Return:
+        location of object in the world frame
+
+    """
     return tuple(object.matrix_world[i][3] for i in range(3))
 
 
-def _get_data_from_blender_scene(context, settings):
-    """Get frame range, trajectories and light animation of all objects for
-    all frames quickly.
+def _get_framerange(context, settings):
+    """Get framerange and related variables.
 
-    frame_range is the global largest set of frames containing all trajs.
-    last_frames contains local last frames that might be different from global.
+    Parameters:
+        context - the main Blender context
+        settings - export settings
+
+    Return:
+        framerange to be used during the export. Framerange is a 3-tuple
+        consisting of (first_frame, last_frame, frame_skip_factor)
+
     """
-
     # define frame range and other variables
-    print("  define frame range from", settings["frame_range_source"])
+    log.info("define frame range from {}".format(settings["frame_range_source"]))
     fps = context.scene.render.fps
     fpsskip = int(fps / settings["output_fps"])
     last_frames = {}
@@ -165,13 +189,25 @@ def _get_data_from_blender_scene(context, settings):
     else:
         raise NotImplementedError("Unknown frame range source")
 
-    # set the same lastframe for all objects if not in 'LOCAL' mode
-    if settings["frame_range_source"] != "LOCAL":
-        for obj in _get_objects(context, settings):
-            last_frames[obj.name] = frame_range[1]
+    return frame_range
+
+
+def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str:Trajectory]:
+    """Get trajectories of all selected/picked objects.
+
+    Parameters:
+        context - the main Blender context
+        settings - export settings
+        framerange - the framerange used for exporting
+
+    Return:
+        dictionary of Trajectory objects indexed by object names
+
+    """
 
     # get object trajectories for each needed frame in convenient format
-    print("  get object trajectories...", end=" ")
+    log.info("getting object trajectories")
+    fps = context.scene.render.fps
     trajectories = (
         {}
     )  # trajectories[name] = timeline of Point4D(t, x, y, z) positions of object 'name'
@@ -185,10 +221,25 @@ def _get_data_from_blender_scene(context, settings):
         context.scene.frame_set(frame)
         for obj in _get_objects(context, settings):
             trajectories[obj.name].append(Point4D(frame / fps, *_get_location(obj)))
-    print()
+
+    return trajectories
+
+
+def _get_lights(context, settings, frame_range: tuple) -> Dict[str:LightCode]:
+    """Get light animation of all selected/picked objects.
+
+    Parameters:
+        context - the main Blender context
+        settings - export settings
+        framerange - the framerange used for exporting
+
+    Return:
+        dictionary of LightCode objects indexed by object names
+    """
 
     # get object color animations for each frame
-    print("  get object color animations...", end=" ")
+    log.info("getting object color animations")
+    fps = context.scene.render.fps
     light_dict = (
         {}
     )  # light_dict[name][frame] = (r, g, b, interpolation_mode) light code of object 'name' at given frame
@@ -224,69 +275,68 @@ def _get_data_from_blender_scene(context, settings):
                                 )
 
                             light_dict[name][frame][fc.array_index] = color
-        # convert to skybrush-compatible format
-        lights = dict(
-            (name, _create_lightcode_from_light_dict_data(light, fps))
-            for name, light in light_dict.items()
-        )
 
-    print()
+    # convert to skybrush-compatible format
+    lights = dict(
+        (name, _create_lightcode_from_light_dict_data(light, fps))
+        for name, light in light_dict.items()
+    )
 
-    return (trajectories, lights)
+    return lights
 
 
-def write_skybrush_file(context, filepath, settings):
+def write_skybrush_file(context, settings, filepath: Path) -> dict:
     """Creates Skybrush-compatible output from blender trajectories and color
     animation.
 
-    This is a helper function for SkybrushExportOperator_
+    This is a helper function for SkybrushExportOperator
+
+    Parameters:
+        context - the main Blender context
+        settings - export settings
+        filepath - the output path where the export should write
+
     """
 
-    print(f"----------\nExporting to {filepath}")
+    log.info(f"----------\nExporting to {filepath}")
 
-    output_directory = Path(filepath).parent
-    fps = context.scene.render.fps
+    # parse trajectories
+    starttime = clock()
+    # get framerange
+    frame_range = _get_framerange(context, settings)
+    # get trajectories
+    trajectories = _get_trajectories(context, settings, frame_range)
+    # get lights
+    lights = _get_lights(context, settings, frame_range)
+    duration = clock() - starttime
+    log.info(
+        f"{len(trajectories)} object trajectories and lights parsed in {duration:.2f} seconds"
+    )
 
-    try:
-        # parse trajectories
-        starttime = clock()
-        trajectories, lights = _get_data_from_blender_scene(context, settings)
-        duration = clock() - starttime
-        print(
-            f"{len(trajectories)} object trajectories and lights parsed in {duration:.2f} seconds"
+    # export trajectories and lights
+    starttime = clock()
+
+    # get show title
+    if bpy.data.is_saved:
+        show_title = "Show '{}' exported from '{}'".format(
+            +bpy.path.basename(filepath).split(".")[0],
+            bpy.path.basename(context.blend_data.filepath),
+        )
+    else:
+        show_title = "Show '{}' exported from Blender".format(
+            bpy.path.basename(filepath).split(".")[0]
         )
 
-        # export trajectories and lights
-        starttime = clock()
+    # create skybrush converter object
+    converter = SkybrushConverter(
+        show_title=show_title, trajectories=trajectories, lights=lights
+    )
 
-        # get show title
-        if bpy.data.is_saved:
-            show_title = "Show '{}' exported from '{}'".format(
-                bpy.path.basename(filepath).split(".")[0],
-                bpy.path.basename(context.blend_data.filepath),
-            )
-        else:
-            show_title = "Show '{}' exported from Blender".format(
-                bpy.path.basename(filepath).split(".")[0]
-            )
+    # export to .skyc
+    converter.to_skyc(filepath)
 
-        # create skybrush converter object
-        converter = SkybrushConverter(
-            show_title=show_title, trajectories=trajectories, lights=lights
-        )
-
-        # export to .skyc
-        converter.to_skyc(filepath)
-
-        duration = clock() - starttime
-        print(f"Objects exported in {duration:.2f} seconds.")
-
-    except IOError:
-        print("Skybrush Exporter - Write Error in output directory: ", output_directory)
-        raise
-    except Exception as e:
-        print("Skybrush Exporter - Error: ", str(e))
-        raise
+    duration = clock() - starttime
+    log.info(f"Objects exported in {duration:.2f} seconds.")
 
     return {"FINISHED"}
 
@@ -311,7 +361,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
     export_selected = BoolProperty(
         name="Export selected objects",
         default=True,
-        description="Check if selected MESH objects should be exported. Otherwise all MESH objects named `drone_*` will be used",
+        description="Check if selected objects should be exported. Otherwise all objects with filters SUPPORTED_TYPES and SUPPORTED_NAMES will be used",
     )
 
     # frame range source
@@ -365,7 +415,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
             "show_orientation": self.show_orientation,
         }
 
-        return write_skybrush_file(context, filepath, settings)
+        return write_skybrush_file(context, settings, filepath)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
