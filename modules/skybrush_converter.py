@@ -64,11 +64,28 @@ class Trajectory:
             raise ValueError("New point must come after existing trajectory in time")
         self.points.append(point)
 
-    def as_dict(self):
-        """Create a Skybrush-compatible dictionary representation of self."""
+    def as_dict(self, ndigits: int = 3):
+        """Create a Skybrush-compatible dictionary representation of self.
+
+        Parameters:
+            ndigits - round floats to this precision
+
+        Return:
+            dictionary of self to be converted to SJON later
+
+        """
         return {
             "points": [
-                [point.t, [point.x, point.y, point.z], []] for point in self.points
+                [
+                    round(point.t, ndigits=ndigits),
+                    [
+                        round(point.x, ndigits=ndigits),
+                        round(point.y, ndigits=ndigits),
+                        round(point.z, ndigits=ndigits),
+                    ],
+                    [],
+                ]
+                for point in self.points
             ],
             "version": 1,
         }
@@ -91,11 +108,27 @@ class LightCode:
             raise ValueError("New color must come after existing light code in time")
         self.colors.append(color)
 
-    def as_dict(self):
-        """Create a Skybrush-compatible dictionary representation of self."""
+    def as_dict(self, ndigits: int = 3):
+        """Create a Skybrush-compatible dictionary representation of self.
+
+        Parameters:
+            ndigits - round floats to this precision
+
+        Return:
+            dictionary of self to be converted to SJON later
+
+        """
         return {
             "data": [
-                [color.t, [color.r, color.g, color.b], color.is_fade]
+                [
+                    round(color.t, ndigits=ndigits),
+                    [
+                        round(color.r, ndigits=ndigits),
+                        round(color.g, ndigits=ndigits),
+                        round(color.b, ndigits=ndigits),
+                    ],
+                    color.is_fade,
+                ]
                 for color in self.colors
             ],
             "version": 1,
@@ -115,40 +148,6 @@ def _create_path_and_open(filename, *args, **kwds):
     return open(str(path), *args, **kwds)
 
 
-class _PrettyFloat:
-    """Placeholder object for floating-point numbers that can be used in a
-    JSON serialization to ensure that they are printed nicely without
-    rounding errors.
-    """
-
-    def __init__(self, value):
-        self._value = value
-
-    @classmethod
-    def prettify(cls, obj, digits: int = None):
-        """Recursively traverses a JSON object and replaces floats with
-        PrettyFloat_ instances that can then be serialized nicely into JSON
-        without rounding errors.
-        """
-        if isinstance(obj, float):
-            if digits is not None:
-                obj = round(obj, digits)
-            return cls(obj)
-        elif isinstance(obj, dict):
-            return {k: cls.prettify(v, digits=digits) for k, v in obj.items()}
-        elif isinstance(obj, (list, tuple)):
-            return [cls.prettify(x, digits=digits) for x in obj]
-        else:
-            return obj
-
-    @classmethod
-    def encoder(cls, obj):
-        if isinstance(obj, cls):
-            return float(format(obj._value, ".17f"))
-        else:
-            raise TypeError("{0!r} cannot be serialized in JSON", type(obj))
-
-
 class SkybrushConverter:
     """Class for converting drone show data to Skybrush-compatible formats."""
 
@@ -157,6 +156,7 @@ class SkybrushConverter:
         show_title: str,
         trajectories: Dict[str, Trajectory],
         lights: Dict[str, LightCode],
+        ndigits: int = 3,
     ):
         """Class initialization.
 
@@ -176,12 +176,13 @@ class SkybrushConverter:
         self._trajectories = trajectories
         self._lights = lights
 
-    def _drone_data_as_dict(self, name: str) -> dict:
+    def _drone_data_as_dict(self, name: str, ndigits: int = 3) -> dict:
         """Create a Skybrush-compatible dictionary representation of all data
         related to a single drone stored in self.
 
         Parameters:
             name: the name of the given drone in self database
+            ndigits - round floats to this precision
 
         Return:
             dict representation of drone data
@@ -190,55 +191,62 @@ class SkybrushConverter:
             "type": "generic",
             "settings": {
                 "name": name,
-                "lights": self._lights[name].as_dict(),
-                "trajectory": self._trajectories[name].as_dict(),
+                "lights": self._lights[name].as_dict(ndigits=ndigits),
+                "trajectory": self._trajectories[name].as_dict(ndigits=ndigits),
             },
         }
 
-    def as_dict(self):
+    def as_dict(self, ndigits: int = 3):
         """Create a Skybrush-compatible dictionary representation of the whole
-        drone show stored in self."""
+        drone show stored in self.
+
+        Parameters:
+            ndigits - round floats to this precision
+
+        Return:
+            dict representation of self
+        """
 
         return {
             "version": 1,
             "settings": {},
             "swarm": {
                 "drones": [
-                    self._drone_data_as_dict(name)
+                    self._drone_data_as_dict(name, ndigits=ndigits)
                     for name in sorted(self._trajectories.keys())
                 ]
             },
             "meta": {"title": self._show_title},
         }
 
-    def as_json(self, indent: int = 2, digits: int = 3) -> str:
+    def as_json(self, indent: int = 2, ndigits: int = 3) -> str:
         """Create a Skybrush-compatible JSON representation of the drone show
         stored in self.
 
         Parameters:
             indent: indentation level in the JSON output
-            digits: number of digits for floats in the JSON output
+            ndigits: number of digits for floats in the JSON output
 
         Return:
             JSON string representation of self
         """
 
-        encoder = JSONEncoder(indent=indent, default=_PrettyFloat.encoder)
-        return encoder.encode(_PrettyFloat.prettify(self.as_dict(), digits=digits))
+        encoder = JSONEncoder(indent=indent)
+        return encoder.encode(self.as_dict(ndigits=ndigits))
 
-    def to_json(self, output: Path, indent: int = 2, digits: int = 3) -> None:
+    def to_json(self, output: Path, indent: int = 2, ndigits: int = 3) -> None:
         """Write a Skybrush-compatible JSON representation of the drone show
         stored in self to the given output file.
 
         Parameters:
             output: the file where the json content should be written
             indent: indentation level in the JSON output
-            digits: number of digits for floats in the JSON output
+            ndigits: number of digits for floats in the JSON output
 
         """
 
         with _create_path_and_open(output, "w") as f:
-            f.write(self.as_json(indent=indent, digits=digits))
+            f.write(self.as_json(indent=indent, ndigits=ndigits))
 
     def to_skyc(self, output: Path) -> None:
         """Write a Skybrush Compiled Format (.skyc) representation of the
