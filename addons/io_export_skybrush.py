@@ -8,21 +8,22 @@ bl_info = {
     "description": "Export object trajectories and color animation to Skybrush compiled format",
     "version": (0, 2, 1),
     "blender": (2, 83, 0),
+    "location": "File > Export > Skybrush",
     "category": "Import-Export",
 }
 
 
-################################################################################
+#############################################################################
 # imports from internal dependencies
 
 import bpy
-import logging
-import os
-import sys
-
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
+
+import logging
+import os
+import sys
 
 from collections import defaultdict
 from fnmatch import fnmatch
@@ -32,7 +33,7 @@ from pathlib import Path
 from typing import Dict
 
 
-################################################################################
+#############################################################################
 # all imports from external dependencies should be below this piece of code
 #
 # Note: This code needs to be harmonized with the plugin installer to have
@@ -45,7 +46,8 @@ module_path = os.path.join(
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-################################################################################
+
+#############################################################################
 # imports from external dependencies
 
 from natsort import natsorted
@@ -66,14 +68,14 @@ from skybrush_converter import (
 )
 
 
-################################################################################
+#############################################################################
 # some global variables that could be parametrized if needed
 
 SUPPORTED_TYPES = ("MESH",)  # ,'CURVE','EMPTY','TEXT','CAMERA','LAMP')
 SUPPORTED_NAMES = "drone_*"
 
 
-################################################################################
+#############################################################################
 # configure logger
 
 log = logging.getLogger(__name__)
@@ -371,7 +373,6 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     converter.to_skyc(filepath)
 
     log.info("Export finished")
-    return {"FINISHED"}
 
 
 #############################################################################
@@ -452,7 +453,9 @@ class SkybrushExportOperator(Operator, ExportHelper):
             "show_orientation": self.show_orientation,
         }
 
-        return _write_skybrush_file(context, settings, filepath)
+        _write_skybrush_file(context, settings, filepath)
+
+        return {"FINISHED"}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)

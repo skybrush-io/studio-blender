@@ -7,6 +7,7 @@ Xcopy /E /I /Y ".venv\Lib\site-packages\natsort" "c:\Users\%USERNAME%\AppData\Ro
 :: This will be needed for all users on Windows to have all Skybrush add-ons available
 mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\addons\"
 copy "addons\io_export_skybrush.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\addons\"
+copy "addons\io_import_skybrush.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\addons\"
 
 :: This is only needed for developers with local skybrush and pyledctrl
 mklink /D "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\skybrush" "d:\%USERNAME%\git\skybrush\skybrush"
