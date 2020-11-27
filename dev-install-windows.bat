@@ -1,8 +1,11 @@
-:: This will be needed for all users on Windows to have all python dependencies available
+:: This will be needed for all users on Windows to have all local python dependencies available
 mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
 copy "modules\blender_helpers.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
 copy "modules\skybrush_converter.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
-Xcopy /E /I /Y ".venv\Lib\site-packages\natsort" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\natsort"
+
+:: These are the external dependencies that are copied to the vendor folder
+call poetry export -f requirements.txt -o "requirements.txt"
+call pip install -r "requirements.txt" -t "c:\\Users\\%USERNAME%\\AppData\\Roaming\\Blender Foundation\\Blender\\2.83\\scripts\\vendor\\skybrush\\"
 
 :: This will be needed for all users on Windows to have all Skybrush add-ons available
 mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\addons\"

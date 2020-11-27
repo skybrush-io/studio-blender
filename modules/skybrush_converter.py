@@ -2,12 +2,32 @@
 easily implement drone show exporter plugins for Skybrush."""
 
 from dataclasses import dataclass
+from enum import Enum
 from json import JSONEncoder
 from natsort import natsorted
 from pathlib import Path
+from operator import attrgetter
 from tempfile import TemporaryDirectory
 from typing import List, Dict
-from operator import attrgetter
+from urllib.request import urlopen, Request
+
+
+#############################################################################
+# list of public classes from this file
+
+__all__ = ["Point4D", "Color4D", "Trajectory", "LightCode", "SkybrushConverter"]
+
+
+#############################################################################
+# configure logger
+
+import logging
+
+log = logging.getLogger(__name__)
+
+
+#############################################################################
+# helper classes to be used by animation software plugins
 
 
 @dataclass
@@ -136,7 +156,21 @@ class LightCode:
         }
 
 
-def _create_path_and_open(filename, *args, **kwds):
+#############################################################################
+# helper functions and classes to be used locally
+
+
+class SkybrushJSONFormat(Enum):
+    """Enum class defining the different JSON formats of Skybrush."""
+
+    # the standard raw Skybrush JSON format used by skybrush converter
+    RAW = 0
+
+    # the online Skybrush JSON format to be sent as a http request
+    ONLINE = 1
+
+
+def create_path_and_open(filename, *args, **kwds):
     """Like open() but also creates the directories leading to the given file
     if they don't exist yet.
     """
@@ -147,6 +181,10 @@ def _create_path_and_open(filename, *args, **kwds):
 
     path.parent.mkdir(exist_ok=True, parents=True)
     return open(str(path), *args, **kwds)
+
+
+#############################################################################
+# the main skybrush converter class to be used by animation software plugins
 
 
 class SkybrushConverter:
@@ -197,18 +235,19 @@ class SkybrushConverter:
             },
         }
 
-    def as_dict(self, ndigits: int = 3):
+    def as_dict(self, format: SkybrushJSONFormat, ndigits: int = 3):
         """Create a Skybrush-compatible dictionary representation of the whole
         drone show stored in self.
 
         Parameters:
+            format: the format of the output
             ndigits - round floats to this precision
 
         Return:
             dict representation of self
         """
 
-        return {
+        data = {
             "version": 1,
             "settings": {},
             "swarm": {
@@ -220,11 +259,24 @@ class SkybrushConverter:
             "meta": {"title": self._show_title},
         }
 
-    def as_json(self, indent: int = 2, ndigits: int = 3) -> str:
+        if format == SkybrushJSONFormat.RAW:
+            return data
+        elif format == SkybrushJSONFormat.ONLINE:
+            return {
+                "input": {"format": "json", "data": data},
+                "output": {"format": "skyc"},
+            }
+        else:
+            raise NotImplementedError("Unknown Skybrush JSON format")
+
+    def as_json(
+        self, format: SkybrushJSONFormat, indent: int = 2, ndigits: int = 3
+    ) -> str:
         """Create a Skybrush-compatible JSON representation of the drone show
         stored in self.
 
         Parameters:
+            format: the format of the JSON output
             indent: indentation level in the JSON output
             ndigits: number of digits for floats in the JSON output
 
@@ -233,21 +285,28 @@ class SkybrushConverter:
         """
 
         encoder = JSONEncoder(indent=indent)
-        return encoder.encode(self.as_dict(ndigits=ndigits))
+        return encoder.encode(self.as_dict(format=format, ndigits=ndigits))
 
-    def to_json(self, output: Path, indent: int = 2, ndigits: int = 3) -> None:
+    def to_json(
+        self,
+        output: Path,
+        format: SkybrushJSONFormat,
+        indent: int = 2,
+        ndigits: int = 3,
+    ) -> None:
         """Write a Skybrush-compatible JSON representation of the drone show
         stored in self to the given output file.
 
         Parameters:
             output: the file where the json content should be written
+            format: the format of the JSON output
             indent: indentation level in the JSON output
             ndigits: number of digits for floats in the JSON output
 
         """
 
-        with _create_path_and_open(output, "w") as f:
-            f.write(self.as_json(indent=indent, ndigits=ndigits))
+        with create_path_and_open(output, "w") as f:
+            f.write(self.as_json(format=format, indent=indent, ndigits=ndigits))
 
     def to_skyc(self, output: Path) -> None:
         """Write a Skybrush Compiled Format (.skyc) representation of the
@@ -266,13 +325,15 @@ class SkybrushConverter:
         except ImportError:
             is_skybrush_installed = False
 
-        with TemporaryDirectory() as work_dir:
-            # first create a temporary .json representation
-            json_output = Path(work_dir) / Path("show.json")
-            self.to_json(json_output)
+        # TODO: this is here for debug reasons to test the online version
+        is_skybrush_installed = False
 
-            # then render it to .skyc
-            if is_skybrush_installed:
+        if is_skybrush_installed:
+            with TemporaryDirectory() as work_dir:
+                # first create a temporary JSON representation
+                json_output = Path(work_dir) / Path("show.json")
+                self.to_json(json_output, format=SkybrushJSONFormat.RAW)
+                # then send it to skybrush to convert it to .skyc
                 importer = find_importer_function("skybrush.io.json.importer")
                 context = ImportContext()
                 parameters = {}
@@ -281,9 +342,23 @@ class SkybrushConverter:
                 context = RenderContext()
                 parameters = {"output": output}
                 renderer(world, context, parameters)
-            else:
-                # if Skybrush Studio is not present locally, try to convert with the
-                # online tool available at https://skybrush.io
-                raise NotImplementedError(
-                    "Online Skybrush converter not implemented yet"
-                )
+        else:
+            # if Skybrush Studio is not present locally, try to convert with the
+            # online tool available at https://studio.skybrush.io
+
+            # create message content
+            data = self.as_json(format=SkybrushJSONFormat.ONLINE).encode("utf-8")
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream",
+            }
+            # create request
+            url = r"https://studio.skybrush.io/api/v1/operations/render"
+            req = Request(url, data=data, headers=headers, method="POST")
+            # send it and wait for response (TODO: make async)
+            log.info("sending http POST request to studio.skybrush.io")
+            with urlopen(req) as response:
+                # write response to file
+                log.info("writing response to file")
+                with create_path_and_open(output, "wb") as f:
+                    f.write(response.read())
