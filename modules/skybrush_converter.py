@@ -5,8 +5,9 @@ from dataclasses import dataclass
 from enum import Enum
 from json import JSONEncoder
 from natsort import natsorted
-from pathlib import Path
 from operator import attrgetter
+from pathlib import Path
+from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import List, Dict
 from urllib.request import urlopen, Request
@@ -355,10 +356,19 @@ class SkybrushConverter:
             # create request
             url = r"https://studio.skybrush.io/api/v1/operations/render"
             req = Request(url, data=data, headers=headers, method="POST")
-            # send it and wait for response (TODO: make async)
+            # send it and wait for response
             log.info("sending http POST request to studio.skybrush.io")
             with urlopen(req) as response:
+                # error checks
+                status_code = response.getcode()
+                info = response.info()
+                content_type = info.get_content_type()
+                if status_code != 200 or content_type != "application/octet-stream":
+                    log.error(
+                        f"error in response: status_code={status_code}, info={info}"
+                    )
+                    return
                 # write response to file
                 log.info("writing response to file")
                 with create_path_and_open(output, "wb") as f:
-                    f.write(response.read())
+                    copyfileobj(response, f)
