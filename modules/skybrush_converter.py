@@ -3,6 +3,7 @@ easily implement drone show exporter plugins for Skybrush."""
 
 from dataclasses import dataclass
 from enum import Enum
+from gzip import compress
 from json import JSONEncoder
 from natsort import natsorted
 from operator import attrgetter
@@ -347,10 +348,13 @@ class SkybrushConverter:
             # if Skybrush Studio is not present locally, try to convert with the
             # online tool available at https://studio.skybrush.io
 
-            # create message content
-            data = self.as_json(format=SkybrushJSONFormat.ONLINE).encode("utf-8")
+            # create compressed message content
+            data = compress(
+                self.as_json(format=SkybrushJSONFormat.ONLINE).encode("utf-8")
+            )
             headers = {
                 "Content-Type": "application/json",
+                "Content-Encoding": "gzip",
                 "Accept": "application/octet-stream",
             }
             # create request
