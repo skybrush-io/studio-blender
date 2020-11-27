@@ -270,29 +270,30 @@ class SkybrushConverter:
         else:
             raise NotImplementedError("Unknown Skybrush JSON format")
 
-    def as_json(
-        self, format: SkybrushJSONFormat, indent: int = 2, ndigits: int = 3
-    ) -> str:
+    def as_json(self, format: SkybrushJSONFormat, ndigits: int = 3) -> str:
         """Create a Skybrush-compatible JSON representation of the drone show
         stored in self.
 
         Parameters:
             format: the format of the JSON output
-            indent: indentation level in the JSON output
             ndigits: number of digits for floats in the JSON output
 
         Return:
             JSON string representation of self
         """
+        if format == SkybrushJSONFormat.RAW:
+            encoder = JSONEncoder(indent=2)
+        elif format == SkybrushJSONFormat.ONLINE:
+            encoder = JSONEncoder(separators=(",", ":"))
+        else:
+            raise NotImplementedError("Unknown Skybrush JSON format")
 
-        encoder = JSONEncoder(indent=indent)
         return encoder.encode(self.as_dict(format=format, ndigits=ndigits))
 
     def to_json(
         self,
         output: Path,
         format: SkybrushJSONFormat,
-        indent: int = 2,
         ndigits: int = 3,
     ) -> None:
         """Write a Skybrush-compatible JSON representation of the drone show
@@ -301,13 +302,12 @@ class SkybrushConverter:
         Parameters:
             output: the file where the json content should be written
             format: the format of the JSON output
-            indent: indentation level in the JSON output
             ndigits: number of digits for floats in the JSON output
 
         """
 
         with create_path_and_open(output, "w") as f:
-            f.write(self.as_json(format=format, indent=indent, ndigits=ndigits))
+            f.write(self.as_json(format=format, ndigits=ndigits))
 
     def to_skyc(self, output: Path) -> None:
         """Write a Skybrush Compiled Format (.skyc) representation of the
@@ -369,6 +369,6 @@ class SkybrushConverter:
                     )
                     return
                 # write response to file
-                log.info("writing response to file")
+                log.info("response received, writing to file")
                 with create_path_and_open(output, "wb") as f:
                     copyfileobj(response, f)
