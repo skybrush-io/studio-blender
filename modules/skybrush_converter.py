@@ -3,6 +3,7 @@ easily implement drone show exporter plugins for Skybrush."""
 
 from dataclasses import dataclass
 from json import JSONEncoder
+from natsort import natsorted
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Dict
@@ -213,7 +214,7 @@ class SkybrushConverter:
             "swarm": {
                 "drones": [
                     self._drone_data_as_dict(name, ndigits=ndigits)
-                    for name in sorted(self._trajectories.keys())
+                    for name in natsorted(self._trajectories.keys())
                 ]
             },
             "meta": {"title": self._show_title},

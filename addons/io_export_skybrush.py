@@ -4,16 +4,21 @@ animation to Skybrush compiled file format (*.skyc).
 
 bl_info = {
     "name": "Export Skybrush Compiled Format (.skyc)",
-    "author": "Gabor Vasarhelyi",
+    "author": "Gabor Vasarhelyi (CollMot Robotics Ltd.)",
     "description": "Export object trajectories and color animation to Skybrush compiled format",
-    "version": (0, 2, 0),
-    "blender": (2, 81, 0),
+    "version": (0, 2, 1),
+    "blender": (2, 83, 0),
     "category": "Import-Export",
 }
+
+
+################################################################################
+# imports from internal dependencies
 
 import bpy
 import logging
 import os
+import sys
 
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
 from bpy.types import Operator
@@ -24,8 +29,26 @@ from fnmatch import fnmatch
 from math import isinf
 from operator import attrgetter
 from pathlib import Path
-from time import clock
 from typing import Dict
+
+
+################################################################################
+# all imports from external dependencies should be below this piece of code
+#
+# Note: This code needs to be harmonized with the plugin installer to have
+# the same target directory for all add-on specific dependencies.
+
+module_path = os.path.join(
+    os.path.dirname(sys.modules[__name__].__file__), "..", "vendor", "skybrush"
+)
+
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+################################################################################
+# imports from external dependencies
+
+from natsort import natsorted
 
 from blender_helpers import (
     register_in_menu,
@@ -42,10 +65,28 @@ from skybrush_converter import (
     SkybrushConverter,
 )
 
+
+################################################################################
+# some global variables that could be parametrized if needed
+
 SUPPORTED_TYPES = ("MESH",)  # ,'CURVE','EMPTY','TEXT','CAMERA','LAMP')
 SUPPORTED_NAMES = "drone_*"
 
+
+################################################################################
+# configure logger
+
 log = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s.%(msecs)03d %(message)s",
+    level=logging.INFO,
+    datefmt="%H:%M:%S",
+)
+
+
+#############################################################################
+# Helper functions for the exporter
+#############################################################################
 
 
 def _create_lightcode_from_light_dict_data(light: dict, fps: float) -> LightCode:
@@ -103,11 +144,10 @@ def _get_objects(context, settings):
         settings - export settings
 
     Yields:
-        objects passing all specified filters sorted by their name
+        objects passing all specified filters natural-sorted by their name
 
     """
-    # TODO: use natsort instead of sort
-    for ob in sorted(context.scene.objects, key=attrgetter("name")):
+    for ob in natsorted(context.scene.objects, key=attrgetter("name")):
         if ob.visible_get() and (
             ob.select_get()
             if settings["export_selected"]
@@ -142,7 +182,6 @@ def _get_framerange(context, settings):
 
     """
     # define frame range and other variables
-    log.info("define frame range from {}".format(settings["frame_range_source"]))
     fps = context.scene.render.fps
     fpsskip = int(fps / settings["output_fps"])
     last_frames = {}
@@ -192,7 +231,7 @@ def _get_framerange(context, settings):
     return frame_range
 
 
-def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str:Trajectory]:
+def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str, Trajectory]:
     """Get trajectories of all selected/picked objects.
 
     Parameters:
@@ -206,7 +245,6 @@ def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str:Traject
     """
 
     # get object trajectories for each needed frame in convenient format
-    log.info("getting object trajectories")
     fps = context.scene.render.fps
     trajectories = (
         {}
@@ -217,7 +255,7 @@ def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str:Traject
         trajectories[obj.name] = Trajectory()
     # parse trajectories
     for frame in range(frame_range[0], frame_range[1] + frame_range[2], frame_range[2]):
-        print(frame, end=", ", flush=True)
+        log.debug(f"processing frame {frame}")
         context.scene.frame_set(frame)
         for obj in _get_objects(context, settings):
             trajectories[obj.name].append(Point4D(frame / fps, *_get_location(obj)))
@@ -225,7 +263,7 @@ def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str:Traject
     return trajectories
 
 
-def _get_lights(context, settings, frame_range: tuple) -> Dict[str:LightCode]:
+def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightCode]:
     """Get light animation of all selected/picked objects.
 
     Parameters:
@@ -238,7 +276,6 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str:LightCode]:
     """
 
     # get object color animations for each frame
-    log.info("getting object color animations")
     fps = context.scene.render.fps
     light_dict = (
         {}
@@ -246,7 +283,7 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str:LightCode]:
     for obj in _get_objects(context, settings):
         name = obj.name
         light_dict[name] = defaultdict(dict)
-        print(name, end=", ", flush=True)
+        log.debug(f"processing {name}")
         if obj.active_material:
             # export default first frame color
             frame = frame_range[0]
@@ -271,7 +308,9 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str:LightCode]:
                                 light_dict[name][frame] = [0, 0, 0, kp.interpolation]
                             elif light_dict[name][frame][3] != kp.interpolation:
                                 raise NotImplementedError(
-                                    f"interpolation types on different color channels do not match for object '{name}' at frame {frame}: '{light_dict[name][frame][3]}' vs '{kp.interpolation}'"
+                                    f"interpolation types on different color channels "
+                                    f"do not match for object '{name}' at frame {frame}: "
+                                    f"'{light_dict[name][frame][3]}' vs '{kp.interpolation}'"
                                 )
 
                             light_dict[name][frame][fc.array_index] = color
@@ -285,7 +324,7 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str:LightCode]:
     return lights
 
 
-def write_skybrush_file(context, settings, filepath: Path) -> dict:
+def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     """Creates Skybrush-compatible output from blender trajectories and color
     animation.
 
@@ -298,28 +337,22 @@ def write_skybrush_file(context, settings, filepath: Path) -> dict:
 
     """
 
-    log.info(f"----------\nExporting to {filepath}")
+    log.info(f"Exporting show content to {filepath}")
 
-    # parse trajectories
-    starttime = clock()
     # get framerange
+    log.info("Getting frame range from {}".format(settings["frame_range_source"]))
     frame_range = _get_framerange(context, settings)
     # get trajectories
+    log.info("Getting object trajectories")
     trajectories = _get_trajectories(context, settings, frame_range)
     # get lights
+    log.info("Getting object color animations")
     lights = _get_lights(context, settings, frame_range)
-    duration = clock() - starttime
-    log.info(
-        f"{len(trajectories)} object trajectories and lights parsed in {duration:.2f} seconds"
-    )
-
-    # export trajectories and lights
-    starttime = clock()
 
     # get show title
     if bpy.data.is_saved:
         show_title = "Show '{}' exported from '{}'".format(
-            +bpy.path.basename(filepath).split(".")[0],
+            bpy.path.basename(filepath).split(".")[0],
             bpy.path.basename(context.blend_data.filepath),
         )
     else:
@@ -328,16 +361,16 @@ def write_skybrush_file(context, settings, filepath: Path) -> dict:
         )
 
     # create skybrush converter object
+    log.info("Creating exporter object")
     converter = SkybrushConverter(
         show_title=show_title, trajectories=trajectories, lights=lights
     )
 
     # export to .skyc
+    log.info("Exporting to .skyc")
     converter.to_skyc(filepath)
 
-    duration = clock() - starttime
-    log.info(f"Objects exported in {duration:.2f} seconds.")
-
+    log.info("Export finished")
     return {"FINISHED"}
 
 
@@ -361,7 +394,9 @@ class SkybrushExportOperator(Operator, ExportHelper):
     export_selected = BoolProperty(
         name="Export selected objects",
         default=True,
-        description="Check if selected objects should be exported. Otherwise all objects with filters SUPPORTED_TYPES and SUPPORTED_NAMES will be used",
+        description="Check if selected objects should be exported. "
+        "Otherwise all objects with filters defined under SUPPORTED_TYPES "
+        "and SUPPORTED_NAMES will be used",
     )
 
     # frame range source
@@ -387,7 +422,8 @@ class SkybrushExportOperator(Operator, ExportHelper):
     show_origin = StringProperty(
         name="Show origin",
         default="0.00, 0.00",
-        description="Global show origin, i.e. (latitude, longitude) center of exported coordinate system [deg]",
+        description="Global show origin, i.e. (latitude, longitude) center of "
+        "exported coordinate system [deg]",
     )
 
     # show orientation
@@ -396,7 +432,8 @@ class SkybrushExportOperator(Operator, ExportHelper):
         default=0,
         step=1,
         precision=2,
-        description="Orientation of exported relative coordinate system (CW from N towards E) [deg]",
+        description="Orientation of exported relative coordinate system "
+        "(CW from N towards E) [deg]",
     )
 
     def execute(self, context):
@@ -415,7 +452,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
             "show_orientation": self.show_orientation,
         }
 
-        return write_skybrush_file(context, settings, filepath)
+        return _write_skybrush_file(context, settings, filepath)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)

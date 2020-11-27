@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "skybrush-blender-plugin"
+version = "0.2.1"
+description = "Skybrush related add-ons for Blender"
+license = "Proprietary"
+authors = ["Gabor Vasarhelyi <vasarhelyi@collmot.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+natsort = "^7.1.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
