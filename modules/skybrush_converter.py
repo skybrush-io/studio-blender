@@ -157,6 +157,23 @@ class LightCode:
             "version": 1,
         }
 
+    def simplify(self, eps: float = 0.5) -> None:
+        """Simplifies a sequence of Color4D elements to a similar sequence with
+        fewer Color4D elements, using a distance function and an acceptable
+        error term.
+
+        The function uses the Ramer-Douglas-Peucker algorithm for simplifying
+        the Color4d segments.
+
+        Parameters:
+            eps: the error term; a Color4D element is considered redundant with
+                respect to two other colors if the color is closer to the line
+                formed by the two other colors than this error term.
+
+        """
+        # TODO: implement
+        return self
+
 
 #############################################################################
 # helper functions and classes to be used locally
