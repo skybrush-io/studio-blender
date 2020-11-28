@@ -1,6 +1,8 @@
 """This file contains classes and functions for animation softwares to
 easily implement drone show exporter plugins for Skybrush."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 from gzip import compress
@@ -13,6 +15,7 @@ from tempfile import TemporaryDirectory
 from typing import List, Dict
 from urllib.request import urlopen, Request
 
+from skybrush_utils import create_path_and_open, simplify_path
 
 #############################################################################
 # list of public classes from this file
@@ -29,7 +32,45 @@ log = logging.getLogger(__name__)
 
 
 #############################################################################
-# helper classes to be used by animation software plugins
+# helper classes and functions to be used locally
+
+
+def _simplify_color_distance_func(keypoints, start, end):
+    """Distance function for LightCode.simplify()"""
+    timespan = end.t - start.t
+
+    result = []
+
+    for point in keypoints:
+        ratio = (point.t - start.t) / timespan if timespan > 0 else 0.5
+        interp = (
+            start.r + ratio * (end.r - start.r),
+            start.g + ratio * (end.g - start.g),
+            start.b + ratio * (end.b - start.b),
+        )
+
+        diff = max(
+            abs(interp[0] - point.r),
+            abs(interp[1] - point.g),
+            abs(interp[2] - point.b),
+        )
+        result.append(diff)
+
+    return result
+
+
+class SkybrushJSONFormat(Enum):
+    """Enum class defining the different JSON formats of Skybrush."""
+
+    # the standard raw Skybrush JSON format used by skybrush converter
+    RAW = 0
+
+    # the online Skybrush JSON format to be sent as a http request
+    ONLINE = 1
+
+
+#############################################################################
+# handy classes to be used by animation software plugins
 
 
 @dataclass
@@ -157,49 +198,19 @@ class LightCode:
             "version": 1,
         }
 
-    def simplify(self, eps: float = 0.5) -> None:
-        """Simplifies a sequence of Color4D elements to a similar sequence with
-        fewer Color4D elements, using a distance function and an acceptable
-        error term.
+    def simplify(self) -> LightCode:
+        """Simplifies the light code by removing unnecessary keypoints
+        from it.
 
-        The function uses the Ramer-Douglas-Peucker algorithm for simplifying
-        the Color4d segments.
-
-        Parameters:
-            eps: the error term; a Color4D element is considered redundant with
-                respect to two other colors if the color is closer to the line
-                formed by the two other colors than this error term.
+        Return:
+            LightCode class with the simplified light code.
 
         """
-        # TODO: implement
-        return self
+        new_items = simplify_path(
+            list(self.colors), eps=4, distance_func=_simplify_color_distance_func
+        )
 
-
-#############################################################################
-# helper functions and classes to be used locally
-
-
-class SkybrushJSONFormat(Enum):
-    """Enum class defining the different JSON formats of Skybrush."""
-
-    # the standard raw Skybrush JSON format used by skybrush converter
-    RAW = 0
-
-    # the online Skybrush JSON format to be sent as a http request
-    ONLINE = 1
-
-
-def create_path_and_open(filename, *args, **kwds):
-    """Like open() but also creates the directories leading to the given file
-    if they don't exist yet.
-    """
-    if not isinstance(filename, Path):
-        path = Path(filename)
-    else:
-        path = filename
-
-    path.parent.mkdir(exist_ok=True, parents=True)
-    return open(str(path), *args, **kwds)
+        return LightCode(new_items)
 
 
 #############################################################################
@@ -343,6 +354,10 @@ class SkybrushConverter:
             is_skybrush_installed = True
         except ImportError:
             is_skybrush_installed = False
+
+        # temporary hack to see intermediate results
+        # self.to_json(r"d:\download\temp.json", format=SkybrushJSONFormat.RAW)
+        # return
 
         if is_skybrush_installed:
             with TemporaryDirectory() as work_dir:

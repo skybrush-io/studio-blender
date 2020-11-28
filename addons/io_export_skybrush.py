@@ -331,15 +331,9 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     lights = _get_lights(context, settings, frame_range)
 
     # get automatic show title
-    if bpy.data.is_saved:
-        show_title = "Show '{}' exported from '{}'".format(
-            bpy.path.basename(filepath).split(".")[0],
-            bpy.path.basename(context.blend_data.filepath),
-        )
-    else:
-        show_title = "Show '{}' exported from Blender".format(
-            bpy.path.basename(filepath).split(".")[0]
-        )
+    show_title = "Show '{}' exported from Blender".format(
+        bpy.path.basename(filepath).split(".")[0]
+    )
 
     # create skybrush converter object
     log.info("Creating exporter object")

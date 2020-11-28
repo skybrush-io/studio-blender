@@ -2,6 +2,7 @@
 mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
 copy "modules\blender_helpers.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
 copy "modules\skybrush_converter.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
+copy "modules\skybrush_utils.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
 
 :: These are the external dependencies that are copied to the vendor folder
 call poetry export -f requirements.txt -o "requirements.txt"
