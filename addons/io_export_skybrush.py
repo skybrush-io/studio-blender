@@ -91,6 +91,11 @@ logging.basicConfig(
 #############################################################################
 
 
+def _to_int_255(value: float) -> int:
+    """Convert [0,1] float to clamped [0,255] int."""
+    return max(0, min(255, round(value * 255)))
+
+
 def _create_lightcode_from_light_dict_data(light: dict, fps: float) -> LightCode:
     """Create LightCode content from light data.
 
@@ -111,29 +116,41 @@ def _create_lightcode_from_light_dict_data(light: dict, fps: float) -> LightCode
     # Note that Blender uses interpolation forwards, Skybrush uses interpolation
     # backwards so old interpolation value needs to be used with new color
     oldip = "CONSTANT"
-    bezier_warning = False
     for frame, params in sorted(light.items()):
-        r, g, b = (
-            max(0, min(255, round(params[0] * 255))),
-            max(0, min(255, round(params[1] * 255))),
-            max(0, min(255, round(params[2] * 255))),
-        )
         if oldip == "CONSTANT":
             is_fade = False
         elif oldip == "LINEAR":
             is_fade = True
         elif oldip == "BEZIER":
-            if bezier_warning is False:
-                log.warning(
-                    "'BEZIER' interpolation in color is treated as 'LINEAR' so far. Implement better method!"
+            # in case of BEZIER keypoints we subsample linearly
+            duration = frame - oldframe
+            df = max(1, round(duration / 5))
+            for subframe in range(oldframe + df, frame, df):
+                ratio = (subframe - oldframe) / duration
+                lightcode.append(
+                    Color4D(
+                        frame / fps,
+                        _to_int_255(oldparams[0] + ratio * (params[0] - oldparams[0])),
+                        _to_int_255(oldparams[1] + ratio * (params[1] - oldparams[1])),
+                        _to_int_255(oldparams[2] + ratio * (params[2] - oldparams[2])),
+                        is_fade=True,
+                    )
                 )
-                bezier_warning = True
-            # TODO: this is not good, how should we treat BEZIER?
             is_fade = True
         else:
             raise NotImplementedError(f"inpterpolation type not handled yet: {oldip}")
-        lightcode.append(Color4D(frame / fps, r, g, b, is_fade=is_fade))
+        lightcode.append(
+            Color4D(
+                frame / fps,
+                _to_int_255(params[0]),
+                _to_int_255(params[1]),
+                _to_int_255(params[2]),
+                is_fade=is_fade,
+            )
+        )
         oldip = params[3]
+        oldparams = params
+        oldframe = frame
 
     return LightCode(lightcode)
 
@@ -286,36 +303,93 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightCode]:
         name = obj.name
         light_dict[name] = defaultdict(dict)
         log.debug(f"processing {name}")
-        if obj.active_material:
-            # export default first frame color
+        # if there is no material associated with the object, we use const black
+        if not obj.active_material:
+            light_dict[name][frame_range[0]] = [0, 0, 0, "CONST"]
+            continue
+        # if color is animated, export it
+        add_first_frame_color = [False] * 3
+        add_last_frame_color = [False] * 3
+        if obj.active_material.animation_data:
+            # iterate channels (r, g, b)
+            for fc in obj.active_material.animation_data.action.fcurves:
+                if fc.data_path != "diffuse_color":
+                    continue
+                if fc.array_index not in (0, 1, 2):
+                    # TODO: we do not support alpha channel parsing yet
+                    continue
+                # get first and last keypoints before/after and inside frame range
+                # and store all keypoints inside frame range
+                ip_before = i_first = i_last = None
+                for i, kp in enumerate(fc.keyframe_points):
+                    frame = int(kp.co[0])  # only integer frames allowed
+                    ip = kp.interpolation
+                    if frame < frame_range[0]:
+                        ip_before = ip
+                    elif frame <= frame_range[1]:
+                        if i_first is None:
+                            i_first = frame
+                        i_last = frame
+                        color = kp.co[1]
+                        if frame not in light_dict[name].keys():
+                            light_dict[name][frame] = [
+                                None,
+                                None,
+                                None,
+                                ip,
+                            ]
+                        elif light_dict[name][frame][3] != ip:
+                            raise NotImplementedError(
+                                f"interpolation types on different color channels "
+                                f"do not match for object '{name}' at frame {frame}: "
+                                f"'{light_dict[name][frame][3]}' vs '{ip}'"
+                            )
+
+                        light_dict[name][frame][fc.array_index] = color
+                    else:
+                        break
+                # if there is no keyframe inside framerange, we get color explicitely
+                if i_first is None:
+                    add_first_frame_color[fc.array_index] = True
+                    add_last_frame_color[fc.array_index] = True
+                    continue
+                # if first is after frame range start, we need to add first frame color keypoint
+                if i_first > frame_range[0]:
+                    add_first_frame_color[fc.array_index] = True
+                # if last is before frame range end, we need to add last frame color keypoint
+                if i_last < frame_range[1]:
+                    add_last_frame_color[fc.array_index] = True
+        # if color is not animated, use a single color
+        else:
+            add_first_frame_color = [True] * 3
+            add_last_frame_color = [True] * 3
+        # add first color if needed
+        if True in add_first_frame_color:
+            if False in add_first_frame_color:
+                raise NotImplementedError(
+                    "different channels have different frame keypoints around frame range start"
+                )
+            if ip_before in ["BEZIER", None]:
+                # this is only a rough approximation but it will make no big difference in most cases
+                ip_before = "LINEAR"
             frame = frame_range[0]
             context.scene.frame_set(frame)
-            light_dict[name][frame] = list(obj.active_material.diffuse_color[:3]) + [
-                "CONSTANT"
+            light_dict[name][frame] = [
+                *obj.active_material.diffuse_color[:3],
+                ip_before,
             ]
-            # export animation as well
-            if obj.active_material.animation_data:
-                # iterate channels (r, g, b)
-                for fc in obj.active_material.animation_data.action.fcurves:
-                    if fc.data_path != "diffuse_color":
-                        continue
-                    if fc.array_index not in (0, 1, 2):
-                        continue
-                    for kp in fc.keyframe_points:
-                        # we only allow integer frames here
-                        frame = int(kp.co[0])
-                        color = kp.co[1]
-                        if frame > frame_range[0] and frame <= frame_range[1]:
-                            if frame not in light_dict[name].keys():
-                                light_dict[name][frame] = [0, 0, 0, kp.interpolation]
-                            elif light_dict[name][frame][3] != kp.interpolation:
-                                raise NotImplementedError(
-                                    f"interpolation types on different color channels "
-                                    f"do not match for object '{name}' at frame {frame}: "
-                                    f"'{light_dict[name][frame][3]}' vs '{kp.interpolation}'"
-                                )
-
-                            light_dict[name][frame][fc.array_index] = color
+        # add last color if needed
+        if True in add_last_frame_color:
+            if False in add_last_frame_color:
+                raise NotImplementedError(
+                    "different channels have different frame keypoints around frame range end"
+                )
+            frame = frame_range[1]
+            context.scene.frame_set(frame)
+            light_dict[name][frame] = [
+                *obj.active_material.diffuse_color[:3],
+                "CONST",
+            ]
 
     # convert to skybrush-compatible format
     lights = dict(
@@ -351,7 +425,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     log.info("Getting object color animations")
     lights = _get_lights(context, settings, frame_range)
 
-    # get show title
+    # get automatic show title
     if bpy.data.is_saved:
         show_title = "Show '{}' exported from '{}'".format(
             bpy.path.basename(filepath).split(".")[0],
