@@ -327,9 +327,6 @@ class SkybrushConverter:
         except ImportError:
             is_skybrush_installed = False
 
-        # TODO: this is here for debug reasons to test the online version
-        is_skybrush_installed = False
-
         if is_skybrush_installed:
             with TemporaryDirectory() as work_dir:
                 # first create a temporary JSON representation
