@@ -170,11 +170,11 @@ class SkybrushOperatorBase(metaclass=ABCMeta):
             content_type = info.get_content_type()
             if status_code != 200 or content_type != "application/octet-stream":
                 log.error(f"error in response: status_code={status_code}, info={info}")
-                return
-            # return response as a dictionary
+                return None
+            # return response as a string
             if output is None:
-                log.info("response received, returning as a dictionary")
-                return loads(response.read().decode("utf-8"))
+                log.info("response received, returning as a string")
+                return response.read().decode("utf-8")
             # or write it to a file
             else:
                 log.info("response received, writing to file")
@@ -573,13 +573,19 @@ class SkybrushMatcher(SkybrushOperatorBase):
             raise NotImplementedError("Unknown Skybrush JSON format")
 
     def match(self) -> List[int]:
-        """Get the optimal mapping between self's start and end pointclouds."""
+        """Get the optimal mapping between self's start and end pointclouds.
+
+        Return:
+            the list of indices of the target PointCloud in the order they are
+            matched with the points in the starting PointCloud, or None on error
+
+        """
 
         is_skybrush_installed = False
 
         # temporary hack to see intermediate results
         self.to_json(r"d:\download\temp.json", format=SkybrushJSONFormat.ONLINE)
-        return
+        return []
 
         if is_skybrush_installed:
             with TemporaryDirectory() as work_dir:
@@ -593,4 +599,6 @@ class SkybrushMatcher(SkybrushOperatorBase):
 
         else:
             # if Skybrush Studio is not present locally, try to convert online
-            return self._ask_skybrush_studio_server("match-points", None)
+            json_data = self._ask_skybrush_studio_server("match-points", None)
+            data = loads(json_data)
+            return data["TODO"]
