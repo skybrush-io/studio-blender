@@ -16,5 +16,7 @@ def main():
     start = PointCloud([Point3D(0, 0, 0), Point3D(1, 2, 3), Point3D(0, 10, 20)])
     end = PointCloud([Point3D(0, 2, 0), Point3D(0, 10, 2), Point3D(1, 0, 3)])
 
-    matcher = SkybrushMatcher(start=start, end=end)
-    print(matcher.match())
+    mapping = SkybrushMatcher(start=start, end=end).match()
+    for i_to, i_from in enumerate(mapping):
+        from_str = "None" if i_from is None else str(start[i_from])
+        print(f"{from_str} -> {end[i_to]}")

@@ -267,11 +267,14 @@ class PointCloud:
     """Simplest representation of a list/group/cloud of Point3D points."""
 
     def __init__(self, points: List[Union[Point3D, Point4D]] = []):
-        self.points = [Point3D(x=p.x, y=p.y, z=p.z) for p in points]
+        self._points = [Point3D(x=p.x, y=p.y, z=p.z) for p in points]
+
+    def __getitem__(self, item):
+        return self._points[item]
 
     def append(self, point: Union[Point3D, Point4D]) -> None:
         """Add a point to the end of the point cloud."""
-        self.points.append(Point3D(x=point.x, y=point.y, z=point.z))
+        self._points.append(Point3D(x=point.x, y=point.y, z=point.z))
 
     def as_list(self, ndigits: int = 3):
         """Create a Skybrush-compatible list representation of self.
@@ -289,8 +292,13 @@ class PointCloud:
                 round(point.y, ndigits=ndigits),
                 round(point.z, ndigits=ndigits),
             ]
-            for point in self.points
+            for point in self._points
         ]
+
+    @property
+    def count(self):
+        """Return the number of points in self."""
+        return len(self._points)
 
 
 class Trajectory:
@@ -567,8 +575,11 @@ class SkybrushMatcher(SkybrushOperatorBase):
         """Get the optimal mapping between self's start and end pointclouds.
 
         Return:
-            the list of indices of the target PointCloud in the order they are
-            matched with the points in the starting PointCloud, or None on error
+            the list of indices of the starting PointCloud elements in the order
+            they are matched with the points in the target PointCloud,
+            i.e.: from[matching[i]] -> to[i] is the ith assignment, where
+            matching[i] can be an integer or None if the ith element of the
+            target PointCloud is not matched to any point from the starting one.
 
         """
 
@@ -577,7 +588,7 @@ class SkybrushMatcher(SkybrushOperatorBase):
 
         # temporary hack to see intermediate results
         self.to_json(r"d:\download\temp.json", format=SkybrushJSONFormat.ONLINE)
-        return []
+        return [None] * self._end.count
 
         if is_skybrush_installed:
             with TemporaryDirectory() as work_dir:
@@ -586,8 +597,8 @@ class SkybrushMatcher(SkybrushOperatorBase):
                 self.to_json(json_output, format=SkybrushJSONFormat.RAW)
                 # then send it to skybrush to find mapping
 
-                # TODO: find mapping with skybrush, this is not it
-                return list(range(len(self._start)))
+                # TODO: find mapping with skybrush
+                return [None] * self._end.count
 
         else:
             # if Skybrush Studio is not present locally, try to convert online
