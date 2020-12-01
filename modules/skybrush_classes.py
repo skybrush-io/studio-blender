@@ -273,27 +273,24 @@ class PointCloud:
         """Add a point to the end of the point cloud."""
         self.points.append(Point3D(x=point.x, y=point.y, z=point.z))
 
-    def as_dict(self, ndigits: int = 3):
-        """Create a Skybrush-compatible dictionary representation of self.
+    def as_list(self, ndigits: int = 3):
+        """Create a Skybrush-compatible list representation of self.
 
         Parameters:
             ndigits: round floats to this precision
 
         Return:
-            dictionary of self to be converted to SJON later
+            list representation of self to be converted to JSON later
 
         """
-        return {
-            "points": [
-                [
-                    round(point.x, ndigits=ndigits),
-                    round(point.y, ndigits=ndigits),
-                    round(point.z, ndigits=ndigits),
-                ]
-                for point in self.points
-            ],
-            "version": 1,
-        }
+        return [
+            [
+                round(point.x, ndigits=ndigits),
+                round(point.y, ndigits=ndigits),
+                round(point.z, ndigits=ndigits),
+            ]
+            for point in self.points
+        ]
 
 
 class Trajectory:
@@ -554,21 +551,15 @@ class SkybrushMatcher(SkybrushOperatorBase):
         """
 
         data = {
+            "from": self._start.as_list(ndigits=ndigits),
+            "to": self._end.as_list(ndigits=ndigits),
             "version": 1,
-            "settings": {},
-            "transition": {
-                "start": self._start.as_dict(ndigits=ndigits),
-                "end": self._end.as_dict(ndigits=ndigits),
-            },
         }
 
         if format == SkybrushJSONFormat.RAW:
             return data
         elif format == SkybrushJSONFormat.ONLINE:
-            return {
-                "input": {"format": "json", "data": data},
-                "output": {"format": "json"},
-            }
+            return data
         else:
             raise NotImplementedError("Unknown Skybrush JSON format")
 
@@ -581,6 +572,7 @@ class SkybrushMatcher(SkybrushOperatorBase):
 
         """
 
+        # TODO: import things from skybrush that are needed for the match op.
         is_skybrush_installed = False
 
         # temporary hack to see intermediate results
@@ -601,4 +593,4 @@ class SkybrushMatcher(SkybrushOperatorBase):
             # if Skybrush Studio is not present locally, try to convert online
             json_data = self._ask_skybrush_studio_server("match-points", None)
             data = loads(json_data)
-            return data["TODO"]
+            return data["matching"]
