@@ -59,12 +59,12 @@ from blender_helpers import (
     unregister_operator,
 )
 
-from skybrush_converter import (
+from skybrush_classes import (
     Point4D,
     Color4D,
     Trajectory,
     LightCode,
-    SkybrushConverter,
+    SkybrushExporter,
 )
 
 
@@ -337,7 +337,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
 
     # create skybrush converter object
     log.info("Creating exporter object")
-    converter = SkybrushConverter(
+    converter = SkybrushExporter(
         show_title=show_title, trajectories=trajectories, lights=lights
     )
 
