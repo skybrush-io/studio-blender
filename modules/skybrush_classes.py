@@ -530,7 +530,7 @@ class SkybrushExporter(SkybrushOperatorBase):
 
 
 class SkybrushMatcher(SkybrushOperatorBase):
-    """Class for creating an optimal trajectory mapping between two PointClouds."""
+    """Class for creating an optimal trajectory mapping between two point clouds."""
 
     def __init__(
         self,
@@ -544,6 +544,10 @@ class SkybrushMatcher(SkybrushOperatorBase):
             end: the target point cloud where drones should arrive
 
         """
+        if start.count < end.count:
+            raise ValueError(
+                f"starting point cloud ({start.count}) must be at least as large as ending point cloud ({end.count})"
+            )
         self._start = start
         self._end = end
 
@@ -572,36 +576,42 @@ class SkybrushMatcher(SkybrushOperatorBase):
             raise NotImplementedError("Unknown Skybrush JSON format")
 
     def match(self) -> List[int]:
-        """Get the optimal mapping between self's start and end pointclouds.
+        """Get the optimal mapping between self's start and end point clouds.
 
         Return:
-            the list of indices of the starting PointCloud elements in the order
-            they are matched with the points in the target PointCloud,
+            the list of indices of the starting point cloud elements in the order
+            they are matched with the points in the target point cloud,
             i.e.: from[matching[i]] -> to[i] is the ith assignment, where
             matching[i] can be an integer or None if the ith element of the
-            target PointCloud is not matched to any point from the starting one.
+            target point cloud is not matched to any point from the starting one.
 
         """
 
-        # TODO: import things from skybrush that are needed for the match op.
-        is_skybrush_installed = False
+        try:
+            from skybrush.algorithms.matching import match_pointclouds
+            from skybrush.geometry.position import Pos3D
 
-        # temporary hack to see intermediate results
-        self.to_json(r"d:\download\temp.json", format=SkybrushJSONFormat.ONLINE)
-        return [None] * self._end.count
+            is_skybrush_installed = True
+        except ImportError:
+            is_skybrush_installed = False
 
         if is_skybrush_installed:
-            with TemporaryDirectory() as work_dir:
-                # first create a temporary JSON representation
-                json_output = Path(work_dir) / Path("show.json")
-                self.to_json(json_output, format=SkybrushJSONFormat.RAW)
-                # then send it to skybrush to find mapping
+            # convert point clouds to skybrush inner format
+            source = [Pos3D(x=p.x, y=p.y, z=p.z) for p in self._start]
+            target = [Pos3D(x=p.x, y=p.y, z=p.z) for p in self._end]
+            # call skybrush matching algorithm with default params
+            mapping_src = match_pointclouds(source, target, partial=True)
+            # convert it to target's point of view
+            mapping = [None] * self._end.count
+            for i_from, i_to in enumerate(mapping_src):
+                if i_to >= 0:
+                    mapping[i_to] = i_from
 
-                # TODO: find mapping with skybrush
-                return [None] * self._end.count
+            return mapping
 
         else:
             # if Skybrush Studio is not present locally, try to convert online
             json_data = self._ask_skybrush_studio_server("match-points", None)
             data = loads(json_data)
+
             return data["matching"]
