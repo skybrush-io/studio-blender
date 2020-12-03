@@ -168,17 +168,24 @@ class SkybrushOperatorBase(metaclass=ABCMeta):
             status_code = response.getcode()
             info = response.info()
             content_type = info.get_content_type()
-            if status_code != 200 or content_type != "application/octet-stream":
+            if status_code != 200 or content_type not in [
+                "application/octet-stream",
+                "application/json",
+            ]:
                 log.error(f"error in response: status_code={status_code}, info={info}")
                 return None
             # return response as a string
             if output is None:
                 log.info("response received, returning as a string")
-                return response.read().decode("utf-8")
+                data = response.read()
+                if content_type == "application/octet-stream":
+                    data = data.decode("utf-8")
+                return data
             # or write it to a file
             else:
                 log.info("response received, writing to file")
-                with create_path_and_open(output, "wb") as f:
+                mode = "wb" if content_type == "application/octet-stream" else "w"
+                with create_path_and_open(output, mode) as f:
                     copyfileobj(response, f)
                 return None
 
