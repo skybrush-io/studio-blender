@@ -29,7 +29,7 @@ mkdir $BLENDER_BASE_DIRECTORY/scripts/addons
 poetry export -f requirements.txt -o requirements.txt
 pip install -v -t $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush -r requirements.txt
 ```
-                                              d
+
 or alternatively
 
 ```
