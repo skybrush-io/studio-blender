@@ -1,4 +1,7 @@
-cd ..\..
+cd %~dp0
+cd ..
+cd ..
+
 
 :: This will be needed for all users on Windows to have all local python dependencies available
 mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
