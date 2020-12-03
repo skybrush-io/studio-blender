@@ -597,11 +597,11 @@ class SkybrushMatcher(SkybrushOperatorBase):
 
         if is_skybrush_installed:
             # convert point clouds to skybrush inner format
-            source = [Pos3D(x=p.x, y=p.y, z=p.z) for p in self._source]
-            target = [Pos3D(x=p.x, y=p.y, z=p.z) for p in self._target]
+            source = [Pos3D(x=x, y=y, z=z) for x, y, z in self._source]
+            target = [Pos3D(x=x, y=y, z=z) for x, y, z in self._target]
             # call skybrush matching algorithm with default params
             mapping_src = match_pointclouds(source, target, partial=True)
-            # convert it to target's point of view
+            # invert the mapping
             mapping = [None] * self._target.count
             for i_from, i_to in enumerate(mapping_src):
                 if i_to >= 0:
