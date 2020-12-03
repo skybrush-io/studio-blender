@@ -1,6 +1,8 @@
 .venv/
 .vscode/
 __pycache__/
+dist/
+tmp/
 
 modules/skybrush
 modules/pyledctrl
