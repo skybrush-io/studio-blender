@@ -17,12 +17,13 @@ bl_info = {
 # imports from internal dependencies
 
 import bpy
+
+from bpy.path import abspath
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
 import logging
-import os
 import sys
 
 from collections import defaultdict
@@ -39,13 +40,16 @@ from typing import Dict, List
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
-module_path = os.path.join(
-    os.path.dirname(sys.modules[__name__].__file__), "..", "vendor", "skybrush"
-)
-
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
+candidates = [
+    abspath(bpy.context.preferences.filepaths.script_directory),
+    Path(sys.modules[__name__].__file__).parent.parent 
+]
+for candidate in candidates:
+    path = (Path(candidate) / "vendor" / "skybrush").resolve()
+    print(str(path))
+    if path.exists():
+        sys.path.insert(0, str(path))
+        break
 
 #############################################################################
 # imports from external dependencies

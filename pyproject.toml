@@ -5,13 +5,21 @@ description = "Skybrush related add-ons for Blender"
 license = "Proprietary"
 authors = ["Gabor Vasarhelyi <vasarhelyi@collmot.com>"]
 packages = [
-    { include = "modules/*.py" },
-    { include = "tests/*.py" },
+    { include = "addons/*.py", from = "src" },
+    { include = "modules/*.py", from = "src" }
 ]
+
+[[tool.poetry.source]]
+name = "collmot"
+url = "https://pypi.collmot.com/simple/"
 
 [tool.poetry.dependencies]
 python = "^3.7"
 natsort = "^7.1.0"
+skybrush-studio = { version = "^0.6.0", optional = true }
+
+[tool.poetry.extras]
+standalone = ["skybrush-studio"]
 
 [tool.poetry.scripts]
 test_matcher = "tests.test_matcher:main"
