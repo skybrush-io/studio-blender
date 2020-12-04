@@ -43,8 +43,8 @@ mkdir -p "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 
 # Copy our code as well
-cp modules/*.py ${BUILD_DIR}/vendor/skybrush
-cp addons/*.py ${BUILD_DIR}/addons
+cp src/modules/*.py ${BUILD_DIR}/vendor/skybrush
+cp src/addons/*.py ${BUILD_DIR}/addons
 
 # Clean any __pycache__ and *.dist-info files
 .venv/bin/pyclean ${BUILD_DIR}
