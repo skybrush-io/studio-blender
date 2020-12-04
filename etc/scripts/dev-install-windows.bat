@@ -19,7 +19,6 @@ copy "src\addons\io_import_skybrush.py" "c:\Users\%USERNAME%\AppData\Roaming\Ble
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: This part is needed only for developers with local skybrush and pyledctrl
-mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush"
 mklink /D "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\skybrush" "d:\%USERNAME%\git\skybrush\skybrush"
 mklink /D "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\pyledctrl" "d:\%USERNAME%\git\pyledctrl\src\pyledctrl"
 
