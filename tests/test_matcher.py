@@ -9,7 +9,9 @@ module_path = os.path.join(
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from skybrush_classes import SkybrushMatcher, Point3D, PointCloud
+from sbstudio.model.point import Point3D
+from sbstudio.model.point_cloud import PointCloud
+from sbstudio.api.operations.match_points import SkybrushMatcher
 
 
 def main():

@@ -40,8 +40,6 @@ cp .venv/Lib/site-packages/all-modules-that-are-needed $BLENDER_BASE_DIRECTORY/s
 # Copy all .py content of ./modules to scripts/modules
 
 ```
-cp modules/blender_helpers.py $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
-cp modules/skybrush_classes.py $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
 cp -r modules/sbstudio $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
 ```
 

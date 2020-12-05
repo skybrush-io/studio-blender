@@ -54,18 +54,17 @@ for candidate in candidates:
 
 from natsort import natsorted
 
-from blender_helpers import (
+from sbstudio.api.operations.export import SkybrushExporter
+from sbstudio.model.color import Color4D
+from sbstudio.model.light_program import LightProgram
+from sbstudio.model.point import Point4D
+from sbstudio.model.trajectory import Trajectory
+from sbstudio.plugin.blender_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
     unregister_operator,
 )
-
-from sbstudio.model.color import Color4D
-from sbstudio.model.light_program import LightProgram
-from sbstudio.model.point import Point4D
-from sbstudio.model.trajectory import Trajectory
-from sbstudio.api.operations.export import SkybrushExporter
 
 
 #############################################################################

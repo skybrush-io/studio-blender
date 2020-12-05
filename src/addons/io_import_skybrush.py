@@ -60,7 +60,7 @@ from skybrush.io.blender.renderer import render
 from skybrush.io.base.renderer import RenderContext, RenderMode
 from skybrush.utils.filesystem import working_directory
 
-from blender_helpers import (
+from sbstudio.plugin.blender_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
