@@ -8,7 +8,7 @@ bl_info = {
 }
 
 #############################################################################
-# imports from internal dependencies
+# imports needed to set up the Python path properly
 
 import bpy
 import sys
@@ -18,8 +18,6 @@ from pathlib import Path
 
 
 #############################################################################
-# all imports from external dependencies should be below this piece of code
-#
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
@@ -35,14 +33,15 @@ for candidate in candidates:
 
 
 #############################################################################
-# imports from external dependencies
+# imports needed by the addon
 
-from blender_asyncio_event_loop import event_loop
+from sbstudio.plugin.operators.prepare import PrepareSceneOperator
+from sbstudio.plugin.plugin_helpers import register_operator, unregister_operator
 
 
 def register():
-    event_loop.start()
+    register_operator(PrepareSceneOperator)
 
 
 def unregister():
-    event_loop.stop_and_join()
+    unregister_operator(PrepareSceneOperator)

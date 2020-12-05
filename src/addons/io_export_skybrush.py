@@ -14,28 +14,16 @@ bl_info = {
 
 
 #############################################################################
-# imports from internal dependencies
+# imports needed to set up the Python path properly
 
 import bpy
-
-from bpy.path import abspath
-from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
-from bpy.types import Operator
-from bpy_extras.io_utils import ExportHelper
-
-import logging
 import sys
 
-from fnmatch import fnmatch
-from math import isinf
-from operator import attrgetter
+from bpy.path import abspath
 from pathlib import Path
-from typing import Dict, List
 
 
 #############################################################################
-# all imports from external dependencies should be below this piece of code
-#
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
@@ -49,17 +37,27 @@ for candidate in candidates:
         sys.path.insert(0, str(path))
         break
 
-#############################################################################
-# imports from external dependencies
 
+#############################################################################
+# imports needed by the addon
+
+import logging
+
+from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
+from bpy.types import Operator
+from bpy_extras.io_utils import ExportHelper
+from fnmatch import fnmatch
+from math import isinf
 from natsort import natsorted
+from operator import attrgetter
+from typing import Dict, List
 
 from sbstudio.api.operations.export import SkybrushExporter
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
-from sbstudio.plugin.blender_helpers import (
+from sbstudio.plugin.plugin_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
@@ -355,7 +353,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
 class SkybrushExportOperator(Operator, ExportHelper):
     """Export object trajectories and curves into Skybrush-compatible format."""
 
-    bl_idname = "export.skybrush"
+    bl_idname = "export_scene.skybrush"
     bl_label = "Export Skybrush SKYC"
     bl_options = {"REGISTER"}
 

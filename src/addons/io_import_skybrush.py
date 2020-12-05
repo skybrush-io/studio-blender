@@ -14,31 +14,16 @@ bl_info = {
 
 
 #############################################################################
-# imports from internal dependencies
+# imports needed to set up the Python path properly
 
 import bpy
-
-from bpy_extras.io_utils import ImportHelper
-from bpy.path import abspath, ensure_ext
-from bpy.props import (
-    BoolProperty,
-    EnumProperty,
-    FloatProperty,
-    IntProperty,
-    StringProperty,
-)
-from bpy.types import Operator
-
-import logging
 import sys
 
-from copy import deepcopy
+from bpy.path import abspath
 from pathlib import Path
 
 
 #############################################################################
-# all imports from external dependencies should be below this piece of code
-#
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
@@ -52,15 +37,30 @@ for candidate in candidates:
         sys.path.insert(0, str(path))
         break
 
+
 #############################################################################
-# imports from external dependencies
+# imports needed by the addon
+
+import logging
+
+from bpy_extras.io_utils import ImportHelper
+from bpy.path import ensure_ext
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    FloatProperty,
+    IntProperty,
+    StringProperty,
+)
+from bpy.types import Operator
+from copy import deepcopy
 
 from skybrush.io.sky.runner import SkybrushScriptRunner
 from skybrush.io.blender.renderer import render
 from skybrush.io.base.renderer import RenderContext, RenderMode
 from skybrush.utils.filesystem import working_directory
 
-from sbstudio.plugin.blender_helpers import (
+from sbstudio.plugin.plugin_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
