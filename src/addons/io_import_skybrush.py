@@ -44,11 +44,10 @@ from pathlib import Path
 
 candidates = [
     abspath(bpy.context.preferences.filepaths.script_directory),
-    Path(sys.modules[__name__].__file__).parent.parent 
+    Path(sys.modules[__name__].__file__).parent.parent,
 ]
 for candidate in candidates:
     path = (Path(candidate) / "vendor" / "skybrush").resolve()
-    print(str(path))
     if path.exists():
         sys.path.insert(0, str(path))
         break

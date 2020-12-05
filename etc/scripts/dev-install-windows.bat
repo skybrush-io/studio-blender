@@ -5,8 +5,8 @@ cd ..
 :: This will be needed for all users on Windows to have all local python dependencies available
 mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
 copy "src\modules\blender_helpers.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
-copy "src\modules\skybrush_classes.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
-copy "src\modules\skybrush_utils.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\"
+mkdir "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\bstudio\"
+copy "src\modules\sbstudio\*.py" "c:\Users\%USERNAME%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\vendor\skybrush\sbstudio"
 
 :: These are the external dependencies that are copied to the vendor folder
 call poetry export -f requirements.txt -o "requirements.txt" --without-hashes

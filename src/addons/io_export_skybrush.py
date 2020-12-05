@@ -26,7 +26,6 @@ from bpy_extras.io_utils import ExportHelper
 import logging
 import sys
 
-from collections import defaultdict
 from fnmatch import fnmatch
 from math import isinf
 from operator import attrgetter
@@ -42,11 +41,10 @@ from typing import Dict, List
 
 candidates = [
     abspath(bpy.context.preferences.filepaths.script_directory),
-    Path(sys.modules[__name__].__file__).parent.parent 
+    Path(sys.modules[__name__].__file__).parent.parent,
 ]
 for candidate in candidates:
     path = (Path(candidate) / "vendor" / "skybrush").resolve()
-    print(str(path))
     if path.exists():
         sys.path.insert(0, str(path))
         break
@@ -63,13 +61,11 @@ from blender_helpers import (
     unregister_operator,
 )
 
-from skybrush_classes import (
-    Point4D,
-    Color4D,
-    Trajectory,
-    LightCode,
-    SkybrushExporter,
-)
+from sbstudio.model.color import Color4D
+from sbstudio.model.light_program import LightProgram
+from sbstudio.model.point import Point4D
+from sbstudio.model.trajectory import Trajectory
+from sbstudio.api.operations.export import SkybrushExporter
 
 
 #############################################################################
@@ -100,10 +96,10 @@ def _to_int_255(value: float) -> int:
     return max(0, min(255, round(value * 255)))
 
 
-def _create_lightcode_from_light_data(
+def _create_light_program_from_light_data(
     light: List[List], frame_range: List, fps: float
-) -> LightCode:
-    """Create LightCode content from light data.
+) -> LightProgram:
+    """Creates a LightProgram object from light data.
 
     Parameters:
         light: list of 3 lists, each containing a list of colors for all frames
@@ -112,11 +108,11 @@ def _create_lightcode_from_light_data(
         fps: frames per second of the light data
 
     Return:
-        LightCode object that can be processed by the local skybrush converter
+        LightProgram object that can be processed by the local Skybrush converter
 
     """
 
-    lightcode = [
+    samples = [
         Color4D(
             frame / fps,
             _to_int_255(light[0][i]),
@@ -127,7 +123,7 @@ def _create_lightcode_from_light_data(
         for i, frame in enumerate(range(frame_range[0], frame_range[1] + 1))
     ]
 
-    return LightCode(lightcode).simplify()
+    return LightProgram(samples).simplify()
 
 
 def _get_objects(context, settings):
@@ -257,7 +253,7 @@ def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str, Trajec
     return trajectories
 
 
-def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightCode]:
+def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightProgram]:
     """Get light animation of all selected/picked objects.
 
     Parameters:
@@ -266,7 +262,7 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightCode]:
         framerange - the framerange used for exporting
 
     Return:
-        dictionary of LightCode objects indexed by object names
+        dictionary of LightProgram objects indexed by object names
     """
 
     # get object color animations for each frame
@@ -302,7 +298,7 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightCode]:
 
     # convert to skybrush-compatible format (and simplify)
     lights = dict(
-        (name, _create_lightcode_from_light_data(light, frame_range, fps))
+        (name, _create_light_program_from_light_data(light, frame_range, fps))
         for name, light in light_dict.items()
     )
 

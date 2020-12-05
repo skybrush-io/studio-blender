@@ -11,9 +11,9 @@ See: https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout
 
 Assuming latest LTS 2.83, `BLENDER_BASE_DIRECTORY=`...
 
- * Linux: `$HOME/.config/blender/2.83/`
- * macOS: `/Users/$USER/Library/Application Support/Blender/2.83/`
- * Windows: `%USERPROFILE%\AppData\Roaming\Blender Foundation\Blender\2.83\`
+- Linux: `$HOME/.config/blender/2.83/`
+- macOS: `/Users/$USER/Library/Application Support/Blender/2.83/`
+- Windows: `%USERPROFILE%\AppData\Roaming\Blender Foundation\Blender\2.83\`
 
 # Create subdirectories (if they do not exist)
 
@@ -42,12 +42,12 @@ cp .venv/Lib/site-packages/all-modules-that-are-needed $BLENDER_BASE_DIRECTORY/s
 ```
 cp modules/blender_helpers.py $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
 cp modules/skybrush_classes.py $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
-cp modules/skybrush_utils.py $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
+cp -r modules/sbstudio $BLENDER_BASE_DIRECTORY/scripts/vendor/skybrush
 ```
 
 # Copy add-ons to scripts/addons
 
-cp addons/*.py $BLENDER_BASE_DIRECTORY/scripts/addons
+cp addons/\*.py $BLENDER_BASE_DIRECTORY/scripts/addons
 
 # Activate add-ons
 

@@ -3,8 +3,6 @@
 import bpy
 import re
 
-from pathlib import Path
-
 
 def _get_menu_by_name(menu):
     menu = re.sub(r"[^A-Za-z]+", "_", menu.lower())

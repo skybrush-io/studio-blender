@@ -1,21 +1,15 @@
-"""All kinds of handy utils to be used by the converter."""
-
 from pathlib import Path
 from typing import Any, Callable, List, Sequence
 
 
-__all__ = ["create_path_and_open", "simplify_path"]
+__all__ = ("create_path_and_open", "simplify_path")
 
 
 def create_path_and_open(filename, *args, **kwds):
     """Like open() but also creates the directories leading to the given file
     if they don't exist yet.
     """
-    if not isinstance(filename, Path):
-        path = Path(filename)
-    else:
-        path = filename
-
+    path = Path(filename)
     path.parent.mkdir(exist_ok=True, parents=True)
     return open(str(path), *args, **kwds)
 
