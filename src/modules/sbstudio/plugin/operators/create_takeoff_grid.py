@@ -20,7 +20,7 @@ from sbstudio.plugin.utils import (
 __all__ = ("CreateTakeoffGridOperator",)
 
 
-def create_drone(location, name, *, template=None, collection=None):
+def create_drone(location, *, name: str, template=None, collection=None):
     """Creates a new drone object at the given location.
 
     Parameters:

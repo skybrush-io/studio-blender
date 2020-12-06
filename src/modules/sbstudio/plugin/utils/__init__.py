@@ -13,7 +13,6 @@ from .collections import (
 )
 from .decorators import with_context, with_scene, with_screen
 from .identifiers import create_internal_id, propose_name, propose_names
-from .views import find_one_3d_view, find_one_3d_view_and_its_area
 
 __all__ = (
     "create_object_in_collection",
@@ -21,8 +20,6 @@ __all__ = (
     "descendants_of",
     "ensure_object_exists_in_collection",
     "find_empty_slot_in",
-    "find_one_3d_view",
-    "find_one_3d_view_and_its_area",
     "get_object_in_collection",
     "overridden_context",
     "propose_name",

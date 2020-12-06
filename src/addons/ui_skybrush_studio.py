@@ -40,7 +40,10 @@ from sbstudio.plugin.operators import (
     PrepareSceneOperator,
 )
 from sbstudio.plugin.plugin_helpers import register_operator, unregister_operator
-
+from sbstudio.plugin.state import (
+    register as register_state,
+    unregister as unregister_state,
+)
 
 #: Operators in this addon; operators that require other operators must come
 #: later in the list than their dependencies
@@ -48,6 +51,7 @@ operators = (PrepareSceneOperator, CreateTakeoffGridOperator)
 
 
 def register():
+    register_state()
     for operator in operators:
         register_operator(operator)
 
@@ -55,3 +59,4 @@ def register():
 def unregister():
     for operator in reversed(operators):
         unregister_operator(operator)
+    unregister_state()

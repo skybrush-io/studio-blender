@@ -64,7 +64,7 @@ class Templates:
 
     @staticmethod
     def _create_drone_template():
-        object = create_icosphere(radius=1)
+        object = create_icosphere(radius=0.5)
 
         # The icosphere is created in the current collection of the Blender
         # context, but we don't need it there so let's remove it.
