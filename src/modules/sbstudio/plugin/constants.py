@@ -71,12 +71,15 @@ class Templates:
         bpy.context.collection.objects.unlink(object)
 
         # Hide the object from the viewport and the render
-        # object.hide_viewport = True
-        # object.hide_select = True
-        # object.hide_render = True
+        object.hide_viewport = True
+        object.hide_select = True
+        object.hide_render = True
 
         # Add a shiny light emission to the object
         material = create_glowing_material("Drone template material", strength=8)
         object.active_material = material
+
+        # Make sure that the object is not selected
+        object.select_set(False)
 
         return object

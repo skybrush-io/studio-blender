@@ -2,7 +2,25 @@ import bpy
 
 from functools import wraps
 
-__all__ = ("with_scene", "with_screen")
+__all__ = ("with_context", "with_scene", "with_screen")
+
+
+def with_context(func):
+    """Decorator that can be applied to a function that takes a keyword
+    argument named `context` and that fills the scene automatically from the
+    current Blender context if it is `None` or not given.
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwds):
+        context = kwds.get("context")
+
+        if context is None:
+            kwds["context"] = bpy.context
+
+        return func(*args, **kwds)
+
+    return wrapper
 
 
 def with_scene(func):
