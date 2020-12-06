@@ -2,14 +2,10 @@
 Skybrush Studio plugin.
 """
 
-import bpy
-
 from bpy.types import Operator
 
-from sbstudio.plugin.utils import (
-    ensure_object_exists_in_collection,
-    link_object_to_scene,
-)
+from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.objects import link_object_to_scene
 
 __all__ = ("PrepareSceneOperator",)
 
@@ -21,20 +17,25 @@ class PrepareSceneOperator(Operator):
     This involves:
 
     * creating the standard "Drones" and "Formations" collections if they do not
-      exist yet.
+      exist yet
+    * creating a drone
     """
+
+    # TODO(ntamas): make this operator internal!
 
     bl_idname = "skybrush.prepare"
     bl_label = "Prepare scene for Skybrush"
-    bl_options = {"REGISTER"}
+    bl_options = {"INTERNAL"}
 
     def execute(self, context):
-        drones = ensure_object_exists_in_collection(bpy.data.collections, "Drones")
-        formations = ensure_object_exists_in_collection(
-            bpy.data.collections, "Formations"
-        )
+        drones = Collections.find_drones()
+        formations = Collections.find_formations()
+        templates = Collections.find_templates()
 
         link_object_to_scene(drones)
         link_object_to_scene(formations)
+        link_object_to_scene(templates)
+
+        Templates.find_drone()
 
         return {"FINISHED"}

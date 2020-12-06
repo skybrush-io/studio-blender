@@ -1,6 +1,7 @@
 """Utility functions directly related to the Blender API."""
 
 from itertools import count
+from typing import Any, Callable, Optional
 
 from .identifiers import create_internal_id
 
@@ -14,7 +15,7 @@ __all__ = (
 def create_object_in_collection(
     collection,
     name: str,
-    factory_method: str = None,
+    factory: Optional[Callable[[], Any]] = None,
     internal: bool = False,
     *args,
     **kwds,
@@ -30,9 +31,12 @@ def create_object_in_collection(
             to `True`, it will be passed through `create_internal_id()` to
             ensure that the names we use do not conflict with other public
             names created by the user in the collection.
-        factory_method (str): name of the method to call on the collection
-            in order to create the new item; `None` means to try `new()` if
-            it exists and fall back to `load()` otherwise.
+        factory: a factory function to create the new object. When it is
+            specified, the object will be created by calling the factory
+            function with no arguments, and it will be linked to the
+            collection by calling `link()` on the collection. When it is
+            not specified, the `new()` or `load()` method of the collection will
+            be used instead.
         internal: whether the object is an internal, Skybrush-specific object
             that should be marked explicitly
     """
@@ -45,10 +49,10 @@ def create_object_in_collection(
     if internal:
         name = create_internal_id(name)
 
-    if factory_method is not None:
-        method = getattr(collection, factory_method)
-        object = method(*args, **kwds)
+    if factory is not None:
+        object = factory()
         object.name = name
+        collection.link(object)
     elif hasattr(collection, "new"):
         object = collection.new(name, *args, **kwds)
     else:
@@ -61,7 +65,7 @@ def create_object_in_collection(
 def ensure_object_exists_in_collection(
     collection,
     name: str,
-    factory_method: str = None,
+    factory: Optional[Callable[[], Any]] = None,
     internal: bool = False,
     *args,
     **kwds,
@@ -76,9 +80,12 @@ def ensure_object_exists_in_collection(
             to `True`, it will be passed through `create_internal_id()` to
             ensure that the names we use do not conflict with other public
             names created by the user in the collection.
-        factory_method (str): name of the method to call on the collection
-            in order to create the new item (if needed); `None` means to try
-            `new()` if it exists and fall back to `load()` otherwise.
+        factory: a factory function to create the new object. When it is
+            specified, the object will be created by calling the factory
+            function with no arguments, and it will be linked to the
+            collection by calling `objects.link()` on the collection. When it is
+            not specified, the `new()` or `load()` method of the collection will
+            be used instead.
         internal: whether the object is an internal, Skybrush-specific object
             that should be marked explicitly
 
@@ -93,7 +100,7 @@ def ensure_object_exists_in_collection(
         return existing
     else:
         return create_object_in_collection(
-            collection, name, factory_method, internal, *args, **kwds
+            collection, name, factory, internal, *args, **kwds
         )
 
 

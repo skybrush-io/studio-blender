@@ -2,7 +2,7 @@ import bpy
 
 from typing import Any, Optional
 
-from .decorators import with_scene
+from .utils import with_scene
 
 __all__ = (
     "create_object",
@@ -66,8 +66,13 @@ def link_object_to_scene(object, *, scene: Optional[bpy.types.Scene] = None):
         object: the Blender object
     """
     parent = scene.collection
+
     if isinstance(object, bpy.types.Collection):
-        parent.children.link(object)
+        parent = parent.children
     else:
-        parent.objects.link(object)
+        parent = parent.objects
+
+    if object not in parent.values():
+        parent.link(object)
+
     return object

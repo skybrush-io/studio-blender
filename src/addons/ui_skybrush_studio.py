@@ -35,13 +35,23 @@ for candidate in candidates:
 #############################################################################
 # imports needed by the addon
 
-from sbstudio.plugin.operators.prepare import PrepareSceneOperator
+from sbstudio.plugin.operators import (
+    CreateTakeoffGridOperator,
+    PrepareSceneOperator,
+)
 from sbstudio.plugin.plugin_helpers import register_operator, unregister_operator
 
 
+#: Operators in this addon; operators that require other operators must come
+#: later in the list than their dependencies
+operators = (PrepareSceneOperator, CreateTakeoffGridOperator)
+
+
 def register():
-    register_operator(PrepareSceneOperator)
+    for operator in operators:
+        register_operator(operator)
 
 
 def unregister():
-    unregister_operator(PrepareSceneOperator)
+    for operator in reversed(operators):
+        unregister_operator(operator)

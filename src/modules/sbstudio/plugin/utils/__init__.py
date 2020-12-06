@@ -13,21 +13,17 @@ from .collections import (
 )
 from .decorators import with_scene, with_screen
 from .identifiers import create_internal_id
-from .objects import create_object, duplicate_object, link_object_to_scene
 from .views import find_one_3d_view, find_one_3d_view_and_its_area
 
 __all__ = (
-    "create_object",
     "create_object_in_collection",
     "create_internal_id",
     "descendants_of",
-    "duplicate_object",
     "ensure_object_exists_in_collection",
     "find_empty_slot_in",
     "find_one_3d_view",
     "find_one_3d_view_and_its_area",
     "get_object_in_collection",
-    "link_object_to_scene",
     "overridden_context",
     "remove_if_unused",
     "with_scene",
@@ -85,7 +81,7 @@ def overridden_context(current_context=None, **kwds):
     """
     result = (current_context or bpy.context).copy()
     for key, value in kwds.items():
-        result[key] = value
+        setattr(result, key, value)
     yield result
 
 
