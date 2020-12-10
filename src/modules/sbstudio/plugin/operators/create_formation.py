@@ -6,7 +6,7 @@ from bpy.props import EnumProperty, StringProperty
 from bpy.types import Operator
 from mathutils import Vector
 
-from sbstudio.plugin.formation import create_formation
+from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.selection import (
     get_selected_objects,
     get_selected_vertices_grouped_by_objects,
@@ -15,7 +15,7 @@ from sbstudio.plugin.selection import (
 )
 from sbstudio.plugin.utils import propose_name
 
-__all__ = ("CreateFormationOperator", "create_formation")
+__all__ = ("CreateFormationOperator",)
 
 
 class CreateFormationOperator(Operator):

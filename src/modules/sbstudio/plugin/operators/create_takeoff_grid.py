@@ -9,7 +9,7 @@ from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Templates
-from sbstudio.plugin.formation import create_formation
+from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.selection import select_only
 from sbstudio.plugin.utils import (
     propose_name,

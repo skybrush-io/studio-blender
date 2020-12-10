@@ -10,6 +10,14 @@ from .utils import (
 __all__ = ("Collections", "Templates")
 
 
+#: Default duration of newly created storyboard entries, in seconds
+DEFAULT_STORYBOARD_ENTRY_DURATION = 20
+
+#: Default duration of transitions to leave between storyboard entries,
+#: in seconds
+DEFAULT_STORYBOARD_TRANSITION_DURATION = 20
+
+
 class Collections:
     #: Name of the collection that holds the drones
     DRONES = "Drones"

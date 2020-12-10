@@ -47,12 +47,34 @@ def register_operator(cls):
     bpy.utils.register_class(cls)
 
 
+def register_panel(cls):
+    """Registers the given Blender panel."""
+    _make_annotations(cls)
+    bpy.utils.register_class(cls)
+
+
+def register_type(cls):
+    """Registers the given Blender custom type."""
+    _make_annotations(cls)
+    bpy.utils.register_class(cls)
+
+
 def unregister_from_menu(menu, func):
     _get_menu_by_name(menu).remove(func)
 
 
 def unregister_operator(cls):
     """Unregisters the given Blender operator."""
+    bpy.utils.unregister_class(cls)
+
+
+def unregister_panel(cls):
+    """Unregisters the given Blender panel."""
+    bpy.utils.unregister_class(cls)
+
+
+def unregister_type(cls):
+    """Unregisters the given Blender custom type."""
     bpy.utils.unregister_class(cls)
 
 

@@ -1,5 +1,6 @@
 import bpy
 
+from bpy.types import Collection
 from functools import partial
 from mathutils import Vector
 from typing import Iterable, Optional
@@ -7,7 +8,7 @@ from typing import Iterable, Optional
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils import create_object_in_collection
 
-__all__ = ("create_formation", "create_marker")
+__all__ = ("create_formation", "create_marker", "is_formation")
 
 
 def create_formation(name: str, points: Optional[Iterable[Vector]] = None):
@@ -59,3 +60,14 @@ def create_marker(
     collection.objects.link(marker)
 
     return marker
+
+
+def is_formation(object) -> bool:
+    """Returns whether the given Blender object is a formation object."""
+    if not isinstance(object, Collection):
+        return False
+
+    # We cannot move upwards in the Blender collection hierarchy so we proceed
+    # downwards instead
+    formations = Collections.find_formations(create=False)
+    return formations and object in formations.children.values()
