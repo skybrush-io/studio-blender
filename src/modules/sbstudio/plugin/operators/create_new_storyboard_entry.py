@@ -1,5 +1,3 @@
-"""Blender operator that creates a regular rectangular takeoff grid."""
-
 from .base import StoryboardOperator
 
 from sbstudio.plugin.constants import (
@@ -15,6 +13,7 @@ class CreateNewStoryboardEntryOperator(StoryboardOperator):
 
     bl_idname = "skybrush.create_new_storyboard_entry"
     bl_label = "Create New Storyboard Entry"
+    bl_description = "Creates a new storyboard entry at the end of the storyboard."
 
     def execute_on_storyboard(self, storyboard, context):
         entry = storyboard.entries.add()

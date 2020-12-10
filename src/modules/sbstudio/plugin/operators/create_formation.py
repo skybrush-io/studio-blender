@@ -1,5 +1,3 @@
-"""Blender operator that creates a regular rectangular takeoff grid."""
-
 import bpy
 
 from bpy.props import EnumProperty, StringProperty
@@ -19,12 +17,16 @@ __all__ = ("CreateFormationOperator",)
 
 
 class CreateFormationOperator(Operator):
-    """Blender operator that creates a new formation in the Formations
-    collection and adds the currently selected vertices to it.
+    """Creates a new formation in the Formations collection and adds the
+    currently selected vertices to it.
     """
 
     bl_idname = "skybrush.create_formation_from_selection"
     bl_label = "Create Formation"
+    bl_description = (
+        "Creates a new formation in the Formations collection and optionally "
+        "adds the currently selected vertices to it."
+    )
     bl_options = {"REGISTER", "UNDO"}
 
     name = StringProperty(name="Name", description="Name of the new formation")

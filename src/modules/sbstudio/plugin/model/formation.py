@@ -8,7 +8,12 @@ from typing import Iterable, Optional
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils import create_object_in_collection
 
-__all__ = ("create_formation", "create_marker", "is_formation")
+__all__ = (
+    "create_formation",
+    "create_marker",
+    "get_all_markers_from_formation",
+    "is_formation",
+)
 
 
 def create_formation(name: str, points: Optional[Iterable[Vector]] = None):
@@ -60,6 +65,17 @@ def create_marker(
     collection.objects.link(marker)
 
     return marker
+
+
+def get_all_markers_from_formation(formation) -> list:
+    """Returns a list containing all the markers in the formation.
+
+    This function returns only empty meshes from the formation, not any other
+    objects that were added by the user.
+    """
+    return [
+        point for point in formation.objects if getattr(point, "type", None) == "EMPTY"
+    ]
 
 
 def is_formation(object) -> bool:

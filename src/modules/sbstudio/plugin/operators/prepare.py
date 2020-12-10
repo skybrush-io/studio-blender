@@ -1,7 +1,3 @@
-"""Blender operator that prepares a Blender file to be used with the
-Skybrush Studio plugin.
-"""
-
 from bpy.types import Operator
 
 from sbstudio.plugin.constants import Collections, Templates
@@ -19,14 +15,12 @@ class PrepareSceneOperator(Operator):
 
     * creating the standard "Drones" and "Formations" collections if they do not
       exist yet
-    * creating a drone
+    * creating a drone template and putting it in the "Templates" collection
     """
-
-    # TODO(ntamas): make this operator internal!
 
     bl_idname = "skybrush.prepare"
     bl_label = "Prepare scene for Skybrush"
-    # bl_options = {"INTERNAL"}
+    bl_options = {"INTERNAL"}
 
     def execute(self, context):
         get_file_specific_state().ensure_initialized()

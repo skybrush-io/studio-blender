@@ -7,7 +7,10 @@ from bpy.props import (
     PointerProperty,
 )
 from bpy.types import Collection, PropertyGroup
+from operator import attrgetter
 from typing import Optional
+
+from sbstudio.plugin.errors import StoryboardValidationError
 
 from .formation import is_formation
 
@@ -112,3 +115,39 @@ class Storyboard(PropertyGroup):
         index = self.active_entry_index
         self.entries.remove(index)
         self.active_entry_index = min(max(0, index), len(self.entries))
+
+    def validate_and_sort_entries(self) -> None:
+        """Validates the entries in the storyboard and sorts them by start time,
+        keeping the active entry index point to the same entry as before.
+
+        Returns:
+            the list of entries in the storyboard, sorted by start time
+
+        Raises:
+            StoryboardValidationError: if the storyboard contains overlapping
+                formations
+        """
+        entries = list(self.entries)
+        entries.sort(key=attrgetter("frame_start"))
+
+        for index, (entry, next_entry) in enumerate(zip(entries, entries[1:])):
+            if entry.frame_end > next_entry.frame_start:
+                raise StoryboardValidationError(
+                    f"Storyboard entry {entry.name!r} at index {index + 1} "
+                    f"overlaps with next entry {next_entry.name!r}"
+                )
+
+        # TODO(ntamas): implement sorting. Unfortunately the API of the collection
+        # is so limited that we would need to implement insertion sort here
+        # ourselves
+        """
+        if entries != list(self.entries):
+            active_entry = self.active_entry
+            new_active_index = entries.index(active_entry) if active_entry else 0
+
+            # TODO(ntamas): sort here
+
+            self.active_entry_index = new_active_index
+        """
+
+        return entries

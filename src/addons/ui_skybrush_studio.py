@@ -43,6 +43,7 @@ from sbstudio.plugin.operators import (
     CreateNewStoryboardEntryOperator,
     CreateTakeoffGridOperator,
     PrepareSceneOperator,
+    RecalculateTransitionsOperator,
     RemoveStoryboardEntryOperator,
 )
 from sbstudio.plugin.panels import StoryboardEditor
@@ -70,6 +71,7 @@ operators = (
     CreateNewStoryboardEntryOperator,
     RemoveStoryboardEntryOperator,
     CreateTakeoffGridOperator,
+    RecalculateTransitionsOperator,
 )
 
 #: Panels in this addon

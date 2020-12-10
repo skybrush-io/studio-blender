@@ -1,5 +1,3 @@
-"""Blender operator that creates a regular rectangular takeoff grid."""
-
 import bpy
 
 from bpy.props import FloatProperty, IntProperty
@@ -102,6 +100,9 @@ class CreateTakeoffGridOperator(Operator):
 
     bl_idname = "skybrush.create_takeoff_grid"
     bl_label = "Create Takeoff Grid"
+    bl_description = (
+        "Creates a takeoff grid and optionally the corresponding set of drones"
+    )
     bl_options = {"REGISTER", "UNDO"}
 
     rows = IntProperty(

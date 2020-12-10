@@ -3,7 +3,7 @@ import bpy
 from itertools import count as count_from
 from typing import List
 
-__all__ = ("create_internal_id", "propose_name", "propose_names")
+__all__ = ("create_internal_id", "is_internal_id", "propose_name", "propose_names")
 
 
 def create_internal_id(name: str) -> str:
@@ -20,6 +20,13 @@ def create_internal_id(name: str) -> str:
         `Skybrush[...]`
     """
     return f"Skybrush[{name}]"
+
+
+def is_internal_id(name: str) -> bool:
+    """Returns whether the given ID looks like one that was generated from
+    `create_internal_id()`.
+    """
+    return name.startswith("Skybrush[") and name.endswith("]")
 
 
 def propose_name(template: str, *, for_collection: bool = False) -> str:
