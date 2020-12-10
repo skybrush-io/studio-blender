@@ -36,6 +36,7 @@ for candidate in candidates:
 # imports needed by the addon
 
 from sbstudio.plugin.operators import (
+    CreateFormationOperator,
     CreateTakeoffGridOperator,
     PrepareSceneOperator,
 )
@@ -47,7 +48,11 @@ from sbstudio.plugin.state import (
 
 #: Operators in this addon; operators that require other operators must come
 #: later in the list than their dependencies
-operators = (PrepareSceneOperator, CreateTakeoffGridOperator)
+operators = (
+    PrepareSceneOperator,
+    CreateFormationOperator,
+    CreateTakeoffGridOperator,
+)
 
 
 def register():

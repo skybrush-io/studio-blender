@@ -26,7 +26,7 @@ class PrepareSceneOperator(Operator):
 
     bl_idname = "skybrush.prepare"
     bl_label = "Prepare scene for Skybrush"
-    bl_options = {"INTERNAL"}
+    # bl_options = {"INTERNAL"}
 
     def execute(self, context):
         get_file_specific_state().ensure_initialized()

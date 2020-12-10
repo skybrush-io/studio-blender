@@ -53,6 +53,14 @@ def duplicate_object(
     return link_object_to_scene(duplicate, scene=scene)
 
 
+def get_vertices_of_object(object):
+    """Returns all the vertices in the given object, or an empty list if the
+    object is not a mesh.
+    """
+    data = object.data if object else None
+    return getattr(data, "vertices", [])
+
+
 @with_scene
 def link_object_to_scene(object, *, scene: Optional[bpy.types.Scene] = None):
     """Links a Blender object to the master collection of the given scene.

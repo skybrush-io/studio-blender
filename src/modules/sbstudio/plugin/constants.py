@@ -66,9 +66,9 @@ class Templates:
     def _create_drone_template():
         object = create_icosphere(radius=0.5)
 
-        # The icosphere is created in the current collection of the Blender
+        # The icosphere is created in the current scene collection of the Blender
         # context, but we don't need it there so let's remove it.
-        bpy.context.collection.objects.unlink(object)
+        bpy.context.scene.collection.objects.unlink(object)
 
         # Hide the object from the viewport and the render
         object.hide_viewport = True

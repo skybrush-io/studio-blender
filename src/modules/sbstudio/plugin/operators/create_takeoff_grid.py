@@ -4,15 +4,14 @@ import bpy
 
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Operator
-from functools import partial
 from numpy import mgrid, zeros
 from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.formation import create_formation
 from sbstudio.plugin.selection import select_only
 from sbstudio.plugin.utils import (
-    create_object_in_collection,
     propose_name,
     propose_names,
 )
@@ -48,32 +47,6 @@ def create_drone(location, *, name: str, template=None, collection=None):
     collection.objects.link(drone)
 
     return drone
-
-
-def create_marker(
-    location, name: str, *, type: str = "PLAIN_AXES", size: float = 1, collection=None
-):
-    """Creates a new point marker (typically part of a formation) at the
-    given location.
-
-    Parameters:
-        location: the location where the new marker should be created
-        name: the name of the marker
-        type: the Blender type (shape) of the marker
-        size: the size of the marker in the Blender viewport
-        collection: the collection that the new marker should be a part of;
-            use `None` to add it to the scene collection
-    """
-    collection = collection or bpy.context.scene.scene_collection
-
-    marker = bpy.data.objects.new(name, None)
-    marker.empty_display_size = size
-    marker.empty_display_type = type
-    marker.location = location
-
-    collection.objects.link(marker)
-
-    return marker
 
 
 def create_points_of_takeoff_grid(
@@ -203,21 +176,9 @@ class CreateTakeoffGridOperator(Operator):
         drone_collection = Collections.find_drones()
 
         name = propose_name("Takeoff formation {}", for_collection=True)
-        formation = create_object_in_collection(
-            Collections.find_formations().children,
-            name,
-            factory=partial(bpy.data.collections.new, name),
-        )
+        create_formation(name, points)
 
-        created_objects = []
-
-        for index, point in enumerate(points, 1):
-            marker_name = f"{name} / {index}"
-            marker = create_marker(
-                location=point, name=marker_name, collection=formation, size=0.5
-            )
-            created_objects.append(marker)
-
+        drones = []
         names = propose_names("Drone {}", len(points))
         for name, point in zip(names, points):
             drone = create_drone(
@@ -226,6 +187,6 @@ class CreateTakeoffGridOperator(Operator):
                 template=drone_template,
                 collection=drone_collection,
             )
-            created_objects.append(drone)
+            drones.append(drone)
 
-        select_only(created_objects)
+        select_only(drone)

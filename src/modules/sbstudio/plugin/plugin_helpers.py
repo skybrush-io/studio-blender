@@ -1,6 +1,7 @@
 """Helper functions that can be used in most of our Blender addons."""
 
 from contextlib import contextmanager
+from typing import ContextManager
 
 import bpy
 import re
@@ -56,7 +57,7 @@ def unregister_operator(cls):
 
 
 @contextmanager
-def with_menu(menu, func):
+def use_menu(menu, func):
     """Context manager that registers the given function in a Blender menu when
     entering the context and unregisters it when exiting the context.
     """
@@ -68,7 +69,31 @@ def with_menu(menu, func):
 
 
 @contextmanager
-def with_operator(cls):
+def use_mode_for_object(mode) -> ContextManager[str]:
+    """Context manager that temporarily switches the mode of the active object
+    to a new one and then switches the object back to the original mode when
+    exiting the context.
+
+    Yields:
+        the original mode that was active _before_ entering the given mode
+    """
+    original_mode = bpy.context.object.mode
+    if original_mode == mode:
+        yield original_mode
+    else:
+        context = bpy.context.copy()
+        bpy.ops.object.mode_set(context, mode=mode)
+        try:
+            yield original_mode
+        finally:
+            # Make sure that we switch the mode back for the _original_ object;
+            # that's why we've made a copy. This allows the user to change the
+            # selection in the context without messing up what we do here.
+            bpy.ops.object.mode_set(context, mode=original_mode)
+
+
+@contextmanager
+def use_operator(cls):
     """Context manager that registers the given Blender operator when entering
     the context and unregisters it when exiting the context.
     """

@@ -6,9 +6,12 @@ import bmesh
 import bpy
 
 from contextlib import contextmanager
+from mathutils import Matrix
 from typing import Optional
 
 from sbstudio.model.types import Coordinate3D
+
+from .objects import create_object
 
 __all__ = (
     "create_cube",
@@ -66,8 +69,37 @@ def create_icosphere(
     Returns:
         object: the created mesh object
     """
-    bpy.ops.mesh.primitive_ico_sphere_add(location=center, radius=radius)
-    return _current_object_renamed_to(name)
+    with use_b_mesh() as bm:
+        # "diameter = radius" may look weird, but actually it is correct. It is
+        # probably a bug in Blender.
+        bmesh.ops.create_icosphere(
+            bm, subdivisions=2, diameter=radius, matrix=Matrix(), calc_uvs=True
+        )
+        obj = create_object_from_bmesh(bm, name=name or "Icosphere")
+
+    obj.location = center
+    return obj
+
+
+def create_object_from_bmesh(bm, *, name: Optional[str] = None):
+    """Creates a new Blender object from a B-mesh representation.
+
+    Parameters:
+        bm: the B-mesh to use
+        name: the name of the newly created object
+        free: whether to free the B-mesh after the mesh representation was
+            created
+
+    Returns:
+        the newly created object
+    """
+    mesh = bpy.data.meshes.new("Mesh")
+    bm.to_mesh(mesh)
+
+    obj = create_object(name or "Object", mesh)
+    mesh.name = f"{obj.name} Mesh"
+
+    return obj
 
 
 def create_sphere(
@@ -108,15 +140,27 @@ def edit_mesh(obj):
     if isinstance(obj, bmesh.types.BMesh):
         yield obj
     elif isinstance(obj, bpy.types.Mesh):
-        result = bmesh.new()
-        result.from_mesh(obj)
-        yield result
-        result.to_mesh(obj)
+        with use_b_mesh() as result:
+            result.from_mesh(obj)
+            yield result
+            result.to_mesh(obj)
     else:
-        result = bmesh.new()
-        result.from_mesh(obj.data)
+        with use_b_mesh() as result:
+            result.from_mesh(obj.data)
+            yield result
+            result.to_mesh(obj.data)
+
+
+@contextmanager
+def use_b_mesh():
+    """Context manager that creates a new B-mesh object when entering the
+    context and frees the B-mesh object when exiting the context.
+    """
+    result = bmesh.new()
+    try:
         yield result
-        result.to_mesh(obj.data)
+    finally:
+        result.free()
 
 
 def subdivide_edges(obj, cuts=1):
