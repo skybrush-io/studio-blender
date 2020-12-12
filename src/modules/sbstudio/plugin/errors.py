@@ -1,7 +1,9 @@
+from sbstudio.errors import SkybrushStudioError
+
 __all__ = ("SkybrushStudioAddonError", "StoryboardValidationError")
 
 
-class SkybrushStudioAddonError(RuntimeError):
+class SkybrushStudioAddonError(SkybrushStudioError):
     """Base class for all errors in this addon."""
 
     pass
