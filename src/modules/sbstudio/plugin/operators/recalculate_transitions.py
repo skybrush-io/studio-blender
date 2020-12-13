@@ -1,12 +1,15 @@
 from collections import defaultdict
 
+from sbstudio.plugin.api import api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import StoryboardValidationError
+from sbstudio.plugin.model.formation import get_all_markers_from_formation
 from sbstudio.plugin.transition import (
     create_transition_constraint_between,
     find_transition_constraint_between,
     is_transition_constraint,
 )
+from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
 
@@ -33,44 +36,58 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         # the drones
         formations = set(entry.formation for entry in entries) - {None}
 
-        # For each drone, check whether there exists a constraint between the
-        # drone and all the formations as outlined above. Add new constraints
-        # for drone-formation pairs as needed, and remove unneeded drone-formation
-        # constraints
-        drones = Collections.find_drones().objects
-        constraints_to_keep_by_drones = defaultdict(list)
-        for formation in formations:
-            # Skip empty formations
-            if not len(formation.objects):
-                continue
+        # Create a variable that stores the time when the previous formation of
+        # the storyboard ended
+        end_of_previous_formation = context.scene.frame_start
 
-            for drone in drones:
-                constraint = find_transition_constraint_between(
-                    drone=drone, formation=formation
-                )
-                if constraint is None:
-                    constraint = create_transition_constraint_between(
+        # Get all the drones
+        drones = Collections.find_drones().objects
+
+        with create_position_evaluator() as get_positions_of:
+            # Iterate through the storyboard
+            for entry in entries:
+                formation = entry.formation
+                markers = get_all_markers_from_formation(formation)
+
+                # We need to create a transition between the places where the drones
+                # are at the end of the previous formation and the points of the
+                # current formation
+                source = get_positions_of(drones, frame=end_of_previous_formation)
+                target = get_positions_of(markers, frame=entry.frame_start)
+                match = api.match_points(source, target)
+
+                # match[i] now contains the index of the drone that the i-th
+                # target point was matched to. We need to invert the mapping.
+                inverted_mapping = [None] * len(source)
+                for target_index, source_index in enumerate(match):
+                    if source_index is not None:
+                        inverted_mapping[source_index] = target_index
+
+                # Now we have the index of the target point that each drone
+                # should be mapped to, and we have `None` for those drones that
+                # will not participate in the formation
+                for source_index, drone in enumerate(drones):
+                    target_index = inverted_mapping[source_index]
+                    constraint = find_transition_constraint_between(
                         drone=drone, formation=formation
                     )
-                else:
-                    # TODO(ntamas): delete keyframes from constraint
-                    pass
 
-                constraints_to_keep_by_drones[drone].append(constraint)
+                    if target_index is None:
+                        # This drone will not participate in this formation so
+                        # we need to delete the constraint that ties the drone
+                        # to the formation
+                        if constraint is not None:
+                            drone.constraints.remove(constraint)
+                    else:
+                        # If we don't have a constraint between the drone
+                        # and the formation, create one
+                        if constraint is None:
+                            constraint = create_transition_constraint_between(
+                                drone=drone, formation=formation
+                            )
 
-        # For any formations that are _not_ in the selected ones, delete the
-        # constraints between them and the drones
-        for drone in drones:
-            constraints_to_keep = constraints_to_keep_by_drones.get(drone, ())
-            constraints_to_delete = []
-            for constraint in drone.constraints:
-                if (
-                    is_transition_constraint(constraint)
-                    and constraint not in constraints_to_keep
-                ):
-                    constraints_to_delete.append(constraint)
-
-            for constraint in constraints_to_delete:
-                drone.constraints.remove(constraint)
+                        # Set the target of the constraint to the appropriate
+                        # point of the formation
+                        constraint.target = markers[target_index]
 
         return {"FINISHED"}
