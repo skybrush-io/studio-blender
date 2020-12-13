@@ -153,7 +153,7 @@ def _get_location(object):
         location of object in the world frame
 
     """
-    return tuple(object.matrix_world[i][3] for i in range(3))
+    return tuple(object.matrix_world.translation)
 
 
 def _get_framerange(context, settings):
