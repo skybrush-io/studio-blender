@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from gzip import compress
 from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
+from ssl import create_default_context, CERT_NONE
 from typing import Any, ContextManager, List, Optional, Sequence
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
@@ -78,7 +79,9 @@ class SkybrushStudioAPI:
         """
         if not url.endswith("/"):
             url += "/"
+
         self._root = url
+        self._request_context = create_default_context()
 
     @contextmanager
     def _send_request(self, url: str, data: Any = None) -> ContextManager[Response]:
@@ -125,10 +128,22 @@ class SkybrushStudioAPI:
 
         url = urljoin(self._root, url.lstrip("/"))
         req = Request(url, data=data, headers=headers, method=method)
-        with urlopen(req) as raw_response:
+        with urlopen(req, context=self._request_context) as raw_response:
             response = Response(raw_response)
             response._run_sanity_checks()
             yield response
+
+    def _skip_ssl_checks(self) -> None:
+        """Configures the API object to skip SSL checks when making requests.
+        This is a _very_ bad practice, but apparently there is some problem with
+        the macOS version of Blender that prevents it from finding the system
+        certificates, and there are reports that the same problem also applies
+        to Linux, hence we provide this method for sake of convenience.
+        """
+        ctx = create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = CERT_NONE
+        self._request_context = ctx
 
     def match_points(
         self, source: Sequence[Coordinate3D], target: Sequence[Coordinate3D]
@@ -146,19 +161,3 @@ class SkybrushStudioAPI:
             raise SkybrushStudioAPIError("invalid response version")
 
         return result.get("mapping")
-
-
-def test():
-    api = SkybrushStudioAPI()
-    print(
-        repr(
-            api.match_points(
-                [[0, 0, 0], [1, 0, 0], [-1, 0, 0]],
-                [[0, 0, 10], [0, 1, 10], [0, -1, 10]],
-            )
-        )
-    )
-
-
-if __name__ == "__main__":
-    test()
