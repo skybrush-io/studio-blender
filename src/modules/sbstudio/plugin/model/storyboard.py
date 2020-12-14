@@ -137,6 +137,14 @@ class Storyboard(PropertyGroup):
                     f"overlaps with next entry {next_entry.name!r}"
                 )
 
+        # Currently we don't support the same formation appearing multiple times
+        # in the storyboard. This should be improved later. TODO(ntamas)
+        formation_set = set(entry.formation for entry in entries)
+        if len(formation_set) < len(entries):
+            raise StoryboardValidationError(
+                "Each formation may appear only once in the storyboard"
+            )
+
         # TODO(ntamas): implement sorting. Unfortunately the API of the collection
         # is so limited that we would need to implement insertion sort here
         # ourselves
