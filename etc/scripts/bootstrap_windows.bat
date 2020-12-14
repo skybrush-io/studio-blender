@@ -9,9 +9,7 @@ set REPO_ROOT="%SCRIPT_ROOT%\..\.."
 
 cd %REPO_ROOT%
 
-if EXIST ".venv\" (
-    call poetry install -E standalone
-)
+call poetry install -E standalone
 
 del /Q "dev\"
 mkdir "dev\vendor\skybrush"
