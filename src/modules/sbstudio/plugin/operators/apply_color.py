@@ -129,6 +129,11 @@ class ApplyColorsToSelectedDronesOperator(Operator):
                 + (origin[2] - point[2]) ** 2
                 for point in positions
             ]
+        else:
+            priorities = None
+
+        if priorities is None:
+            return selection
 
         order = list(range(len(selection)))
         order.sort(key=priorities.__getitem__)
