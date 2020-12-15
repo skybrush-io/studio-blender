@@ -1,26 +1,19 @@
 import bpy
 
+from bpy.types import Material
+from typing import Optional
+
 from sbstudio.model.types import RGBAColor
 
+from .errors import SkybrushStudioAddonError
+
 __all__ = (
-    "add_light_emission_to_material",
     "create_colored_material",
     "create_glowing_material",
+    "get_shader_node_and_input_for_diffuse_color_of_material",
     "set_diffuse_color_of_material",
     "set_specular_reflection_intensity_of_material",
 )
-
-
-def add_light_emission_to_material(material, emit=0.0):
-    """Modifies the given material such that it emits light on its own.
-
-    Parameters:
-        emit (float): amount of light to emit
-    """
-    if False and material.use_nodes:
-        material.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value = (
-            emit * 10
-        )
 
 
 def _create_material(name: str):
@@ -80,6 +73,20 @@ def create_glowing_material(
     return mat
 
 
+def get_material_for_led_light_color(drone) -> Optional[Material]:
+    """Returns the material of the given drone object that is supposed to
+    correspond to the LED light.
+
+    Returns:
+        the material of the LED light or `None` if no such material has been
+        set up on the drone yet
+    """
+    if len(drone.material_slots) > 0:
+        return drone.material_slots[0].material
+    else:
+        return None
+
+
 def set_diffuse_color_of_material(material, color):
     """Sets the diffuse color of the given material to the given value.
 
@@ -93,12 +100,38 @@ def set_diffuse_color_of_material(material, color):
         # Material is using shader nodes so we need to adjust the diffuse
         # color in the shader as well (the base property would control only
         # what we see in the preview window)
-        nodes = material.node_tree.nodes
-        try:
-            nodes["Emission"].inputs["Color"].default_value = color
-        except KeyError:
-            nodes["Principled BSDF"].inputs["Base Color"].default_value = color
+        _, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
+        input.default_value = color
+
     material.diffuse_color = color
+
+
+def get_shader_node_and_input_for_diffuse_color_of_material(material):
+    """Returns a reference to the shader node and its input that controls the
+    diffuse color of the given material.
+
+    The material must use a principled BSDF or an emission shader.
+
+    Parameters:
+        material: the Blender material to update
+
+    Raises:
+        SkybrushStudioAddonError: if the material does not use shader nodes
+    """
+    nodes = material.node_tree.nodes
+    try:
+        node = nodes["Emission"]
+        input = node.inputs["Color"]
+        return node, input
+    except KeyError:
+        try:
+            node = nodes["Principled BSDF"]
+            input = node.inputs["Base Color"]
+            return node, input
+        except KeyError:
+            raise SkybrushStudioAddonError(
+                "Material does not have a diffuse color shader node"
+            )
 
 
 def set_specular_reflection_intensity_of_material(material, intensity):

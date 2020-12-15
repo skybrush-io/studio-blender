@@ -41,6 +41,12 @@ def register_in_menu(menu, func):
     _get_menu_by_name(menu).append(func)
 
 
+def register_header(cls):
+    """Registers the given Blender header."""
+    _make_annotations(cls)
+    bpy.utils.register_class(cls)
+
+
 def register_operator(cls):
     """Registers the given Blender operator."""
     _make_annotations(cls)
@@ -61,6 +67,11 @@ def register_type(cls):
 
 def unregister_from_menu(menu, func):
     _get_menu_by_name(menu).remove(func)
+
+
+def unregister_header(cls):
+    """Unregisters the given Blender header."""
+    bpy.utils.unregister_class(cls)
 
 
 def unregister_operator(cls):

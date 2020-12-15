@@ -84,7 +84,7 @@ class Templates:
         object.hide_render = True
 
         # Add a shiny light emission to the object
-        material = create_glowing_material("Drone template material", strength=8)
+        material = create_glowing_material("Drone template material")
         object.active_material = material
 
         # Make sure that the object is not selected

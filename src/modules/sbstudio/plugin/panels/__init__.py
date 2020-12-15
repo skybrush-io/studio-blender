@@ -1,3 +1,7 @@
+from .led_control import LEDControlPanel
 from .storyboard_editor import StoryboardEditor
 
-__all__ = ("StoryboardEditor",)
+__all__ = (
+    "LEDControlPanel",
+    "StoryboardEditor",
+)

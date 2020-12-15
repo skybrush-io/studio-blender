@@ -138,7 +138,8 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         # TODO(ntamas): sort the constraints such that the ones corresponding
         # to formations that come later (in time) appear later in the constraint
-        # chain
+        # chain. Right now it doesn't cause any problems, but it would be nicer
+        # for the user as it would be easier to find a particular constraint.
 
         # TODO(ntamas): currently it is not possible for a formation to appear
         # more than once in the sequence

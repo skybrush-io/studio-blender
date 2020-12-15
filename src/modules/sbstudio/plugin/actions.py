@@ -9,6 +9,7 @@ from .utils.collections import ensure_object_exists_in_collection
 
 __all__ = (
     "ensure_action_exists_for_object",
+    "find_all_f_curves_for_data_path",
     "find_f_curve_for_data_path",
     "get_action_for_object",
     "get_name_of_action_for_object",
@@ -22,7 +23,7 @@ def get_name_of_action_for_object(object) -> str:
     return f"{object.name} Action"
 
 
-def ensure_action_exists_for_object(object) -> Action:
+def ensure_action_exists_for_object(object, name: Optional[str] = None) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
     """
@@ -34,7 +35,7 @@ def ensure_action_exists_for_object(object) -> Action:
         object.animation_data_create()
 
     action = ensure_object_exists_in_collection(
-        bpy.data.actions, get_name_of_action_for_object(object)
+        bpy.data.actions, name or get_name_of_action_for_object(object)
     )
     object.animation_data.action = action
 
@@ -72,3 +73,28 @@ def find_f_curve_for_data_path(object_or_action, data_path: str) -> Optional[FCu
             return curve
 
     return None
+
+
+def find_all_f_curves_for_data_path(
+    object_or_action, data_path: str
+) -> Optional[FCurve]:
+    """Finds all F-curves in the F-curves of the action whose data path
+    matches the given property, sorted by the array index of the curves.
+
+    Parameters:
+        object_or_action: the object or action
+        data_path: the data path of the F-curves we are looking for
+
+    Returns:
+        the list of matching F-curves
+    """
+    if not isinstance(object_or_action, Action):
+        action = get_action_for_object(object_or_action)
+        if not action:
+            return []
+    else:
+        action = object_or_action
+
+    # TODO(ntamas): sort by array index!
+    result = [curve for curve in action.fcurves if curve.data_path == data_path]
+    return result

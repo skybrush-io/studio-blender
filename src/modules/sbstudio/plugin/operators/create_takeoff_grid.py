@@ -7,7 +7,11 @@ from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.materials import get_material_for_led_light_color
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.operators.detach_materials_from_template import (
+    detach_material_from_drone_template,
+)
 from sbstudio.plugin.selection import select_only
 from sbstudio.plugin.utils import (
     propose_name,
@@ -176,6 +180,8 @@ class CreateTakeoffGridOperator(Operator):
         drone_template = Templates.find_drone()
         drone_collection = Collections.find_drones()
 
+        template_material = get_material_for_led_light_color(drone_template)
+
         name = propose_name("Takeoff formation {}", for_collection=True)
         create_formation(name, points)
 
@@ -187,6 +193,9 @@ class CreateTakeoffGridOperator(Operator):
                 name=name,
                 template=drone_template,
                 collection=drone_collection,
+            )
+            detach_material_from_drone_template(
+                drone, template_material=template_material
             )
             drones.append(drone)
 

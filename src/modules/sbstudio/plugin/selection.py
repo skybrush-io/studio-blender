@@ -1,12 +1,15 @@
 from bpy.types import Collection, Context
 from typing import Optional
 
+from .constants import Collections
 from .objects import get_vertices_of_object
 from .plugin_helpers import use_mode_for_object
 from .utils import with_context
 
 __all__ = (
     "deselect_all",
+    "get_selected_drones",
+    "get_selected_objects_from_collection",
     "get_selected_vertices",
     "get_selected_vertices_grouped_by_objects",
     "has_selection",
@@ -21,6 +24,15 @@ def deselect_all(*, context: Optional[Context] = None):
     """
     for obj in context.selected_objects:
         obj.select_set(False)
+
+
+@with_context
+def get_selected_drones(*, context: Optional[Context] = None):
+    """Returns the list of selected drones in the given context."""
+    drones = Collections.find_drones(create=False)
+    return (
+        get_selected_objects_from_collection(drones, context=context) if drones else []
+    )
 
 
 @with_context
@@ -40,6 +52,20 @@ def get_selected_objects(*, context: Optional[Context] = None):
     else:
         active_object = context.active_object
         return [active_object] if active_object else []
+
+
+@with_context
+def get_selected_objects_from_collection(
+    collection, *, context: Optional[Context] = None
+):
+    """Returns the list of selected objects from the given collection, in the
+    order they appear in the `context.selected_objects` array. The latter is
+    important; this is used by the gradient coloring operator.
+    """
+    result = [obj for obj in collection.objects if obj.select_get()]
+    selection = get_selected_objects(context=context)
+    result.sort(key=selection.index)
+    return result
 
 
 @with_context

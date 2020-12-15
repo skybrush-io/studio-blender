@@ -4,7 +4,11 @@ from bpy.types import Action, FCurve
 from operator import eq
 from typing import Callable, Optional, Sequence, Tuple, Union
 
-from .actions import find_f_curve_for_data_path, get_action_for_object
+from .actions import (
+    find_f_curve_for_data_path,
+    find_all_f_curves_for_data_path,
+    get_action_for_object,
+)
 
 __all__ = ("clear_keyframes", "set_keyframes")
 
@@ -67,22 +71,33 @@ def clear_keyframes(
 def set_keyframes(
     object,
     data_path: str,
-    values: Sequence[Tuple[float, float]],
+    values: Sequence[Tuple[float, Optional[Union[float, Sequence[float]]]]],
     clear_range: bool = False,
-) -> None:
+    interpolation: Optional[str] = None,
+) -> list:
     """Sets the values of multiple keyframes to specific values, optionally
     removing any other keyframes in the range spanned by the values.
 
     Parameters:
         object: the object on which the keyframes are to be set
         data_path: the data path to use
-        values: the values to set; it is assumed to be sorted by time
+        values: the values to set. Each item must be a pair consisting of a
+            frame number and a value, and the entire sequence is assumed to be
+            sorted by time. The value may be `None` for keyframes where we want
+            to keep the current value.
         clear_range: whether to remove any additional keyframes in the range
             spanned by the values
+        interpolation: interpolation type to set for the affected keyframes;
+            `None` to use the Blender default
 
     Returns:
-        the keyframes that were set
+        the keyframes that were added
     """
+    if not values:
+        return
+
+    is_array = any(isinstance(value[1], (tuple, list)) for value in values)
+
     if clear_range and len(values) >= 2:
         frame_start, frame_end = values[0][0], values[-1][0]
         clear_keyframes(object, frame_start, frame_end, data_path)
@@ -93,9 +108,31 @@ def set_keyframes(
     for frame, value in values:
         target.keyframe_insert(prop, frame=frame)
 
-    fcurve = find_f_curve_for_data_path(object, data_path)
-    assert fcurve is not None
+    if is_array:
+        fcurves = find_all_f_curves_for_data_path(object, data_path)
+        result = []
+        for fcurve in fcurves:
+            array_index = fcurve.array_index
+            values_for_curve = [
+                (frame, value[array_index] if value is not None else None)
+                for frame, value in values
+            ]
+            result.extend(_update_keyframes_on_single_f_curve(fcurve, values_for_curve))
+    else:
+        fcurve = find_f_curve_for_data_path(object, data_path)
+        assert fcurve is not None
+        result = _update_keyframes_on_single_f_curve(fcurve, values)
 
+    if interpolation is not None:
+        for point in result:
+            point.interpolation = interpolation
+
+    return result
+
+
+def _update_keyframes_on_single_f_curve(
+    fcurve: FCurve, values: Sequence[Tuple[float, float]]
+) -> list:
     result = []
 
     if values:
@@ -103,9 +140,11 @@ def set_keyframes(
         next_value = values[index]
         for point in fcurve.keyframe_points:
             if point.co[0] == next_value[0]:
-                point.co[1] = next_value[1]
-                point.handle_left[1] = next_value[1]
-                point.handle_right[1] = next_value[1]
+                if next_value[1] is not None:
+                    point.co[1] = next_value[1]
+                    point.handle_left[1] = next_value[1]
+                    point.handle_right[1] = next_value[1]
+
                 result.append(point)
 
                 index += 1
