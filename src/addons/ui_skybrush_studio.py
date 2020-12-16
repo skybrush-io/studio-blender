@@ -40,6 +40,7 @@ for candidate in candidates:
 from sbstudio.plugin.model import (
     DroneShowAddonProperties,
     LEDControlPanelProperties,
+    SafetyCheckProperties,
     StoryboardEntry,
     Storyboard,
 )
@@ -54,7 +55,7 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     SwapColorsInLEDControlPanelOperator,
 )
-from sbstudio.plugin.panels import LEDControlPanel, StoryboardEditor
+from sbstudio.plugin.panels import LEDControlPanel, SafetyCheckPanel, StoryboardEditor
 from sbstudio.plugin.plugin_helpers import (
     register_header,
     register_operator,
@@ -69,12 +70,15 @@ from sbstudio.plugin.state import (
     register as register_state,
     unregister as unregister_state,
 )
+from sbstudio.plugin.tasks import SafetyCheckTask
+
 
 #: Custom types in this addon
 types = (
     StoryboardEntry,
     Storyboard,
     LEDControlPanelProperties,
+    SafetyCheckProperties,
     DroneShowAddonProperties,
 )
 
@@ -93,10 +97,13 @@ operators = (
 )
 
 #: Panels in this addon
-panels = (LEDControlPanel, StoryboardEditor)
+panels = (LEDControlPanel, StoryboardEditor, SafetyCheckPanel)
 
 #: Headers in this addon
 headers = ()
+
+#: Background tasks in this addon
+tasks = (SafetyCheckTask(),)
 
 
 def register():
@@ -109,10 +116,14 @@ def register():
         register_panel(panel)
     for header in headers:
         register_header(header)
+    for task in tasks:
+        task.register()
     Scene.skybrush = PointerProperty(type=DroneShowAddonProperties)
 
 
 def unregister():
+    for task in tasks:
+        task.unregister()
     for header in reversed(headers):
         unregister_header(header)
     for panel in reversed(panels):
