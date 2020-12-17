@@ -19,7 +19,7 @@ def enable_bloom_effect_if_needed() -> None:
     Blender scenes.
     """
     if bpy.context.scene.skybrush.settings.use_bloom_effect:
-        drones = Collections.find_drones()
+        drones = Collections.find_drones(create=False)
         if drones:
             enable_bloom_effect()
 
