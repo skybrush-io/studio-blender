@@ -38,33 +38,35 @@ class SafetyCheckOverlay(Overlay):
         bgl.glEnable(bgl.GL_BLEND)
 
         if self._nearest_neighbor_coords is not None:
-            if self._nearest_neighbor_batch is None:
-                self._nearest_neighbor_batch = [
-                    batch_for_shader(
-                        self._shader,
-                        "LINES",
-                        {"pos": self._nearest_neighbor_coords},
-                    ),
-                    batch_for_shader(
-                        self._shader,
-                        "POINTS",
-                        {"pos": self._nearest_neighbor_coords},
-                    ),
-                ]
-
             safety_check = bpy.context.scene.skybrush.safety_check
-            threshold = safety_check.proximity_warning_threshold
-            if threshold > 0 and safety_check.min_distance < threshold:
-                color = (1, 0, 0, 1)
-            else:
-                color = (0, 1, 0, 1)
 
-            self._shader.bind()
-            self._shader.uniform_float("color", color)
-            bgl.glLineWidth(5)
-            bgl.glPointSize(20)
-            for batch in self._nearest_neighbor_batch:
-                batch.draw(self._shader)
+            if self._nearest_neighbor_batch is None:
+                if safety_check.should_show_proximity_warning:
+                    # Construct the shader batch to draw the lines on the UI
+                    self._nearest_neighbor_batch = [
+                        batch_for_shader(
+                            self._shader,
+                            "LINES",
+                            {"pos": self._nearest_neighbor_coords},
+                        ),
+                        batch_for_shader(
+                            self._shader,
+                            "POINTS",
+                            {"pos": self._nearest_neighbor_coords},
+                        ),
+                    ]
+                else:
+                    # Nearest point pair is far enough, we don't need the
+                    # proximity warning
+                    self._nearest_neighbor_batch = []
+
+            if self._nearest_neighbor_batch:
+                self._shader.bind()
+                self._shader.uniform_float("color", (1, 0, 0, 1))
+                bgl.glLineWidth(5)
+                bgl.glPointSize(20)
+                for batch in self._nearest_neighbor_batch:
+                    batch.draw(self._shader)
 
     def dispose(self) -> None:
         self._nearest_neighbor_batch = None
