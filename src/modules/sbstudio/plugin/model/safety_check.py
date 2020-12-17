@@ -17,6 +17,6 @@ class SafetyCheckProperties(PropertyGroup):
     min_distance = FloatProperty(
         name="Min distance",
         description="Minimum distance along all possible pairs of drones, calculated between their centers of mass",
-        default=2.7,
         unit="LENGTH",
+        default=0.0,
     )

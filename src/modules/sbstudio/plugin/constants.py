@@ -49,7 +49,7 @@ class Collections:
         if create:
             return ensure_object_exists_in_collection(coll, key)
         else:
-            return get_object_in_collection(coll, key)
+            return get_object_in_collection(coll, key, default=None)
 
 
 class Templates:

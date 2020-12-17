@@ -16,6 +16,7 @@ def run_safety_check(scene, depsgraph):
 
     drones = Collections.find_drones(create=False)
     if not drones:
+        safety_check.min_distance = -1  # invalid
         return
 
     positions = [tuple(drone.matrix_world.translation) for drone in drones.objects]

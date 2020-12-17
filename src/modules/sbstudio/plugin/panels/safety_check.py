@@ -28,4 +28,8 @@ class SafetyCheckPanel(Panel):
 
         layout = self.layout
 
-        layout.prop(safety_check, "min_distance")
+        row = layout.row()
+        if safety_check.min_distance >= 0:
+            row.label(text=f"Min distance: {safety_check.min_distance:.1f} m")
+        else:
+            row.label(text=f"Min distance: ---")
