@@ -309,9 +309,9 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     This is a helper function for SkybrushExportOperator
 
     Parameters:
-        context - the main Blender context
-        settings - export settings
-        filepath - the output path where the export should write
+        context: the main Blender context
+        settings: export settings
+        filepath: the output path where the export should write
 
     """
 
@@ -354,7 +354,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
     """Export object trajectories and curves into Skybrush-compatible format."""
 
     bl_idname = "export_scene.skybrush"
-    bl_label = "Export Skybrush SKYC"
+    bl_label = "Export Skybrush Compiled Format"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush files
@@ -363,11 +363,12 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
     # output all objects or only selected ones
     export_selected = BoolProperty(
-        name="Export selected objects",
+        name="Export selected objects only",
         default=True,
-        description="Check if selected objects should be exported. "
-        "Otherwise all objects with filters defined under SUPPORTED_TYPES "
-        "and SUPPORTED_NAMES will be used",
+        description=(
+            "Export only the selected drones from the scene. Uncheck to export "
+            "all drones, irrespectively of the selection."
+        ),
     )
 
     # frame range source
@@ -384,11 +385,12 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
     # output frame rate
     output_fps = FloatProperty(
-        name="Output FPS",
+        name="Frame rate",
         default=1,
-        description="Temporal resolution of exported trajectory [1/s]",
+        description="Temporal resolution of exported trajectory (frames per second)",
     )
 
+    """
     # show origin
     show_origin = StringProperty(
         name="Show origin",
@@ -399,20 +401,22 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
     # show orientation
     show_orientation = FloatProperty(
-        name="show_orientation",
+        name="Show orientation",
         default=0,
         step=1,
         precision=2,
         description="Orientation of exported relative coordinate system "
         "(CW from N towards E) [deg]",
     )
+    """
 
     def execute(self, context):
         filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
         settings = {
             "export_selected": self.export_selected,
             "frame_range_source": self.frame_range_source,
-            "output_fps": self.output_fps,
+            "output_fps": self.output_fps
+            """
             "show_origin": [
                 float(x)
                 for x in self.show_origin.replace(",", " ")
@@ -421,6 +425,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
                 .split()
             ],
             "show_orientation": self.show_orientation,
+            """
         }
 
         _write_skybrush_file(context, settings, filepath)
