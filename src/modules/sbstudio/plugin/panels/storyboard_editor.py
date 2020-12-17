@@ -52,5 +52,7 @@ class StoryboardEditor(Panel):
             col.prop(entry, "duration")
             col.prop(entry, "is_name_customized")
 
+        layout.separator()
+
         col = layout.column()
         col.operator("skybrush.recalculate_transitions")

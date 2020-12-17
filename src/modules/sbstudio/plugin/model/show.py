@@ -3,6 +3,7 @@ from bpy.types import PropertyGroup
 
 from .led_control import LEDControlPanelProperties
 from .safety_check import SafetyCheckProperties
+from .settings import DroneShowAddonSettings
 from .storyboard import Storyboard
 
 __all__ = ("DroneShowAddonProperties",)
@@ -18,4 +19,5 @@ class DroneShowAddonProperties(PropertyGroup):
 
     led_control = PointerProperty(type=LEDControlPanelProperties)
     safety_check = PointerProperty(type=SafetyCheckProperties)
+    settings = PointerProperty(type=DroneShowAddonSettings)
     storyboard = PointerProperty(type=Storyboard)

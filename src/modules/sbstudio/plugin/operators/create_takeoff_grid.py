@@ -17,6 +17,7 @@ from sbstudio.plugin.utils import (
     propose_name,
     propose_names,
 )
+from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 
 __all__ = ("CreateTakeoffGridOperator",)
 
@@ -200,3 +201,5 @@ class CreateTakeoffGridOperator(Operator):
             drones.append(drone)
 
         select_only(drone)
+
+        enable_bloom_effect_if_needed()

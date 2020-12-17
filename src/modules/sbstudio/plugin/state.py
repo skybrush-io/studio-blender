@@ -12,7 +12,6 @@ from .utils import (
     ensure_object_exists_in_collection,
     get_object_in_collection,
 )
-from .views import find_all_3d_views
 
 
 class StateBase(metaclass=ABCMeta):
@@ -70,11 +69,7 @@ class _SkybrushStudioFileState:
         """Initializes the plugin in the current file, assuming that it is not
         initialized yet.
         """
-        # Turn on the glow effect
-        bpy.context.scene.eevee.use_bloom = True
-        bpy.context.scene.eevee.bloom_radius = 4
-        for space in find_all_3d_views():
-            space.shading.type = "MATERIAL"
+        pass
 
 
 #: File-specific state object

@@ -52,3 +52,7 @@ class LEDControlPanel(Panel):
         params = row.operator("skybrush.apply_colors_to_selection", text="Fade to")
         params.color = "SECONDARY"
         params.fade = True
+
+        layout.separator()
+
+        layout.prop(scene.skybrush.settings, "use_bloom_effect")

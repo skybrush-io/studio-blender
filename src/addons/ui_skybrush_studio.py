@@ -39,6 +39,7 @@ for candidate in candidates:
 
 from sbstudio.plugin.model import (
     DroneShowAddonProperties,
+    DroneShowAddonSettings,
     LEDControlPanelProperties,
     SafetyCheckProperties,
     StoryboardEntry,
@@ -70,7 +71,7 @@ from sbstudio.plugin.state import (
     register as register_state,
     unregister as unregister_state,
 )
-from sbstudio.plugin.tasks import SafetyCheckTask
+from sbstudio.plugin.tasks import InitializationTask, SafetyCheckTask
 
 
 #: Custom types in this addon
@@ -79,6 +80,7 @@ types = (
     Storyboard,
     LEDControlPanelProperties,
     SafetyCheckProperties,
+    DroneShowAddonSettings,
     DroneShowAddonProperties,
 )
 
@@ -103,7 +105,7 @@ panels = (LEDControlPanel, StoryboardEditor, SafetyCheckPanel)
 headers = ()
 
 #: Background tasks in this addon
-tasks = (SafetyCheckTask(),)
+tasks = (InitializationTask(), SafetyCheckTask())
 
 
 def register():

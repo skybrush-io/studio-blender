@@ -110,8 +110,8 @@ class SafetyCheckProperties(PropertyGroup):
     ) -> None:
         """Clears the result of the last minimum distance calculation."""
         self.min_distance = distance
-        self.closest_pair_first = first
-        self.closest_pair_second = second
+        self.closest_pair_first = first if first is not None else (0, 0, 0)
+        self.closest_pair_second = second if second is not None else (0, 0, 0)
         self._refresh_overlay()
 
     def _refresh_overlay(self) -> None:
