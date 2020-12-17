@@ -17,6 +17,9 @@ DEFAULT_STORYBOARD_ENTRY_DURATION = 20
 #: in seconds
 DEFAULT_STORYBOARD_TRANSITION_DURATION = 20
 
+#: Drone radius
+DRONE_RADIUS = 0.5
+
 
 class Collections:
     #: Name of the collection that holds the drones
@@ -72,7 +75,7 @@ class Templates:
 
     @staticmethod
     def _create_drone_template():
-        object = create_icosphere(radius=0.5)
+        object = create_icosphere(radius=DRONE_RADIUS)
 
         # The icosphere is created in the current scene collection of the Blender
         # context, but we don't need it there so let's remove it.

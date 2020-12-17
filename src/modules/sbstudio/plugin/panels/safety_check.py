@@ -1,5 +1,7 @@
 from bpy.types import Panel
 
+__all__ = ("SafetyCheckPanel",)
+
 
 class SafetyCheckPanel(Panel):
     """Custom Blender panel that allows the user to set the parameters of the
@@ -28,8 +30,20 @@ class SafetyCheckPanel(Panel):
 
         layout = self.layout
 
-        row = layout.row()
-        if safety_check.min_distance >= 0:
-            row.label(text=f"Min distance: {safety_check.min_distance:.1f} m")
-        else:
-            row.label(text=f"Min distance: ---")
+        layout.label(text="Current frame")
+
+        col = layout.column()
+        col.alert = safety_check.should_show_proximity_warning
+        col.prop(safety_check, "min_distance")
+        col.alert = False
+
+        col.separator()
+
+        col.prop(safety_check, "proximity_warning_enabled")
+        row = col.row()
+        row.prop(
+            safety_check,
+            "proximity_warning_threshold",
+            text="",
+        )
+        row.enabled = safety_check.proximity_warning_enabled

@@ -129,4 +129,8 @@ def find_nearest_neighbors(points):
         pair, and their distance
     """
     points = array(points, dtype=float)
+    if len(points.shape) < 2:
+        # we only have one point
+        return None, None, inf
+
     return _nearest_neighbors_divide_and_conquer(points)
