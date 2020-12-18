@@ -4,12 +4,12 @@ from abc import ABCMeta, abstractmethod
 from gzip import compress
 from json import JSONEncoder
 from pathlib import Path
-from shutil import copyfileobj
 from typing import Union
 from urllib.request import urlopen, Request
 
 from ..enums import SkybrushJSONFormat
 
+from sbstudio.api.base import Response
 from sbstudio.utils import create_path_and_open
 
 
@@ -103,30 +103,18 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
         req = Request(url, data=data, headers=headers, method="POST")
         # send it and wait for response
         log.info("sending http POST request to studio.skybrush.io")
-        with urlopen(req) as response:
-            # error checks
-            status_code = response.getcode()
-            info = response.info()
-            content_type = info.get_content_type()
-            if status_code != 200 or content_type not in [
-                "application/octet-stream",
-                "application/json",
-            ]:
-                log.error(f"error in response: status_code={status_code}, info={info}")
-                return None
+        with urlopen(req) as raw_response:
+            response = Response(raw_response)
+            # check response for errors
+            response._run_sanity_checks()
             # return response as a string
             if output is None:
                 log.info("response received, returning as a string")
-                data = response.read()
-                if content_type == "application/octet-stream":
-                    data = data.decode("utf-8")
-                return data
+                return response.as_str()
             # or write it to a file
             else:
                 log.info("response received, writing to file")
-                mode = "wb" if content_type == "application/octet-stream" else "w"
-                with create_path_and_open(output, mode) as f:
-                    copyfileobj(response, f)
+                response.to_file(output)
                 return None
 
         return None

@@ -98,4 +98,4 @@ class SkybrushMatcher(SkybrushAPIOperationBase):
             json_data = self._ask_skybrush_studio_server("match-points", None)
             data = loads(json_data)
 
-            return data["mapping"]
+            return data.get("mapping")

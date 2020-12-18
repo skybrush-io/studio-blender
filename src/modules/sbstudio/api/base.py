@@ -4,12 +4,18 @@ from contextlib import contextmanager
 from gzip import compress
 from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
+from natsort import natsorted
+from pathlib import Path
+from shutil import copyfileobj
 from ssl import create_default_context, CERT_NONE
-from typing import Any, ContextManager, List, Optional, Sequence
+from typing import Any, ContextManager, Dict, List, Optional, Sequence
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+from sbstudio.model.light_program import LightProgram
+from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
+from sbstudio.utils import create_path_and_open
 
 from .errors import SkybrushStudioAPIError
 
@@ -63,6 +69,27 @@ class Response:
         if self.content_type != "application/json":
             raise SkybrushStudioAPIError("Response type is not JSON")
         return json.load(TextIOWrapper(self._response, encoding="utf-8"))
+
+    def as_str(self) -> str:
+        """Reads the whole response body and return it as a string."""
+        if self.content_type not in ["application/octet-stream", "application/json"]:
+            raise SkybrushStudioAPIError("Invalid response type")
+        data = self._response.read()
+        if self.content_type == "application/octet-stream":
+            data = data.decode("utf-8")
+
+        return data
+
+    def to_file(self, filename: Path) -> None:
+        """Writes response to a given file."""
+        if self.content_type == "application/octet-stream":
+            mode = "wb"
+        elif self.content_type == "application/json":
+            mode = "w"
+        else:
+            raise SkybrushStudioAPIError("Invalid response type")
+        with create_path_and_open(filename, mode) as f:
+            copyfileobj(self._response, f)
 
 
 class SkybrushStudioAPI:
@@ -161,3 +188,54 @@ class SkybrushStudioAPI:
             raise SkybrushStudioAPIError("invalid response version")
 
         return result.get("mapping")
+
+    def export_to_skyc(
+        self,
+        show_title: str,
+        trajectories: Dict[str, Trajectory],
+        lights: Dict[str, LightProgram],
+        output: Path,
+        ndigits: float = 3,
+    ) -> None:
+        """Export drone show data into Skybrush Compiled Format (.skyc).
+
+        Parameters:
+            show_title: arbitrary show title
+            trajectories: dictionary of trajectories indexed by drone names
+            lights: dictionary of light programs indexed by drone names
+            output: the file path where the output should be saved
+            ndigits: round floats to this precision
+
+        Note: drone names must match in trajectories and lights
+
+        """
+
+        data = {
+            "input": {
+                "format": "json",
+                "data": {
+                    "version": 1,
+                    "settings": {},
+                    "swarm": {
+                        "drones": [
+                            {
+                                "type": "generic",
+                                "settings": {
+                                    "name": name,
+                                    "lights": lights[name].as_dict(ndigits=ndigits),
+                                    "trajectory": trajectories[name].as_dict(
+                                        ndigits=ndigits
+                                    ),
+                                },
+                            }
+                            for name in natsorted(trajectories.keys())
+                        ]
+                    },
+                    "meta": {"title": show_title},
+                },
+            },
+            "output": {"format": "skyc"},
+        }
+
+        with self._send_request("operations/render", data) as response:
+            response.to_file(output)
