@@ -390,42 +390,12 @@ class SkybrushExportOperator(Operator, ExportHelper):
         description="Temporal resolution of exported trajectory (frames per second)",
     )
 
-    """
-    # show origin
-    show_origin = StringProperty(
-        name="Show origin",
-        default="0.00, 0.00",
-        description="Global show origin, i.e. (latitude, longitude) center of "
-        "exported coordinate system [deg]",
-    )
-
-    # show orientation
-    show_orientation = FloatProperty(
-        name="Show orientation",
-        default=0,
-        step=1,
-        precision=2,
-        description="Orientation of exported relative coordinate system "
-        "(CW from N towards E) [deg]",
-    )
-    """
-
     def execute(self, context):
         filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
         settings = {
             "export_selected": self.export_selected,
             "frame_range_source": self.frame_range_source,
             "output_fps": self.output_fps
-            """
-            "show_origin": [
-                float(x)
-                for x in self.show_origin.replace(",", " ")
-                .replace(";", " ")
-                .strip()
-                .split()
-            ],
-            "show_orientation": self.show_orientation,
-            """
         }
 
         _write_skybrush_file(context, settings, filepath)
