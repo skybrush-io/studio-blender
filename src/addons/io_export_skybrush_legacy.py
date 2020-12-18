@@ -3,10 +3,10 @@ animation to Skybrush compiled file format (*.skyc).
 """
 
 bl_info = {
-    "name": "Export Skybrush Compiled Format (.skyc)",
-    "author": "CollMot Robotics Ltd.",
-    "description": "Export object trajectories and color animation to Skybrush compiled format",
-    "version": (1, 0, 0),
+    "name": "Legacy Export Skybrush Compiled Format (.skyc)",
+    "author": "Gabor Vasarhelyi (CollMot Robotics Ltd.)",
+    "description": "Export object trajectories and color animation to Skybrush compiled format (legacy version)",
+    "version": (0, 2, 1),
     "blender": (2, 83, 0),
     "location": "File > Export > Skybrush",
     "category": "Import-Export",
@@ -57,16 +57,20 @@ from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
-from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.materials import (
-    get_shader_node_and_input_for_diffuse_color_of_material,
-)
 from sbstudio.plugin.plugin_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
     unregister_operator,
 )
+
+
+#############################################################################
+# some global variables that could be parametrized if needed
+
+SUPPORTED_TYPES = ("MESH",)  # ,'CURVE','EMPTY','TEXT','CAMERA','LAMP')
+SUPPORTED_NAMES = "drone_*"
+
 
 #############################################################################
 # configure logger
@@ -119,26 +123,24 @@ def _create_light_program_from_light_data(
     return LightProgram(samples).simplify()
 
 
-def _get_drones(context, settings):
-    """Return drone objects to export.
+def _get_objects(context, settings):
+    """Return generator for objects to export.
 
     Parameters:
         context - the main Blender context
         settings - export settings
 
     Yields:
-        drone objects passing all specified filters natural-sorted by their name
+        objects passing all specified filters natural-sorted by their name
 
     """
-    drone_collection = Collections.find_drones(create=False)
-
-    to_export = [
-        drone
-        for drone in drone_collection.objects
-        if not settings["export_selected"] or drone.select_get()
-    ]
-
-    return natsorted(to_export, key=attrgetter("name"))
+    for ob in natsorted(context.scene.objects, key=attrgetter("name")):
+        if ob.visible_get() and (
+            ob.select_get()
+            if settings["export_selected"]
+            else (fnmatch(ob.name, SUPPORTED_NAMES) and ob.type in SUPPORTED_TYPES)
+        ):
+            yield ob
 
 
 def _get_location(object):
@@ -155,28 +157,65 @@ def _get_location(object):
 
 
 def _get_framerange(context, settings):
-    """Get framerange based on user settings.
+    """Get framerange and related variables.
 
     Parameters:
         context - the main Blender context
         settings - export settings
 
     Return:
-        (first_frame, last_frame) framerange to be used during the export
+        framerange to be used during the export. Framerange is a 3-tuple
+        consisting of (first_frame, last_frame, frame_skip_factor)
 
     """
     # define frame range and other variables
+    fps = context.scene.render.fps
+    fpsskip = int(fps / settings["output_fps"])
+    last_frames = {}
     if settings["frame_range_source"] == "RENDER":
-        return (context.scene.frame_start, context.scene.frame_end)
+        frame_range = [context.scene.frame_start, context.scene.frame_end, fpsskip]
     elif settings["frame_range_source"] == "PREVIEW":
-        return (context.scene.frame_preview_start, context.scene.frame_preview_end)
-    elif settings["frame_range_source"] == "STORYBOARD":
-        return (
-            context.scene.skybrush.storyboard.frame_start,
-            context.scene.skybrush.storyboard.frame_end,
-        )
+        frame_range = [
+            context.scene.frame_preview_start,
+            context.scene.frame_preview_end,
+            fpsskip,
+        ]
+    elif settings["frame_range_source"] == "LOCAL":
+        # get largest common frame_range
+        frame_range_min = float("Inf")
+        frame_range_max = -float("Inf")
+        for obj in _get_objects(context, settings):
+            last_frames[obj.name] = -float("Inf")
+            # check object's own animation data and its follow_path constraints, too
+            follow_path_constraints = [
+                cons for cons in obj.constraints if cons.type == "FOLLOW_PATH"
+            ]
+            targets = [cons.target for cons in follow_path_constraints]
+            curves = [target.data for target in targets]
+            for curve in curves + [obj]:
+                if curve.animation_data:
+                    new_frame_range = [
+                        int(x) for x in curve.animation_data.action.frame_range
+                    ]
+                    if new_frame_range[0] < frame_range_min:
+                        frame_range_min = new_frame_range[0]
+                    if new_frame_range[1] > frame_range_max:
+                        frame_range_max = new_frame_range[1]
+                    if new_frame_range[1] > last_frames[obj.name]:
+                        last_frames[obj.name] = new_frame_range[1]
+            if isinf(last_frames[obj.name]):
+                raise UnboundLocalError(
+                    "There is no local frame range defined for '%s'", obj.name
+                )
+        if isinf(frame_range_min) or isinf(frame_range_max):
+            raise UnboundLocalError(
+                "There is no local frame range defined for any of the objects."
+            )
+        frame_range = [frame_range_min, frame_range_max, fpsskip]
     else:
         raise NotImplementedError("Unknown frame range source")
+
+    return frame_range
 
 
 def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str, Trajectory]:
@@ -192,18 +231,21 @@ def _get_trajectories(context, settings, frame_range: tuple) -> Dict[str, Trajec
 
     """
 
-    # initialize trajectories
+    # get object trajectories for each needed frame in convenient format
     fps = context.scene.render.fps
-    drones = _get_drones(context, settings)
-    trajectories = dict((drone.name, Trajectory()) for drone in drones)
-    # parse trajectories
-    frame_step = max(1, int(fps / settings["output_fps"]))
+    trajectories = (
+        {}
+    )  # trajectories[name] = timeline of Point4D(t, x, y, z) positions of object 'name'
     context.scene.frame_set(frame_range[0])
-    for frame in range(frame_range[0], frame_range[1] + frame_step, frame_step):
+    # initialize trajectories
+    for obj in _get_objects(context, settings):
+        trajectories[obj.name] = Trajectory()
+    # parse trajectories
+    for frame in range(frame_range[0], frame_range[1] + frame_range[2], frame_range[2]):
         log.debug(f"processing frame {frame}")
         context.scene.frame_set(frame)
-        for drone in drones:
-            trajectories[drone.name].append(Point4D(frame / fps, *_get_location(drone)))
+        for obj in _get_objects(context, settings):
+            trajectories[obj.name].append(Point4D(frame / fps, *_get_location(obj)))
 
     return trajectories
 
@@ -224,26 +266,23 @@ def _get_lights(context, settings, frame_range: tuple) -> Dict[str, LightProgram
     fps = context.scene.render.fps
     num_frames = frame_range[1] - frame_range[0] + 1
     light_dict = {}
-    for drone in _get_drones(context, settings):
-        name = drone.name
+    for obj in _get_objects(context, settings):
+        name = obj.name
         log.debug(f"processing {name}")
         # if there is no material associated with the object, we use const black
-        if not drone.active_material:
+        if not obj.active_material:
             light_dict[name] = [[0] * num_frames, [0] * num_frames, [0] * num_frames]
             continue
-        material = drone.active_material
         # if color is not animated, use a single color
-        if not material.node_tree.animation_data:
-            light_dict[name] = [[x] * num_frames for x in material.diffuse_color[:3]]
+        if not obj.active_material.animation_data:
+            light_dict[name] = [
+                [x] * num_frames for x in obj.active_material.diffuse_color[:3]
+            ]
             continue
-        animation = material.node_tree.animation_data
         # if color is animated, sample it on all frames first
         light_dict[name] = [[], [], []]
-        node, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
-        index = node.inputs.find(input.name)
-        data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
-        for fc in animation.action.fcurves:
-            if fc.data_path != data_path:
+        for fc in obj.active_material.animation_data.action.fcurves:
+            if fc.data_path != "diffuse_color":
                 continue
             # iterate channels (r, g, b) only
             if fc.array_index not in (0, 1, 2):
@@ -287,6 +326,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     # get lights
     log.info("Getting object color animations")
     lights = _get_lights(context, settings, frame_range)
+
     # get automatic show title
     show_title = "Show '{}' exported from Blender".format(
         bpy.path.basename(filepath).split(".")[0]
@@ -297,6 +337,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     converter = SkybrushExporter(
         show_title=show_title, trajectories=trajectories, lights=lights
     )
+
     # export to .skyc
     log.info("Exporting to .skyc")
     converter.to_skyc(filepath)
@@ -310,10 +351,10 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
 
 
 class SkybrushExportOperator(Operator, ExportHelper):
-    """Export object trajectories and curves into Skybrush-compatible format."""
+    """Legacy Export object trajectories and curves into Skybrush-compatible format."""
 
-    bl_idname = "export_scene.skybrush"
-    bl_label = "Export Skybrush SKYC"
+    bl_idname = "legacy_export_scene.skybrush"
+    bl_label = "Legacy Export Skybrush SKYC"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush files
@@ -322,11 +363,11 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
     # output all objects or only selected ones
     export_selected = BoolProperty(
-        name="Export selected drones only",
-        default=False,
+        name="Export selected objects only",
+        default=True,
         description=(
-            "Export only the selected objects from the Drones Collection. "
-            "Uncheck to export all drones, irrespectively of the selection."
+            "Export only the selected drones from the scene. Uncheck to export "
+            "all drones, irrespectively of the selection."
         ),
     )
 
@@ -335,11 +376,11 @@ class SkybrushExportOperator(Operator, ExportHelper):
         name="Frame range source",
         description="Choose a frame range source to use for export",
         items=(
-            ("STORYBOARD", "Storyboard", "Use the storyboard to define frame range"),
+            ("LOCAL", "Local", "Use local frame range stored in animation data"),
             ("RENDER", "Render", "Use global render frame range set by scene"),
             ("PREVIEW", "Preview", "Use global preview frame range set by scene"),
         ),
-        default="STORYBOARD",
+        default="LOCAL",
     )
 
     # output frame rate
@@ -372,7 +413,9 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
 
 def menu_func_export(self, context):
-    self.layout.operator(SkybrushExportOperator.bl_idname, text="Skybrush (.skyc)")
+    self.layout.operator(
+        SkybrushExportOperator.bl_idname, text="Legacy Skybrush (.skyc)"
+    )
 
 
 def register():
