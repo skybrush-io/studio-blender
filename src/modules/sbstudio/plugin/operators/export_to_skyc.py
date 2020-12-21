@@ -288,7 +288,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
     # output frame rate
     output_fps = FloatProperty(
         name="Frame rate",
-        default=1,
+        default=4,
         description="Temporal resolution of exported trajectory (frames per second)",
     )
 
