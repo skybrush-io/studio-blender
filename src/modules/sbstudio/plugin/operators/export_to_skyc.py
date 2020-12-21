@@ -1,5 +1,6 @@
 import bpy
 import logging
+import os
 
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
 from bpy.types import Operator
@@ -75,6 +76,8 @@ def _get_drones(context, settings):
 
     """
     drone_collection = Collections.find_drones(create=False)
+    if not drone_collection:
+        return []
 
     to_export = [
         drone
@@ -302,5 +305,10 @@ class SkybrushExportOperator(Operator, ExportHelper):
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        if not self.filepath:
+            filepath = bpy.data.filepath or "Untitled"
+            filepath, _ = os.path.splitext(filepath)
+            self.filepath = f"{filepath}.skyc"
+
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
