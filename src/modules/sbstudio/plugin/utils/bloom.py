@@ -34,6 +34,7 @@ def set_bloom_effect_enabled(value: bool) -> None:
     if value:
         bpy.context.scene.eevee.use_bloom = True
         bpy.context.scene.eevee.bloom_radius = 4
+        bpy.context.scene.eevee.bloom_intensity = 0.2
         for space in find_all_3d_views():
             space.shading.type = "MATERIAL"
 

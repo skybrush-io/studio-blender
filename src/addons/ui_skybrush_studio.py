@@ -56,7 +56,12 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     SwapColorsInLEDControlPanelOperator,
 )
-from sbstudio.plugin.panels import LEDControlPanel, SafetyCheckPanel, StoryboardEditor
+from sbstudio.plugin.panels import (
+    ExportPanel,
+    LEDControlPanel,
+    SafetyCheckPanel,
+    StoryboardEditor,
+)
 from sbstudio.plugin.plugin_helpers import (
     register_header,
     register_operator,
@@ -98,8 +103,9 @@ operators = (
     SwapColorsInLEDControlPanelOperator,
 )
 
-#: Panels in this addon
-panels = (LEDControlPanel, StoryboardEditor, SafetyCheckPanel)
+#: Panels in this addon. The order also implicitly defines the order in which
+#: our tabs appear in the sidebar of the 3D view.
+panels = (LEDControlPanel, StoryboardEditor, SafetyCheckPanel, ExportPanel)
 
 #: Headers in this addon
 headers = ()

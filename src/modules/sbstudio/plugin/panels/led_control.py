@@ -1,5 +1,9 @@
 from bpy.types import Panel
 
+from sbstudio.plugin.operators import (
+    ApplyColorsToSelectedDronesOperator as ApplyColors,
+)
+
 
 class LEDControlPanel(Panel):
     """Custom Blender panel that allows the user to control the color of the
@@ -13,7 +17,7 @@ class LEDControlPanel(Panel):
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Skybrush"
+    bl_category = "Show Design"
 
     @classmethod
     def poll(cls, context):
@@ -38,18 +42,18 @@ class LEDControlPanel(Panel):
         col.prop(led_control, "secondary_color", text="Secondary", icon="COLOR")
 
         row = layout.row()
-        params = row.operator("skybrush.apply_colors_to_selection", text="Apply")
+        params = row.operator(ApplyColors.bl_idname, text="Apply")
         params.color = "PRIMARY"
         params.fade = False
-        params = row.operator("skybrush.apply_colors_to_selection", text="Apply")
+        params = row.operator(ApplyColors.bl_idname, text="Apply")
         params.color = "SECONDARY"
         params.fade = False
 
         row = layout.row()
-        params = row.operator("skybrush.apply_colors_to_selection", text="Fade to")
+        params = row.operator(ApplyColors.bl_idname, text="Fade to")
         params.color = "PRIMARY"
         params.fade = True
-        params = row.operator("skybrush.apply_colors_to_selection", text="Fade to")
+        params = row.operator(ApplyColors.bl_idname, text="Fade to")
         params.color = "SECONDARY"
         params.fade = True
 

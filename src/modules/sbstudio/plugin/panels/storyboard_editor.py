@@ -1,5 +1,11 @@
 from bpy.types import Panel
 
+from sbstudio.plugin.operators import (
+    CreateNewStoryboardEntryOperator,
+    RecalculateTransitionsOperator,
+    RemoveStoryboardEntryOperator,
+)
+
 
 class StoryboardEditor(Panel):
     """Custom Blender panel that allows the user to edit the storyboard of the
@@ -13,7 +19,7 @@ class StoryboardEditor(Panel):
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Skybrush"
+    bl_category = "Show Design"
 
     def draw(self, context):
         layout = self.layout
@@ -42,8 +48,8 @@ class StoryboardEditor(Panel):
         )
 
         col = row.column(align=True)
-        col.operator("skybrush.create_new_storyboard_entry", icon="ADD", text="")
-        col.operator("skybrush.remove_storyboard_entry", icon="REMOVE", text="")
+        col.operator(CreateNewStoryboardEntryOperator.bl_idname, icon="ADD", text="")
+        col.operator(RemoveStoryboardEntryOperator.bl_idname, icon="REMOVE", text="")
 
         if entry is not None:
             col = layout.column()
@@ -55,4 +61,4 @@ class StoryboardEditor(Panel):
         layout.separator()
 
         col = layout.column()
-        col.operator("skybrush.recalculate_transitions")
+        col.operator(RecalculateTransitionsOperator.bl_idname)

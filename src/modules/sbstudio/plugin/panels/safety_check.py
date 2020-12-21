@@ -16,7 +16,7 @@ class SafetyCheckPanel(Panel):
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Skybrush"
+    bl_category = "Safety & Export"
 
     @classmethod
     def poll(cls, context):
