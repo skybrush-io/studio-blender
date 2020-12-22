@@ -55,6 +55,7 @@ from sbstudio.plugin.operators import (
     RecalculateTransitionsOperator,
     RemoveStoryboardEntryOperator,
     SwapColorsInLEDControlPanelOperator,
+    ValidateTrajectoriesOperator,
 )
 from sbstudio.plugin.panels import (
     ExportPanel,
@@ -101,6 +102,7 @@ operators = (
     RecalculateTransitionsOperator,
     ApplyColorsToSelectedDronesOperator,
     SwapColorsInLEDControlPanelOperator,
+    ValidateTrajectoriesOperator,
 )
 
 #: Panels in this addon. The order also implicitly defines the order in which

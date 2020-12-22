@@ -172,23 +172,6 @@ class SkybrushStudioAPI:
         ctx.verify_mode = CERT_NONE
         self._request_context = ctx
 
-    def match_points(
-        self, source: Sequence[Coordinate3D], target: Sequence[Coordinate3D]
-    ) -> List[Optional[int]]:
-        """Matches the points of a source point set to the points of a
-        target point set in a way that ensures collision-free straight-line
-        trajectories between the matched points when neither the source nor the
-        target points are too close to each other.
-        """
-        data = {"version": 1, "source": source, "target": target}
-        with self._send_request("operations/match-points", data) as response:
-            result = response.as_json()
-
-        if result.get("version") != 1:
-            raise SkybrushStudioAPIError("invalid response version")
-
-        return result.get("mapping")
-
     def export_to_skyc(
         self,
         show_title: str,
@@ -239,3 +222,74 @@ class SkybrushStudioAPI:
 
         with self._send_request("operations/render", data) as response:
             response.to_file(output)
+
+    def generate_plots(
+        self,
+        trajectories: Dict[str, Trajectory],
+        output: Path,
+        ndigits: float = 3,
+    ) -> None:
+        """Export drone show data into Skybrush Compiled Format (.skyc).
+
+        Parameters:
+            show_title: arbitrary show title
+            trajectories: dictionary of trajectories indexed by drone names
+            output: the file path where the output should be saved
+            ndigits: round floats to this precision
+        """
+        data = {
+            "input": {
+                "format": "json",
+                "data": {
+                    "version": 1,
+                    "settings": {},
+                    "swarm": {
+                        "drones": [
+                            {
+                                "type": "generic",
+                                "settings": {
+                                    "name": name,
+                                    "trajectory": trajectories[name].as_dict(
+                                        ndigits=ndigits
+                                    ),
+                                },
+                            }
+                            for name in natsorted(trajectories.keys())
+                        ]
+                    },
+                    "meta": {},
+                },
+            },
+            "output": {
+                "format": "plot",
+                "parameters": {
+                    "plots": "nn,pos,vel",
+                    "fps": 5,
+                    "single_file": True,
+                    # TODO(ntamaS): max altitude and min distance should be
+                    # configurable from the outside
+                    "min_distance": 3,
+                    "max_altitude": 150,
+                },
+            },
+        }
+
+        with self._send_request("operations/render", data) as response:
+            response.to_file(output)
+
+    def match_points(
+        self, source: Sequence[Coordinate3D], target: Sequence[Coordinate3D]
+    ) -> List[Optional[int]]:
+        """Matches the points of a source point set to the points of a
+        target point set in a way that ensures collision-free straight-line
+        trajectories between the matched points when neither the source nor the
+        target points are too close to each other.
+        """
+        data = {"version": 1, "source": source, "target": target}
+        with self._send_request("operations/match-points", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        return result.get("mapping")

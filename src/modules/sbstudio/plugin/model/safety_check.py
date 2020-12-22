@@ -1,25 +1,46 @@
-from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty
+from bpy.props import BoolProperty, FloatProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional
+from typing import Optional, List, Tuple
 
+from sbstudio.model.safety_check import SafetyCheckResult
+from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.overlays import SafetyCheckOverlay
 
 __all__ = ("SafetyCheckProperties",)
 
+
 #: Global safety check overlay. This cannot be an attribute of SafetyCheckProperties
 #: for some reason; Blender PropertyGroup objects are weird.
-overlay = None
+_overlay = None
+
+#: Current safety check result object. This cannot be an attribute of
+#: SafetyCheckProperties for some reason; Blender PropertyGroup objects are weird.
+_safety_check_result = SafetyCheckResult()
+
+
+def _get_overlay(create: bool = True):
+    global _overlay
+
+    if _overlay is None and create:
+        # Lazy construction, this is intentional
+        _overlay = SafetyCheckOverlay()
+
+    return _overlay
+
+
+def altitude_warning_enabled_updated(self, context: Optional[Context] = None):
+    """Called when the altitude warning is enabled or disabled by the user."""
+    self.ensure_overlays_enabled_if_needed()
+    self._refresh_overlay()
+
+
+def altitude_warning_threshold_updated(self, context: Optional[Context] = None):
+    self._refresh_overlay()
 
 
 def proximity_warning_enabled_updated(self, context: Optional[Context] = None):
     """Called when the proximity warning is enabled or disabled by the user."""
-    global overlay
-
-    if overlay is None:
-        # Lazy construction, this is intentional
-        overlay = SafetyCheckOverlay()
-
-    overlay.enabled = self.proximity_warning_enabled
+    self.ensure_overlays_enabled_if_needed()
     self._refresh_overlay()
 
 
@@ -39,21 +60,16 @@ class SafetyCheckProperties(PropertyGroup):
 
     min_distance = FloatProperty(
         name="Min distance",
-        description="Minimum distance along all possible pairs of drones, calculated between their centers of mass",
+        description="Minimum distance along all possible pairs of drones in the current frame, calculated between their centers of mass",
         unit="LENGTH",
         default=0.0,
     )
 
-    closest_pair_first = FloatVectorProperty(
-        name="Location of the first point in the closest pair",
-        options={"HIDDEN"},
-        subtype="XYZ",
-    )
-
-    closest_pair_second = FloatVectorProperty(
-        name="Location of the second point in the closest pair",
-        options={"HIDDEN"},
-        subtype="XYZ",
+    max_altitude = FloatProperty(
+        name="Max altitude",
+        description="Maximum altitude of all drones in the current frame",
+        unit="LENGTH",
+        default=0.0,
     )
 
     proximity_warning_enabled = BoolProperty(
@@ -76,6 +92,26 @@ class SafetyCheckProperties(PropertyGroup):
         update=proximity_warning_threshold_updated,
     )
 
+    altitude_warning_enabled = BoolProperty(
+        name="Show altitude warnings",
+        description=(
+            "Specifies whether Blender should show a warning when the altitude of a "
+            "drone is larger than the altitude warning threshold"
+        ),
+        update=altitude_warning_enabled_updated,
+        default=True,
+    )
+
+    altitude_warning_threshold = FloatProperty(
+        name="Altitude warning threshold",
+        description="Maximum allowed altitude for a single drone without triggering an altitude warning",
+        unit="LENGTH",
+        default=150.0,
+        min=0.0,
+        max=1000.0,
+        update=altitude_warning_threshold_updated,
+    )
+
     @property
     def min_distance_is_valid(self) -> bool:
         """Retuns whether the minimum distance property can be considered valid.
@@ -83,6 +119,25 @@ class SafetyCheckProperties(PropertyGroup):
         scene at all.
         """
         return self.min_distance > 0
+
+    @property
+    def max_altitude_is_valid(self) -> bool:
+        """Retuns whether the maximum altitude property can be considered valid.
+        Right now we use zero to denote cases when there are no drones in the
+        scene at all.
+        """
+        return self.max_altitude > 0
+
+    @property
+    def should_show_altitude_warning(self) -> bool:
+        """Returns whether the altitude warning should be drawn in the 3D view
+        _right now_, given the current values of the properties.
+        """
+        return (
+            self.altitude_warning_enabled
+            and self.max_altitude_is_valid
+            and self.max_altitude > self.altitude_warning_threshold
+        )
 
     @property
     def should_show_proximity_warning(self) -> bool:
@@ -95,34 +150,65 @@ class SafetyCheckProperties(PropertyGroup):
             and self.min_distance < self.proximity_warning_threshold
         )
 
-    def clear_minimum_distance_calculation_result(self) -> None:
-        """Clears the result of the last minimum distance calculation."""
+    def clear_safety_check_result(self) -> None:
+        """Clears the result of the last safety check."""
+        global _safety_check_result
+
+        self.max_altitude = 0
         self.min_distance = 0
-        self.closest_pair_first = (0, 0, 0)
-        self.closest_pair_second = (0, 0, 0)
+        _safety_check_result.clear()
+
         self._refresh_overlay()
 
     def ensure_overlays_enabled_if_needed(self) -> None:
-        proximity_warning_enabled_updated(self)
+        _get_overlay().enabled = (
+            self.altitude_warning_enabled or self.proximity_warning_enabled
+        )
 
-    def set_minimum_distance_calculation_result(
-        self, first, second, distance: float
+    def set_safety_check_result(
+        self,
+        nearest_neighbors: Optional[Tuple[float, Coordinate3D, Coordinate3D]] = None,
+        max_altitude: Optional[float] = None,
+        drones_over_max_altitude: Optional[List[Coordinate3D]] = None,
     ) -> None:
         """Clears the result of the last minimum distance calculation."""
-        self.min_distance = distance
-        self.closest_pair_first = first if first is not None else (0, 0, 0)
-        self.closest_pair_second = second if second is not None else (0, 0, 0)
-        self._refresh_overlay()
+        global _safety_check_result
+
+        if nearest_neighbors is not None:
+            first, second, distance = nearest_neighbors
+            self.min_distance = distance
+            _safety_check_result.closest_pair = (
+                (first, second) if first is not None and second is not None else None
+            )
+            _safety_check_result.min_distance = distance
+            refresh = True
+
+        if max_altitude is not None:
+            self.max_altitude = max_altitude
+            refresh = True
+
+        if drones_over_max_altitude is not None:
+            _safety_check_result.drones_over_max_altitude = drones_over_max_altitude
+            refresh = True
+
+        if refresh:
+            self._refresh_overlay()
 
     def _refresh_overlay(self) -> None:
         """Refreshes the safety check overlay on the 3D view if needed."""
-        global overlay
+        global _safety_check_result
+
+        overlay = _get_overlay(create=False)
+
         if overlay:
-            overlay.nearest_neighbor_coords = (
-                [
-                    self.closest_pair_first,
-                    self.closest_pair_second,
-                ]
-                if self.min_distance_is_valid
-                else None
-            )
+            markers = []
+
+            if self.should_show_proximity_warning:
+                markers.append(_safety_check_result.closest_pair)
+
+            if self.should_show_altitude_warning:
+                markers.extend(
+                    [point] for point in _safety_check_result.drones_over_max_altitude
+                )
+
+            overlay.markers = markers

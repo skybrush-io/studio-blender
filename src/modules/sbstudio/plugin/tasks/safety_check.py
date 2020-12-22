@@ -22,13 +22,29 @@ def run_safety_check(scene, depsgraph):
 
     drones = Collections.find_drones(create=False)
     if not drones:
-        safety_check.clear_minimum_distance_calculation_result()
+        safety_check.clear_safety_check_result()
         return
 
     positions = [tuple(drone.matrix_world.translation) for drone in drones.objects]
-    first, second, distance = find_nearest_neighbors(positions)
 
-    safety_check.set_minimum_distance_calculation_result(first, second, distance)
+    max_altitude = (
+        safety_check.altitude_warning_threshold
+        if safety_check.altitude_warning_enabled
+        else None
+    )
+
+    if max_altitude is not None:
+        drones_over_max_altitude = [
+            position for position in positions if position[2] >= max_altitude
+        ]
+    else:
+        drones_over_max_altitude = []
+
+    safety_check.set_safety_check_result(
+        nearest_neighbors=find_nearest_neighbors(positions),
+        max_altitude=max(position[2] for position in positions),
+        drones_over_max_altitude=drones_over_max_altitude,
+    )
 
 
 def ensure_overlays_enabled(*args):

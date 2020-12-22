@@ -156,7 +156,7 @@ def _get_location(object):
     return tuple(object.matrix_world.translation)
 
 
-def _get_framerange(context, settings):
+def _get_frame_range_from_export_settings(context, settings):
     """Get framerange and related variables.
 
     Parameters:
@@ -319,7 +319,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
 
     # get framerange
     log.info("Getting frame range from {}".format(settings["frame_range_source"]))
-    frame_range = _get_framerange(context, settings)
+    frame_range = _get_frame_range_from_export_settings(context, settings)
     # get trajectories
     log.info("Getting object trajectories")
     trajectories = _get_trajectories(context, settings, frame_range)

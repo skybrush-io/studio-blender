@@ -10,6 +10,7 @@ from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
+from .validate_trajectories import ValidateTrajectoriesOperator
 
 __all__ = (
     "ApplyColorsToSelectedDronesOperator",
@@ -22,4 +23,5 @@ __all__ = (
     "RemoveStoryboardEntryOperator",
     "SkybrushExportOperator",
     "SwapColorsInLEDControlPanelOperator",
+    "ValidateTrajectoriesOperator",
 )
