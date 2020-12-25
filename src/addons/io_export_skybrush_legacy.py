@@ -172,15 +172,15 @@ def _get_frame_range_from_export_settings(context, settings):
     fps = context.scene.render.fps
     fpsskip = int(fps / settings["output_fps"])
     last_frames = {}
-    if settings["frame_range_source"] == "RENDER":
+    if settings["frame_range"] == "RENDER":
         frame_range = [context.scene.frame_start, context.scene.frame_end, fpsskip]
-    elif settings["frame_range_source"] == "PREVIEW":
+    elif settings["frame_range"] == "PREVIEW":
         frame_range = [
             context.scene.frame_preview_start,
             context.scene.frame_preview_end,
             fpsskip,
         ]
-    elif settings["frame_range_source"] == "LOCAL":
+    elif settings["frame_range"] == "LOCAL":
         # get largest common frame_range
         frame_range_min = float("Inf")
         frame_range_max = -float("Inf")
@@ -318,7 +318,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     log.info(f"Exporting show content to {filepath}")
 
     # get framerange
-    log.info("Getting frame range from {}".format(settings["frame_range_source"]))
+    log.info("Getting frame range from {}".format(settings["frame_range"]))
     frame_range = _get_frame_range_from_export_settings(context, settings)
     # get trajectories
     log.info("Getting object trajectories")
@@ -371,10 +371,10 @@ class SkybrushExportOperator(Operator, ExportHelper):
         ),
     )
 
-    # frame range source
-    frame_range_source = EnumProperty(
+    # frame range
+    frame_range = EnumProperty(
         name="Frame range",
-        description="Choose a frame range source to use for export",
+        description="Choose a frame range to use for export",
         items=(
             ("LOCAL", "Local", "Use local frame range stored in animation data"),
             ("RENDER", "Render", "Use global render frame range set by scene"),
@@ -394,7 +394,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
         filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
         settings = {
             "export_selected": self.export_selected,
-            "frame_range_source": self.frame_range_source,
+            "frame_range": self.frame_range,
             "output_fps": self.output_fps,
         }
 

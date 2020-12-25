@@ -2,7 +2,7 @@ import bpy
 import logging
 import os
 
-from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
+from bpy.props import BoolProperty, StringProperty, FloatProperty
 from bpy.types import Context, Operator
 from bpy_extras.io_utils import ExportHelper
 from natsort import natsorted
@@ -12,16 +12,17 @@ from typing import Dict, List, Optional, Tuple
 
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
-from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.api import api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.materials import (
     get_shader_node_and_input_for_diffuse_color_of_material,
 )
+from sbstudio.plugin.props import FrameRangeProperty
 from sbstudio.plugin.utils import with_context
+from sbstudio.plugin.utils.sampling import sample_positions_of_objects_in_frame_range
 
-__all__ = ("SkybrushExportOperator",)
+__all__ = ("SkybrushExportOperator", "get_drones_to_export", "resolve_frame_range")
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ def _create_light_program_from_light_data(
     return LightProgram(samples).simplify()
 
 
-def _get_drones_to_export(selected_only: bool = False):
+def get_drones_to_export(selected_only: bool = False):
     """Returns the drone objects to export.
 
     Parameters:
@@ -84,16 +85,27 @@ def _get_drones_to_export(selected_only: bool = False):
     return natsorted(to_export, key=attrgetter("name"))
 
 
-def _get_location(object) -> Tuple[float, float, float]:
-    """Return global location of an object at the actual frame.
-
-    Parameters:
-        object: a Blender object
-
-    Return:
-        location of object in the world frame
+@with_context
+def resolve_frame_range(
+    range: str, *, context: Optional[Context] = None
+) -> Tuple[int, int]:
+    """Resolves one of the commonly used frame ranges used in multiple places
+    throughout the plugin.
     """
-    return tuple(object.matrix_world.translation)
+    if range == "RENDER":
+        # Return the entire frame range of the current scene
+        return (context.scene.frame_start, context.scene.frame_end)
+    elif range == "PREVIEW":
+        # Return the selected preview range of the current scene
+        return (context.scene.frame_preview_start, context.scene.frame_preview_end)
+    elif range == "STORYBOARD":
+        # Return the frame range covered by the storyboard
+        return (
+            context.scene.skybrush.storyboard.frame_start,
+            context.scene.skybrush.storyboard.frame_end,
+        )
+    else:
+        raise RuntimeError(f"Unknown frame range: {range!r}")
 
 
 @with_context
@@ -107,22 +119,10 @@ def _get_frame_range_from_export_settings(
         settings: the export settings chosen by the user
         context: the main Blender context
 
-    Return:
-        (first_frame, last_frame) framerange to be used during the export
-
+    Returns:
+        frame range to be used during the export (both ends inclusive)
     """
-    # define frame range and other variables
-    if settings["frame_range_source"] == "RENDER":
-        return (context.scene.frame_start, context.scene.frame_end)
-    elif settings["frame_range_source"] == "PREVIEW":
-        return (context.scene.frame_preview_start, context.scene.frame_preview_end)
-    elif settings["frame_range_source"] == "STORYBOARD":
-        return (
-            context.scene.skybrush.storyboard.frame_start,
-            context.scene.skybrush.storyboard.frame_end,
-        )
-    else:
-        raise NotImplementedError("Unknown frame range source")
+    return resolve_frame_range(settings["frame_range"], context=context)
 
 
 @with_context
@@ -140,20 +140,9 @@ def _get_trajectories(
     Returns:
         dictionary of Trajectory objects indexed by object names
     """
-
-    # initialize trajectories
-    fps = context.scene.render.fps
-    trajectories = dict((drone.name, Trajectory()) for drone in drones)
-    # parse trajectories
-    frame_step = max(1, int(fps / settings["output_fps"]))
-    context.scene.frame_set(frame_range[0])
-    for frame in range(frame_range[0], frame_range[1] + frame_step, frame_step):
-        log.debug(f"processing frame {frame}")
-        context.scene.frame_set(frame)
-        for drone in drones:
-            trajectories[drone.name].append(Point4D(frame / fps, *_get_location(drone)))
-
-    return trajectories
+    return sample_positions_of_objects_in_frame_range(
+        drones, frame_range, fps=settings["output_fps"], context=context, by_name=True
+    )
 
 
 @with_context
@@ -246,11 +235,11 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     log.info(f"Exporting show content to {filepath}")
 
     # get framerange
-    log.info("Getting frame range from {}".format(settings["frame_range_source"]))
+    log.info("Getting frame range from {}".format(settings["frame_range"]))
     frame_range = _get_frame_range_from_export_settings(settings, context=context)
 
     # determine list of drones to export
-    drones = list(_get_drones_to_export(settings["export_selected"]))
+    drones = list(get_drones_to_export(settings["export_selected"]))
 
     # get trajectories
     log.info("Getting object trajectories")
@@ -294,22 +283,13 @@ class SkybrushExportOperator(Operator, ExportHelper):
         name="Export selected drones only",
         default=False,
         description=(
-            "Export only the selected objects from the Drones Collection. "
+            "Export only the selected drones. "
             "Uncheck to export all drones, irrespectively of the selection."
         ),
     )
 
-    # frame range source
-    frame_range_source = EnumProperty(
-        name="Frame range source",
-        description="Choose a frame range source to use for export",
-        items=(
-            ("STORYBOARD", "Storyboard", "Use the storyboard to define frame range"),
-            ("RENDER", "Render", "Use global render frame range set by scene"),
-            ("PREVIEW", "Preview", "Use global preview frame range set by scene"),
-        ),
-        default="STORYBOARD",
-    )
+    # frame range
+    frame_range = FrameRangeProperty()
 
     # output frame rate
     output_fps = FloatProperty(
@@ -322,7 +302,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
         filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
         settings = {
             "export_selected": self.export_selected,
-            "frame_range_source": self.frame_range_source,
+            "frame_range": self.frame_range,
             "output_fps": self.output_fps,
         }
 

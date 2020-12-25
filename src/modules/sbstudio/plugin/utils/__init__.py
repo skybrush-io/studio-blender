@@ -14,6 +14,7 @@ from .collections import (
 from .debounce import debounced
 from .decorators import with_context, with_scene, with_screen
 from .identifiers import create_internal_id, propose_name, propose_names
+from .platform import get_temporary_directory, open_file_with_default_application
 
 __all__ = (
     "create_object_in_collection",
@@ -23,7 +24,9 @@ __all__ = (
     "ensure_object_exists_in_collection",
     "find_empty_slot_in",
     "get_object_in_collection",
+    "get_temporary_directory",
     "overridden_context",
+    "open_file_with_default_application",
     "propose_name",
     "propose_names",
     "remove_if_unused",

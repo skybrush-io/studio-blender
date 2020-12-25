@@ -1,3 +1,4 @@
 from .color import ColorProperty
+from .frame_range import FrameRangeProperty
 
-__all__ = ("ColorProperty",)
+__all__ = ("ColorProperty", "FrameRangeProperty")

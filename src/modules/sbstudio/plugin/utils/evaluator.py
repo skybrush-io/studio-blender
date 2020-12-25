@@ -1,4 +1,4 @@
-from bpy.types import Context
+from bpy.types import Context, Object
 from contextlib import contextmanager
 from functools import partial
 from typing import Callable, Optional, Sequence
@@ -29,7 +29,7 @@ def create_position_evaluator(context: Optional[Context] = None):
 
 
 def _evaluate_positions_of_objects(
-    objects,
+    objects: Sequence[Object],
     *,
     seek_to: Optional[Callable[[int], None]] = None,
     frame: Optional[int] = None
@@ -37,3 +37,15 @@ def _evaluate_positions_of_objects(
     if frame is not None:
         seek_to(frame)
     return [tuple(obj.matrix_world.translation) for obj in objects]
+
+
+def get_position_of_object(object: Object) -> Coordinate3D:
+    """Returns the global position of an object at the current frame.
+
+    Parameters:
+        object: a Blender object
+
+    Returns:
+        location of object in the world frame
+    """
+    return tuple(object.matrix_world.translation)
