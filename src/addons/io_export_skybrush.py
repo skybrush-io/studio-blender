@@ -28,7 +28,7 @@ from pathlib import Path
 # the same target directory for all add-on specific dependencies.
 
 candidates = [
-    abspath(bpy.context.preferences.filepaths.script_directory),
+    Path(sys.modules[__name__].__file__).parent,
     Path(sys.modules[__name__].__file__).parent.parent,
 ]
 for candidate in candidates:

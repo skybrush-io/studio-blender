@@ -75,6 +75,19 @@ url = "https://pypi.collmot.com/simple"
 reference = "collmot"
 
 [[package]]
+name = "pyminifier"
+version = "2.1"
+description = "Python code minifier, obfuscator, and compressor"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.source]
+type = "legacy"
+url = "https://pypi.collmot.com/simple"
+reference = "collmot"
+
+[[package]]
 name = "skybrush-studio"
 version = "0.6.0"
 description = "Drone show designer tools and scripting language"
@@ -118,7 +131,7 @@ standalone = ["skybrush-studio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "95f6c6f72cb51f4407c8f3411dd6acabdf1b621cd2f4788462df3f51458e0374"
+content-hash = "12ba0602abba4f2d9ce95c94bbc61b291c50796e9aa52084093bbdad6b8f0b11"
 
 [metadata.files]
 click = [
@@ -172,6 +185,9 @@ pyclean = [
 pyledctrl = [
     {file = "pyledctrl-3.1.1-py3-none-any.whl", hash = "md5:44b60eea59c28dcc26096eddf7ee5ace"},
     {file = "pyledctrl-3.1.1.tar.gz", hash = "md5:ee551ae91efebd9c19dd31ca55d081e7"},
+]
+pyminifier = [
+    {file = "pyminifier-2.1.tar.gz", hash = "sha256:e192618fe901830e9298825b32828bc9555ae8649e05af37bfab2db328546777"},
 ]
 skybrush-studio = [
     {file = "skybrush-studio-0.6.0.tar.gz", hash = "md5:8968c7dec01a9df474c8be1e41d2195e"},

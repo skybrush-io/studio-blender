@@ -5,6 +5,7 @@
 
 OUTPUT_DIR="./dist"
 TMP_DIR="./tmp"
+PYMINIFIER_ARGS=""
 
 ###############################################################################
 
@@ -34,21 +35,29 @@ fi
 # Create build folder
 BUILD_DIR="${OUTPUT_DIR}/build"
 rm -rf "${BUILD_DIR}"
-mkdir -p "${BUILD_DIR}/addons"
+mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
 # Install dependencies
-.venv/bin/pip install -U pip wheel pyclean
+.venv/bin/pip install -U pip wheel pyclean pyminifier
 .venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 
 # Copy our code as well
-cp src/modules/*.py ${BUILD_DIR}/vendor/skybrush
-cp src/addons/*.py ${BUILD_DIR}/addons
+cp -r src/modules/sbstudio ${BUILD_DIR}/vendor/skybrush
+cp src/addons/ui_*.py ${BUILD_DIR}
+cp src/addons/io_export_skybrush.py ${BUILD_DIR}
 
 # Clean any __pycache__ and *.dist-info files
 .venv/bin/pyclean ${BUILD_DIR}
 rm -rf ${BUILD_DIR}/vendor/skybrush/*.dist-info
+
+# Minify the source code
+for file in `find ${BUILD_DIR}/vendor/skybrush/sbstudio -name "*.py"`; do
+  if [ -s "$file" ]; then
+    .venv/bin/pyminifier $PYMINIFIER_ARGS -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
+  fi
+done
 
 # Create a single ZIP
 ZIP_STEM="${PROJECT_NAME}-${VERSION}"
