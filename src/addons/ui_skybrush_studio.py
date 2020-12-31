@@ -36,8 +36,9 @@ for candidate in candidates:
 # imports needed by the addon
 
 from sbstudio.plugin.model import (
+    DroneShowAddonFileSpecificSettings,
+    DroneShowAddonGlobalSettings,
     DroneShowAddonProperties,
-    DroneShowAddonSettings,
     FormationsPanelProperties,
     LEDControlPanelProperties,
     SafetyCheckProperties,
@@ -89,7 +90,8 @@ types = (
     Storyboard,
     LEDControlPanelProperties,
     SafetyCheckProperties,
-    DroneShowAddonSettings,
+    DroneShowAddonFileSpecificSettings,
+    DroneShowAddonGlobalSettings,
     DroneShowAddonProperties,
 )
 

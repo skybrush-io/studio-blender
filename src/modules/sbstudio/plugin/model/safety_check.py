@@ -48,6 +48,16 @@ def proximity_warning_threshold_updated(self, context: Optional[Context] = None)
     self._refresh_overlay()
 
 
+def velocity_warning_enabled_updated(self, context: Optional[Context] = None):
+    """Called when the velocity warning is enabled or disabled by the user."""
+    self.ensure_overlays_enabled_if_needed()
+    self._refresh_overlay()
+
+
+def velocity_warning_threshold_updated(self, context: Optional[Context] = None):
+    self._refresh_overlay()
+
+
 class SafetyCheckProperties(PropertyGroup):
     """Property group that stores the parameters and calculated values of the
     real-time flight safety checks.
@@ -69,6 +79,20 @@ class SafetyCheckProperties(PropertyGroup):
         name="Max altitude",
         description="Maximum altitude of all drones in the current frame",
         unit="LENGTH",
+        default=0.0,
+    )
+
+    max_velocity_xy = FloatProperty(
+        name="Max XY velocity",
+        description="Maximum horizontal velocity of all drones in the current frame",
+        unit="VELOCITY",
+        default=0.0,
+    )
+
+    max_velocity_z = FloatProperty(
+        name="Max Z velocity",
+        description="Maximum vertical velocity of all drones in the current frame",
+        unit="VELOCITY",
         default=0.0,
     )
 
@@ -112,6 +136,36 @@ class SafetyCheckProperties(PropertyGroup):
         update=altitude_warning_threshold_updated,
     )
 
+    velocity_warning_enabled = BoolProperty(
+        name="Show velocity warnings",
+        description=(
+            "Specifies whether Blender should show a warning when the velocity of a "
+            "drone is larger than the velocity warning threshold"
+        ),
+        update=velocity_warning_enabled_updated,
+        default=True,
+    )
+
+    velocity_xy_warning_threshold = FloatProperty(
+        name="Maximum XY velocity",
+        description="Maximum velocity allowed in the horizontal plane",
+        default=10,
+        min=0,
+        max=30,
+        unit="VELOCITY",
+        update=velocity_warning_threshold_updated,
+    )
+
+    velocity_z_warning_threshold = FloatProperty(
+        name="Maximum Z velocity",
+        description="Maximum velocity allowed in the vertical direction",
+        default=2,
+        min=0,
+        max=30,
+        unit="VELOCITY",
+        update=velocity_warning_threshold_updated,
+    )
+
     @property
     def min_distance_is_valid(self) -> bool:
         """Retuns whether the minimum distance property can be considered valid.
@@ -127,6 +181,14 @@ class SafetyCheckProperties(PropertyGroup):
         scene at all.
         """
         return self.max_altitude > 0
+
+    @property
+    def max_velocities_are_valid(self) -> bool:
+        """Retuns whether the maximum velocity property can be considered valid.
+        Right now we use zero to denote cases when there are no drones in the
+        scene at all.
+        """
+        return self.max_velocity_xy > 0 or self.max_velocity_z > 0
 
     @property
     def should_show_altitude_warning(self) -> bool:
@@ -150,12 +212,37 @@ class SafetyCheckProperties(PropertyGroup):
             and self.min_distance < self.proximity_warning_threshold
         )
 
+    @property
+    def should_show_velocity_xy_warning(self) -> bool:
+        """Returns whether the XY velocity warning should be drawn in the 3D view
+        _right now_, given the current values of the properties.
+        """
+        return (
+            self.velocity_warning_enabled
+            and self.max_velocities_are_valid
+            and self.max_velocity_xy > self.velocity_xy_warning_threshold
+        )
+
+    @property
+    def should_show_velocity_z_warning(self) -> bool:
+        """Returns whether the Z velocity warning should be drawn in the 3D view
+        _right now_, given the current values of the properties.
+        """
+        return (
+            self.velocity_warning_enabled
+            and self.max_velocities_are_valid
+            and self.max_velocity_z > self.velocity_z_warning_threshold
+        )
+
     def clear_safety_check_result(self) -> None:
         """Clears the result of the last safety check."""
         global _safety_check_result
 
         self.max_altitude = 0
         self.min_distance = 0
+        self.max_velocity_xy = 0
+        self.max_velocity_z = 0
+
         _safety_check_result.clear()
 
         self._refresh_overlay()
@@ -170,6 +257,10 @@ class SafetyCheckProperties(PropertyGroup):
         nearest_neighbors: Optional[Tuple[float, Coordinate3D, Coordinate3D]] = None,
         max_altitude: Optional[float] = None,
         drones_over_max_altitude: Optional[List[Coordinate3D]] = None,
+        max_velocity_xy: Optional[float] = None,
+        drones_over_max_velocity_xy: Optional[List[Coordinate3D]] = None,
+        max_velocity_z: Optional[float] = None,
+        drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
     ) -> None:
         """Clears the result of the last minimum distance calculation."""
         global _safety_check_result
@@ -191,6 +282,24 @@ class SafetyCheckProperties(PropertyGroup):
             _safety_check_result.drones_over_max_altitude = drones_over_max_altitude
             refresh = True
 
+        if max_velocity_xy is not None:
+            self.max_velocity_xy = max_velocity_xy
+            refresh = True
+
+        if drones_over_max_velocity_xy is not None:
+            _safety_check_result.drones_over_max_velocity_xy = (
+                drones_over_max_velocity_xy
+            )
+            refresh = True
+
+        if max_velocity_z is not None:
+            self.max_velocity_z = max_velocity_z
+            refresh = True
+
+        if drones_over_max_velocity_z is not None:
+            _safety_check_result.drones_over_max_velocity_z = drones_over_max_velocity_z
+            refresh = True
+
         if refresh:
             self._refresh_overlay()
 
@@ -209,6 +318,17 @@ class SafetyCheckProperties(PropertyGroup):
             if self.should_show_altitude_warning:
                 markers.extend(
                     [point] for point in _safety_check_result.drones_over_max_altitude
+                )
+
+            if self.should_show_velocity_xy_warning:
+                markers.extend(
+                    [point]
+                    for point in _safety_check_result.drones_over_max_velocity_xy
+                )
+
+            if self.should_show_velocity_z_warning:
+                markers.extend(
+                    [point] for point in _safety_check_result.drones_over_max_velocity_z
                 )
 
             overlay.markers = markers

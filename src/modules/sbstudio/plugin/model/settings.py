@@ -1,20 +1,27 @@
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, FloatProperty
 from bpy.types import PropertyGroup
 
 from sbstudio.plugin.utils.bloom import set_bloom_effect_enabled
 
 
-__all__ = ("DroneShowAddonSettings",)
+__all__ = ("DroneShowAddonFileSpecificSettings",)
 
 
 def use_bloom_effect_updated(self, context):
     set_bloom_effect_enabled(self.use_bloom_effect)
 
 
-class DroneShowAddonSettings(PropertyGroup):
+class DroneShowAddonFileSpecificSettings(PropertyGroup):
     """Property group that stores the generic settings of a drone show in the
     addon that do not belong elsewhere.
     """
+
+    max_acceleration = FloatProperty(
+        name="Maximum acceleration",
+        description="Maximum acceleration allowed when planning the duration of transitions between fixed points",
+        default=4,
+        unit="ACCELERATION",
+    )
 
     use_bloom_effect = BoolProperty(
         name="Use bloom effect",

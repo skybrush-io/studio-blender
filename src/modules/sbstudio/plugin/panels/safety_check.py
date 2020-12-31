@@ -27,7 +27,9 @@ class SafetyCheckPanel(Panel):
     def draw(self, context):
         scene = context.scene
         safety_check = scene.skybrush.safety_check
-        if not safety_check:
+        settings = scene.skybrush.settings
+
+        if not safety_check or not settings:
             return
 
         layout = self.layout
@@ -44,6 +46,19 @@ class SafetyCheckPanel(Panel):
         col.prop(safety_check, "max_altitude")
         col.alert = False
 
+        col = layout.column()
+        col.alert = safety_check.should_show_velocity_xy_warning
+        col.enabled = safety_check.max_velocities_are_valid
+        col.prop(safety_check, "max_velocity_xy")
+        col.alert = False
+
+        col = layout.column()
+        col.alert = safety_check.should_show_velocity_z_warning
+        col.enabled = safety_check.max_velocities_are_valid
+        col.prop(safety_check, "max_velocity_z")
+        col.alert = False
+
+        col = layout.column()
         col.separator()
 
         col.prop(safety_check, "proximity_warning_enabled")
@@ -63,6 +78,20 @@ class SafetyCheckPanel(Panel):
             text="",
         )
         row.enabled = safety_check.altitude_warning_enabled
+
+        col.prop(safety_check, "velocity_warning_enabled")
+        row = col.row()
+        row.prop(
+            safety_check,
+            "velocity_xy_warning_threshold",
+            text="XY",
+        )
+        row.prop(
+            safety_check,
+            "velocity_z_warning_threshold",
+            text="Z",
+        )
+        row.enabled = safety_check.velocity_warning_enabled
 
         col.separator()
 

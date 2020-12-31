@@ -1,3 +1,5 @@
+from collections import OrderedDict
+from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any, Callable, List, Sequence
 
@@ -62,3 +64,47 @@ def _simplify_line(points, *, eps, distance_func):
         pre = _simplify_line(points[: index + 1], eps=eps, distance_func=distance_func)
         post = _simplify_line(points[index:], eps=eps, distance_func=distance_func)
         return pre[:-1] + post
+
+
+class LRUCache(MutableMapping):
+    """Size-limited cache with least-recently-used eviction policy."""
+
+    def __init__(self, capacity: int):
+        """Constructor.
+
+        Parameters:
+            capacity: maximum number of items that can be stored in the cache.
+        """
+        self._items = OrderedDict()
+        self._capacity = max(int(capacity), 1)
+
+    def __delitem__(self, key):
+        del self._items[key]
+
+    def __iter__(self):
+        return iter(self._items)
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+    def __setitem__(self, key, value):
+        self._items[key] = value
+        self._items.move_to_end(key)
+        if len(self._items) > self._capacity:
+            self._items.popitem(last=False)
+
+    def get(self, key):
+        """Returns the value corresponding to the given key, marking the key as
+        recently accessed.
+        """
+        value = self._items[key]
+        self._items.move_to_end(key)
+        return value
+
+    def peek(self, key):
+        """Returns the value corresponding to the given key, _without_ marking
+        the key as recently accessed.
+        """
+        return self._items[key]
+
+    __getitem__ = peek
