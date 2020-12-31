@@ -10,10 +10,8 @@ bl_info = {
 #############################################################################
 # imports needed to set up the Python path properly
 
-import bpy
 import sys
 
-from bpy.path import abspath
 from bpy.props import PointerProperty
 from bpy.types import Scene
 from pathlib import Path
@@ -40,6 +38,7 @@ for candidate in candidates:
 from sbstudio.plugin.model import (
     DroneShowAddonProperties,
     DroneShowAddonSettings,
+    FormationsPanelProperties,
     LEDControlPanelProperties,
     SafetyCheckProperties,
     StoryboardEntry,
@@ -53,15 +52,18 @@ from sbstudio.plugin.operators import (
     DetachMaterialsFromDroneTemplateOperator,
     PrepareSceneOperator,
     RecalculateTransitionsOperator,
+    RemoveFormationOperator,
     RemoveStoryboardEntryOperator,
     SwapColorsInLEDControlPanelOperator,
+    UpdateFormationOperator,
     ValidateTrajectoriesOperator,
 )
 from sbstudio.plugin.panels import (
     ExportPanel,
+    FormationsPanel,
+    StoryboardEditor,
     LEDControlPanel,
     SafetyCheckPanel,
-    StoryboardEditor,
 )
 from sbstudio.plugin.plugin_helpers import (
     register_header,
@@ -82,6 +84,7 @@ from sbstudio.plugin.tasks import InitializationTask, SafetyCheckTask
 
 #: Custom types in this addon
 types = (
+    FormationsPanelProperties,
     StoryboardEntry,
     Storyboard,
     LEDControlPanelProperties,
@@ -95,6 +98,8 @@ types = (
 operators = (
     PrepareSceneOperator,
     CreateFormationOperator,
+    UpdateFormationOperator,
+    RemoveFormationOperator,
     CreateNewStoryboardEntryOperator,
     RemoveStoryboardEntryOperator,
     CreateTakeoffGridOperator,
@@ -107,7 +112,13 @@ operators = (
 
 #: Panels in this addon. The order also implicitly defines the order in which
 #: our tabs appear in the sidebar of the 3D view.
-panels = (LEDControlPanel, StoryboardEditor, SafetyCheckPanel, ExportPanel)
+panels = (
+    FormationsPanel,
+    StoryboardEditor,
+    LEDControlPanel,
+    SafetyCheckPanel,
+    ExportPanel,
+)
 
 #: Headers in this addon
 headers = ()

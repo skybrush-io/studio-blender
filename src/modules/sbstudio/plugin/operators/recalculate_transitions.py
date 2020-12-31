@@ -1,6 +1,5 @@
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
-    find_f_curve_for_data_path,
 )
 from sbstudio.plugin.api import api
 from sbstudio.plugin.constants import Collections
@@ -36,9 +35,6 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         # Get all the drones
         drones = Collections.find_drones().objects
-
-        # Get hold of a function to jump to a given frame
-        seek_to = context.scene.frame_set
 
         # Prepare a list consisting of triplets like this:
         # end of previous formation, formation, start of next formation

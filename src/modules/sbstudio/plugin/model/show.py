@@ -1,6 +1,7 @@
 from bpy.props import PointerProperty
 from bpy.types import PropertyGroup
 
+from .formations_panel import FormationsPanelProperties
 from .led_control import LEDControlPanelProperties
 from .safety_check import SafetyCheckProperties
 from .settings import DroneShowAddonSettings
@@ -17,6 +18,7 @@ class DroneShowAddonProperties(PropertyGroup):
     of this property.
     """
 
+    formations = PointerProperty(type=FormationsPanelProperties)
     led_control = PointerProperty(type=LEDControlPanelProperties)
     safety_check = PointerProperty(type=SafetyCheckProperties)
     settings = PointerProperty(type=DroneShowAddonSettings)

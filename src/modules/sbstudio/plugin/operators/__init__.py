@@ -8,8 +8,10 @@ from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOper
 from .export_to_skyc import SkybrushExportOperator
 from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
+from .remove_formation import RemoveFormationOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
+from .update_formation import UpdateFormationOperator
 from .validate_trajectories import ValidateTrajectoriesOperator
 
 __all__ = (
@@ -20,8 +22,10 @@ __all__ = (
     "DetachMaterialsFromDroneTemplateOperator",
     "PrepareSceneOperator",
     "RecalculateTransitionsOperator",
+    "RemoveFormationOperator",
     "RemoveStoryboardEntryOperator",
     "SkybrushExportOperator",
     "SwapColorsInLEDControlPanelOperator",
+    "UpdateFormationOperator",
     "ValidateTrajectoriesOperator",
 )

@@ -4,22 +4,16 @@ from bpy.props import (
     BoolProperty,
     CollectionProperty,
     IntProperty,
-    PointerProperty,
 )
-from bpy.types import Collection, PropertyGroup
+from bpy.types import PropertyGroup
 from operator import attrgetter
 from typing import Optional
 
 from sbstudio.plugin.errors import StoryboardValidationError
-
-from .formation import is_formation
+from sbstudio.plugin.props import FormationProperty
 
 
 __all__ = ("StoryboardEntry", "Storyboard")
-
-
-def _is_formation(self, object):
-    return is_formation(object)
 
 
 def _handle_formation_change(operator, context):
@@ -37,15 +31,12 @@ class StoryboardEntry(PropertyGroup):
         description="Keeps the name of the storyboard entry when the associated formation changes",
         default=False,
     )
-    formation = PointerProperty(
-        name="Formation",
+    formation = FormationProperty(
         description=(
             "Formation to use in this storyboard entry. Leave empty to mark this "
             "interval in the show as a segment that should not be affected by "
             "formation constraints."
         ),
-        type=Collection,
-        poll=_is_formation,
         update=_handle_formation_change,
     )
     frame_start = IntProperty(

@@ -9,6 +9,7 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils import create_object_in_collection
 
 __all__ = (
+    "add_markers_to_formation",
     "create_formation",
     "create_marker",
     "get_all_markers_from_formation",
@@ -34,9 +35,7 @@ def create_formation(name: str, points: Optional[Iterable[Vector]] = None):
         factory=partial(bpy.data.collections.new, name),
     )
 
-    for index, point in enumerate(points, 1):
-        marker_name = f"{name} / {index}"
-        create_marker(location=point, name=marker_name, collection=formation, size=0.5)
+    add_markers_to_formation(formation, points, name=name)
 
     return formation
 
@@ -65,6 +64,28 @@ def create_marker(
     collection.objects.link(marker)
 
     return marker
+
+
+def add_markers_to_formation(
+    formation,
+    points: Optional[Iterable[Vector]],
+    *,
+    name: Optional[str] = None,
+    start_from: int = 1,
+) -> None:
+    """Creates new markers in a formation object.
+
+    Parameters:
+        formation: the formation to create the markers in
+        points: the points to add to the formation
+        name: the name of the formation
+        start_from: the index of the first point to add; used when naming the
+            newly added markers
+    """
+    name = name or formation.name
+    for index, point in enumerate(points, start_from):
+        marker_name = f"{name} / {index}"
+        create_marker(location=point, name=marker_name, collection=formation, size=0.5)
 
 
 def get_all_markers_from_formation(formation) -> list:
