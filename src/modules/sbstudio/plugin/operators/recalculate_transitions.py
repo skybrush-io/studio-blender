@@ -70,7 +70,15 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                 # current formation
                 source = get_positions_of(drones, frame=end_of_previous)
                 target = get_positions_of(markers, frame=entry.frame_start)
-                match = api.match_points(source, target)
+
+                if entry.transition_type == "AUTO":
+                    # Auto mapping with our API
+                    match = api.match_points(source, target)
+                else:
+                    # Manual mapping
+                    match = list(range(min(len(source), len(target))))
+                    if len(match) < len(target):
+                        match.extend([None] * (len(target) - len(match)))
 
                 # match[i] now contains the index of the drone that the i-th
                 # target point was matched to. We need to invert the mapping.

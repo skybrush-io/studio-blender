@@ -56,6 +56,7 @@ class StoryboardEditor(Panel):
             col.prop(entry, "formation")
             col.prop(entry, "frame_start")
             col.prop(entry, "duration")
+            col.prop(entry, "transition_type")
             col.prop(entry, "is_name_customized")
 
         layout.separator()

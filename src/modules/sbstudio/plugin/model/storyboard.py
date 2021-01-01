@@ -3,6 +3,7 @@ import bpy
 from bpy.props import (
     BoolProperty,
     CollectionProperty,
+    EnumProperty,
     IntProperty,
 )
 from bpy.types import PropertyGroup
@@ -48,6 +49,18 @@ class StoryboardEntry(PropertyGroup):
         name="Duration",
         description="Duration of this formation",
         default=0,
+    )
+    transition_type = EnumProperty(
+        items=[
+            ("MANUAL", "Manual", "", 1),
+            ("AUTO", "Auto", "", 2),
+        ],
+        name="Transition",
+        description="Type of transition between the previous formation and this one. "
+        "Manual transitions map the nth vertex of the initial formation to the nth "
+        "vertex of the target formation; auto-matched transitions find an "
+        "optimal mapping between vertices of the initial and the target formation.",
+        default="AUTO",
     )
 
     @property
