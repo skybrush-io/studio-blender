@@ -5,10 +5,22 @@ from typing import Any, Callable, List, Optional, Sequence, Tuple
 
 
 __all__ = (
+    "constant",
     "create_path_and_open",
     "get_moves_required_to_sort_collection",
     "simplify_path",
 )
+
+
+def constant(value: Any) -> Callable[..., Any]:
+    """Factory that returns a function that returns the given value when called
+    with arbitrary arguments.
+    """
+
+    def result(*args, **kwds):
+        return value
+
+    return result
 
 
 def create_path_and_open(filename, *args, **kwds):

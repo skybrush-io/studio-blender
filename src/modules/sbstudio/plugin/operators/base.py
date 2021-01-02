@@ -1,5 +1,6 @@
 from bpy.types import Operator
 
+from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.selection import select_only
 
 
@@ -43,4 +44,16 @@ class StoryboardOperator(Operator):
 
     def execute(self, context):
         storyboard = context.scene.skybrush.storyboard
-        return self.execute_on_storyboard(storyboard, context)
+
+        validate = getattr(self.__class__, "only_with_valid_storyboard", False)
+
+        if validate:
+            try:
+                entries = storyboard.validate_and_sort_entries()
+            except StoryboardValidationError as ex:
+                self.report({"ERROR_INVALID_INPUT"}, str(ex))
+                return {"CANCELLED"}
+
+            return self.execute_on_storyboard(storyboard, entries, context)
+        else:
+            return self.execute_on_storyboard(storyboard, context)

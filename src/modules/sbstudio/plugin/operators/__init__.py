@@ -6,6 +6,7 @@ from .create_new_storyboard_entry import CreateNewStoryboardEntryOperator
 from .create_takeoff_grid import CreateTakeoffGridOperator
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
 from .export_to_skyc import SkybrushExportOperator
+from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .remove_formation import RemoveFormationOperator
@@ -20,6 +21,7 @@ __all__ = (
     "CreateNewStoryboardEntryOperator",
     "CreateTakeoffGridOperator",
     "DetachMaterialsFromDroneTemplateOperator",
+    "FixConstraintOrderingOperator",
     "PrepareSceneOperator",
     "RecalculateTransitionsOperator",
     "RemoveFormationOperator",

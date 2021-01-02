@@ -1,30 +1,28 @@
+from typing import List, Sequence, Tuple
+
+import bpy
+
+from bpy.props import EnumProperty
+
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
 )
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.keyframes import set_keyframes
 from sbstudio.plugin.model.formation import get_all_markers_from_formation
+from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
 from sbstudio.plugin.transition import (
     create_transition_constraint_between,
     find_transition_constraint_between,
-    get_id_for_formation_constraint,
     set_constraint_name_from_formation,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
-from sbstudio.utils import get_moves_required_to_sort_collection
+from sbstudio.utils import constant
 
 from .base import StoryboardOperator
 
 __all__ = ("RecalculateTransitionsOperator",)
-
-
-def sort_constraints_of_object(object, key):
-    constraints = object.constraints
-    moves = get_moves_required_to_sort_collection(constraints, key)
-    for source, target in moves:
-        constraints.move(source, target)
 
 
 class RecalculateTransitionsOperator(StoryboardOperator):
@@ -35,38 +33,37 @@ class RecalculateTransitionsOperator(StoryboardOperator):
     bl_description = (
         "Recalculates all transitions in the show based on the current storyboard."
     )
+    bl_options = {"UNDO"}
 
-    def execute_on_storyboard(self, storyboard, context):
-        try:
-            entries = storyboard.validate_and_sort_entries()
-        except StoryboardValidationError as ex:
-            self.report({"ERROR_INVALID_INPUT"}, str(ex))
-            return {"CANCELLED"}
+    scope = EnumProperty(
+        items=[
+            ("ALL", "Entire storyboard", "", 1),
+            ("TO_SELECTED", "To selected formation", "", 2),
+            ("FROM_SELECTED", "From selected formation", "", 3),
+            ("FROM_SELECTED_TO_END", "From selected formation to end", "", 4),
+        ],
+        name="Scope",
+        description="Scope of the operator that defines which transitions must be recalculated",
+        default="ALL",
+    )
 
+    only_with_valid_storyboard = True
+
+    def execute_on_storyboard(self, storyboard, entries, context):
         # Get all the drones
         drones = Collections.find_drones().objects
 
         # Prepare a list consisting of triplets like this:
         # end of previous formation, formation, start of next formation
-        num_entries = len(entries)
-        entry_info = []
-        for index, entry in enumerate(entries):
-            entry_info.append(
-                (
-                    None if index == 0 else entries[index - 1].frame_end,
-                    entry,
-                    None
-                    if index == num_entries - 1
-                    else entries[index + 1].frame_start,
-                )
-            )
+        entry_info = self._get_transitions_to_process(storyboard, entries)
 
         with create_position_evaluator() as get_positions_of:
             # Grab some common constants that we will need
             start_of_scene = min(context.scene.frame_start, storyboard.frame_start)
             end_of_scene = max(context.scene.frame_end, storyboard.frame_end)
 
-            # Iterate through the storyboard
+            # Iterate through the entries for which we need to recalculate the
+            # transitions
             for end_of_previous, entry, start_of_next in entry_info:
                 formation = entry.formation
                 if formation is None:
@@ -75,7 +72,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
                 is_first_formation = end_of_previous is None
                 if end_of_previous is None:
-                    end_of_previous = context.scene.frame_start
+                    end_of_previous = start_of_scene
 
                 markers = get_all_markers_from_formation(formation)
 
@@ -170,21 +167,57 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                             0.25,
                         )
 
-        # Sort the constraints such that the ones corresponding to formations
-        # that come later (in time) appear later in the constraint chain.
-        formation_priority_map = {
-            get_id_for_formation_constraint(entry.formation): index
-            for index, entry in enumerate(entries)
-            if entry.formation is not None
-        }
-
-        def key_function(constraint):
-            return formation_priority_map.get(constraint.name, 100000)
-
-        for drone in drones:
-            sort_constraints_of_object(drone, key=key_function)
+        bpy.ops.skybrush.fix_constraint_ordering()
 
         # TODO(ntamas): currently it is not possible for a formation to appear
         # more than once in the sequence
 
         return {"FINISHED"}
+
+    def _get_transitions_to_process(
+        self, storyboard: Storyboard, entries: Sequence[StoryboardEntry]
+    ) -> List[Tuple[float, StoryboardEntry, float]]:
+        """Processes the storyboard entries and selects the ones for which we
+        need to recalculate the transitions, based on the scope parameter of
+        the operator.
+
+        Returns:
+            for each entry where the transition _to_ the formation of the entry
+            has to be recalculated, a tuple containing the end of the
+            previous formation (`None` if this is the first formation in the
+            entire storyboard), the storyboard entry itself, and the start frame
+            of the next formation (`None` if this is the last formation in the
+            entire storyboard)
+        """
+        entry_info = []
+        active_index = int(storyboard.active_entry_index)
+        num_entries = len(entries)
+
+        if self.scope == "FROM_SELECTED":
+            condition = (
+                (active_index + 1).__eq__
+                if active_index < num_entries - 1
+                else constant(False)
+            )
+        elif self.scope == "TO_SELECTED":
+            condition = active_index.__eq__
+        elif self.scope == "FROM_SELECTED_TO_END":
+            condition = active_index.__le__
+        elif self.scope == "ALL":
+            condition = constant(True)
+        else:
+            condition = constant(False)
+
+        for index, entry in enumerate(entries):
+            if condition(index):
+                entry_info.append(
+                    (
+                        None if index == 0 else entries[index - 1].frame_end,
+                        entry,
+                        None
+                        if index == num_entries - 1
+                        else entries[index + 1].frame_start,
+                    )
+                )
+
+        return entry_info
