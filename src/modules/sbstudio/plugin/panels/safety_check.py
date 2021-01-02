@@ -24,6 +24,13 @@ class SafetyCheckPanel(Panel):
     def poll(cls, context):
         return context.scene.skybrush.safety_check
 
+    def draw_header(self, context):
+        scene = context.scene
+        safety_check = scene.skybrush.safety_check
+
+        if safety_check:
+            self.layout.prop(safety_check, "enabled", text="")
+
     def draw(self, context):
         scene = context.scene
         safety_check = scene.skybrush.safety_check
@@ -33,9 +40,6 @@ class SafetyCheckPanel(Panel):
             return
 
         layout = self.layout
-
-        layout.prop(safety_check, "enabled")
-        layout.separator()
 
         row = layout.row()
         row.enabled = safety_check.enabled

@@ -20,12 +20,9 @@ class CreateFormationOperator(FormationOperator):
     currently selected vertices to it.
     """
 
-    bl_idname = "skybrush.create_formation_from_selection"
+    bl_idname = "skybrush.create_formation"
     bl_label = "Create Formation"
-    bl_description = (
-        "Creates a new formation in the Formations collection and optionally "
-        "adds the currently selected vertices to it."
-    )
+    bl_description = "Creates a new formation in the Formations collection."
     bl_options = {"REGISTER", "UNDO"}
 
     name = StringProperty(name="Name", description="Name of the new formation")

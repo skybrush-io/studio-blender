@@ -38,11 +38,30 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
     scope = EnumProperty(
         items=[
-            ("ALL", "Entire storyboard", "", 1),
-            ("CURRENT_FRAME", "Current frame", "", 2),
-            ("TO_SELECTED", "To selected formation", "", 3),
-            ("FROM_SELECTED", "From selected formation", "", 4),
-            ("FROM_SELECTED_TO_END", "From selected formation to end", "", 5),
+            ("ALL", "Entire storyboard", "", "SEQUENCE", 1),
+            ("CURRENT_FRAME", "Current frame", "", "EMPTY_SINGLE_ARROW", 2),
+            None,
+            (
+                "TO_SELECTED",
+                "To selected formation",
+                "",
+                "TRACKING_BACKWARDS_SINGLE",
+                3,
+            ),
+            (
+                "FROM_SELECTED",
+                "From selected formation",
+                "",
+                "TRACKING_FORWARDS_SINGLE",
+                4,
+            ),
+            (
+                "FROM_SELECTED_TO_END",
+                "From selected formation to end",
+                "",
+                "TRACKING_FORWARDS",
+                5,
+            ),
         ],
         name="Scope",
         description="Scope of the operator that defines which transitions must be recalculated",
