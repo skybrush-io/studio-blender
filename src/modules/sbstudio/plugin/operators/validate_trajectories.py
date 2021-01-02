@@ -1,7 +1,7 @@
 from bpy.props import BoolProperty
 from bpy.types import Operator
 
-from sbstudio.plugin.api import api
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.props import FrameRangeProperty
 from sbstudio.plugin.utils import (
     get_temporary_directory,
@@ -50,7 +50,7 @@ class ValidateTrajectoriesOperator(Operator):
 
         output = get_temporary_directory() / "validation.pdf"
         try:
-            api.generate_plots(trajectories=trajectories, output=output)
+            get_api().generate_plots(trajectories=trajectories, output=output)
         except Exception:
             self.report(
                 {"ERROR"},

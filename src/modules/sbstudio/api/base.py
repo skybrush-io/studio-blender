@@ -1,4 +1,5 @@
 import json
+import re
 
 from contextlib import contextmanager
 from gzip import compress
@@ -92,23 +93,66 @@ class Response:
             copyfileobj(self._response, f)
 
 
+_API_KEY_REGEXP = re.compile(r"^[a-zA-Z0-9-_.]*$")
+
+
 class SkybrushStudioAPI:
     """Class that represents a connection to the API of a Skybrush Studio
     server.
     """
 
-    def __init__(self, url: str = "https://studio.skybrush.io/api/v1/"):
+    @staticmethod
+    def validate_api_key(key: str) -> str:
+        """Validates the given API key.
+
+        Returns:
+            the validated API key; same as the input argument
+
+        Raises:
+            ValueError: if the key cannot be a valid API key
+        """
+        if not _API_KEY_REGEXP.match(key):
+            raise ValueError("Invalid API key")
+        return key
+
+    def __init__(
+        self,
+        url: str = "https://studio.skybrush.io/api/v1/",
+        api_key: Optional[str] = None,
+    ):
         """Constructor.
 
         Parameters:
             url: the root URL of the Skybrush Studio API; defaults to the public
                 online service
+            api_key: the API key used to authenticate with the server
         """
-        if not url.endswith("/"):
-            url += "/"
-
-        self._root = url
+        self._api_key = None
+        self._root = None
         self._request_context = create_default_context()
+
+        self.api_key = api_key
+        self.url = url
+
+    @property
+    def api_key(self) -> Optional[str]:
+        """The API key used to authenticate with the server."""
+        return self._api_key
+
+    @api_key.setter
+    def api_key(self, value: Optional[str]) -> None:
+        self._api_key = self.validate_api_key(value) if value else None
+
+    @property
+    def url(self) -> str:
+        """The URL where the API can be accessed."""
+        return self._root
+
+    @url.setter
+    def url(self, value: str) -> None:
+        if not value.endswith("/"):
+            value += "/"
+        self._root = value
 
     @contextmanager
     def _send_request(self, url: str, data: Any = None) -> ContextManager[Response]:
@@ -152,6 +196,8 @@ class SkybrushStudioAPI:
         headers = {"Content-Type": content_type}
         if content_encoding is not None:
             headers["Content-Encoding"] = content_encoding
+        if self._api_key is not None:
+            headers["X-Skybrush-API-Key"] = self._api_key
 
         url = urljoin(self._root, url.lstrip("/"))
         req = Request(url, data=data, headers=headers, method=method)

@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.trajectory import Trajectory
-from sbstudio.plugin.api import api
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.materials import (
     get_shader_node_and_input_for_diffuse_color_of_material,
@@ -256,7 +256,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
 
     # create Skybrush converter object
     log.info("Exporting to .skyc")
-    api.export_to_skyc(
+    get_api().export_to_skyc(
         show_title=show_title, trajectories=trajectories, lights=lights, output=filepath
     )
     log.info("Export finished")

@@ -1,7 +1,7 @@
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
 )
-from sbstudio.plugin.api import api
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.keyframes import set_keyframes
@@ -73,7 +73,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
                 if entry.transition_type == "AUTO":
                     # Auto mapping with our API
-                    match = api.match_points(source, target)
+                    match = get_api().match_points(source, target)
                 else:
                     # Manual mapping
                     match = list(range(min(len(source), len(target))))
