@@ -108,7 +108,14 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
                 if entry.transition_type == "AUTO":
                     # Auto mapping with our API
-                    match = get_api().match_points(source, target)
+                    try:
+                        match = get_api().match_points(source, target)
+                    except Exception:
+                        self.report(
+                            {"ERROR"},
+                            "Error while invoking transition planner on the Skybrush Studio online service",
+                        )
+                        return {"CANCELLED"}
                 else:
                     # Manual mapping
                     match = list(range(min(len(source), len(target))))

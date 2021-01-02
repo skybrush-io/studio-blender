@@ -132,7 +132,7 @@ class Storyboard(PropertyGroup):
             frame_start = (
                 self.frame_end + fps * DEFAULT_STORYBOARD_TRANSITION_DURATION
                 if self.entries
-                else self.scene.frame_start
+                else context.scene.frame_start
             )
 
         if duration is None or duration <= 0:

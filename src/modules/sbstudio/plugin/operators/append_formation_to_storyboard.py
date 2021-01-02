@@ -45,6 +45,17 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
         fps = context.scene.render.fps
 
+        # Set up safety check parameters
+        safety_kwds = dict(
+            max_velocity_xy=safety_check.velocity_xy_warning_threshold
+            if safety_check
+            else 8,
+            max_velocity_z=safety_check.velocity_z_warning_threshold
+            if safety_check
+            else 2,
+            max_acceleration=settings.max_acceleration if settings else 4,
+        )
+
         with create_position_evaluator() as get_positions_of:
             if last_formation is not None:
                 markers = get_all_markers_from_formation(last_formation)
@@ -58,20 +69,22 @@ class AppendFormationToStoryboardOperator(FormationOperator):
             markers = get_all_markers_from_formation(formation)
             target = get_positions_of(markers, frame=entry.frame_start)
 
+        try:
             transition_duration = get_api().plan_transition(
-                source,
-                target,
-                max_velocity_xy=safety_check.velocity_xy_warning_threshold
-                if safety_check
-                else 8,
-                max_velocity_z=safety_check.velocity_z_warning_threshold
-                if safety_check
-                else 2,
-                max_acceleration=settings.max_acceleration if settings else 4,
+                source, target, **safety_kwds
             )
+        except Exception:
+            self.report(
+                {"ERROR"},
+                "Error while invoking transition planner on the Skybrush Studio online service",
+            )
+            return {"CANCELLED"}
 
-            # To get nicer-looking frame counts, we round the end of the
-            # transition up to the next whole second
-            entry.frame_start = ceil(last_frame / fps + transition_duration) * fps
+        # To get nicer-looking frame counts, we round the end of the
+        # transition up to the next whole second. We need to take into account
+        # whether the scene starts from frame 1 or 0, though.
+        new_start = ceil(last_frame + transition_duration * fps)
+        diff = ceil((new_start - context.scene.frame_start) / fps) * fps
+        entry.frame_start = context.scene.frame_start + diff
 
         return {"FINISHED"}

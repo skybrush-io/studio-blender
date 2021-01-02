@@ -140,7 +140,9 @@ def run_safety_check(scene, depsgraph):
     )
     velocities = list(velocity_snapshot.values())
 
-    max_velocity_xy_found = max(hypot(vel[0], vel[1]) for vel in velocities)
+    max_velocity_xy_found = (
+        max(hypot(vel[0], vel[1]) for vel in velocities) if velocities else 0.0
+    )
     if max_velocity_xy is not None:
         drones_over_max_velocity_xy = [
             snapshot.get(name, _ZERO)
