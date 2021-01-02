@@ -34,33 +34,13 @@ class SafetyCheckPanel(Panel):
 
         layout = self.layout
 
-        layout.label(text="Current frame")
+        layout.prop(safety_check, "enabled")
+        layout.separator()
 
-        col = layout.column()
-        col.alert = safety_check.should_show_proximity_warning
-        col.prop(safety_check, "min_distance")
-        col.alert = False
+        row = layout.row()
+        row.enabled = safety_check.enabled
 
-        col = layout.column()
-        col.alert = safety_check.should_show_altitude_warning
-        col.prop(safety_check, "max_altitude")
-        col.alert = False
-
-        col = layout.column()
-        col.alert = safety_check.should_show_velocity_xy_warning
-        col.enabled = safety_check.max_velocities_are_valid
-        col.prop(safety_check, "max_velocity_xy")
-        col.alert = False
-
-        col = layout.column()
-        col.alert = safety_check.should_show_velocity_z_warning
-        col.enabled = safety_check.max_velocities_are_valid
-        col.prop(safety_check, "max_velocity_z")
-        col.alert = False
-
-        col = layout.column()
-        col.separator()
-
+        col = row.column()
         col.prop(safety_check, "proximity_warning_enabled")
         row = col.row()
         row.prop(
@@ -93,6 +73,6 @@ class SafetyCheckPanel(Panel):
         )
         row.enabled = safety_check.velocity_warning_enabled
 
-        col.separator()
+        layout.separator()
 
-        col.operator(ValidateTrajectoriesOperator.bl_idname)
+        layout.operator(ValidateTrajectoriesOperator.bl_idname)

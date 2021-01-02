@@ -1,4 +1,6 @@
 import bgl
+import blf
+import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
@@ -13,6 +15,13 @@ __all__ = ("SafetyCheckOverlay",)
 #: Type specification for markers on the overlay. Each marker is a sequence of
 #: coordinates that are interconnected with lines.
 MarkerList = List[Sequence[Coordinate3D]]
+
+
+def set_warning_color_iff(condition: bool, font_id: int) -> None:
+    if condition:
+        blf.color(font_id, 1, 1, 0, 1)
+    else:
+        blf.color(font_id, 1, 1, 1, 1)
 
 
 class SafetyCheckOverlay(Overlay):
@@ -47,6 +56,46 @@ class SafetyCheckOverlay(Overlay):
 
     def prepare(self) -> None:
         self._shader = gpu.shader.from_builtin("3D_UNIFORM_COLOR")
+
+    def draw_2d(self) -> None:
+        skybrush = getattr(bpy.context.scene, "skybrush", None)
+        safety_check = getattr(skybrush, "safety_check", None)
+        if not safety_check:
+            return
+
+        font_id = 0
+
+        context = bpy.context
+
+        left_panel_width = context.area.regions[2].width
+        total_height = context.area.height
+
+        left_margin = left_panel_width + 38
+        y = total_height - 224
+
+        blf.size(font_id, 22, 72)
+        blf.enable(font_id, blf.SHADOW)
+
+        if safety_check.min_distance_is_valid:
+            set_warning_color_iff(safety_check.should_show_proximity_warning, font_id)
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(font_id, f"Min distance: {safety_check.min_distance:.1f} m")
+            y -= 40
+
+        if safety_check.max_altitude_is_valid:
+            set_warning_color_iff(safety_check.should_show_altitude_warning, font_id)
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(font_id, f"Max altitude: {safety_check.max_altitude:.1f} m")
+            y -= 40
+
+        if safety_check.max_velocities_are_valid:
+            set_warning_color_iff(safety_check.should_show_velocity_warning, font_id)
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(
+                font_id,
+                f"Max velocity XY: {safety_check.max_velocity_xy:.1f} m/s | Z: {safety_check.max_velocity_z:.1f} m/s",
+            )
+            y -= 40
 
     def draw_3d(self) -> None:
         bgl.glEnable(bgl.GL_BLEND)

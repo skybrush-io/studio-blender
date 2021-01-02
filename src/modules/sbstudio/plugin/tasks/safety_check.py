@@ -94,7 +94,11 @@ def estimate_velocities_of_drones_at_frame(snapshot, *, frame, scene):
 def run_safety_check(scene, depsgraph):
     safety_check = scene.skybrush.safety_check
 
-    drones = Collections.find_drones(create=False)
+    if safety_check.enabled:
+        drones = Collections.find_drones(create=False)
+    else:
+        drones = None
+
     if not drones:
         safety_check.clear_safety_check_result()
         return
@@ -155,6 +159,8 @@ def run_safety_check(scene, depsgraph):
             for name, vel in velocity_snapshot.items()
             if abs(vel[2]) > max_velocity_z
         ]
+    else:
+        drones_over_max_velocity_z = []
 
     safety_check.set_safety_check_result(
         nearest_neighbors=nearest_neighbors,

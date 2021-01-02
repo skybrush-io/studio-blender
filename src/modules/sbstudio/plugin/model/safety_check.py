@@ -68,6 +68,16 @@ class SafetyCheckProperties(PropertyGroup):
     they can be modified by the user.
     """
 
+    enabled = BoolProperty(
+        name="Enable safety checks",
+        description=(
+            "Enables real-time safety checks that compare the altitudes, distances and "
+            "velocities of drones with a safety threshold in every frame. Turn this off "
+            "if performance suffers during playback."
+        ),
+        default=True,
+    )
+
     min_distance = FloatProperty(
         name="Min distance",
         description="Minimum distance along all possible pairs of drones in the current frame, calculated between their centers of mass",
@@ -214,6 +224,20 @@ class SafetyCheckProperties(PropertyGroup):
             self.proximity_warning_enabled
             and self.min_distance_is_valid
             and self.min_distance < self.proximity_warning_threshold
+        )
+
+    @property
+    def should_show_velocity_warning(self) -> bool:
+        """Returns whether the velocity warning should be drawn in the 3D view
+        _right now_, given the current values of the properties.
+        """
+        return (
+            self.velocity_warning_enabled
+            and self.max_velocities_are_valid
+            and (
+                self.max_velocity_xy > self.velocity_xy_warning_threshold
+                or self.max_velocity_z > self.velocity_z_warning_threshold
+            )
         )
 
     @property
