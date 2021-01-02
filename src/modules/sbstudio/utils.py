@@ -1,10 +1,14 @@
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Callable, List, Sequence
+from typing import Any, Callable, List, Optional, Sequence, Tuple
 
 
-__all__ = ("create_path_and_open", "simplify_path")
+__all__ = (
+    "create_path_and_open",
+    "get_moves_required_to_sort_collection",
+    "simplify_path",
+)
 
 
 def create_path_and_open(filename, *args, **kwds):
@@ -14,6 +18,41 @@ def create_path_and_open(filename, *args, **kwds):
     path = Path(filename)
     path.parent.mkdir(exist_ok=True, parents=True)
     return open(str(path), *args, **kwds)
+
+
+def get_moves_required_to_sort_collection(
+    items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
+) -> List[Tuple[int, int]]:
+    """Given a list of items and an optional sorting key function, returns a
+    list of from-to pairs representing steps that are needed to sort the list
+    with single-item moves. This is useful for sorting Blender collections
+    with its `move()` method.
+    """
+    result = []
+    num_items = len(items)
+
+    if num_items:
+        if key:
+            items = [key(item) for item in items]
+
+        indexes = sorted(range(num_items), key=items.__getitem__)
+
+        for front, index in enumerate(indexes):
+            if index != front:
+                result.append((index, front))
+                for j in range(front + 1, num_items):
+                    if indexes[j] >= front and indexes[j] < index:
+                        indexes[j] += 1
+
+    return result
+
+
+# >>> print(get_moves_required_to_sort_collection([10, 40, 30, 20, 50]))
+# [(3, 1), (3, 2)]
+# >>> print(get_moves_required_to_sort_collection([30, 20, 10, 40]))
+# [(2, 0), (2, 1)]
+# print(get_moves_required_to_sort_collection([50, 70, 40, 30, 20, 60, 10]))
+# [(6, 0), (5, 1), (5, 2), (5, 3), (6, 5)]
 
 
 def simplify_path(

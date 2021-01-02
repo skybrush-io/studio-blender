@@ -9,12 +9,22 @@ from sbstudio.plugin.model.formation import get_all_markers_from_formation
 from sbstudio.plugin.transition import (
     create_transition_constraint_between,
     find_transition_constraint_between,
+    get_id_for_formation_constraint,
+    set_constraint_name_from_formation,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
+from sbstudio.utils import get_moves_required_to_sort_collection
 
 from .base import StoryboardOperator
 
 __all__ = ("RecalculateTransitionsOperator",)
+
+
+def sort_constraints_of_object(object, key):
+    constraints = object.constraints
+    moves = get_moves_required_to_sort_collection(constraints, key)
+    for source, target in moves:
+        constraints.move(source, target)
 
 
 class RecalculateTransitionsOperator(StoryboardOperator):
@@ -52,6 +62,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             )
 
         with create_position_evaluator() as get_positions_of:
+            # Grab some common constants that we will need
+            start_of_scene = min(context.scene.frame_start, storyboard.frame_start)
+            end_of_scene = max(context.scene.frame_end, storyboard.frame_end)
+
             # Iterate through the storyboard
             for end_of_previous, entry, start_of_next in entry_info:
                 formation = entry.formation
@@ -109,6 +123,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                             constraint = create_transition_constraint_between(
                                 drone=drone, formation=formation
                             )
+                        else:
+                            # Make sure that the name of the constraint contains the
+                            # name of the formation even if the user renamed it
+                            set_constraint_name_from_formation(constraint, formation)
 
                         # Set the target of the constraint to the appropriate
                         # point of the formation
@@ -123,13 +141,25 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                     # Create keyframes for the influence of the constraint
                     ensure_action_exists_for_object(drone)
                     keyframes = [
+                        (start_of_scene, 0.0),
                         (end_of_previous, 0.0),
                         (entry.frame_start, 1.0),
                         (entry.frame_end, 1.0),
                     ]
+                    if start_of_scene == end_of_previous:
+                        del keyframes[0:1]
                     if start_of_next is not None:
-                        keyframes.append((start_of_next, 0.0))
-                    new_keyframe_points = set_keyframes(drone, key, keyframes)
+                        keyframes.append((start_of_next, 1.0))
+                        keyframes.append((start_of_next + 1, 0.0))
+                        keyframes.append((end_of_scene, 0.0))
+
+                    # Since 'keyframes' spans from the start of the scene to the
+                    # end, this will update all keyframes for the constraint.
+                    # We need this to handle cases when the user reorders the
+                    # formations.
+                    new_keyframe_points = set_keyframes(
+                        drone, key, keyframes, clear_range=True
+                    )
 
                     # For the first formation, the takeoff should be abrupt,
                     # not smooth, so tweak the keyframe a bit
@@ -140,10 +170,19 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                             0.25,
                         )
 
-        # TODO(ntamas): sort the constraints such that the ones corresponding
-        # to formations that come later (in time) appear later in the constraint
-        # chain. Right now it doesn't cause any problems, but it would be nicer
-        # for the user as it would be easier to find a particular constraint.
+        # Sort the constraints such that the ones corresponding to formations
+        # that come later (in time) appear later in the constraint chain.
+        formation_priority_map = {
+            get_id_for_formation_constraint(entry.formation): index
+            for index, entry in enumerate(entries)
+            if entry.formation is not None
+        }
+
+        def key_function(constraint):
+            return formation_priority_map.get(constraint.name, 100000)
+
+        for drone in drones:
+            sort_constraints_of_object(drone, key=key_function)
 
         # TODO(ntamas): currently it is not possible for a formation to appear
         # more than once in the sequence

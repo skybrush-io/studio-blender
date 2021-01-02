@@ -273,6 +273,8 @@ class SkybrushStudioAPI:
         self,
         trajectories: Dict[str, Trajectory],
         output: Path,
+        min_distance: float = 2,
+        max_altitude: float = 150,
         ndigits: float = 3,
     ) -> None:
         """Export drone show data into Skybrush Compiled Format (.skyc).
@@ -281,6 +283,8 @@ class SkybrushStudioAPI:
             show_title: arbitrary show title
             trajectories: dictionary of trajectories indexed by drone names
             output: the file path where the output should be saved
+            min_distance: desired minimum distance between drones
+            max_altitude: maximum allowed altitude for each drone
             ndigits: round floats to this precision
         """
         data = {
@@ -312,10 +316,8 @@ class SkybrushStudioAPI:
                     "plots": "nn,pos,vel",
                     "fps": 5,
                     "single_file": True,
-                    # TODO(ntamaS): max altitude and min distance should be
-                    # configurable from the outside
-                    "min_distance": 3,
-                    "max_altitude": 150,
+                    "min_distance": min_distance,
+                    "max_altitude": max_altitude,
                 },
             },
         }

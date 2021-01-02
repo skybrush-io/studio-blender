@@ -48,9 +48,21 @@ class ValidateTrajectoriesOperator(Operator):
             by_name=True,
         )
 
+        skybrush = getattr(context.scene, "skybrush", None)
+
         output = get_temporary_directory() / "validation.pdf"
+        kwds = {
+            "trajectories": trajectories,
+            "output": output,
+        }
+        if skybrush:
+            kwds["min_distance"] = skybrush.safety_check.proximity_warning_threshold
+            kwds["max_altitude"] = skybrush.safety_check.altitude_warning_threshold
+
+        print(repr(kwds))
+
         try:
-            get_api().generate_plots(trajectories=trajectories, output=output)
+            get_api().generate_plots(**kwds)
         except Exception:
             self.report(
                 {"ERROR"},

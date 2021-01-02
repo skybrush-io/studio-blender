@@ -5,11 +5,14 @@ from .utils.identifiers import create_internal_id, is_internal_id
 __all__ = (
     "create_transition_constraint_between",
     "find_transition_constraint_between",
+    "get_id_for_formation_constraint",
     "is_transition_constraint",
+    "parse_formation_name_from_constraint",
+    "set_constraint_name_from_formation",
 )
 
 
-def _get_id_for_formation_constraint(formation):
+def get_id_for_formation_constraint(formation):
     # Make sure to update is_transition_constraint() as well if you change the
     # format of the ID
     return create_internal_id(f"To {formation.name}")
@@ -33,7 +36,7 @@ def create_transition_constraint_between(drone, formation):
     point = formation.objects[0]
 
     constraint = drone.constraints.new(type="COPY_LOCATION")
-    constraint.name = _get_id_for_formation_constraint(formation)
+    constraint.name = get_id_for_formation_constraint(formation)
     constraint.influence = 0
     constraint.target = point
 
@@ -75,3 +78,14 @@ def is_transition_constraint(constraint):
         and is_internal_id(constraint.name)
         and "[To " in constraint.name
     )
+
+
+def parse_formation_name_from_constraint(constraint):
+    return constraint.name[3:] if constraint.name else None
+
+
+def set_constraint_name_from_formation(constraint, formation):
+    """Updates the name of the given constraint such that it refers to the given
+    formation.
+    """
+    constraint.name = get_id_for_formation_constraint(formation)

@@ -1,7 +1,6 @@
 """Functions related to the handling of keyframes in animation actions."""
 
 from bpy.types import Action, FCurve
-from operator import eq
 from typing import Callable, Optional, Sequence, Tuple, Union
 
 from .actions import (
@@ -36,7 +35,7 @@ def clear_keyframes(
         curves = action.fcurves
 
     if isinstance(data_path_filter, str):
-        data_path_filter = eq(data_path_filter)
+        data_path_filter = data_path_filter.__eq__
 
     for curve in curves:
         if data_path_filter is not None and not data_path_filter(curve.data_path):
