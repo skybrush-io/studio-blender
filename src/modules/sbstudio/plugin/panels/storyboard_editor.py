@@ -2,6 +2,8 @@ from bpy.types import Panel
 
 from sbstudio.plugin.operators import (
     CreateNewStoryboardEntryOperator,
+    MoveStoryboardEntryDownOperator,
+    MoveStoryboardEntryUpOperator,
     RecalculateTransitionsOperator,
     RemoveStoryboardEntryOperator,
 )
@@ -19,7 +21,7 @@ class StoryboardEditor(Panel):
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Show Design"
+    bl_category = "Formations"
 
     def draw(self, context):
         layout = self.layout
@@ -54,6 +56,11 @@ class StoryboardEditor(Panel):
         col = row.column(align=True)
         col.operator(CreateNewStoryboardEntryOperator.bl_idname, icon="ADD", text="")
         col.operator(RemoveStoryboardEntryOperator.bl_idname, icon="REMOVE", text="")
+        col.separator()
+        col.operator(MoveStoryboardEntryUpOperator.bl_idname, icon="TRIA_UP", text="")
+        col.operator(
+            MoveStoryboardEntryDownOperator.bl_idname, icon="TRIA_DOWN", text=""
+        )
 
         if entry is not None:
             col = layout.column()

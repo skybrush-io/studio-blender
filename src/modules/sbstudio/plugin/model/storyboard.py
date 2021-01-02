@@ -112,6 +112,43 @@ class Storyboard(PropertyGroup):
             else bpy.context.scene.frame_start
         )
 
+    def move_active_entry_down(self) -> None:
+        """Moves the active entry one slot down in the storyboard and adjusts the
+        active entry index as needed.
+        """
+        index = self.active_entry_index
+        num_entries = len(self.entries)
+        if index < num_entries - 1:
+            this_entry = self.entries[index]
+            next_entry = self.entries[index + 1]
+            pad = next_entry.frame_start - this_entry.frame_end
+
+            this_entry.frame_start, next_entry.frame_start = (
+                this_entry.frame_start + next_entry.duration + pad,
+                this_entry.frame_start,
+            )
+
+            self.entries.move(index, index + 1)
+            self.active_entry_index = index + 1
+
+    def move_active_entry_up(self) -> None:
+        """Moves the active entry one slot up in the storyboard and adjusts the
+        active entry index as needed.
+        """
+        index = self.active_entry_index
+        if index > 0:
+            prev_entry = self.entries[index - 1]
+            this_entry = self.entries[index]
+            pad = this_entry.frame_start - prev_entry.frame_end
+
+            this_entry.frame_start, prev_entry.frame_start = (
+                prev_entry.frame_start,
+                prev_entry.frame_start + this_entry.duration + pad,
+            )
+
+            self.entries.move(index, index - 1)
+            self.active_entry_index = index - 1
+
     def remove_active_entry(self) -> None:
         """Removes the active entry from the storyboard and adjusts the active
         entry index as needed.
