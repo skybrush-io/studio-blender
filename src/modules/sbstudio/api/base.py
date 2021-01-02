@@ -386,6 +386,8 @@ class SkybrushStudioAPI:
         if result.get("version") != 1:
             raise SkybrushStudioAPIError("invalid response version")
 
+        print(repr(result))
+
         start_times = result.get("start_times")
         durations = result.get("durations")
         if start_times is not None and durations is not None:

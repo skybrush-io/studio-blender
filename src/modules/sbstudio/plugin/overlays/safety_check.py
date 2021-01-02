@@ -48,7 +48,7 @@ class SafetyCheckOverlay(Overlay):
     def prepare(self) -> None:
         self._shader = gpu.shader.from_builtin("3D_UNIFORM_COLOR")
 
-    def draw(self) -> None:
+    def draw_3d(self) -> None:
         bgl.glEnable(bgl.GL_BLEND)
 
         if self._markers is not None:
