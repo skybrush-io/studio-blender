@@ -6,6 +6,7 @@ from sbstudio.plugin.operators import (
     MoveStoryboardEntryUpOperator,
     RecalculateTransitionsOperator,
     RemoveStoryboardEntryOperator,
+    SelectStoryboardEntryForCurrentFrameOperator,
 )
 
 
@@ -57,6 +58,12 @@ class StoryboardEditor(Panel):
         col.operator(CreateNewStoryboardEntryOperator.bl_idname, icon="ADD", text="")
         col.operator(RemoveStoryboardEntryOperator.bl_idname, icon="REMOVE", text="")
         col.separator()
+        col.operator(
+            SelectStoryboardEntryForCurrentFrameOperator.bl_idname,
+            icon="EMPTY_SINGLE_ARROW",
+            text="",
+        )
+        col.separator()
         col.operator(MoveStoryboardEntryUpOperator.bl_idname, icon="TRIA_UP", text="")
         col.operator(
             MoveStoryboardEntryDownOperator.bl_idname, icon="TRIA_DOWN", text=""
@@ -77,29 +84,47 @@ class StoryboardEditor(Panel):
         col.label(text="Recalculate Transitions")
 
         row = col.row()
+        index = storyboard.get_index_of_entry_containing_frame(scene.frame_current)
+        row.enabled = index < 0
+        params = row.operator(
+            RecalculateTransitionsOperator.bl_idname,
+            text="Current Frame",
+            icon="EMPTY_SINGLE_ARROW",
+        )
+        params.scope = "CURRENT_FRAME"
+
+        row = col.row()
         row.enabled = entry is not None
         params = row.operator(
-            RecalculateTransitionsOperator.bl_idname, text="Previous to Selected"
+            RecalculateTransitionsOperator.bl_idname,
+            text="Previous to Selected",
+            icon="TRACKING_BACKWARDS_SINGLE",
         )
         params.scope = "TO_SELECTED"
 
         row = col.row()
         row.enabled = entry is not None and not is_last
         params = row.operator(
-            RecalculateTransitionsOperator.bl_idname, text="Selected to Next"
+            RecalculateTransitionsOperator.bl_idname,
+            text="Selected to Next",
+            icon="TRACKING_FORWARDS_SINGLE",
         )
         params.scope = "FROM_SELECTED"
 
         row = col.row()
         row.enabled = entry is not None and not is_last
         params = row.operator(
-            RecalculateTransitionsOperator.bl_idname, text="Selected to End"
+            RecalculateTransitionsOperator.bl_idname,
+            text="Selected to End",
+            icon="TRACKING_FORWARDS",
         )
         params.scope = "FROM_SELECTED_TO_END"
 
         row = col.row()
         row.enabled = len(storyboard.entries) > 0
         params = row.operator(
-            RecalculateTransitionsOperator.bl_idname, text="Entire Storyboard"
+            RecalculateTransitionsOperator.bl_idname,
+            text="Entire Storyboard",
+            icon="SEQUENCE",
         )
         params.scope = "ALL"

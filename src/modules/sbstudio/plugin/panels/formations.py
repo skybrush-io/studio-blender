@@ -1,8 +1,13 @@
 from bpy.types import Panel
 
-from sbstudio.plugin.operators.create_formation import CreateFormationOperator
-from sbstudio.plugin.operators.remove_formation import RemoveFormationOperator
-from sbstudio.plugin.operators.update_formation import UpdateFormationOperator
+from sbstudio.plugin.operators import (
+    CreateFormationOperator,
+    DeselectFormationOperator,
+    RemoveFormationOperator,
+    SelectFormationOperator,
+    UpdateFormationOperator,
+    AppendFormationToStoryboardOperator,
+)
 
 __all__ = ("FormationsPanel",)
 
@@ -40,7 +45,18 @@ class FormationsPanel(Panel):
         layout.prop(formations, "selected", text="")
 
         row = layout.row()
+        row.operator(SelectFormationOperator.bl_idname, text="Select")
+        row.operator(DeselectFormationOperator.bl_idname, text="Deselect")
+
+        row = layout.row()
         row.operator(
-            UpdateFormationOperator.bl_idname, text="Update", icon="RECOVER_LAST"
+            AppendFormationToStoryboardOperator.bl_idname,
+            text="Append to Storyboard",
+            icon="FORWARD",
         )
-        row.operator(RemoveFormationOperator.bl_idname, text="Remove", icon="REMOVE")
+
+        row = layout.row()
+        row.operator(
+            UpdateFormationOperator.bl_idname, text="Update", icon="FILE_REFRESH"
+        )
+        row.operator(RemoveFormationOperator.bl_idname, text="Remove", icon="TRASH")

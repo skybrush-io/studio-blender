@@ -59,8 +59,6 @@ class ValidateTrajectoriesOperator(Operator):
             kwds["min_distance"] = skybrush.safety_check.proximity_warning_threshold
             kwds["max_altitude"] = skybrush.safety_check.altitude_warning_threshold
 
-        print(repr(kwds))
-
         try:
             get_api().generate_plots(**kwds)
         except Exception:

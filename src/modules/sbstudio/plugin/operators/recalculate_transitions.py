@@ -12,6 +12,7 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.keyframes import set_keyframes
 from sbstudio.plugin.model.formation import get_all_markers_from_formation
 from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
+from sbstudio.plugin.tasks.safety_check import invalidate_caches
 from sbstudio.plugin.transition import (
     create_transition_constraint_between,
     find_transition_constraint_between,
@@ -38,9 +39,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
     scope = EnumProperty(
         items=[
             ("ALL", "Entire storyboard", "", 1),
-            ("TO_SELECTED", "To selected formation", "", 2),
-            ("FROM_SELECTED", "From selected formation", "", 3),
-            ("FROM_SELECTED_TO_END", "From selected formation to end", "", 4),
+            ("CURRENT_FRAME", "Current frame", "", 2),
+            ("TO_SELECTED", "To selected formation", "", 3),
+            ("FROM_SELECTED", "From selected formation", "", 4),
+            ("FROM_SELECTED_TO_END", "From selected formation to end", "", 5),
         ],
         name="Scope",
         description="Scope of the operator that defines which transitions must be recalculated",
@@ -56,6 +58,9 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         # Prepare a list consisting of triplets like this:
         # end of previous formation, formation, start of next formation
         entry_info = self._get_transitions_to_process(storyboard, entries)
+        if not entry_info:
+            self.report({"ERROR"}, "No transitions match the selected scope")
+            return {"CANCELLED"}
 
         with create_position_evaluator() as get_positions_of:
             # Grab some common constants that we will need
@@ -155,7 +160,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                     # We need this to handle cases when the user reorders the
                     # formations.
                     new_keyframe_points = set_keyframes(
-                        drone, key, keyframes, clear_range=True
+                        drone, key, keyframes, clear_range=True, interpolation="BEZIER"
                     )
 
                     # For the first formation, the takeoff should be abrupt,
@@ -168,6 +173,8 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                         )
 
         bpy.ops.skybrush.fix_constraint_ordering()
+
+        invalidate_caches(clear_result=True)
 
         # TODO(ntamas): currently it is not possible for a formation to appear
         # more than once in the sequence
@@ -203,6 +210,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             condition = active_index.__eq__
         elif self.scope == "FROM_SELECTED_TO_END":
             condition = active_index.__le__
+        elif self.scope == "CURRENT_FRAME":
+            frame = bpy.context.scene.frame_current
+            index = storyboard.get_index_of_entry_after_frame(frame)
+            condition = index.__eq__
         elif self.scope == "ALL":
             condition = constant(True)
         else:

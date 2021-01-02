@@ -21,6 +21,9 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         description="Maximum acceleration allowed when planning the duration of transitions between fixed points",
         default=4,
         unit="ACCELERATION",
+        min=0.1,
+        soft_min=0.1,
+        soft_max=20,
     )
 
     use_bloom_effect = BoolProperty(

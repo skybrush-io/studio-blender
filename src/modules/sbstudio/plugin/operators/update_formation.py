@@ -81,7 +81,6 @@ class UpdateFormationOperator(FormationOperator):
         bpy.ops.object.delete()
 
         points = collect_points_for_formation_update(self.update_with)
-        print(repr(self.update_with), repr(points))
         add_markers_to_formation(formation, points)
 
         return {"FINISHED"}

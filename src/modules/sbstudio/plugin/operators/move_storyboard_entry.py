@@ -1,5 +1,3 @@
-from bpy.props import EnumProperty
-
 from .base import StoryboardOperator
 
 __all__ = ("MoveStoryboardEntryDownOperator", "MoveStoryboardEntryUpOperator")

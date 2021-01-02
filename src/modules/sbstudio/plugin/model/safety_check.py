@@ -112,7 +112,8 @@ class SafetyCheckProperties(PropertyGroup):
         unit="LENGTH",
         default=3.0,
         min=0.0,
-        max=10.0,
+        soft_min=0.0,
+        soft_max=10.0,
         update=proximity_warning_threshold_updated,
     )
 
@@ -132,7 +133,8 @@ class SafetyCheckProperties(PropertyGroup):
         unit="LENGTH",
         default=150.0,
         min=0.0,
-        max=1000.0,
+        soft_min=0.0,
+        soft_max=1000.0,
         update=altitude_warning_threshold_updated,
     )
 
@@ -150,8 +152,9 @@ class SafetyCheckProperties(PropertyGroup):
         name="Maximum XY velocity",
         description="Maximum velocity allowed in the horizontal plane",
         default=10,
-        min=0,
-        max=30,
+        min=1,
+        soft_min=1,
+        soft_max=30,
         unit="VELOCITY",
         update=velocity_warning_threshold_updated,
     )
@@ -161,7 +164,8 @@ class SafetyCheckProperties(PropertyGroup):
         description="Maximum velocity allowed in the vertical direction",
         default=2,
         min=0,
-        max=30,
+        soft_min=0.1,
+        soft_max=30,
         unit="VELOCITY",
         update=velocity_warning_threshold_updated,
     )
@@ -231,7 +235,7 @@ class SafetyCheckProperties(PropertyGroup):
         return (
             self.velocity_warning_enabled
             and self.max_velocities_are_valid
-            and self.max_velocity_z > self.velocity_z_warning_threshold
+            and abs(self.max_velocity_z) > self.velocity_z_warning_threshold
         )
 
     def clear_safety_check_result(self) -> None:

@@ -122,7 +122,9 @@ def run_safety_check(scene, depsgraph):
         ]
     else:
         drones_over_max_altitude = []
-    max_altitude_found = max(position[2] for position in positions)
+    max_altitude_found = (
+        max(position[2] for position in positions) if positions else 0.0
+    )
 
     # Check nearest neighbors
     nearest_neighbors = find_nearest_neighbors(positions)
@@ -144,8 +146,8 @@ def run_safety_check(scene, depsgraph):
     else:
         drones_over_max_velocity_xy = []
 
-    upper = max(vel[2] for vel in velocities)
-    lower = min(vel[2] for vel in velocities)
+    upper = max(vel[2] for vel in velocities) if velocities else 0.0
+    lower = min(vel[2] for vel in velocities) if velocities else 0.0
     max_velocity_z_found = upper if abs(upper) > abs(lower) else lower
     if max_velocity_z is not None:
         drones_over_max_velocity_z = [
@@ -171,12 +173,24 @@ def ensure_overlays_enabled():
     safety_check.ensure_overlays_enabled_if_needed()
 
 
+def invalidate_caches(clear_result: bool = False):
+    """Invalidates the caches used by the safety check feature.
+
+    This function should be called when the plugin makes radical changes to the
+    current scene; for instance, after re-planning transitions.
+    """
+    global _position_snapshot_cache
+    _position_snapshot_cache.clear()
+
+    if clear_result:
+        safety_check = bpy.context.scene.skybrush.safety_check
+        safety_check.clear_safety_check_result()
+
+
 def run_tasks_post_load(*args):
     """Runs all the tasks that should be completed after loading a file."""
-    global _position_snapshot_cache
-
+    invalidate_caches()
     ensure_overlays_enabled()
-    _position_snapshot_cache.clear()
 
 
 class SafetyCheckTask(Task):

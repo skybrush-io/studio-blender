@@ -341,3 +341,57 @@ class SkybrushStudioAPI:
             raise SkybrushStudioAPIError("invalid response version")
 
         return result.get("mapping")
+
+    def plan_transition(
+        self,
+        source: Sequence[Coordinate3D],
+        target: Sequence[Coordinate3D],
+        *,
+        max_velocity_xy: float,
+        max_velocity_z: float,
+        max_acceleration: float,
+        matching_method: str = "optimal",
+    ) -> float:
+        """Proposes a minimum feasible duration for a transition between the
+        given source and target points, assuming that the drones move in a
+        straight line, they are stationary in the beginning and in the end,
+        and they are allowed to move with the given maximum velocities and
+        accelerations.
+
+        Parameters:
+            source: the list of source points
+            target: the list of target points
+            max_velocity_xy: maximum allowed velocity in the XY plane
+            max_velocity_z: maximum allowed velocity along the Z axis
+            max_acceleration: maximum allowed acceleration
+            matching_method: the algorithm to use when matching source points
+                to target points; see the server documentation fof more details.
+        """
+        if not source or not target:
+            return 0.0
+
+        data = {
+            "version": 1,
+            "source": source,
+            "target": target,
+            "max_velocity_xy": max_velocity_xy,
+            "max_velocity_z": max_velocity_z,
+            "max_acceleration": max_acceleration,
+            "transition_method": "const_jerk",
+            "matching_method": matching_method,
+        }
+        with self._send_request("operations/plan-transition", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        start_times = result.get("start_times")
+        durations = result.get("durations")
+        if start_times is not None and durations is not None:
+            return max(
+                start_time + duration
+                for start_time, duration in zip(start_times, durations)
+            )
+        else:
+            raise SkybrushStudioAPIError("invalid response format")
