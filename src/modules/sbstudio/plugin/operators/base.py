@@ -33,6 +33,20 @@ class FormationOperator(Operator):
             context.scene.skybrush.formations.selected = formation
 
 
+class LightEffectOperator(Operator):
+    """Operator mixin that allows an operator to be executed if we have a
+    light effects object in the current scene.
+    """
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.skybrush and context.scene.skybrush.light_effects
+
+    def execute(self, context):
+        light_effects = context.scene.skybrush.light_effects
+        return self.execute_on_light_effect_collection(light_effects, context)
+
+
 class StoryboardOperator(Operator):
     """Operator mixin that allows an operator to be executed if we have a
     storyboard in the current scene.

@@ -164,7 +164,7 @@ class SafetyCheckProperties(PropertyGroup):
         default=10,
         min=1,
         soft_min=1,
-        soft_max=30,
+        soft_max=10,
         unit="VELOCITY",
         update=velocity_warning_threshold_updated,
     )
@@ -175,7 +175,7 @@ class SafetyCheckProperties(PropertyGroup):
         default=2,
         min=0,
         soft_min=0.1,
-        soft_max=30,
+        soft_max=5,
         unit="VELOCITY",
         update=velocity_warning_threshold_updated,
     )

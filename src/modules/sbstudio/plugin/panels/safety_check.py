@@ -47,34 +47,18 @@ class SafetyCheckPanel(Panel):
         col = row.column()
         col.prop(safety_check, "proximity_warning_enabled")
         row = col.row()
-        row.prop(
-            safety_check,
-            "proximity_warning_threshold",
-            text="",
-        )
+        row.prop(safety_check, "proximity_warning_threshold", text="", slider=True)
         row.enabled = safety_check.proximity_warning_enabled
 
         col.prop(safety_check, "altitude_warning_enabled")
         row = col.row()
-        row.prop(
-            safety_check,
-            "altitude_warning_threshold",
-            text="",
-        )
+        row.prop(safety_check, "altitude_warning_threshold", text="", slider=True)
         row.enabled = safety_check.altitude_warning_enabled
 
         col.prop(safety_check, "velocity_warning_enabled")
         row = col.row()
-        row.prop(
-            safety_check,
-            "velocity_xy_warning_threshold",
-            text="XY",
-        )
-        row.prop(
-            safety_check,
-            "velocity_z_warning_threshold",
-            text="Z",
-        )
+        row.prop(safety_check, "velocity_xy_warning_threshold", text="XY", slider=True)
+        row.prop(safety_check, "velocity_z_warning_threshold", text="Z", slider=True)
         row.enabled = safety_check.velocity_warning_enabled
 
         layout.separator()

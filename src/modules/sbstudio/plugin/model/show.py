@@ -3,6 +3,7 @@ from bpy.types import PropertyGroup
 
 from .formations_panel import FormationsPanelProperties
 from .led_control import LEDControlPanelProperties
+from .light_effects import LightEffectCollection
 from .safety_check import SafetyCheckProperties
 from .settings import DroneShowAddonFileSpecificSettings
 from .storyboard import Storyboard
@@ -20,6 +21,7 @@ class DroneShowAddonProperties(PropertyGroup):
 
     formations = PointerProperty(type=FormationsPanelProperties)
     led_control = PointerProperty(type=LEDControlPanelProperties)
+    light_effects = PointerProperty(type=LightEffectCollection)
     safety_check = PointerProperty(type=SafetyCheckProperties)
     settings = PointerProperty(type=DroneShowAddonFileSpecificSettings)
     storyboard = PointerProperty(type=Storyboard)

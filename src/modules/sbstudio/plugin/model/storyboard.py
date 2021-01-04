@@ -18,6 +18,8 @@ from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.props import FormationProperty
 from sbstudio.plugin.utils import with_context
 
+from .mixins import ListMixin
+
 __all__ = ("StoryboardEntry", "Storyboard")
 
 
@@ -35,6 +37,7 @@ class StoryboardEntry(PropertyGroup):
         name="Custom Name",
         description="Keeps the name of the storyboard entry when the associated formation changes",
         default=False,
+        options=set(),
     )
     formation = FormationProperty(
         description=(
@@ -43,16 +46,19 @@ class StoryboardEntry(PropertyGroup):
             "formation constraints."
         ),
         update=_handle_formation_change,
+        options=set(),
     )
     frame_start = IntProperty(
         name="Start Frame",
         description="Frame when this formation should start in the show",
         default=0,
+        options=set(),
     )
     duration = IntProperty(
         name="Duration",
         description="Duration of this formation",
         default=0,
+        options=set(),
     )
     transition_type = EnumProperty(
         items=[
@@ -65,6 +71,7 @@ class StoryboardEntry(PropertyGroup):
         "vertex of the target formation; auto-matched transitions find an "
         "optimal mapping between vertices of the initial and the target formation.",
         default="AUTO",
+        options=set(),
     )
 
     def contains_frame(self, frame: int) -> bool:
@@ -82,7 +89,7 @@ class StoryboardEntry(PropertyGroup):
         return self.frame_start + self.duration
 
 
-class Storyboard(PropertyGroup):
+class Storyboard(PropertyGroup, ListMixin):
     """Blender property group representing the entire storyboard of the
     drone show.
     """
@@ -113,8 +120,8 @@ class Storyboard(PropertyGroup):
         name: str,
         frame_start: Optional[int] = None,
         duration: Optional[int] = None,
-        select: bool = False,
         *,
+        select: bool = False,
         context: Optional[Context] = None,
     ) -> StoryboardEntry:
         """Appends a new entry to the end of the storyboard.
@@ -125,7 +132,7 @@ class Storyboard(PropertyGroup):
                 sensible default
             duration: the duration of the new entry; `None` chooses a sensible
                 default
-            select: whether to select hte newly added entry after it was created
+            select: whether to select the newly added entry after it was created
         """
         fps = context.scene.render.fps
         if frame_start is None:
@@ -239,51 +246,6 @@ class Storyboard(PropertyGroup):
         entry = self.last_entry
         return entry.formation if entry else None
 
-    def move_active_entry_down(self) -> None:
-        """Moves the active entry one slot down in the storyboard and adjusts the
-        active entry index as needed.
-        """
-        index = self.active_entry_index
-        num_entries = len(self.entries)
-        if index < num_entries - 1:
-            this_entry = self.entries[index]
-            next_entry = self.entries[index + 1]
-            pad = next_entry.frame_start - this_entry.frame_end
-
-            this_entry.frame_start, next_entry.frame_start = (
-                this_entry.frame_start + next_entry.duration + pad,
-                this_entry.frame_start,
-            )
-
-            self.entries.move(index, index + 1)
-            self.active_entry_index = index + 1
-
-    def move_active_entry_up(self) -> None:
-        """Moves the active entry one slot up in the storyboard and adjusts the
-        active entry index as needed.
-        """
-        index = self.active_entry_index
-        if index > 0:
-            prev_entry = self.entries[index - 1]
-            this_entry = self.entries[index]
-            pad = this_entry.frame_start - prev_entry.frame_end
-
-            this_entry.frame_start, prev_entry.frame_start = (
-                prev_entry.frame_start,
-                prev_entry.frame_start + this_entry.duration + pad,
-            )
-
-            self.entries.move(index, index - 1)
-            self.active_entry_index = index - 1
-
-    def remove_active_entry(self) -> None:
-        """Removes the active entry from the storyboard and adjusts the active
-        entry index as needed.
-        """
-        index = self.active_entry_index
-        self.entries.remove(index)
-        self.active_entry_index = min(max(0, index), len(self.entries))
-
     def validate_and_sort_entries(self) -> None:
         """Validates the entries in the storyboard and sorts them by start time,
         keeping the active entry index point to the same entry as before.
@@ -327,3 +289,23 @@ class Storyboard(PropertyGroup):
         """
 
         return entries
+
+    def _on_active_entry_moving_down(self, this_entry, next_entry) -> bool:
+        pad = next_entry.frame_start - this_entry.frame_end
+
+        this_entry.frame_start, next_entry.frame_start = (
+            this_entry.frame_start + next_entry.duration + pad,
+            this_entry.frame_start,
+        )
+
+        return True
+
+    def _on_active_entry_moving_up(self, this_entry, prev_entry) -> bool:
+        pad = this_entry.frame_start - prev_entry.frame_end
+
+        this_entry.frame_start, prev_entry.frame_start = (
+            prev_entry.frame_start,
+            prev_entry.frame_start + this_entry.duration + pad,
+        )
+
+        return True

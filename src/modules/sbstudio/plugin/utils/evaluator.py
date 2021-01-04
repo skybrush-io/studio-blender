@@ -7,7 +7,7 @@ from sbstudio.model.types import Coordinate3D
 
 from .decorators import with_context
 
-__all__ = ("create_position_evaluator",)
+__all__ = ("create_position_evaluator", "get_position_of_object")
 
 
 @contextmanager

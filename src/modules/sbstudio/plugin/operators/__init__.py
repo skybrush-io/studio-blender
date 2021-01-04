@@ -3,11 +3,16 @@
 from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator
 from .create_formation import CreateFormationOperator
+from .create_light_effect import CreateLightEffectOperator
 from .create_new_storyboard_entry import CreateNewStoryboardEntryOperator
 from .create_takeoff_grid import CreateTakeoffGridOperator
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
 from .export_to_skyc import SkybrushExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
+from .move_light_effect import (
+    MoveLightEffectDownOperator,
+    MoveLightEffectUpOperator,
+)
 from .move_storyboard_entry import (
     MoveStoryboardEntryDownOperator,
     MoveStoryboardEntryUpOperator,
@@ -15,6 +20,7 @@ from .move_storyboard_entry import (
 from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .remove_formation import RemoveFormationOperator
+from .remove_light_effect import RemoveLightEffectOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .select_formation import SelectFormationOperator, DeselectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
@@ -26,16 +32,20 @@ __all__ = (
     "AppendFormationToStoryboardOperator",
     "ApplyColorsToSelectedDronesOperator",
     "CreateFormationOperator",
+    "CreateLightEffectOperator",
     "CreateNewStoryboardEntryOperator",
     "CreateTakeoffGridOperator",
     "DeselectFormationOperator",
     "DetachMaterialsFromDroneTemplateOperator",
     "FixConstraintOrderingOperator",
+    "MoveLightEffectDownOperator",
+    "MoveLightEffectUpOperator",
     "MoveStoryboardEntryDownOperator",
     "MoveStoryboardEntryUpOperator",
     "PrepareSceneOperator",
     "RecalculateTransitionsOperator",
     "RemoveFormationOperator",
+    "RemoveLightEffectOperator",
     "RemoveStoryboardEntryOperator",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",

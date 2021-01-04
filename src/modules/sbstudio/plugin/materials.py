@@ -12,6 +12,7 @@ __all__ = (
     "create_glowing_material",
     "get_shader_node_and_input_for_diffuse_color_of_material",
     "set_diffuse_color_of_material",
+    "set_led_light_color",
     "set_specular_reflection_intensity_of_material",
 )
 
@@ -87,7 +88,26 @@ def get_material_for_led_light_color(drone) -> Optional[Material]:
         return None
 
 
-def set_diffuse_color_of_material(material, color):
+def get_diffuse_color_of_material(material) -> RGBAColor:
+    """Returns the diffuse color of the given material to the given value.
+
+    The material must use a principled BSDF or an emission shader.
+
+    Parameters:
+        material: the Blender material to update
+        color: the color to apply to the material
+    """
+    if material.use_nodes:
+        # Material is using shader nodes so we need to adjust the diffuse
+        # color in the shader as well (the base property would control only
+        # what we see in the preview window)
+        _, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
+        return tuple(input.default_value)
+    else:
+        return material.diffuse_color
+
+
+def set_diffuse_color_of_material(material, color: RGBAColor):
     """Sets the diffuse color of the given material to the given value.
 
     The material must use a principled BSDF or an emission shader.
@@ -104,6 +124,32 @@ def set_diffuse_color_of_material(material, color):
         input.default_value = color
 
     material.diffuse_color = color
+
+
+def get_led_light_color(drone) -> RGBAColor:
+    """Returns the color of the LED light on the given drone.
+
+    Parameters:
+        drone: the drone to query
+        color: the color to apply to the LED light of the drone
+    """
+    material = get_material_for_led_light_color(drone)
+    if material is not None:
+        return get_diffuse_color_of_material(material)
+    else:
+        return (0.0, 0.0, 0.0, 0.0)
+
+
+def set_led_light_color(drone, color: RGBAColor):
+    """Sets the color of the LED light on the given drone.
+
+    Parameters:
+        drone: the drone to update
+        color: the color to apply to the LED light of the drone
+    """
+    material = get_material_for_led_light_color(drone)
+    if material is not None:
+        set_diffuse_color_of_material(material, color)
 
 
 def get_shader_node_and_input_for_diffuse_color_of_material(material):

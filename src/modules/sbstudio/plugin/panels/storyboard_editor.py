@@ -34,12 +34,6 @@ class StoryboardEditor(Panel):
         if not storyboard:
             return
 
-        entry = storyboard.active_entry
-        is_last = (
-            entry is None
-            or storyboard.active_entry_index == len(storyboard.entries) - 1
-        )
-
         row = layout.row()
 
         col = row.column()
@@ -69,6 +63,9 @@ class StoryboardEditor(Panel):
             MoveStoryboardEntryDownOperator.bl_idname, icon="TRIA_DOWN", text=""
         )
 
+        #####################################################################
+
+        entry = storyboard.active_entry
         if entry is not None:
             col = layout.column()
             col.prop(entry, "formation")
@@ -76,6 +73,8 @@ class StoryboardEditor(Panel):
             col.prop(entry, "duration")
             col.prop(entry, "transition_type")
             col.prop(entry, "is_name_customized")
+
+        #####################################################################
 
         layout.separator()
 

@@ -41,6 +41,8 @@ from sbstudio.plugin.model import (
     DroneShowAddonProperties,
     FormationsPanelProperties,
     LEDControlPanelProperties,
+    LightEffect,
+    LightEffectCollection,
     SafetyCheckProperties,
     StoryboardEntry,
     Storyboard,
@@ -50,15 +52,19 @@ from sbstudio.plugin.operators import (
     ApplyColorsToSelectedDronesOperator,
     CreateFormationOperator,
     CreateNewStoryboardEntryOperator,
+    CreateLightEffectOperator,
     CreateTakeoffGridOperator,
     DeselectFormationOperator,
     DetachMaterialsFromDroneTemplateOperator,
     FixConstraintOrderingOperator,
+    MoveLightEffectDownOperator,
+    MoveLightEffectUpOperator,
     MoveStoryboardEntryDownOperator,
     MoveStoryboardEntryUpOperator,
     PrepareSceneOperator,
     RecalculateTransitionsOperator,
     RemoveFormationOperator,
+    RemoveLightEffectOperator,
     RemoveStoryboardEntryOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
@@ -71,6 +77,7 @@ from sbstudio.plugin.panels import (
     FormationsPanel,
     StoryboardEditor,
     LEDControlPanel,
+    LightEffectsPanel,
     SafetyCheckPanel,
 )
 from sbstudio.plugin.plugin_helpers import (
@@ -87,12 +94,18 @@ from sbstudio.plugin.state import (
     register as register_state,
     unregister as unregister_state,
 )
-from sbstudio.plugin.tasks import InitializationTask, SafetyCheckTask
+from sbstudio.plugin.tasks import (
+    InitializationTask,
+    SafetyCheckTask,
+    UpdateLightEffectsTask,
+)
 
 
 #: Custom types in this addon
 types = (
     FormationsPanelProperties,
+    LightEffect,
+    LightEffectCollection,
     StoryboardEntry,
     Storyboard,
     LEDControlPanelProperties,
@@ -117,6 +130,10 @@ operators = (
     MoveStoryboardEntryUpOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     RemoveStoryboardEntryOperator,
+    CreateLightEffectOperator,
+    MoveLightEffectDownOperator,
+    MoveLightEffectUpOperator,
+    RemoveLightEffectOperator,
     CreateTakeoffGridOperator,
     DetachMaterialsFromDroneTemplateOperator,
     FixConstraintOrderingOperator,
@@ -132,6 +149,7 @@ panels = (
     FormationsPanel,
     StoryboardEditor,
     LEDControlPanel,
+    LightEffectsPanel,
     SafetyCheckPanel,
     ExportPanel,
 )
@@ -140,7 +158,7 @@ panels = (
 headers = ()
 
 #: Background tasks in this addon
-tasks = (InitializationTask(), SafetyCheckTask())
+tasks = (InitializationTask(), SafetyCheckTask(), UpdateLightEffectsTask())
 
 
 def register():
