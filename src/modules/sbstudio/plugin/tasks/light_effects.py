@@ -5,7 +5,6 @@ light effects.
 
 from .base import Task
 
-from sbstudio.model.types import RGBAColor
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.materials import get_led_light_color, set_led_light_color
 from sbstudio.plugin.utils.evaluator import get_position_of_object
@@ -13,7 +12,21 @@ from sbstudio.plugin.utils.evaluator import get_position_of_object
 __all__ = ("UpdateLightEffectsTask",)
 
 
+#: Number of the last frame that was evaluated with `update_light_effects()`
+last_frame = None
+
+#: Cache for the "base" color of every drone in the current frame before we
+#: apply the light effects on them. Cleared when we move to a new frame
+base_color_cache = {}
+
+#: White color, used as a base color when no info is available for a newly added
+#: drone
+WHITE = (1, 1, 1, 1)
+
+
 def update_light_effects(scene, depsgraph):
+    global last_frame, base_color_cache, WHITE
+
     # This function is going to be evaluated in every frame, so we should walk
     # the extra mile to ensure that the number of object allocations is as low
     # as possible -- therefore there are lots of in-place modifications of
@@ -26,9 +39,10 @@ def update_light_effects(scene, depsgraph):
     frame = scene.frame_current
     drones = None
 
-    # TODO(ntamas): if we are standing in a frame with only one effect enabled,
-    # and we disable that effect, the colors of the drones will keep that color.
-    # We should refresh all of them instead.
+    if last_frame != frame:
+        # Frame changed, clear the base color cache
+        last_frame = frame
+        base_color_cache.clear()
 
     changed = False
 
@@ -37,11 +51,20 @@ def update_light_effects(scene, depsgraph):
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
             positions = [get_position_of_object(drone) for drone in drones]
-            colors = [list(get_led_light_color(drone)) for drone in drones]
+            if not base_color_cache:
+                # This is the first time we are evaluating this frame, so fill
+                # the base color cache in parallel to the colors list
+                colors = []
+                for drone in drones:
+                    color = get_led_light_color(drone)
+                    colors.append(list(color))
+                    base_color_cache[drone] = color
+            else:
+                # Initialize the colors list from the cached base colors
+                colors = [list(base_color_cache.get(drone, WHITE)) for drone in drones]
             changed = True
 
-        for index, position in enumerate(positions):
-            effect.apply_on_color(colors[index], position=positions[index], frame=frame)
+        effect.apply_on_colors(colors, positions=positions, frame=frame)
 
     if changed:
         for drone, color in zip(drones, colors):

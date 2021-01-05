@@ -74,5 +74,7 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")
             col.separator()
+            col.prop(entry, "mesh")
+            col.separator()
             col.prop(entry, "influence", slider=True)
             col.prop(entry, "enabled")  # TODO(ntamas): move this to each list item

@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 
 from typing import Iterable, Optional
 
@@ -9,7 +10,9 @@ from bpy.props import (
     IntProperty,
     PointerProperty,
 )
-from bpy.types import ColorRamp, Context, PropertyGroup, Texture
+from bpy.types import ColorRamp, Context, PropertyGroup, Mesh, Object, Texture
+from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 from sbstudio.model.types import Coordinate3D, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
@@ -19,6 +22,33 @@ from sbstudio.utils import alpha_over_in_place
 from .mixins import ListMixin
 
 __all__ = ("LightEffect", "LightEffectCollection")
+
+
+def object_has_mesh_data(self, obj) -> bool:
+    """Filter function that accepts only those Blender objects that have a mesh
+    as their associated data.
+    """
+    return obj.data and isinstance(obj.data, Mesh)
+
+
+CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+
+
+def test_containment(point, bvh_tree: BVHTree) -> bool:
+    """Given a point and a BVH-tree, tests whether the point is _probably_
+    within the mesh represented by the BVH-tree.
+
+    This is done by casting three rays in the X, Y and Z directions. The point
+    is assumed to be within the mesh if all three rays hit the mesh.
+    """
+    global CONTAINMENT_TEST_AXES
+
+    for axis in CONTAINMENT_TEST_AXES:
+        _, _, _, dist = bvh_tree.ray_cast(point, axis)
+        if dist is None or dist == -1:
+            return False
+
+    return True
 
 
 class LightEffect(PropertyGroup):
@@ -57,6 +87,7 @@ class LightEffect(PropertyGroup):
         default=0,
         options=set(),
     )
+
     influence = FloatProperty(
         name="Influence",
         description="Influence of this light effect on the final color of drones",
@@ -73,18 +104,32 @@ class LightEffect(PropertyGroup):
         options={"HIDDEN"},
     )
 
-    def apply_on_color(
-        self, color: RGBAColor, position: Coordinate3D, frame: int
-    ) -> None:
-        """Applies this effect to a given color, assuming that the drone having
-        the given color is at the given position in the given frame.
+    mesh = PointerProperty(
+        type=Object,
+        name="Mesh",
+        description="Mesh that is used to limit the light effect to some part of the scene",
+        poll=object_has_mesh_data,
+    )
 
-        Returns:
-            color: the color to apply the effect on; it will be modified in-place.
-            position: the position of the drone
-            frame: the frame in which the color is evaluated
+    def apply_on_colors(
+        self, colors: Iterable[RGBAColor], positions: Iterable[Coordinate3D], frame: int
+    ) -> None:
+        """Applies this effect to a given list of colors, each belonging to a
+        given spatial position in the given frame.
+
+        Parameters:
+            colors: the colors to modify in-place
+            positions: the spatial positions of the drones having the given
+                colors in 3D space
+            frame: the frame index
         """
-        return alpha_over_in_place(self.evaluate_at(position, frame), color)
+        if not self.enabled or not self.contains_frame(frame):
+            return 0.0
+
+        bvh_tree = self._get_bvh_tree_from_mesh()
+        for index, position in enumerate(positions):
+            color = colors[index]
+            alpha_over_in_place(self._evaluate_at(position, frame, bvh_tree), color)
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -104,7 +149,33 @@ class LightEffect(PropertyGroup):
         """Evaluates the effect at the given position in space and at the
         given frame, returning the color yielded by the effect.
         """
-        alpha = max(min(self.evaluate_influence_at(position, frame), 1.0), 0.0)
+        if not self.enabled or not self.contains_frame(frame):
+            return 0.0
+
+        bvh_tree = self._get_bvh_tree_from_mesh()
+        return self._evaluate_at(position, frame, bvh_tree)
+
+    def evaluate_influence_at(self, position, frame: int) -> float:
+        """Eveluates the effective influence of the effect on the given position
+        in space and at the given frame.
+        """
+        if not self.enabled or not self.contains_frame(frame):
+            return 0.0
+
+        bvh_tree = self._get_bvh_tree_from_mesh()
+        return self._evaluate_influence_at(position, frame, bvh_tree)
+
+    @property
+    def frame_end(self) -> int:
+        """Returns the index of the last frame that is covered by the effect."""
+        return self.frame_start + self.duration
+
+    def _evaluate_at(
+        self, position, frame: int, bvh_tree: Optional[BVHTree]
+    ) -> RGBAColor:
+        alpha = max(
+            min(self._evaluate_influence_at(position, frame, bvh_tree), 1.0), 0.0
+        )
         # TODO(ntamas): use position from somewhere else
         color_ramp = self.color_ramp
         if color_ramp:
@@ -114,11 +185,11 @@ class LightEffect(PropertyGroup):
             # should not happen
             return (1.0, 1.0, 1.0, alpha)
 
-    def evaluate_influence_at(self, position, frame: int) -> float:
-        """Eveluates the effective influence of the effect on the given position
-        in space and at the given frame.
-        """
-        if not self.enabled or not self.contains_frame(frame):
+    def _evaluate_influence_at(
+        self, position, frame: int, bvh_tree: Optional[BVHTree]
+    ) -> float:
+        # Apply mesh containment constraint
+        if bvh_tree and not test_containment(position, bvh_tree):
             return 0.0
 
         influence = 1.0
@@ -137,10 +208,19 @@ class LightEffect(PropertyGroup):
 
         return influence
 
-    @property
-    def frame_end(self) -> int:
-        """Returns the index of the last frame that is covered by the effect."""
-        return self.frame_start + self.duration
+    def _get_bvh_tree_from_mesh(self) -> BVHTree:
+        """Returns a BVH-tree data structure from the mesh associated to this
+        light effect for easy containment detection.
+        """
+        if self.mesh:
+            b_mesh = bmesh.new()
+            b_mesh.from_mesh(self.mesh.data)
+            b_mesh.transform(self.mesh.matrix_world)
+            tree = BVHTree.FromBMesh(b_mesh)
+            b_mesh.free()
+            return tree
+        else:
+            return None
 
 
 class LightEffectCollection(PropertyGroup, ListMixin):
