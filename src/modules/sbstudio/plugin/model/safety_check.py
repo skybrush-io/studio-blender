@@ -73,7 +73,7 @@ class SafetyCheckProperties(PropertyGroup):
         description=(
             "Enables real-time safety checks that compare the altitudes, distances and "
             "velocities of drones with a safety threshold in every frame. Turn this off "
-            "if performance suffers during playback."
+            "if performance suffers during playback"
         ),
         default=True,
     )
@@ -186,7 +186,9 @@ class SafetyCheckProperties(PropertyGroup):
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
-        return self.min_distance > 0
+        # For some reason, Blender initializes with a min_distance of 3.4e+38
+        # on macOS, hence we need to exclude large min distances
+        return self.min_distance > 0 and self.min_distance < 100000
 
     @property
     def max_altitude_is_valid(self) -> bool:

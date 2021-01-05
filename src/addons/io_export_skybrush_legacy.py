@@ -47,7 +47,7 @@ from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 from fnmatch import fnmatch
-from math import isinf
+from math import inf, isinf
 from natsort import natsorted
 from operator import attrgetter
 from typing import Dict, List
@@ -182,10 +182,10 @@ def _get_frame_range_from_export_settings(context, settings):
         ]
     elif settings["frame_range"] == "LOCAL":
         # get largest common frame_range
-        frame_range_min = float("Inf")
-        frame_range_max = -float("Inf")
+        frame_range_min = inf
+        frame_range_max = -inf
         for obj in _get_objects(context, settings):
-            last_frames[obj.name] = -float("Inf")
+            last_frames[obj.name] = -inf
             # check object's own animation data and its follow_path constraints, too
             follow_path_constraints = [
                 cons for cons in obj.constraints if cons.type == "FOLLOW_PATH"
