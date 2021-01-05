@@ -75,7 +75,7 @@ def sample_positions_of_objects_in_frame_range(
         a dictionary mapping the objects (or their names) to their trajectories
     """
     scene_fps = context.scene.render.fps
-    frame_step = max(1, scene_fps // fps)
+    frame_step = max(1, int(scene_fps // fps))
     frames = chain(range(frame_range[0], frame_range[1], frame_step), [frame_range[1]])
     return sample_positions_of_objects(
         objects, frames, by_name=by_name, context=context

@@ -289,7 +289,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
     )
 
     # frame range
-    frame_range = FrameRangeProperty()
+    frame_range = FrameRangeProperty(default="RENDER")
 
     # output frame rate
     output_fps = FloatProperty(
