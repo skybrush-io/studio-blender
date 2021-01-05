@@ -9,7 +9,7 @@ __all__ = ("get_api",)
 _api = None
 
 #: Set this boolean to `True` if you are using the API with a local server
-_local = True
+_local = False
 
 
 def get_api():

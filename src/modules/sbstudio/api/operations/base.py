@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 from gzip import compress
 from json import JSONEncoder
 from pathlib import Path
+from ssl import create_default_context, CERT_NONE
 from typing import Union
 from urllib.request import urlopen, Request
 
@@ -98,12 +99,18 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
             "Content-Encoding": "gzip",
             "Accept": "application/octet-stream",
         }
+        # create unverified SSL context; needed for macOS
+        ctx = create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = CERT_NONE
         # create request
         url = fr"https://studio.skybrush.io/api/v1/operations/{operation}"
         req = Request(url, data=data, headers=headers, method="POST")
         # send it and wait for response
-        log.info("sending http POST request to studio.skybrush.io")
-        with urlopen(req) as raw_response:
+        log.info(
+            f"sending http POST request to studio.skybrush.io, body size: {len(data)} bytes"
+        )
+        with urlopen(req, context=ctx) as raw_response:
             response = Response(raw_response)
             # check response for errors
             response._run_sanity_checks()
