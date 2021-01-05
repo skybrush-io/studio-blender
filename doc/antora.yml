@@ -1,0 +1,6 @@
+name: skybrush-plugin-blender
+title: Skybrush Studio for Blender
+version: 'latest'
+nav:
+  - modules/ROOT/nav.adoc
+

@@ -1,0 +1,4 @@
+= Skybrush Studio for Blender
+:imagesdir: ../assets/images
+
+This is the main documentation of *Skybrush Studio for Blender*, a plugin for Blender to design professional drone shows.

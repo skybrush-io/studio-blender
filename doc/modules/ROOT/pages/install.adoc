@@ -1,0 +1,3 @@
+= Software installation
+:imagesdir: ../assets/images
+

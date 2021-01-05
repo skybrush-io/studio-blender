@@ -1,0 +1,5 @@
+[glossary]
+= Glossary
+:imagesdir: ../assets/images
+
+[glossary]
