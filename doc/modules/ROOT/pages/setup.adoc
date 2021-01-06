@@ -1,0 +1,2 @@
+= Basic setup
+:imagesdir: ../assets/images
