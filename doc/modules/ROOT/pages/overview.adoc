@@ -1,2 +1,15 @@
 = Overview
 :imagesdir: ../assets/images
+
+*Skybrush Studio* is part of https://skybrush.io/[*Skybrush*] suite, an integrated software solution for the design, visualisation, testing and delivery of both indoor and outdoor drone light shows. Skybrush was built from the ground up on a rock solid platform-independent architecture and a clean and intuitive user interface, incorporating our experiences gathered during ten years of research in drone swarms as well as all the lessons we have learned while operating drone shows regularly since 2015.
+
+https://skybrush.io/[*Skybrush*] is a modular software suite, consisting of the following modules, each of which may be operated on its own or as part of the whole suite:
+
+* *Skybrush Studio* - drone show designer framework
+* *Skybrush Viewer* - 3D drone show visualiser for testing and presentation purposes
+* *Skybrush Live* - drone show management and fleet control framework
+* *Skybrush Backstage* - drone inventory and log management framework
+
+In this manual our focus is on *Skybrush Studio for Blender*, which is an implementation of *Skybrush Studio* modules and functions in the open-source 3D designer framework of https://www.blender.org/[Blender].
+
+If you are interested in working with *Skybrush Studio* but you prefer to use another animation software, please mailto:support@collmot.com[contact us].

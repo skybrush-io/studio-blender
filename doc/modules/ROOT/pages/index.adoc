@@ -2,3 +2,6 @@
 :imagesdir: ../assets/images
 
 This is the main documentation of *Skybrush Studio for Blender*, a plugin for Blender to design professional drone shows.
+
+Please use the left sidebar for browsing the documentation. We also encourage you to mailto:support@collmot.com[contact us] in case of any questions.
+
