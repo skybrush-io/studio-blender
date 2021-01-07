@@ -1,4 +1,0 @@
-= Operators
-:imagesdir: ../assets/images
-
-TODO

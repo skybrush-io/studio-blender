@@ -7,6 +7,5 @@
 * xref:panels/index.adoc[Tabs and Panels]
 ** xref:panels/formations.adoc[Formations]
 ** xref:panels/leds.adoc[LEDs]
-** xref:panels/safety_export.adoc[Safety & Export]
-* xref:operators.adoc[Operators]
+** xref:panels/safety_and_export.adoc[Safety & Export]
 * xref:glossary.adoc[Glossary]
