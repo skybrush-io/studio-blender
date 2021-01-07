@@ -14,7 +14,7 @@ class SafetyCheckPanel(Panel):
     bl_idname = "OBJECT_PT_skybrush_safety_check_panel"
     bl_label = "Safety Check"
 
-    # The following three settings determine that the LED control panel gets
+    # The following three settings determine that the safety check panel gets
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

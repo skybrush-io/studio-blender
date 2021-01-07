@@ -6,7 +6,7 @@ from bpy.props import (
     EnumProperty,
     IntProperty,
 )
-from bpy.types import Context, PropertyGroup
+from bpy.types import Collection, Context, PropertyGroup
 from operator import attrgetter
 from typing import Optional
 
@@ -121,6 +121,7 @@ class Storyboard(PropertyGroup, ListMixin):
         frame_start: Optional[int] = None,
         duration: Optional[int] = None,
         *,
+        formation: Optional[Collection] = None,
         select: bool = False,
         context: Optional[Context] = None,
     ) -> StoryboardEntry:
@@ -132,14 +133,16 @@ class Storyboard(PropertyGroup, ListMixin):
                 sensible default
             duration: the duration of the new entry; `None` chooses a sensible
                 default
+            formation: the formation that the newly added entry should refer to
             select: whether to select the newly added entry after it was created
         """
-        fps = context.scene.render.fps
+        scene = context.scene
+        fps = scene.render.fps
         if frame_start is None:
             frame_start = (
                 self.frame_end + fps * DEFAULT_STORYBOARD_TRANSITION_DURATION
                 if self.entries
-                else context.scene.frame_start
+                else scene.frame_start
             )
 
         if duration is None or duration <= 0:
@@ -149,6 +152,19 @@ class Storyboard(PropertyGroup, ListMixin):
         entry.frame_start = frame_start
         entry.duration = duration
         entry.name = name
+
+        if (
+            formation is None
+            and hasattr(scene, "skybrush")
+            and hasattr(scene.skybrush, "formations")
+        ):
+            # Use the active formation if it is not in the storyboard yet
+            formation = scene.skybrush.formations.selected
+            if self.contains_formation(formation):
+                formation = None
+
+        if formation is not None:
+            entry.formation = formation
 
         if select:
             self.active_entry_index = len(self.entries) - 1

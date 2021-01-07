@@ -17,7 +17,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
     """
 
     max_acceleration = FloatProperty(
-        name="Maximum acceleration",
+        name="Max acceleration",
         description="Maximum acceleration allowed when planning the duration of transitions between fixed points",
         default=4,
         unit="ACCELERATION",

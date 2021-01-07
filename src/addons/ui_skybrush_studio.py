@@ -79,6 +79,7 @@ from sbstudio.plugin.panels import (
     LEDControlPanel,
     LightEffectsPanel,
     SafetyCheckPanel,
+    SwarmPanel,
 )
 from sbstudio.plugin.plugin_helpers import (
     register_header,
@@ -146,6 +147,7 @@ operators = (
 #: Panels in this addon. The order also implicitly defines the order in which
 #: our tabs appear in the sidebar of the 3D view.
 panels = (
+    SwarmPanel,
     FormationsPanel,
     StoryboardEditor,
     LEDControlPanel,
