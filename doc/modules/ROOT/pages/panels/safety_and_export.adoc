@@ -1,0 +1,14 @@
+= Safety & Export
+:imagesdir: ../../assets/images
+
+The Safety & Export panel in the sidebar of the Viewport editor lets you perform real-time verification of your drone animation and enables you to export your show into Skybrush Compiled format.
+
+image::panels/safety_and_export.jpg[Safety & Export panel]
+
+== Safety Check section
+
+TODO
+
+== Export section
+
+TODO

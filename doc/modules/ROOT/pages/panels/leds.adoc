@@ -1,4 +1,16 @@
 = LEDs
-:imagesdir: ../assets/images
+:imagesdir: ../../assets/images
+
+The LEDs panel in the sidebar of the Viewport editor lets you create light animation for your drone show.
+
+image::panels/leds.jpg[LEDs panel]
+
+
+== LED Control section
+
+TODO
+
+
+== Light Effects section
 
 TODO

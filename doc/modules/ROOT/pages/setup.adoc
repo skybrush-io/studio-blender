@@ -35,7 +35,7 @@ The table below summarizes all mappings between the relative and absolute coordi
 |===
 |Skybrush Studio Plugin for Blender | Skybrush Live
 
-|(relative coordinates)|(absolute coordinates)
+|(relative coordinates)|(absolute/geodetic coordinates)
 
 | (0, 0, 0) | show origin
 | X | front (show orientation)

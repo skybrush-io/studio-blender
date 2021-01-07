@@ -1,5 +1,5 @@
 = Quick guide to drone show design with Skybrush Studio
-:imagesdir: ../assets/images
+:imagesdir: ../../assets/images
 
 The *Skybrush Studio Plugin for Blender* is a great handy addon that extends Blender's capabilities specifically for professional drone show design. In the following tutorial we will go through the steps how to create a nice drone show from scratch.
 
