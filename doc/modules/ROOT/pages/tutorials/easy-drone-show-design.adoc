@@ -1,0 +1,64 @@
+= Quick guide to drone show design with Skybrush Studio
+:imagesdir: ../assets/images
+
+The *Skybrush Studio Plugin for Blender* is a great handy addon that extends Blender's capabilities specifically for professional drone show design. In the following tutorial we will go through the steps how to create a nice drone show from scratch.
+
+In the followings we assume that you have at least a basic understanding of Blender and its capabilities.
+
+
+== 1. Initialize your show framework
+
+You can automatically initialize your show framework with executing the "Create Takeoff Grid" operator from the F3 menu. This will create all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show.
+
+To read more about these collections, please read the xref:glossary.adc[Glossary].
+
+
+== 2. Create formations
+
+Formations are static or dynamic (animated) scenes, standalone parts of your final drone show.
+
+First, create any static or dynamic animation you wish, made of any objects or vertices of objects. If you are ready, use the Formations panel in the sidebar of the 3D Viewport editor to use it as a formation of the drone show.
+
+
+== 3. Create a Storyboard from formations
+
+The Storyboard defines the structure of your drone show, consisting of formations coming one after another.
+
+Use the Formations panel in the sidebar of the 3D Viewport editor to create a Storyboard. Add your formations to the Storybard, define their starting time and duration.
+
+
+== 4. Create automatic transitions
+
+Use the "Recalculate transitions" button at the bottom of the Storyboard section of the Formations panel to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
+
+While transitions are created, your drones in the Drones collection will also be attached to all your formations. The animation part of your show is now almost ready...
+
+
+== 5. Check and verify your animation
+
+Use the Safety & Export panel in the sidebar of the Viewport editor to enable real-time verification checks on your animation. Setup your safety parameters to a convenient value and watch your animation in the 3D Viewport editor. Drones and drone pairs not passing the safety checks (velocity, altitude, proximity) will be highlighted with red, while status information about the verification results will be visible on the left side of the window.
+
+Press the "Validate Trajectories" button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
+
+Once ready, you will receive a `.pdf` file containing detailed validation checks.
+
+TIP: Interactive validation of the whole show is also possible in *Skybrush Viewer*. Check that out, too!
+
+
+== 6. Add lights to your show
+
+Use the LEDs panel in the sidebar of the 3D Viewport editor to add light animation to your show.
+
+Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors and press the Apply (change abruptly) or Fade to (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
+
+TIP: In the popup window change the "Color to apply" propery to Gradient to create more spectacular coloring schemes according to the "Order in gradient" property selection.
+
+
+== 7. Export your show to .skyc
+
+Once ready, use the "Export to .skyc" button of the "Safety & Export" panel in the sidebar of the 3D Viewport editor to export your entire show into Skybrush Compiled format.
+
+This single-file format is compatible with *Skybrush Viewer*, if you wish to visualize or verify your show or you simply want to send a link with an interactive 3D visualization of the show to your clients, and it is also compatible with *Skybrush Live* that is our profession tool of drone show execution.
+
+
+We are done. Enjoy, mailto:support@collmot.com[send us feedback or ask] if you have any questions!
