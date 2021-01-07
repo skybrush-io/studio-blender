@@ -1,6 +1,7 @@
 import bpy
 import bmesh
 
+from operator import itemgetter
 from typing import Iterable, Optional
 
 from bpy.props import (
@@ -32,7 +33,22 @@ def object_has_mesh_data(self, obj) -> bool:
     return obj.data and isinstance(obj.data, Mesh)
 
 
+#: Pre-constructed vectors for a quick containment test using raycasting and BVH-trees
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+
+#: Axis mapping for the gradient-based output types
+OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
+    "GRADIENT_XYZ": (0, 1, 2),
+    "GRADIENT_XZY": (0, 2, 1),
+    "GRADIENT_YXZ": (1, 0, 2),
+    "GRADIENT_YZX": (1, 2, 0),
+    "GRADIENT_ZXY": (2, 0, 1),
+    "GRADIENT_ZYX": (2, 1, 0),
+    "default": (0, 0, 0),
+}
+OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
+    key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY.items()
+}
 
 
 def test_containment(point, bvh_tree: BVHTree) -> bool:
@@ -102,8 +118,9 @@ class LightEffect(PropertyGroup):
             ("GRADIENT_YZX", "Gradient (YZX)", "", 7),
             ("GRADIENT_ZXY", "Gradient (ZXY)", "", 8),
             ("GRADIENT_ZYX", "Gradient (ZYX)", "", 9),
-            ("DISTANCE", "Distance from mesh", "", 10),
-            ("CUSTOM", "Custom expression", "", 11),
+            ("TEMPORAL", "Temporal", "", 10),
+            ("DISTANCE", "Distance from mesh", "", 11),
+            ("CUSTOM", "Custom expression", "", 12),
         ],
         default="LAST_COLOR",
     )
@@ -157,8 +174,43 @@ class LightEffect(PropertyGroup):
         output_type = self.output
         color_ramp = self.color_ramp
         new_color = [0.0] * 4
+        order = None
 
-        # TODO(ntamas): take care of ordering for different gradient types!
+        outputs = None
+        common_output = None
+
+        if output_type == "FIRST_COLOR":
+            common_output = 0.0
+        elif output_type == "LAST_COLOR":
+            common_output = 1.0
+        elif output_type == "TEMPORAL":
+            common_output = (frame - self.frame_start) / self.duration
+        elif output_type.startswith("GRADIENT_"):
+            sort_key = OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
+            order = list(range(num_positions))
+            if sort_key is not None:
+                order.sort(key=lambda index: sort_key(positions[index]))
+
+            outputs = [1.0] * num_positions
+            if num_positions > 1:
+                for u, v in enumerate(order):
+                    outputs[v] = u / (num_positions - 1)
+        elif output_type == "INDEXED":
+            # Gradient based on index
+            if num_positions > 1:
+                np_m1 = num_positions - 1
+                outputs = [index / np_m1 for index in range(num_positions)]
+            else:
+                common_output = 1.0
+        elif output_type == "DISTANCE":
+            # TODO(ntamas)
+            common_output = 1.0
+        elif output_type == "CUSTOM_EXPRESSION":
+            # TODO(ntamas)
+            common_output = 1.0
+        else:
+            # Should not get here
+            common_output = 1.0
 
         for index, position in enumerate(positions):
             # Take the base color to modify
@@ -166,17 +218,10 @@ class LightEffect(PropertyGroup):
 
             # Calculate the output value of the effect that goes through the color
             # ramp mapper
-            if output_type == "FIRST_COLOR":
-                output = 0.0
-            elif output_type == "LAST_COLOR":
-                output = 1.0
-            elif output_type == "CUSTON":
-                # TODO(ntamas): implement custom Python expressions
-                output = 1.0
+            if common_output is not None:
+                output = common_output
             else:
-                # All the remaining effects are basically gradient effects, the
-                # ordering was taken care of above outside the for loop
-                output = index / (num_positions - 1) if num_positions > 1 else 1.0
+                output = outputs[index]
 
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
