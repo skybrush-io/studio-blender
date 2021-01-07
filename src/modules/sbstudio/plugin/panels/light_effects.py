@@ -76,5 +76,6 @@ class LightEffectsPanel(Panel):
             col.separator()
             col.prop(entry, "mesh")
             col.separator()
+            col.prop(entry, "output")
             col.prop(entry, "influence", slider=True)
             col.prop(entry, "enabled")  # TODO(ntamas): move this to each list item

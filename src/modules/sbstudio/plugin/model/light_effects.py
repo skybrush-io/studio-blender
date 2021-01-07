@@ -6,6 +6,7 @@ from typing import Iterable, Optional
 from bpy.props import (
     BoolProperty,
     CollectionProperty,
+    EnumProperty,
     FloatProperty,
     IntProperty,
     PointerProperty,
@@ -88,6 +89,25 @@ class LightEffect(PropertyGroup):
         options=set(),
     )
 
+    output = EnumProperty(
+        name="Output",
+        description="Output function that determines the value that is passed through the color ramp to obtain the color to assign to a drone",
+        items=[
+            ("FIRST_COLOR", "First color of color ramp", "", 1),
+            ("LAST_COLOR", "Last color of color ramp", "", 2),
+            ("INDEXED", "Gradient", "", 3),
+            ("GRADIENT_XYZ", "Gradient (XYZ)", "", 4),
+            ("GRADIENT_XZY", "Gradient (XZY)", "", 5),
+            ("GRADIENT_YXZ", "Gradient (YXZ)", "", 6),
+            ("GRADIENT_YZX", "Gradient (YZX)", "", 7),
+            ("GRADIENT_ZXY", "Gradient (ZXY)", "", 8),
+            ("GRADIENT_ZYX", "Gradient (ZYX)", "", 9),
+            ("DISTANCE", "Distance from mesh", "", 10),
+            ("CUSTOM", "Custom expression", "", 11),
+        ],
+        default="LAST_COLOR",
+    )
+
     influence = FloatProperty(
         name="Influence",
         description="Influence of this light effect on the final color of drones",
@@ -112,7 +132,11 @@ class LightEffect(PropertyGroup):
     )
 
     def apply_on_colors(
-        self, colors: Iterable[RGBAColor], positions: Iterable[Coordinate3D], frame: int
+        self,
+        colors: Iterable[RGBAColor],
+        positions: Iterable[Coordinate3D],
+        *,
+        frame: int,
     ) -> None:
         """Applies this effect to a given list of colors, each belonging to a
         given spatial position in the given frame.
@@ -127,9 +151,14 @@ class LightEffect(PropertyGroup):
             return 0.0
 
         bvh_tree = self._get_bvh_tree_from_mesh()
+        num_positions = len(positions)
+
         for index, position in enumerate(positions):
             color = colors[index]
-            alpha_over_in_place(self._evaluate_at(position, frame, bvh_tree), color)
+            alpha_over_in_place(
+                self._evaluate_at(position, frame, index, num_positions, bvh_tree),
+                color,
+            )
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -145,15 +174,24 @@ class LightEffect(PropertyGroup):
         """
         return 0 <= (frame - self.frame_start) < self.duration
 
-    def evaluate_at(self, position, frame: int) -> RGBAColor:
+    def evaluate_at(
+        self, position, frame: int, index: int = 0, num_drones: int = 0
+    ) -> RGBAColor:
         """Evaluates the effect at the given position in space and at the
         given frame, returning the color yielded by the effect.
+
+        Parameters:
+            position: the spatial position to evaluate the effect at
+            frame: the frame index
+            index: index of the drone that will receive the evaluated color
+            num_drones: the total number of drones on which the effect is
+                evaluated
         """
         if not self.enabled or not self.contains_frame(frame):
             return 0.0
 
         bvh_tree = self._get_bvh_tree_from_mesh()
-        return self._evaluate_at(position, frame, bvh_tree)
+        return self._evaluate_at(position, frame, index, num_drones, bvh_tree)
 
     def evaluate_influence_at(self, position, frame: int) -> float:
         """Eveluates the effective influence of the effect on the given position
@@ -171,15 +209,35 @@ class LightEffect(PropertyGroup):
         return self.frame_start + self.duration
 
     def _evaluate_at(
-        self, position, frame: int, bvh_tree: Optional[BVHTree]
+        self,
+        position,
+        frame: int,
+        index: int,
+        num_drones: int,
+        bvh_tree: Optional[BVHTree],
     ) -> RGBAColor:
         alpha = max(
             min(self._evaluate_influence_at(position, frame, bvh_tree), 1.0), 0.0
         )
+
         # TODO(ntamas): use position from somewhere else
+
+        # Calculate the output value of the effect that goes through the color
+        # ramp mapper
+        output = self.output
+        if output == "FIRST_COLOR":
+            output = 0.0
+        elif output == "LAST_COLOR":
+            output = 1.0
+        elif output == "INDEXED":
+            output = index / (num_drones - 1) if num_drones > 1 else 1.0
+        else:
+            # TODO(ntamas)
+            output = 1.0
+
         color_ramp = self.color_ramp
         if color_ramp:
-            color = color_ramp.evaluate(1.0)
+            color = color_ramp.evaluate(output)
             return (color[0], color[1], color[2], color[3] * alpha)
         else:
             # should not happen
@@ -192,7 +250,7 @@ class LightEffect(PropertyGroup):
         if bvh_tree and not test_containment(position, bvh_tree):
             return 0.0
 
-        influence = 1.0
+        influence = self.influence
 
         # Apply fade-in
         if self.fade_in_duration > 0:
@@ -208,9 +266,10 @@ class LightEffect(PropertyGroup):
 
         return influence
 
-    def _get_bvh_tree_from_mesh(self) -> BVHTree:
+    def _get_bvh_tree_from_mesh(self) -> Optional[BVHTree]:
         """Returns a BVH-tree data structure from the mesh associated to this
-        light effect for easy containment detection.
+        light effect for easy containment detection, or `None` if the light
+        effect has no associated mesh.
         """
         if self.mesh:
             b_mesh = bmesh.new()
@@ -268,11 +327,13 @@ class LightEffectCollection(PropertyGroup, ListMixin):
                 default
             select: whether to select the newly added entry after it was created
         """
-        fps = context.scene.render.fps
+        scene = context.scene
+
+        fps = scene.render.fps
         if frame_start is None:
             # TODO(ntamas): choose the start of the formation that includes the
             # current frame or transition
-            frame_start = context.scene.frame_start
+            frame_start = scene.frame_start
 
         if duration is None or duration <= 0:
             duration = fps * DEFAULT_LIGHT_EFFECT_DURATION
@@ -286,6 +347,20 @@ class LightEffectCollection(PropertyGroup, ListMixin):
             name="Texture for light effect", type="NONE"
         )
         entry.texture.use_color_ramp = True
+
+        # Clear alpha from color ramp
+        elts = entry.texture.color_ramp.elements
+        for elt in elts:
+            elt.color[3] = 1.0
+
+        # Copy default colors from the LED Control panel
+        if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "led_control"):
+            led_control = scene.skybrush.led_control
+            last_elt = len(elts) - 1
+            for i in range(3):
+                elts[0].color[i] = led_control.primary_color[i]
+                if last_elt > 0:
+                    elts[last_elt].color[i] = led_control.secondary_color[i]
 
         if select:
             self.active_entry_index = len(self.entries) - 1
