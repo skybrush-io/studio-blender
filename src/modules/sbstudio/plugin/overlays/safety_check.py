@@ -33,6 +33,7 @@ class SafetyCheckOverlay(Overlay):
         super().__init__()
 
         self._markers = None
+        self._pixel_size = 1
         self._shader_batches = None
 
     @property
@@ -56,6 +57,7 @@ class SafetyCheckOverlay(Overlay):
 
     def prepare(self) -> None:
         self._shader = gpu.shader.from_builtin("3D_UNIFORM_COLOR")
+        self._pixel_size = bpy.context.preferences.system.pixel_size
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
@@ -70,23 +72,24 @@ class SafetyCheckOverlay(Overlay):
         left_panel_width = context.area.regions[2].width
         total_height = context.area.height
 
-        left_margin = left_panel_width + 38
-        y = total_height - 224
+        left_margin = left_panel_width + 19 * self._pixel_size
+        y = total_height - 112 * self._pixel_size
+        line_height = 20 * self._pixel_size
 
-        blf.size(font_id, 22, 72)
+        blf.size(font_id, int(11 * self._pixel_size), 72)
         blf.enable(font_id, blf.SHADOW)
 
         if safety_check.min_distance_is_valid:
             set_warning_color_iff(safety_check.should_show_proximity_warning, font_id)
             blf.position(font_id, left_margin, y, 0)
             blf.draw(font_id, f"Min distance: {safety_check.min_distance:.1f} m")
-            y -= 40
+            y -= line_height
 
         if safety_check.max_altitude_is_valid:
             set_warning_color_iff(safety_check.should_show_altitude_warning, font_id)
             blf.position(font_id, left_margin, y, 0)
             blf.draw(font_id, f"Max altitude: {safety_check.max_altitude:.1f} m")
-            y -= 40
+            y -= line_height
 
         if safety_check.max_velocities_are_valid:
             set_warning_color_iff(safety_check.should_show_velocity_warning, font_id)
@@ -95,7 +98,7 @@ class SafetyCheckOverlay(Overlay):
                 font_id,
                 f"Max velocity XY: {safety_check.max_velocity_xy:.1f} m/s | Z: {safety_check.max_velocity_z:.1f} m/s",
             )
-            y -= 40
+            y -= line_height
 
     def draw_3d(self) -> None:
         bgl.glEnable(bgl.GL_BLEND)
