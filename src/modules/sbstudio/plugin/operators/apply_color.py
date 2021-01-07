@@ -2,11 +2,9 @@ from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 from random import shuffle
 
-from sbstudio.plugin.actions import ensure_action_exists_for_object
-from sbstudio.plugin.keyframes import set_keyframes
 from sbstudio.plugin.materials import (
+    create_keyframe_for_diffuse_color_of_material,
     get_material_for_led_light_color,
-    get_shader_node_and_input_for_diffuse_color_of_material,
 )
 from sbstudio.plugin.props import ColorProperty
 from sbstudio.plugin.selection import get_selected_drones
@@ -141,19 +139,6 @@ class ApplyColorsToSelectedDronesOperator(Operator):
         return [selection[i] for i in order]
 
     def _apply_color_to_single_drone(self, drone, frame: int, index: int, ratio: float):
-        material = get_material_for_led_light_color(drone)
-        if not material:
-            # Drone does not have an LED light
-            return
-
-        # Ensure that we have animation data for the shader node tree. we need
-        # to use a custom name because all the node trees otherwise have the
-        # same name ("Shader Nodetree") so they would get the same action
-        node_tree = material.node_tree
-        ensure_action_exists_for_object(
-            node_tree, name=f"{material.name} Shader Nodetree Action"
-        )
-
         # Create the color to add in the keyframes
         if self.color == "PRIMARY":
             # Pure primary color
@@ -165,13 +150,11 @@ class ApplyColorsToSelectedDronesOperator(Operator):
             # Gradient
             color = self.primary_color * (1 - ratio) + self.secondary_color * ratio
 
-        color_as_rgba = color.r, color.g, color.b, 1.0
-        keyframes = [(frame, color_as_rgba)]
-        if not self.fade:
-            keyframes.insert(0, (frame - 1, None))
+        material = get_material_for_led_light_color(drone)
+        if not material:
+            # Drone does not have an LED light
+            return
 
-        # Set the keyframes
-        node, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
-        index = node.inputs.find(input.name)
-        data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
-        set_keyframes(node_tree, data_path, keyframes, interpolation="LINEAR")
+        create_keyframe_for_diffuse_color_of_material(
+            material, color, frame=frame, step=not self.fade
+        )

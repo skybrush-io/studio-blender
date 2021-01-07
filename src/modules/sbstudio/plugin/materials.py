@@ -4,6 +4,8 @@ from bpy.types import Material
 from typing import Optional
 
 from sbstudio.model.types import RGBAColor
+from sbstudio.plugin.actions import ensure_action_exists_for_object
+from sbstudio.plugin.keyframes import set_keyframes
 
 from .errors import SkybrushStudioAddonError
 
@@ -124,6 +126,47 @@ def set_diffuse_color_of_material(material, color: RGBAColor):
         input.default_value = color
 
     material.diffuse_color = color
+
+
+def create_keyframe_for_diffuse_color_of_material(
+    material, color: RGBAColor, *, frame: Optional[int] = None, step: bool = False
+):
+    """Creates keyframes for the diffuse color of the given material to set it
+    to the given color in the given frame.
+
+    Parameters:
+        material: the material to modify
+        color: the RGB color to use for the diffuse color of the material
+        frame: the frame to apply the diffuse color on; `None` means the
+            current frame
+        step: whether to insert an additional keyframe in the preceding frame to
+            ensure an abrupt transition
+    """
+    if frame is None:
+        frame = bpy.context.scene.frame_current
+
+    # Ensure that we have animation data for the shader node tree. we need
+    # to use a custom name because all the node trees otherwise have the
+    # same name ("Shader Nodetree") so they would get the same action
+    node_tree = material.node_tree
+    ensure_action_exists_for_object(
+        node_tree, name=f"{material.name} Shader Nodetree Action"
+    )
+
+    if hasattr(color, "r"):
+        color_as_rgba = color.r, color.g, color.b, 1.0
+    else:
+        color_as_rgba = color[0], color[1], color[2], 1.0
+
+    keyframes = [(frame, color_as_rgba)]
+    if step and frame > bpy.context.scene.frame_start:
+        keyframes.insert(0, (frame - 1, None))
+
+    # Set the keyframes
+    node, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
+    index = node.inputs.find(input.name)
+    data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
+    set_keyframes(node_tree, data_path, keyframes, interpolation="LINEAR")
 
 
 def get_led_light_color(drone) -> RGBAColor:

@@ -17,13 +17,14 @@ def detach_material_from_drone_template(
         )
 
     if template_material is None:
-        return
+        return None
 
     for slot in drone.material_slots:
         if slot.material == template_material:
             copied_material = template_material.copy()
             copied_material.name = f"LED color of {drone.name}"
             slot.material = copied_material
+            return slot.material
 
 
 class DetachMaterialsFromDroneTemplateOperator(Operator):

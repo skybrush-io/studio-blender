@@ -7,7 +7,10 @@ from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Templates
-from sbstudio.plugin.materials import get_material_for_led_light_color
+from sbstudio.plugin.materials import (
+    get_material_for_led_light_color,
+    create_keyframe_for_diffuse_color_of_material,
+)
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_material_from_drone_template,
@@ -183,7 +186,7 @@ class CreateTakeoffGridOperator(Operator):
 
         template_material = get_material_for_led_light_color(drone_template)
 
-        name = propose_name("Takeoff formation {}", for_collection=True)
+        name = propose_name("Landing grid", for_collection=True)
         create_formation(name, points)
 
         drones = []
@@ -195,9 +198,15 @@ class CreateTakeoffGridOperator(Operator):
                 template=drone_template,
                 collection=drone_collection,
             )
-            detach_material_from_drone_template(
+            material = detach_material_from_drone_template(
                 drone, template_material=template_material
             )
+
+            # The next line is needed for light effects to work properly
+            create_keyframe_for_diffuse_color_of_material(
+                material, (1.0, 1.0, 1.0), frame=context.scene.frame_start, step=True
+            )
+
             drones.append(drone)
 
         select_only(drone)
