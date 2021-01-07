@@ -1,21 +1,20 @@
-= Formations
+= Formations tab
 :imagesdir: ../../assets/images
 
-The Formations panel in the sidebar of the Viewport editor lets you assign your animations to your drone show.
+The Formations tab in the sidebar of the Viewport editor lets you assign your animations to your drone show.
 
-image::panels/formations.jpg[Formations panel]
+image::panels/formations.jpg[Formations tab]
 
-== Formations section
+== Formations panel
 
-With the "Formations" section of the panel you can create, select, deselect, update or remove formations or you can add them to your Storyboard.
+With the Formations panel of the Formations tab you can create, select, deselect, update or remove formations or you can add them to your Storyboard.
 
 The "Create formations" button lets you define a name and select the source of the new formation. It can be the selected objects, selected vertices, current positions of drones. The first two might contain static or dynamic animations.
 
-== Storyboard section
+== Storyboard panel
 
 The Storyboard gives you the overall structure of your drone show, with your formations ordered in time.
 
 Add your formations to the storyboard, order them as you wish, define a starting time and duration.
 
 Once you are satisfied with your storyboard, you can press the "Recalculate Transitions" button to create automatic and optimal transitions between your formations without collisions. This button also creates the constraints on your drones in your Drones collection to follow the given formations during their active time.
-

@@ -9,15 +9,15 @@ Drones collection:: This collection contains all your drone objects. It is creat
 
 Formations collection:: This collection contains all your formations, which are also collections. A formation collection contains empty meshes (one for each drone) that should be animated to give you static or dynamic formations of a specific scene in the Storyboard. The objects (empty meshes) in a formation collection appear in the viewport preview as thin crosses.
 
-Formations panel:: The formations panel is a Skybrush-specific new panel in the sidebar of the 3D Viewport editor that allows you to create formations and to edit the Storyboard.
+Formations tab:: The Formations tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains one panel that allows you to create formations and another to edit the Storyboard.
 
-LEDs panel:: The LEDs panel is a Skybrush-specific new panel in the sidebar of the 3D Viewport editor that allows you to add light animation to your drone show easily.
+LEDs tab:: The LEDs tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains panels that allows you to add light animation to your drone show easily.
 
-Safety & Export panel:: The Safety & Export panel is a Skybrush-specific new panel in the sidebar of the 3D Viewport editor that allows you to perform real-time safety verification of your animation and to export your drone show in Skybrush Compiled Format (`.skyc`).
+Safety & Export tab:: The Safety & Export tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor, containing of two panels: one allows you to perform real-time safety verification of your animation and another to export your drone show in Skybrush Compiled Format (`.skyc`).
 
 SKYC:: `.skyc` stands for *Skybrush Compiled* format. It is our most common show definition file type that contains all information related to a drone show (all drone trajectories and light animations, pyro events, suggested geofence definitions, music, designer notes to the operators etc.). The final output of *Skybrush Studio Plugin for Blender* is always a single `.skyc` file that can be opened by other components of the *Skybrush* suite, such as *Skybrush Viewer* and *Skybrush Live*.
 
-Storyboard:: The Storyboard is a simple list of formations (static or dynamic) that are organized in time with proper timing to give you the overall structure of your drone show animation. The Storyboard can be edited in the "Formations" panel of the sidebar in the 3D Viewport editor.
+Storyboard:: The Storyboard is a simple list of formations (static or dynamic) that are organized in time with proper timing to give you the overall structure of your drone show animation. The Storyboard can be edited in the "Formations" tab of the sidebar in the 3D Viewport editor.
 
 Takeoff grid:: The takeoff grid contains the takeoff positions of your drones. It should be your initial formation in your Storyboard. The takeoff grid can be created with the "Create Takeoff Grid" operator, which also initializes all necessary collections for your drone show design.
 
