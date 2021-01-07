@@ -147,18 +147,52 @@ class LightEffect(PropertyGroup):
                 colors in 3D space
             frame: the frame index
         """
+        # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
-            return 0.0
+            return
 
         bvh_tree = self._get_bvh_tree_from_mesh()
         num_positions = len(positions)
 
+        output_type = self.output
+        color_ramp = self.color_ramp
+        new_color = [0.0] * 4
+
+        # TODO(ntamas): take care of ordering for different gradient types!
+
         for index, position in enumerate(positions):
+            # Take the base color to modify
             color = colors[index]
-            alpha_over_in_place(
-                self._evaluate_at(position, frame, index, num_positions, bvh_tree),
-                color,
+
+            # Calculate the output value of the effect that goes through the color
+            # ramp mapper
+            if output_type == "FIRST_COLOR":
+                output = 0.0
+            elif output_type == "LAST_COLOR":
+                output = 1.0
+            elif output_type == "CUSTON":
+                # TODO(ntamas): implement custom Python expressions
+                output = 1.0
+            else:
+                # All the remaining effects are basically gradient effects, the
+                # ordering was taken care of above outside the for loop
+                output = index / (num_positions - 1) if num_positions > 1 else 1.0
+
+            # Calculate the influence of the effect, depending on the fade-in
+            # and fade-out durations and the optional mesh
+            alpha = max(
+                min(self._evaluate_influence_at(position, frame, bvh_tree), 1.0), 0.0
             )
+
+            if color_ramp:
+                new_color[:] = color_ramp.evaluate(output)
+                new_color[3] *= alpha
+            else:
+                # should not happen
+                new_color[:] = (1.0, 1.0, 1.0, alpha)
+
+            # Apply the new color with alpha blending
+            alpha_over_in_place(new_color, color)
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -174,78 +208,17 @@ class LightEffect(PropertyGroup):
         """
         return 0 <= (frame - self.frame_start) < self.duration
 
-    def evaluate_at(
-        self, position, frame: int, index: int = 0, num_drones: int = 0
-    ) -> RGBAColor:
-        """Evaluates the effect at the given position in space and at the
-        given frame, returning the color yielded by the effect.
-
-        Parameters:
-            position: the spatial position to evaluate the effect at
-            frame: the frame index
-            index: index of the drone that will receive the evaluated color
-            num_drones: the total number of drones on which the effect is
-                evaluated
-        """
-        if not self.enabled or not self.contains_frame(frame):
-            return 0.0
-
-        bvh_tree = self._get_bvh_tree_from_mesh()
-        return self._evaluate_at(position, frame, index, num_drones, bvh_tree)
-
-    def evaluate_influence_at(self, position, frame: int) -> float:
-        """Eveluates the effective influence of the effect on the given position
-        in space and at the given frame.
-        """
-        if not self.enabled or not self.contains_frame(frame):
-            return 0.0
-
-        bvh_tree = self._get_bvh_tree_from_mesh()
-        return self._evaluate_influence_at(position, frame, bvh_tree)
-
     @property
     def frame_end(self) -> int:
         """Returns the index of the last frame that is covered by the effect."""
         return self.frame_start + self.duration
 
-    def _evaluate_at(
-        self,
-        position,
-        frame: int,
-        index: int,
-        num_drones: int,
-        bvh_tree: Optional[BVHTree],
-    ) -> RGBAColor:
-        alpha = max(
-            min(self._evaluate_influence_at(position, frame, bvh_tree), 1.0), 0.0
-        )
-
-        # TODO(ntamas): use position from somewhere else
-
-        # Calculate the output value of the effect that goes through the color
-        # ramp mapper
-        output = self.output
-        if output == "FIRST_COLOR":
-            output = 0.0
-        elif output == "LAST_COLOR":
-            output = 1.0
-        elif output == "INDEXED":
-            output = index / (num_drones - 1) if num_drones > 1 else 1.0
-        else:
-            # TODO(ntamas)
-            output = 1.0
-
-        color_ramp = self.color_ramp
-        if color_ramp:
-            color = color_ramp.evaluate(output)
-            return (color[0], color[1], color[2], color[3] * alpha)
-        else:
-            # should not happen
-            return (1.0, 1.0, 1.0, alpha)
-
     def _evaluate_influence_at(
         self, position, frame: int, bvh_tree: Optional[BVHTree]
     ) -> float:
+        """Eveluates the effective influence of the effect on the given position
+        in space and at the given frame.
+        """
         # Apply mesh containment constraint
         if bvh_tree and not test_containment(position, bvh_tree):
             return 0.0

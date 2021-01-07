@@ -16,7 +16,10 @@ __all__ = ("UpdateLightEffectsTask",)
 last_frame = None
 
 #: Cache for the "base" color of every drone in the current frame before we
-#: apply the light effects on them. Cleared when we move to a new frame
+#: apply the light effects on them. Cleared when we move to a new frame. The
+#: mapping is keyed by the _ids_ of the drones so we do not hang on to a
+#: reference of a drone if the user deletes it and Blender decides to free the
+#: associated memory area
 base_color_cache = {}
 
 #: White color, used as a base color when no info is available for a newly added
@@ -58,13 +61,27 @@ def update_light_effects(scene, depsgraph):
                 for drone in drones:
                     color = get_led_light_color(drone)
                     colors.append(list(color))
-                    base_color_cache[drone] = color
+                    base_color_cache[id(drone)] = color
             else:
                 # Initialize the colors list from the cached base colors
-                colors = [list(base_color_cache.get(drone, WHITE)) for drone in drones]
+                colors = [
+                    list(base_color_cache.get(id(drone), WHITE)) for drone in drones
+                ]
             changed = True
 
         effect.apply_on_colors(colors, positions=positions, frame=frame)
+
+    # If we haven't changed anything, _but_ this is because we have recently
+    # disabled or removed the last effect (which we know from the fact that
+    # the base_color_cache is filled), clear the cache and update the colors
+    # nevertheless. This is needed to update the screen properly when the last
+    # effect is disabled.
+    if not changed:
+        if base_color_cache:
+            drones = Collections.find_drones().objects
+            colors = [list(base_color_cache.get(id(drone), WHITE)) for drone in drones]
+            base_color_cache.clear()
+            changed = True
 
     if changed:
         for drone, color in zip(drones, colors):

@@ -14,7 +14,7 @@ class LightEffectsPanel(Panel):
     frames (instead of using keyframes).
     """
 
-    bl_idname = "OBJECT_PT_skybrush_light_effects_panel"
+    bl_idname = "OBJECT_PT_LightEffectsPanel"
     bl_label = "Light Effects"
 
     # The following three settings determine that the light effects panel gets
@@ -28,28 +28,25 @@ class LightEffectsPanel(Panel):
         return context.scene.skybrush.light_effects
 
     def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
         scene = context.scene
         light_effects = scene.skybrush.light_effects
         if not light_effects:
             return
 
-        layout = self.layout
-
-        layout.use_property_split = True
-        # layout.use_property_decorate = False
-
         row = layout.row()
 
         col = row.column()
         col.template_list(
-            "UI_UL_list",
+            "SKYBRUSH_UL_LightEffectsList",
             "OBJECT_PT_skybrush_light_effects_panel",
             light_effects,
             "entries",
             light_effects,
             "active_entry_index",
-            maxrows=10,
-            sort_lock=True,
         )
 
         col = row.column(align=True)
@@ -78,4 +75,3 @@ class LightEffectsPanel(Panel):
             col.separator()
             col.prop(entry, "output")
             col.prop(entry, "influence", slider=True)
-            col.prop(entry, "enabled")  # TODO(ntamas): move this to each list item

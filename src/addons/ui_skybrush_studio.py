@@ -35,6 +35,7 @@ for candidate in candidates:
 #############################################################################
 # imports needed by the addon
 
+from sbstudio.plugin.lists import SKYBRUSH_UL_LightEffectsList
 from sbstudio.plugin.model import (
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
@@ -83,10 +84,12 @@ from sbstudio.plugin.panels import (
 )
 from sbstudio.plugin.plugin_helpers import (
     register_header,
+    register_list,
     register_operator,
     register_panel,
     register_type,
     unregister_header,
+    unregister_list,
     unregister_operator,
     unregister_panel,
     unregister_type,
@@ -144,6 +147,9 @@ operators = (
     ValidateTrajectoriesOperator,
 )
 
+#: List widgets in this addon.
+lists = (SKYBRUSH_UL_LightEffectsList,)
+
 #: Panels in this addon. The order also implicitly defines the order in which
 #: our tabs appear in the sidebar of the 3D view.
 panels = (
@@ -169,6 +175,8 @@ def register():
         register_type(custom_type)
     for operator in operators:
         register_operator(operator)
+    for list_ in lists:
+        register_list(list_)
     for panel in panels:
         register_panel(panel)
     for header in headers:
@@ -185,6 +193,8 @@ def unregister():
         unregister_header(header)
     for panel in reversed(panels):
         unregister_panel(panel)
+    for list_ in lists:
+        unregister_list(list_)
     for operator in reversed(operators):
         unregister_operator(operator)
     for custom_type in reversed(types):
