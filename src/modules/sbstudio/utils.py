@@ -3,13 +3,14 @@ from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Sequence, Tuple
 
-from sbstudio.model.types import RGBAColor
+from sbstudio.model.types import Coordinate3D, RGBAColor
 
 
 __all__ = (
     "alpha_over_in_place",
     "constant",
     "create_path_and_open",
+    "distance_sq_of",
     "get_moves_required_to_sort_collection",
     "simplify_path",
 )
@@ -61,6 +62,11 @@ def create_path_and_open(filename, *args, **kwds):
     path = Path(filename)
     path.parent.mkdir(exist_ok=True, parents=True)
     return open(str(path), *args, **kwds)
+
+
+def distance_sq_of(p: Coordinate3D, q: Coordinate3D) -> float:
+    """Returns the squared Euclidean distance of two 3D points."""
+    return (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2
 
 
 def get_moves_required_to_sort_collection(

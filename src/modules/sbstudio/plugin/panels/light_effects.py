@@ -74,4 +74,5 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "mesh")
             col.separator()
             col.prop(entry, "output")
+            col.prop(entry, "target")
             col.prop(entry, "influence", slider=True)

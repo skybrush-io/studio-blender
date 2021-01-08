@@ -1,8 +1,9 @@
 import bpy
 import bmesh
 
+from functools import partial
 from operator import itemgetter
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional
 
 from bpy.props import (
     BoolProperty,
@@ -19,7 +20,8 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.model.types import Coordinate3D, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
-from sbstudio.utils import alpha_over_in_place
+from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.utils import alpha_over_in_place, distance_sq_of
 
 from .mixins import ListMixin
 
@@ -51,7 +53,7 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
 }
 
 
-def test_containment(point, bvh_tree: BVHTree) -> bool:
+def test_containment(bvh_tree: BVHTree, point: Coordinate3D) -> bool:
     """Given a point and a BVH-tree, tests whether the point is _probably_
     within the mesh represented by the BVH-tree.
 
@@ -144,8 +146,24 @@ class LightEffect(PropertyGroup):
     mesh = PointerProperty(
         type=Object,
         name="Mesh",
-        description="Mesh that is used to limit the light effect to some part of the scene",
+        description=(
+            'Mesh related to the light effect; used when the output is set to "Distance" or to limit the '
+            'light effect to the inside of this mesh when "Only inside" is checked'
+        ),
         poll=object_has_mesh_data,
+    )
+
+    target = EnumProperty(
+        name="Target",
+        description=(
+            "Specifies whether to apply this light effect to all drones or only"
+            " to those drones that are inside the given mesh"
+        ),
+        items=[
+            ("ALL", "All drones", "", 1),
+            ("INSIDE_MESH", "Inside the mesh", "", 2),
+        ],
+        default="ALL",
     )
 
     def apply_on_colors(
@@ -168,7 +186,6 @@ class LightEffect(PropertyGroup):
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        bvh_tree = self._get_bvh_tree_from_mesh()
         num_positions = len(positions)
 
         output_type = self.output
@@ -185,11 +202,22 @@ class LightEffect(PropertyGroup):
             common_output = 1.0
         elif output_type == "TEMPORAL":
             common_output = (frame - self.frame_start) / self.duration
-        elif output_type.startswith("GRADIENT_"):
-            sort_key = OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
+        elif output_type.startswith("GRADIENT_") or output_type == "DISTANCE":
+            if output_type == "DISTANCE":
+                if self.mesh:
+                    position_of_mesh = get_position_of_object(self.mesh)
+                    sort_key = lambda index: distance_sq_of(
+                        positions[index], position_of_mesh
+                    )
+                else:
+                    sort_key = None
+            else:
+                sort_key = OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
+                sort_key = lambda index: sort_key(positions[index])
+
             order = list(range(num_positions))
             if sort_key is not None:
-                order.sort(key=lambda index: sort_key(positions[index]))
+                order.sort(key=sort_key)
 
             outputs = [1.0] * num_positions
             if num_positions > 1:
@@ -212,6 +240,10 @@ class LightEffect(PropertyGroup):
             # Should not get here
             common_output = 1.0
 
+        # Get the additional predicate required to evaluate whether the effect
+        # will be applied at a given position
+        condition = self._get_spatial_effect_predicate()
+
         for index, position in enumerate(positions):
             # Take the base color to modify
             color = colors[index]
@@ -226,7 +258,7 @@ class LightEffect(PropertyGroup):
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
             alpha = max(
-                min(self._evaluate_influence_at(position, frame, bvh_tree), 1.0), 0.0
+                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
 
             if color_ramp:
@@ -259,13 +291,19 @@ class LightEffect(PropertyGroup):
         return self.frame_start + self.duration
 
     def _evaluate_influence_at(
-        self, position, frame: int, bvh_tree: Optional[BVHTree]
+        self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
     ) -> float:
         """Eveluates the effective influence of the effect on the given position
         in space and at the given frame.
+
+        Parameters:
+            position: the position to evaluate the influence at
+            frame: the frame count
+            condition: additional condition that must evaluate to true when called
+                with the position; otherwise the effect will not be applied at all
         """
         # Apply mesh containment constraint
-        if bvh_tree and not test_containment(position, bvh_tree):
+        if condition and not condition(position):
             return 0.0
 
         influence = self.influence
@@ -298,6 +336,11 @@ class LightEffect(PropertyGroup):
             return tree
         else:
             return None
+
+    def _get_spatial_effect_predicate(self) -> Optional[Callable[[Coordinate3D], bool]]:
+        if self.target == "INSIDE_MESH":
+            bvh_tree = self._get_bvh_tree_from_mesh()
+            return partial(test_containment, bvh_tree)
 
 
 class LightEffectCollection(PropertyGroup, ListMixin):
