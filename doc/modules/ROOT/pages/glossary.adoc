@@ -7,7 +7,7 @@ Collection:: Blender objects in a scene can be grouped into collections. Collect
 
 Drones collection:: This collection contains all your drone objects. It is created automatically with the "Create Takeoff Grid" operator.
 
-Formations collection:: This collection contains all your formations, which are also collections. A formation collection contains empty meshes (one for each drone) that should be animated to give you static or dynamic formations of a specific scene in the Storyboard. The objects (empty meshes) in a formation collection appear in the viewport preview as thin crosses.
+Formations collection:: This collection contains all your formations, which are also collections. A formation collection contains empty meshes (one for each drone) that should be animated to give you static or dynamic formations of a specific scene in the Storyboard. The objects (empty meshes) in a formation collection appear in the 3D viewport editor preview as thin crosses.
 
 Formations tab:: The Formations tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains one panel that allows you to create formations and another to edit the Storyboard.
 

@@ -18,9 +18,9 @@ image::tutorials/easy-drone-show-design/blender_3dviewport_with_skybrush_tabs.jp
 
 You will see three new tabs related to *Skybrush Studio*:
 
-* Formations
-* LEDs
-* Safety & Export
+* xref:panels/formations.adoc[Formations]
+* xref:panels/leds.adoc[LEDs]
+* xref:panels/safety_and_export.adoc[Safety & Export]
 
 These tabs contain all panels, buttons, operators and functions that are specifically needed for drone show design.
 
@@ -30,7 +30,7 @@ image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
 Setup your takeoff grid with any convenient parameters and press OK.
 
-This will create all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show and will initialize your drones in the 3D Viewport editor.
+This will create all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
 
 To read more about the mentioned collections, please read the xref:glossary.adc[Glossary].
 
