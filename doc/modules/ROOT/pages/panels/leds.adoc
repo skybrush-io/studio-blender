@@ -34,6 +34,13 @@ If the "Fade to color" checkbox is disabled, one keyframe with the previous colo
 
 The "Color to apply" option lets you select which color to use, the primary, the secondary or as a more advanced feature, a gradient color between these two. If the gradient mode is selected (assuming that you have selected multiple drones to color), the "Order in gradient" option lets you define how the gradient coloring is performed (along a given axis, as a distance from the cursor etc.).
 
+=== Use Bloom Effect
+
+Specifies whether the bloom effect should automatically be enabled on the 3D View.
+
+The bloom effect gives you a nice realistic look with shiny drones, however it can be very misleading in terms of the final sensed color.
+
+
 == Light Effects panel
 
 The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation.

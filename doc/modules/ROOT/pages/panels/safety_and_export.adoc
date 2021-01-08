@@ -7,8 +7,61 @@ image::panels/safety_and_export.jpg[Safety & Export tab]
 
 == Safety Check panel
 
-TODO
+The Safety Check panel lets you perform real-time frame-level or full post-processed verification of your drone animation to aid you towards completely safe drone flighs.
+
+To enable or disable all safety checks together, use the checkbox at the top left corner of the panel.
+
+=== Proximity warnings
+
+This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.
+
+The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone-pairs. This drone pair is also highlighted with red, along with a red line connecting them.
+
+image::panels/safety_check/proximity_warning.jpg[Proximity warning]
+
+To enable or disable proximity warnings, use the "Show proximity warnings" checkbox.
+
+=== Altitude warnings
+
+This option lets you define a maximum altitude for your drone show. If there are drones above this altitude (measured along the `Z` axis), you get real-time altitude warnings.
+
+The text-based altitude warning on the left side of the 3D Viewport editor always shows you the maximum altitude of drones. Drones above the altitude threshold at a given frame are highlighted in red.
+
+To enable or disable altitude warnings, use the "Show altitude warnings" checkbox.
+
+=== Velocity warnings
+
+This option lets you define a maximum horizontal and vertical speed for your drone show. If there are drones above these velocity limits, you get real-time velocity warnings.
+
+The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal and vertical velocity of drones. Drones above the velocity thresholds at a given frame are highlighted in red.
+
+To enable or disable velocity warnings, use the "Show velocity warnings" checkbox.
+
+=== Validate Trajectories
+
+Press the "Validate Trajectories" button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
+
+image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
+
+Once ready, you will receive a `.pdf` file containing detailed validation checks.
+
+TIP: Interactive validation of the whole show is also possible in *Skybrush Viewer*. Check that out, too!
+
 
 == Export panel
 
-TODO
+Once you are finished with your drone show, use the Export panel to export it from Blender to formats that can be uploaded to your drones.
+
+=== Export to .skyc
+
+The Skybrush Compiled format is a single-file descriptor of your complete drone show. It is used as the primary drone show format throughout the entire *Skybrush* suite:
+
+* If you wish to visualize or verify your show or you simply want to send a link with an interactive 3D visualization of the show to your clients, use *Skybrush Viewer*.
+
+* If you want to execute your drone show on your real drones, use *Skybrush Live*.
+
+If you press the "Export to .skyc" button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+
+* Export all or only selected drones
+* Define the frame range of the output (Render / Preview / Storyboard)
+* Set output frame rate (make sure it is a submultiple of your render FPS)
