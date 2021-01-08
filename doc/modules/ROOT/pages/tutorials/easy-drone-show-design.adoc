@@ -80,7 +80,7 @@ Use the LEDs tab in the sidebar of the 3D Viewport editor to add light animation
 
 Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors in the LED Control panel and press the Apply (change abruptly) or Fade to (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
 
-image::panels/led_control/create_color_keyframe.jpg[Create color keyframe]
+image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
 
 TIP: In the popup window change the "Color to apply" propery to Gradient to create more spectacular coloring schemes according to the "Order in gradient" property selection.
 

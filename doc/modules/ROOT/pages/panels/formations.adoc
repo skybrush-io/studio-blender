@@ -102,7 +102,11 @@ Set the duration of the given formation in the drone show. The end frame of the 
 
 === Transition
 
-Set the type of transition between the previous formation and this one. Manual transitions map the nth vertex of the initial formation to the nth vertex of the target formation. Auto-matched transitions find an optimal mapping between vertices of the initial and the target formation.
+Set the type of transition between the previous formation and this one:
+
+* Manual transitions map the nth vertex of the initial formation to the nth vertex of the target formation.
+
+* Auto-matched transitions find an optimal mapping between vertices of the initial and the target formation.
 
 === Custom Name
 

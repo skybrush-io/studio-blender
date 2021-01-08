@@ -8,9 +8,102 @@ image::panels/leds.jpg[LEDs tab]
 
 == LED Control panel
 
-TODO
+The LED Control panel provide a simple way to color your selected drones at individual keyframes.
 
+=== Primary color
+
+Press on the left color field to set the primary color you would like to set on the selected drones. Selecting a color does not set color keyframes yet, it just indicates your desired color.
+
+=== Secondary color
+
+Press on the right dcolor field to set the secondary color you would like to use in some light effects when coloring selected drones. Selecting a color does not set color keyframes yet, it just indicates your desired secondary color.
+
+=== Swap Colors
+
+Press the arrows in between the primary and secondary color fields to swap the two colors.
+
+=== Apply / Fade to
+
+The Apply and "Fade to" buttons below the selected primary and secondary colors open the same popup window with different default values corresponding to their function.
+
+image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
+
+They insert color animation keyframes at the given frame for the selected drones, according to the settings in the popup window.
+
+If the "Fade to color" checkbox is disabled, one keyframe with the previous color is inserted right before the actual frame and one with the selected color is added to the current frame (resulting in abrupt color change at the given frame). If the chekcbox is enabled, only one color keyframe will be added at the current frame, but with linear interpolation on the left (from the past) from the previous color keyframe.
+
+The "Color to apply" option lets you select which color to use, the primary, the secondary or as a more advanced feature, a gradient color between these two. If the gradient mode is selected (assuming that you have selected multiple drones to color), the "Order in gradient" option lets you define how the gradient coloring is performed (along a given axis, as a distance from the cursor etc.).
 
 == Light Effects panel
 
-TODO
+The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation.
+
+Light effects are parametrized and they are not burnt as color keyframes, so it is very easy to adjust them along with animation changes.
+
+The basic concept of the light effects is that they have a given dynamic intensity at every frame during the effect that defines how much the light effect is expressed on top of the base color at the given frame.
+
+=== Create Light Effect
+
+Use the plus sign next to the light effect list to add a new light effect to the end of the list.
+
+=== Remove Light Effect
+
+Use the minus sign next to the light effect list to remove the currently selected light effect from the list.
+
+=== Color Ramp functions
+
+Every light effect builds on a user defined color ramp, consisting of an arbitrary number of colors at arbitrary positions on the color ramp (indexed between 0 and 1) and a given interpolation method between the defined colors on the ramp.
+
+Use the + and - signs below the light effect list to add or remove new colors to/from the color ramp associated with the selected light effect and use the other functions around the visual color ramp to change its properties.
+
+The way the color ramp is used in a given light effect is described below
+
+=== Start Frame
+
+Define the frame when the selected light effect should start during the drone show
+
+=== Duration
+
+Define the duration of the light effect in frames. The end frame of the light effect will be `Start Frame + Duration`.
+
+=== Fade in
+
+During the optional fade-in period the inner intensity of the light effect grows linearly from 0 to 1.
+
+=== Fade out
+
+During the optional fade-out period the inner intensity of the light effect decays from 1 to 0.
+
+=== Mesh
+
+Select the mesh related to the light effect. Used when the Output is set to "Distance" or to limit the light effect to the inside of this mesh when "Only inside" is checked.
+
+=== Output
+
+The Output function determines the value that is passed through the color ramp to obtain the color to assign to a given drone.
+
+image::panels/light_effects/output.jpg[Output]
+
+Custom expression:: TODO(ntamas)
+
+Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected Mesh to the color ramp (i.e., closest drone from Mesh will pick the leftmost color in the ramp, farthest will pick the rightmost color, all the rest will get a value in between according to their distance ratio).
+
+Temporal:: All drones will go through all colors of the color ramp simultaneously throughout the total duration of the light effect.
+
+Gradient:: A single static color will be picked from the color ramp by all drones in an evenly distributed way, according to the order on the given gradient axes.
+
+Last color of color ramp:: The last color of the color ramp
+will be used by all drones during the whole light effect.
+
+First color of color ramp:: The first color of the color ramp will be used by all drones during the whole light effect.
+
+=== Target
+
+This property defines which drones are affected by the given light effect. You can affect all drones, or only drones inside a given mesh.
+
+=== Influence
+
+the influence parameter sets the overal transparency of the effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
+
+TIP: The influence parameter can be animated with keyframes, which is a simple way to create flashes, for example.
+
