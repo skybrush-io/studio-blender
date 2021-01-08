@@ -2,9 +2,12 @@
 :imagesdir: ../../assets/images
 :experimental:
 
-The *Skybrush Studio Plugin for Blender* is a great handy addon that extends Blender's capabilities specifically for professional drone show design. In the following tutorial we will go through the steps how to create a drone show from scratch.
+The *Skybrush Studio Plugin for Blender* is a great handy addon that extends Blender's capabilities specifically for professional drone show design. In this tutorial we will show step by step how to create a drone show from scratch with it.
 
-In the followings we assume that you have at least a basic understanding of Blender and its capabilities and you have successfully installed the *Skybrush Studio Plugin for Blender* to supplement Blender with all the Skybrush tools.
+In this tutorial we assume the followings:
+
+* You have at least a basic understanding of Blender and its capabilities
+* You have successfully installed the *Skybrush Studio Plugin for Blender* to supplement Blender with all available Skybrush tools.
 
 
 == 1. Initialize your show framework
@@ -13,15 +16,15 @@ Press kbd:[N] in the 3D Viewport editor to open its sidebar.
 
 image::tutorials/easy-drone-show-design/blender_3dviewport_with_skybrush_tabs.jpg[Blender 3D Viewport with Skybrush tabs]
 
-You will see three new tabs related to Skybrush:
+You will see three new tabs related to *Skybrush Studio*:
 
 * Formations
 * LEDs
 * Safety & Export
 
-These tabs contain all operators and functions that are specifically needed for drone show design.
+These tabs contain all panels, buttons, operators and functions that are specifically needed for drone show design.
 
-Select the Formations tab and press the "Create Takeoff Grid" button.
+First of all, select the Formations tab and press the "Create Takeoff Grid" button.
 
 image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
@@ -34,7 +37,7 @@ To read more about the mentioned collections, please read the xref:glossary.adc[
 
 == 2. Create formations
 
-Formations are standalone scenes of your final drone show, consisting of static or dynamic (animated) items.
+Formations are standalone parts of your final drone show, consisting of static or dynamic (animated) scenes.
 
 Use the "Create Formation" button on the Formations tab to create a formation as part of your drone show.
 
@@ -44,9 +47,9 @@ If you would like to create static formations, they can be initialized from many
 
 If you wish to create animated formations, you have two options:
 
-1. You can create a static formation, which converts your objects/vertices into empty meshes. After, you can animate your empty meshes as needed.
+1. You can create a static formation, which converts your objects/vertices into empty meshes. Once you have your formation, you can animate your empty meshes in it as needed.
 
-2. You can create a vertex group of any vertices of an object. If you name it "Drones" and use that object as a formation, Skybrush will use its animated vertices instead of creating empty meshes.
+2. You can create a vertex group of any vertices of an object. If you name it "Drones" and use that object as a formation, Skybrush will use its animated vertices in the formation.
 
 In either way, make sure that the number of vertices or objects you use match the size of your fleet. If your animation uses less objects than your fleet size, supplement it with placeholder objects.
 
@@ -57,7 +60,7 @@ Repeat this phase with all scenes of your drone show and create separate drone s
 
 == 3. Create a Storyboard from formations
 
-The Storyboard defines the structure of your drone show, consisting of formations coming one after another.
+The Storyboard defines the temporal structure of your drone show, consisting of formations coming one after another, with automatic or manual transitions between them.
 
 Check out the Storyboard panel in the Formations tab. Add your formations to the Storybard, define their starting time and duration.
 
@@ -75,12 +78,13 @@ While transitions are created, your drones in the Drones collection will also be
 
 Use the LEDs tab in the sidebar of the 3D Viewport editor to add light animation to your show.
 
-Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors and press the Apply (change abruptly) or Fade to (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
+Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors in the LED Control panel and press the Apply (change abruptly) or Fade to (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
 
 image::panels/led_control/create_color_keyframe.jpg[Create color keyframe]
 
-
 TIP: In the popup window change the "Color to apply" propery to Gradient to create more spectacular coloring schemes according to the "Order in gradient" property selection.
+
+As a more advanced option, use the "Light Effects" panel in the LEds tab to create more sophisticated, parametrized light effects for your show.
 
 
 == 5. Check and verify your animation
@@ -93,14 +97,16 @@ image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 
 Once ready, you will receive a `.pdf` file containing detailed validation checks.
 
+Correct your show to eliminate all safety check warnings to ensure maximal safety of your drones and the world below them...
+
 TIP: Interactive validation of the whole show is also possible in *Skybrush Viewer*. Check that out, too!
 
 
 == 7. Export your show to .skyc
 
-Once ready, use the "Export to .skyc" button of the Export panel on the "Safety & Export" tab in the sidebar of the 3D Viewport editor to export your entire show into Skybrush Compiled format.
+Once ready, use the "Export to .skyc" button of the Export panel on the "Safety & Export" tab to export your entire show into Skybrush Compiled format.
 
-The Skybrush Compiled format is compatible with other components of the *Skybrush* suite.
+The Skybrush Compiled format is compatible with other components of the *Skybrush* suite:
 
 * If you wish to visualize or verify your show or you simply want to send a link with an interactive 3D visualization of the show to your clients, use *Skybrush Viewer*.
 
