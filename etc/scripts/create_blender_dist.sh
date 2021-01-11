@@ -6,6 +6,7 @@
 OUTPUT_DIR="./dist"
 TMP_DIR="./tmp"
 PYMINIFIER_ARGS=""
+MINIFY=1
 
 ###############################################################################
 
@@ -39,7 +40,7 @@ mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
 # Install dependencies
-.venv/bin/pip install -U pip wheel pyclean pyminifier
+.venv/bin/pip install -U pip wheel pyclean pyminifier stickytape
 .venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 
@@ -52,24 +53,35 @@ cp src/addons/io_export_skybrush.py ${BUILD_DIR}
 .venv/bin/pyclean ${BUILD_DIR}
 rm -rf ${BUILD_DIR}/vendor/skybrush/*.dist-info
 
-# Minify the source code
-for file in `find ${BUILD_DIR}/vendor/skybrush/sbstudio -name "*.py"`; do
-  if [ -s "$file" ]; then
-    .venv/bin/pyminifier $PYMINIFIER_ARGS -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
-  fi
-done
+# Minify the source code with pyminifier
+if [ "x${MINIFY}" = x1 ]; then
+  for file in `find ${BUILD_DIR}/vendor/skybrush/sbstudio -name "*.py"`; do
+    if [ -s "$file" ]; then
+      .venv/bin/pyminifier $PYMINIFIER_ARGS -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
+    fi
+  done
+fi
 
 # Create a single ZIP
 ZIP_STEM="${PROJECT_NAME}-${VERSION}"
 rm -rf "${TMP_DIR}/${ZIP_STEM}"
 mkdir -p "${TMP_DIR}/${ZIP_STEM}"
-mv "${BUILD_DIR}"/* "${TMP_DIR}/${ZIP_STEM}"
+cp -r "${BUILD_DIR}"/* "${TMP_DIR}/${ZIP_STEM}"
 ( cd "${TMP_DIR}/${ZIP_STEM}"; zip -r "../${ZIP_STEM}.zip" * )
 mv "${TMP_DIR}/${ZIP_STEM}.zip" "${OUTPUT_DIR}"
 rm -rf "${TMP_DIR}/${ZIP_STEM}"
+
+# Create a single-file Python entry point
+cat ${BUILD_DIR}/ui_skybrush_studio.py >${BUILD_DIR}/entrypoint.py
+echo -e "\n\nregister()\n" >>${BUILD_DIR}/entrypoint.py
+.venv/bin/stickytape ${BUILD_DIR}/entrypoint.py --add-python-path ${BUILD_DIR}/vendor/skybrush --add-python-module sbstudio.plugin.utils.platform --add-python-module natsort >${OUTPUT_DIR}/${ZIP_STEM}.py
+
+# Clean up after ourselves
 rm -rf "${BUILD_DIR}"
 
 echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 echo "Bundle created successfully in ${OUTPUT_DIR}/${ZIP_STEM}.zip"
+echo "Single-file script created successfully in ${OUTPUT_DIR}/${ZIP_STEM}.py"
+
