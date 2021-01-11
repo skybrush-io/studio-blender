@@ -31,6 +31,8 @@ def script(
         add_python_modules=add_python_modules,
     ))
     output.append(_indent(open(path).read()))
+    output.append("\n\n")
+    output.append(_epilogue())
     return "".join(output)
 
 def _read_sys_path_from_python_bin(binary_path):
@@ -63,6 +65,11 @@ def _prelude():
     prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
     with open(prelude_path) as prelude_file:
         return prelude_file.read()
+
+def _epilogue():
+    epilogue_path = os.path.join(os.path.dirname(__file__), "epilogue.py")
+    with open(epilogue_path) as epilogue_file:
+        return epilogue_file.read()
 
 def _generate_module_writers(path, sys_path, add_python_modules):
     generator = ModuleWriterGenerator(sys_path)
