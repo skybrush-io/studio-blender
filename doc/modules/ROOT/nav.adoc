@@ -1,4 +1,5 @@
 * xref:overview.adoc[Overview]
+* xref:features.adoc[Feature highlights]
 * xref:install.adoc[Software installation]
 * xref:hardware.adoc[Hardware requirements]
 * xref:setup.adoc[Basic setup]
