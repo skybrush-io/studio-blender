@@ -331,6 +331,7 @@ class SafetyCheckProperties(PropertyGroup):
             refresh = True
 
         if refresh:
+            self.ensure_overlays_enabled_if_needed()
             self._refresh_overlay()
 
     def _refresh_overlay(self) -> None:
