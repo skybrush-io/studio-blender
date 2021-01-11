@@ -5,7 +5,6 @@
 
 OUTPUT_DIR="./dist"
 TMP_DIR="./tmp"
-PYMINIFIER_ARGS=""
 MINIFY=1
 
 ###############################################################################
@@ -56,7 +55,7 @@ rm -rf ${BUILD_DIR}/vendor/skybrush/*.dist-info
 if [ "x${MINIFY}" = x1 ]; then
   for file in `find ${BUILD_DIR}/vendor/skybrush/sbstudio -name "*.py"`; do
     if [ -s "$file" ]; then
-      .venv/bin/pyminifier $PYMINIFIER_ARGS -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
+      .venv/bin/pyminifier -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
     fi
   done
 fi
@@ -73,7 +72,9 @@ rm -rf "${TMP_DIR}/${ZIP_STEM}"
 # Create a single-file Python entry point
 cat ${BUILD_DIR}/ui_skybrush_studio.py >${BUILD_DIR}/entrypoint.py
 echo -e "\n\nregister()\n" >>${BUILD_DIR}/entrypoint.py
-PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py --add-python-path ${BUILD_DIR}/vendor/skybrush --add-python-module sbstudio.plugin.utils.platform --add-python-module natsort >${OUTPUT_DIR}/${ZIP_STEM}.py
+PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py --add-python-path ${BUILD_DIR}/vendor/skybrush --add-python-module sbstudio.plugin.utils.platform --add-python-module natsort >${OUTPUT_DIR}/${ZIP_STEM}.py.orig
+.venv/bin/pyminifier --gzip ${OUTPUT_DIR}/${ZIP_STEM}.py.orig >${OUTPUT_DIR}/${ZIP_STEM}.py
+rm ${OUTPUT_DIR}/${ZIP_STEM}.py.orig
 
 # Clean up after ourselves
 rm -rf "${BUILD_DIR}"
