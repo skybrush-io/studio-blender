@@ -105,7 +105,7 @@ def run_safety_check(scene, depsgraph):
 
     # Get the thresholds from the safety check object
     if safety_check.altitude_warning_threshold:
-        max_altitude = safety_check.altitude_warning_enabled
+        max_altitude = safety_check.altitude_warning_threshold
     else:
         max_altitude = None
     if safety_check.velocity_warning_enabled:
