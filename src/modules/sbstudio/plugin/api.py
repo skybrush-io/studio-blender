@@ -1,5 +1,6 @@
 import bpy
 
+from sbstudio.api import SkybrushStudioAPI
 from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
 
 __all__ = ("get_api",)
@@ -17,8 +18,6 @@ def get_api():
     global _api, _local
 
     if _api is None:
-        from sbstudio.api import SkybrushStudioAPI
-
         _api = SkybrushStudioAPI()
 
         # This is bad practice, but the default installation of Blender does not find
