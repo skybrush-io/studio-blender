@@ -33,7 +33,7 @@ class SafetyCheckOverlay(Overlay):
         super().__init__()
 
         self._markers = None
-        self._pixel_size = 1
+        self._ui_scale = 1
         self._shader_batches = None
 
     @property
@@ -57,7 +57,11 @@ class SafetyCheckOverlay(Overlay):
 
     def prepare(self) -> None:
         self._shader = gpu.shader.from_builtin("3D_UNIFORM_COLOR")
-        self._pixel_size = bpy.context.preferences.system.pixel_size
+        self._ui_scale = (
+            bpy.context.preferences.system.pixel_size
+            * bpy.context.preferences.system.dpi
+            / 72
+        )
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
@@ -72,11 +76,11 @@ class SafetyCheckOverlay(Overlay):
         left_panel_width = context.area.regions[2].width
         total_height = context.area.height
 
-        left_margin = left_panel_width + 19 * self._pixel_size
-        y = total_height - 112 * self._pixel_size
-        line_height = 20 * self._pixel_size
+        left_margin = left_panel_width + 19 * self._ui_scale
+        y = total_height - 112 * self._ui_scale
+        line_height = 20 * self._ui_scale
 
-        blf.size(font_id, int(11 * self._pixel_size), 72)
+        blf.size(font_id, int(11 * self._ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
 
         if safety_check.min_distance_is_valid:
