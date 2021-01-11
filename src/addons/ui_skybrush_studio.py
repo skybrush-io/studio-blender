@@ -69,6 +69,7 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
+    SkybrushExportOperator,
     SwapColorsInLEDControlPanelOperator,
     UpdateFormationOperator,
     ValidateTrajectoriesOperator,
@@ -145,6 +146,7 @@ operators = (
     ApplyColorsToSelectedDronesOperator,
     SwapColorsInLEDControlPanelOperator,
     ValidateTrajectoriesOperator,
+    SkybrushExportOperator,
 )
 
 #: List widgets in this addon.
