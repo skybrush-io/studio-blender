@@ -40,7 +40,7 @@ mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
 # Install dependencies
-.venv/bin/pip install -U pip wheel pyclean pyminifier stickytape
+.venv/bin/pip install -U pip wheel pyclean pyminifier
 .venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 
@@ -73,7 +73,7 @@ rm -rf "${TMP_DIR}/${ZIP_STEM}"
 # Create a single-file Python entry point
 cat ${BUILD_DIR}/ui_skybrush_studio.py >${BUILD_DIR}/entrypoint.py
 echo -e "\n\nregister()\n" >>${BUILD_DIR}/entrypoint.py
-.venv/bin/stickytape ${BUILD_DIR}/entrypoint.py --add-python-path ${BUILD_DIR}/vendor/skybrush --add-python-module sbstudio.plugin.utils.platform --add-python-module natsort >${OUTPUT_DIR}/${ZIP_STEM}.py
+PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py --add-python-path ${BUILD_DIR}/vendor/skybrush --add-python-module sbstudio.plugin.utils.platform --add-python-module natsort >${OUTPUT_DIR}/${ZIP_STEM}.py
 
 # Clean up after ourselves
 rm -rf "${BUILD_DIR}"
