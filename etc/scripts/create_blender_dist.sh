@@ -72,8 +72,13 @@ rm -rf "${TMP_DIR}/${ZIP_STEM}"
 # Create a single-file Python entry point
 cat ${BUILD_DIR}/ui_skybrush_studio.py >${BUILD_DIR}/entrypoint.py
 echo -e "\n\nregister()\n" >>${BUILD_DIR}/entrypoint.py
-PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py --add-python-path ${BUILD_DIR}/vendor/skybrush --add-python-module sbstudio.plugin.utils.platform --add-python-module natsort >${OUTPUT_DIR}/${ZIP_STEM}.py.orig
+PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py \
+	--add-python-path ${BUILD_DIR}/vendor/skybrush \
+	--add-python-module sbstudio.plugin.utils.platform \
+	--add-python-module natsort \
+	>${OUTPUT_DIR}/${ZIP_STEM}.py.orig
 .venv/bin/pyminifier --gzip ${OUTPUT_DIR}/${ZIP_STEM}.py.orig >${OUTPUT_DIR}/${ZIP_STEM}.py
+# cp ${OUTPUT_DIR}/${ZIP_STEM}.py.orig ${OUTPUT_DIR}/${ZIP_STEM}.py
 rm ${OUTPUT_DIR}/${ZIP_STEM}.py.orig
 
 # Clean up after ourselves
