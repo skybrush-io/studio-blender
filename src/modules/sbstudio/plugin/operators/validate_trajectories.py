@@ -35,8 +35,6 @@ class ValidateTrajectoriesOperator(Operator):
     frame_range = FrameRangeProperty()
 
     def execute(self, context):
-        # TODO(ntamas): allow the user to choose the frame range and the selection
-
         drones = get_drones_to_export(selected_only=self.selected_only)
         frame_range = resolve_frame_range(self.frame_range)
 
