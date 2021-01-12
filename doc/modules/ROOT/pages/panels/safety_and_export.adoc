@@ -9,6 +9,10 @@ image::panels/safety_and_export.jpg[Safety & Export tab]
 
 The Safety Check panel lets you perform real-time frame-level or full post-processed verification of your drone animation to aid you towards completely safe drone flighs.
 
+Safety warnings of the actual frame appear as text on the left side of the 3D Viewport editor, while errorous drones are also highlighted with red as seen in the image below.
+
+image::panels/safety_check/safety_checks.jpg[Safety checks]
+
 To enable or disable all safety checks together, use the checkbox at the top left corner of the panel.
 
 === Proximity warnings
@@ -16,8 +20,6 @@ To enable or disable all safety checks together, use the checkbox at the top lef
 This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.
 
 The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone-pairs. This drone pair is also highlighted with red, along with a red line connecting them.
-
-image::panels/safety_check/proximity_warning.jpg[Proximity warning]
 
 To enable or disable proximity warnings, use the "Show proximity warnings" checkbox.
 
