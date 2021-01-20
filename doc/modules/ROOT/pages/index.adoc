@@ -3,6 +3,8 @@
 
 This is the main documentation of *Skybrush Studio for Blender*, a plugin for Blender to design professional drone shows.
 
+image::skybrush_studio_for_blender_small.jpg[Skybrush Studio Plugin for Blender]
+
 To get a quick overview of the drone show design process with *Skybrush Studio for Blender*, we recommend to go through the tutorial xref:tutorials/easy-drone-show-design.adoc[Quick guide to drone show design with Skybrush Studio].
 
 To get a comprehensive understanding of all features and tools, please use the left sidebar for browsing the full documentation. We also encourage you to mailto:support@collmot.com[contact us] in case of any questions.
