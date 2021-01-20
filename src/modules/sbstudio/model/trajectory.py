@@ -30,7 +30,7 @@ class Trajectory:
             ndigits: round floats to this precision
 
         Return:
-            dictionary of self to be converted to SJON later
+            dictionary of self to be converted to JSON later
 
         """
         return {

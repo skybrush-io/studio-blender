@@ -1,6 +1,7 @@
 from bpy.props import BoolProperty
 from bpy.types import Operator
 
+from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.props import FrameRangeProperty
 from sbstudio.plugin.utils import (
@@ -46,16 +47,24 @@ class ValidateTrajectoriesOperator(Operator):
             by_name=True,
         )
 
-        skybrush = getattr(context.scene, "skybrush", None)
+        safety_check = getattr(context.scene.skybrush, "safety_check", None)
+        validation = SafetyCheckParams(
+            max_velocity_xy=safety_check.velocity_xy_warning_threshold
+            if safety_check
+            else 8,
+            max_velocity_z=safety_check.velocity_z_warning_threshold
+            if safety_check
+            else 2,
+            max_altitude=safety_check.max_altitude if safety_check else 150,
+            min_distance=safety_check.min_distance if safety_check else 3,
+        )
 
         output = get_temporary_directory() / "validation.pdf"
         kwds = {
             "trajectories": trajectories,
             "output": output,
+            "validation": validation,
         }
-        if skybrush:
-            kwds["min_distance"] = skybrush.safety_check.proximity_warning_threshold
-            kwds["max_altitude"] = skybrush.safety_check.altitude_warning_threshold
 
         try:
             get_api().generate_plots(**kwds)

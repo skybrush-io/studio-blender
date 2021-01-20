@@ -14,6 +14,7 @@ from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 from sbstudio.model.light_program import LightProgram
+from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.utils import create_path_and_open
@@ -221,6 +222,7 @@ class SkybrushStudioAPI:
     def export_to_skyc(
         self,
         show_title: str,
+        validation: SafetyCheckParams,
         trajectories: Dict[str, Trajectory],
         lights: Dict[str, LightProgram],
         output: Path,
@@ -230,6 +232,7 @@ class SkybrushStudioAPI:
 
         Parameters:
             show_title: arbitrary show title
+            validation: safety check parameters
             trajectories: dictionary of trajectories indexed by drone names
             lights: dictionary of light programs indexed by drone names
             output: the file path where the output should be saved
@@ -244,7 +247,7 @@ class SkybrushStudioAPI:
                 "format": "json",
                 "data": {
                     "version": 1,
-                    "settings": {},
+                    "settings": {"validation": validation.as_dict(ndigits=ndigits)},
                     "swarm": {
                         "drones": [
                             {
@@ -273,8 +276,7 @@ class SkybrushStudioAPI:
         self,
         trajectories: Dict[str, Trajectory],
         output: Path,
-        min_distance: float = 2,
-        max_altitude: float = 150,
+        validation: SafetyCheckParams,
         ndigits: float = 3,
     ) -> None:
         """Export drone show data into Skybrush Compiled Format (.skyc).
@@ -285,6 +287,8 @@ class SkybrushStudioAPI:
             output: the file path where the output should be saved
             min_distance: desired minimum distance between drones
             max_altitude: maximum allowed altitude for each drone
+            max_velocity_xy: maximum allowed horizontal velocity
+            max_velocity_z: maximum allowed vertical velocity
             ndigits: round floats to this precision
         """
         data = {
@@ -292,7 +296,7 @@ class SkybrushStudioAPI:
                 "format": "json",
                 "data": {
                     "version": 1,
-                    "settings": {},
+                    "settings": {"validation": validation.as_dict(ndigits=ndigits)},
                     "swarm": {
                         "drones": [
                             {
@@ -316,8 +320,6 @@ class SkybrushStudioAPI:
                     "plots": "nn,pos,vel",
                     "fps": 5,
                     "single_file": True,
-                    "min_distance": min_distance,
-                    "max_altitude": max_altitude,
                 },
             },
         }

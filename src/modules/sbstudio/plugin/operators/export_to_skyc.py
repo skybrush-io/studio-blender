@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
+from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
@@ -254,10 +255,25 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
         bpy.path.basename(filepath).split(".")[0]
     )
 
+    # get validation parameters
+    safety_check = getattr(context.scene.skybrush, "safety_check", None)
+    validation = SafetyCheckParams(
+        max_velocity_xy=safety_check.velocity_xy_warning_threshold
+        if safety_check
+        else 8,
+        max_velocity_z=safety_check.velocity_z_warning_threshold if safety_check else 2,
+        max_altitude=safety_check.max_altitude if safety_check else 150,
+        min_distance=safety_check.min_distance if safety_check else 3,
+    )
+
     # create Skybrush converter object
     log.info("Exporting to .skyc")
     get_api().export_to_skyc(
-        show_title=show_title, trajectories=trajectories, lights=lights, output=filepath
+        show_title=show_title,
+        validation=validation,
+        trajectories=trajectories,
+        lights=lights,
+        output=filepath,
     )
     log.info("Export finished")
 
