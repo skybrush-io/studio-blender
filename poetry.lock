@@ -89,7 +89,7 @@ reference = "collmot"
 
 [[package]]
 name = "skybrush-studio"
-version = "0.6.0"
+version = "0.9.0"
 description = "Drone show designer tools and scripting language"
 category = "main"
 optional = true
@@ -111,14 +111,15 @@ reference = "collmot"
 
 [[package]]
 name = "tqdm"
-version = "4.54.0"
+version = "4.56.0"
 description = "Fast, Extensible Progress Meter"
 category = "main"
 optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 
 [package.extras]
-dev = ["py-make (>=0.1.0)", "twine", "argopt", "pydoc-markdown", "wheel"]
+dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+telegram = ["requests"]
 
 [package.source]
 type = "legacy"
@@ -131,7 +132,7 @@ standalone = ["skybrush-studio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "12ba0602abba4f2d9ce95c94bbc61b291c50796e9aa52084093bbdad6b8f0b11"
+content-hash = "cca154bd645283f0b25739b991b75dbdd4eebaf2d886e56e164559919f5d89c9"
 
 [metadata.files]
 click = [
@@ -190,10 +191,10 @@ pyminifier = [
     {file = "pyminifier-2.1.tar.gz", hash = "sha256:e192618fe901830e9298825b32828bc9555ae8649e05af37bfab2db328546777"},
 ]
 skybrush-studio = [
-    {file = "skybrush-studio-0.6.0.tar.gz", hash = "md5:8968c7dec01a9df474c8be1e41d2195e"},
-    {file = "skybrush_studio-0.6.0-py3-none-any.whl", hash = "md5:64d09b014bce486cbe25439d0a8d32fb"},
+    {file = "skybrush-studio-0.9.0.tar.gz", hash = "md5:2a09938337c1c4b10d0fa2e7d2ba12a7"},
+    {file = "skybrush_studio-0.9.0-py3-none-any.whl", hash = "md5:bd1aa4b5f735353f46a5db4f53816b01"},
 ]
 tqdm = [
-    {file = "tqdm-4.54.0-py2.py3-none-any.whl", hash = "sha256:9e7b8ab0ecbdbf0595adadd5f0ebbb9e69010e0bd48bbb0c15e550bf2a5292df"},
-    {file = "tqdm-4.54.0.tar.gz", hash = "sha256:5c0d04e06ccc0da1bd3fa5ae4550effcce42fcad947b4a6cafa77bdc9b09ff22"},
+    {file = "tqdm-4.56.0-py2.py3-none-any.whl", hash = "sha256:4621f6823bab46a9cc33d48105753ccbea671b68bab2c50a9f0be23d4065cb5a"},
+    {file = "tqdm-4.56.0.tar.gz", hash = "sha256:fe3d08dd00a526850568d542ff9de9bbc2a09a791da3c334f3213d8d0bbbca65"},
 ]
