@@ -55,8 +55,12 @@ class ValidateTrajectoriesOperator(Operator):
             max_velocity_z=safety_check.velocity_z_warning_threshold
             if safety_check
             else 2,
-            max_altitude=safety_check.max_altitude if safety_check else 150,
-            min_distance=safety_check.min_distance if safety_check else 3,
+            max_altitude=safety_check.altitude_warning_threshold
+            if safety_check
+            else 150,
+            min_distance=safety_check.proximity_warning_threshold
+            if safety_check
+            else 3,
         )
 
         output = get_temporary_directory() / "validation.pdf"
