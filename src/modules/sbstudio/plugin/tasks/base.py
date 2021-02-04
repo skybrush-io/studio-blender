@@ -47,11 +47,15 @@ class Task:
         cls._registered_handlers = []
 
         for name in _handler_names:
-            func = cls.functions.get(name)
-            if callable(func):
-                func = persistent(func)
-                getattr(bpy.app.handlers, name).append(func)
-                cls._registered_handlers.append((name, func))
+            funcs = cls.functions.get(name)
+            if not hasattr(funcs, "__iter__"):
+                funcs = [funcs]
+
+            for func in funcs:
+                if callable(func):
+                    func = persistent(func)
+                    getattr(bpy.app.handlers, name).append(func)
+                    cls._registered_handlers.append((name, func))
 
     def unregister(cls):
         """Unregisters this task instance from Blender."""

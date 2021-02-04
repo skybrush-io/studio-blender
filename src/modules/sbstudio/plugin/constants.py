@@ -1,5 +1,7 @@
 import bpy
 
+from typing import Callable, Optional
+
 from .materials import create_glowing_material
 from .meshes import create_icosphere
 from .utils import (
@@ -36,7 +38,17 @@ class Collections:
 
     @classmethod
     def find_drones(cls, *, create: bool = True):
-        return cls._find(cls.DRONES, create=create)
+        # Return the collection specified in the settings if the user specified
+        # one; otherwise fall back to finding the collection by name.
+        if bpy.context.scene:
+            skybrush = getattr(bpy.context.scene, "skybrush", None)
+            collection = skybrush.settings.drone_collection if skybrush else None
+            if collection:
+                return collection
+
+        return cls._find(
+            cls.DRONES, create=create, on_created=cls._on_drone_collection_created
+        )
 
     @classmethod
     def find_formations(cls, *, create: bool = True):
@@ -47,15 +59,28 @@ class Collections:
         return cls._find(cls.TEMPLATES, create=create)
 
     @classmethod
-    def _find(cls, key: str, *, create: bool = True):
+    def _find(
+        cls,
+        key: str,
+        *,
+        create: bool = True,
+        on_created: Optional[Callable[[bpy.types.Object], None]] = None
+    ):
         """Returns the Blender collection that holds the drones, and optionally
         creates it if it does not exist yet.
         """
         coll = bpy.data.collections
         if create:
-            return ensure_object_exists_in_collection(coll, key)
+            result = ensure_object_exists_in_collection(coll, key)
+            if on_created:
+                on_created(result)
+            return result
         else:
             return get_object_in_collection(coll, key, default=None)
+
+    @classmethod
+    def _on_drone_collection_created(cls, obj) -> None:
+        bpy.context.scene.skybrush.settings.drone_collection = obj
 
 
 class Templates:

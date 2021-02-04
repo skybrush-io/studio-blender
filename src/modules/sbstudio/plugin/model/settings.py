@@ -1,5 +1,5 @@
-from bpy.props import BoolProperty, FloatProperty
-from bpy.types import PropertyGroup
+from bpy.props import BoolProperty, FloatProperty, PointerProperty
+from bpy.types import Collection, PropertyGroup
 
 from sbstudio.plugin.utils.bloom import set_bloom_effect_enabled
 
@@ -15,6 +15,12 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
     """Property group that stores the generic settings of a drone show in the
     addon that do not belong elsewhere.
     """
+
+    drone_collection = PointerProperty(
+        type=Collection,
+        name="Drone collection",
+        description="The collection that contains all the objects that are to be treated as drones",
+    )
 
     max_acceleration = FloatProperty(
         name="Max acceleration",

@@ -1,3 +1,5 @@
+import bpy
+
 from bpy.types import Panel
 
 from sbstudio.plugin.operators import CreateTakeoffGridOperator
@@ -27,6 +29,10 @@ class SwarmPanel(Panel):
             return
 
         layout = self.layout
+
+        layout.prop(settings, "drone_collection", text="Drones")
+
+        layout.separator()
 
         layout.prop(settings, "max_acceleration", slider=True)
 
