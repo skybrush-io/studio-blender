@@ -7,12 +7,14 @@ from .plugin_helpers import use_mode_for_object
 from .utils import with_context
 
 __all__ = (
+    "add_to_selection",
     "deselect_all",
     "get_selected_drones",
     "get_selected_objects_from_collection",
     "get_selected_vertices",
     "get_selected_vertices_grouped_by_objects",
     "has_selection",
+    "remove_from_selection",
     "select_only",
 )
 
@@ -147,7 +149,37 @@ def select_only(objects, *, context: Optional[Context] = None):
     all the objects and sub-collections.
     """
     deselect_all(context=context)
+    add_to_selection(objects, context=context)
 
+
+@with_context
+def add_to_selection(objects, *, context: Optional[Context] = None):
+    """Adds the given objects to the current selection in the given context
+    (defaults to the current context).
+
+    Can also handle collections; when a collection is added to the selection,
+    it will select all the objects and sub-collections in the collection.
+    """
+    _set_selected_state_of_objects(objects, True, context=context)
+
+
+@with_context
+def remove_from_selection(objects, *, context: Optional[Context] = None):
+    """Removes the given objects from the current selection in the given context
+    (defaults to the current context).
+
+    Can also handle collections; when a collection is removed from the selection,
+    it will remove all the objects and sub-collections in the collection.
+    """
+    _set_selected_state_of_objects(objects, False, context=context)
+
+
+def _set_selected_state_of_objects(
+    objects, state, *, context: Optional[Context] = None
+):
+    """Common implementation of `add_to_selection()` and
+    `remove_from_selection()`.
+    """
     if not hasattr(objects, "__iter__"):
         objects = [objects]
 
@@ -155,7 +187,9 @@ def select_only(objects, *, context: Optional[Context] = None):
     while queue:
         item = queue.pop()
         if hasattr(item, "select_set"):
-            item.select_set(True)
+            item.select_set(state)
+        elif hasattr(item, "select"):
+            item.select = state
         elif isinstance(item, Collection):
             queue.extend(item.objects)
             queue.extend(item.children)

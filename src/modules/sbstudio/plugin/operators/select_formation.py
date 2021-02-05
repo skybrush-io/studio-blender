@@ -1,4 +1,5 @@
 from sbstudio.plugin.model.formation import get_all_markers_from_formation
+from sbstudio.plugin.selection import add_to_selection, remove_from_selection
 
 from .base import FormationOperator
 
@@ -14,8 +15,7 @@ class SelectFormationOperator(FormationOperator):
 
     def execute_on_formation(self, formation, context):
         markers = get_all_markers_from_formation(formation)
-        for marker in markers:
-            marker.select_set(True)
+        add_to_selection(markers)
         return {"FINISHED"}
 
 
@@ -28,6 +28,5 @@ class DeselectFormationOperator(FormationOperator):
 
     def execute_on_formation(self, formation, context):
         markers = get_all_markers_from_formation(formation)
-        for marker in markers:
-            marker.select_set(False)
+        remove_from_selection(markers)
         return {"FINISHED"}

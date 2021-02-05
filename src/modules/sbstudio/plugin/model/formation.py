@@ -1,15 +1,16 @@
 import bpy
 
-from bpy.types import Collection
+from bpy.types import Collection, Object
 from functools import partial
 from mathutils import Vector
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils import create_object_in_collection
 
 __all__ = (
-    "add_markers_to_formation",
+    "add_objects_to_formation",
+    "add_points_to_formation",
     "create_formation",
     "create_marker",
     "get_all_markers_from_formation",
@@ -17,7 +18,9 @@ __all__ = (
 )
 
 
-def create_formation(name: str, points: Optional[Iterable[Vector]] = None):
+def create_formation(
+    name: str, points: Optional[Iterable[Vector]] = None
+) -> Collection:
     """Creates a new static formation object with the given name and the given
     points.
 
@@ -35,14 +38,19 @@ def create_formation(name: str, points: Optional[Iterable[Vector]] = None):
         factory=partial(bpy.data.collections.new, name),
     )
 
-    add_markers_to_formation(formation, points, name=name)
+    add_points_to_formation(formation, points, name=name)
 
     return formation
 
 
 def create_marker(
-    location, name: str, *, type: str = "PLAIN_AXES", size: float = 1, collection=None
-):
+    location,
+    name: str,
+    *,
+    type: str = "PLAIN_AXES",
+    size: float = 1,
+    collection: Optional[Collection] = None,
+) -> Object:
     """Creates a new point marker (typically part of a formation) at the
     given location.
 
@@ -66,7 +74,22 @@ def create_marker(
     return marker
 
 
-def add_markers_to_formation(
+def add_objects_to_formation(
+    formation,
+    objects: Optional[Iterable[Object]],
+) -> None:
+    """Adds the given objects to a formation object as children as-is, _without_
+    creating new markers for their current positions.
+
+    Parameters:
+        formation: the formation to add the objects to
+        objects: the objects to add to the formation
+    """
+    for obj in objects:
+        formation.objects.link(obj)
+
+
+def add_points_to_formation(
     formation,
     points: Optional[Iterable[Vector]],
     *,
@@ -83,20 +106,18 @@ def add_markers_to_formation(
             newly added markers
     """
     name = name or formation.name
-    for index, point in enumerate(points, start_from):
+    for index, point in enumerate(points or [], start_from):
         marker_name = f"{name} / {index}"
         create_marker(location=point, name=marker_name, collection=formation, size=0.5)
 
 
-def get_all_markers_from_formation(formation) -> list:
+def get_all_markers_from_formation(formation) -> List[Object]:
     """Returns a list containing all the markers in the formation.
 
-    This function returns only empty meshes from the formation, not any other
-    objects that were added by the user.
+    This function returns all the meshes that are direct children of the
+    formation container.
     """
-    return [
-        point for point in formation.objects if getattr(point, "type", None) == "EMPTY"
-    ]
+    return [point for point in formation.objects]
 
 
 def is_formation(object) -> bool:

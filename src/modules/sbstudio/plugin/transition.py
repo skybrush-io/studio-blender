@@ -52,8 +52,8 @@ def find_transition_constraint_between(drone, formation):
     Returns:
         the constraint or `None` if no such constraint exists
     """
-    # Get all the points from the formation
-    points = set(get_all_markers_from_formation(formation))
+    # Get all the markers from the formation
+    markers = set(get_all_markers_from_formation(formation))
 
     for constraint in drone.constraints:
         if constraint.type != "COPY_LOCATION":
@@ -62,7 +62,7 @@ def find_transition_constraint_between(drone, formation):
         if not is_internal_id(constraint.name):
             continue
 
-        if constraint.target in points:
+        if constraint.target in markers:
             return constraint
 
     return None
