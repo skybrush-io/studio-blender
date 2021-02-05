@@ -10,7 +10,7 @@ class SelectFormationOperator(FormationOperator):
 
     bl_idname = "skybrush.select_formation"
     bl_label = "Select Formation"
-    bl_description = "Adds the selected formation to the selection." ""
+    bl_description = "Adds the selected formation to the selection"
 
     def execute_on_formation(self, formation, context):
         markers = get_all_markers_from_formation(formation)
@@ -24,7 +24,7 @@ class DeselectFormationOperator(FormationOperator):
 
     bl_idname = "skybrush.deselect_formation"
     bl_label = "Deselect Formation"
-    bl_description = "Removes the selected formation from the selection." ""
+    bl_description = "Removes the selected formation from the selection"
 
     def execute_on_formation(self, formation, context):
         markers = get_all_markers_from_formation(formation)

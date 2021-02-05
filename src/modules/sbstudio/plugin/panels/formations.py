@@ -38,11 +38,10 @@ class FormationsPanel(Panel):
 
         layout = self.layout
 
-        layout.operator(CreateFormationOperator.bl_idname, icon="ADD")
-
-        layout.separator()
-
-        layout.prop(formations, "selected", text="")
+        row = layout.row(align=True)
+        row.prop(formations, "selected", text="")
+        row.operator(CreateFormationOperator.bl_idname, icon="ADD", text="")
+        row.operator(RemoveFormationOperator.bl_idname, icon="X", text="")
 
         row = layout.row()
         row.operator(SelectFormationOperator.bl_idname, text="Select")
@@ -59,4 +58,3 @@ class FormationsPanel(Panel):
         row.operator(
             UpdateFormationOperator.bl_idname, text="Update", icon="FILE_REFRESH"
         )
-        row.operator(RemoveFormationOperator.bl_idname, text="Remove", icon="TRASH")

@@ -15,7 +15,10 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
     bl_idname = "skybrush.append_formation_to_storyboard"
     bl_label = "Append Selected Formation to Storyboard"
-    bl_description = "Appends the selected formation to the end of the show, planning the transition between the last formation and the new one."
+    bl_description = (
+        "Appends the selected formation to the end of the show, planning the "
+        "transition between the last formation and the new one"
+    )
 
     @classmethod
     def poll(cls, context):
