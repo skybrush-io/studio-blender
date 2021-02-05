@@ -71,7 +71,7 @@ def ensure_object_exists_in_collection(
     **kwds,
 ):
     """Ensures that a Blender object with the given name exists in the given
-    collection with the given.
+    collection.
 
     Parameters:
         collection: a Blender collection with `find()`, `new()` and `remove()`
