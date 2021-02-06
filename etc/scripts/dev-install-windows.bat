@@ -1,3 +1,7 @@
+echo OFF
+echo "This script is deprecated, but keep it please as it contains some useful information. Use 'bootstrap_windows.bat' instead."
+goto :EOF
+
 cd %~dp0
 cd ..
 cd ..
