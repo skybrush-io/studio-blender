@@ -118,7 +118,7 @@ def run_safety_check(scene, depsgraph):
     snapshot = create_position_snapshot_for_drones_in_collection(drones, frame=frame)
     _position_snapshot_cache[frame] = snapshot
 
-    # Check max altitude
+    # Check min/max altitude
     positions = list(snapshot.values())
     if max_altitude is not None:
         drones_over_max_altitude = [
@@ -128,6 +128,9 @@ def run_safety_check(scene, depsgraph):
         drones_over_max_altitude = []
     max_altitude_found = (
         max(position[2] for position in positions) if positions else 0.0
+    )
+    min_altitude_found = (
+        min(position[2] for position in positions) if positions else 0.0
     )
 
     # Check nearest neighbors
@@ -166,6 +169,7 @@ def run_safety_check(scene, depsgraph):
 
     safety_check.set_safety_check_result(
         nearest_neighbors=nearest_neighbors,
+        min_altitude=min_altitude_found,
         max_altitude=max_altitude_found,
         drones_over_max_altitude=drones_over_max_altitude,
         max_velocity_xy=max_velocity_xy_found,

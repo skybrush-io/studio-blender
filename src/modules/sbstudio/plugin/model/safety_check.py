@@ -85,6 +85,13 @@ class SafetyCheckProperties(PropertyGroup):
         default=0.0,
     )
 
+    min_altitude = FloatProperty(
+        name="Min altitude",
+        description="Minimum altitude of all drones in the current frame",
+        unit="LENGTH",
+        default=0.0,
+    )
+
     max_altitude = FloatProperty(
         name="Max altitude",
         description="Maximum altitude of all drones in the current frame",
@@ -268,6 +275,7 @@ class SafetyCheckProperties(PropertyGroup):
         """Clears the result of the last safety check."""
         global _safety_check_result
 
+        self.min_altitude = 0
         self.max_altitude = 0
         self.min_distance = 0
         self.max_velocity_xy = 0
@@ -285,6 +293,7 @@ class SafetyCheckProperties(PropertyGroup):
     def set_safety_check_result(
         self,
         nearest_neighbors: Optional[Tuple[float, Coordinate3D, Coordinate3D]] = None,
+        min_altitude: Optional[float] = None,
         max_altitude: Optional[float] = None,
         drones_over_max_altitude: Optional[List[Coordinate3D]] = None,
         max_velocity_xy: Optional[float] = None,
@@ -306,6 +315,10 @@ class SafetyCheckProperties(PropertyGroup):
 
         if max_altitude is not None:
             self.max_altitude = max_altitude
+            refresh = True
+
+        if min_altitude is not None:
+            self.min_altitude = min_altitude
             refresh = True
 
         if drones_over_max_altitude is not None:

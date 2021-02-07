@@ -92,7 +92,10 @@ class SafetyCheckOverlay(Overlay):
         if safety_check.max_altitude_is_valid:
             set_warning_color_iff(safety_check.should_show_altitude_warning, font_id)
             blf.position(font_id, left_margin, y, 0)
-            blf.draw(font_id, f"Max altitude: {safety_check.max_altitude:.1f} m")
+            blf.draw(
+                font_id,
+                f"Altitude: {safety_check.min_altitude:.1f} - {safety_check.max_altitude:.1f} m",
+            )
             y -= line_height
 
         if safety_check.max_velocities_are_valid:
