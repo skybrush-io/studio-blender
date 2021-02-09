@@ -1,0 +1,3 @@
+[submodule "doc/book"]
+	path = doc/book
+	url = git@git.collmot.com:skybrush/pdf-doc-theme

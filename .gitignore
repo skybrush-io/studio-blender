@@ -3,6 +3,7 @@
 __pycache__/
 dev/
 dist/
+doc/*.pdf
 tmp/
 
 modules/skybrush
