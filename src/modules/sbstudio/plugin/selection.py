@@ -134,10 +134,15 @@ def has_selection(*, context: Optional[Context] = None) -> bool:
     context. In all other modes, we check the vertices of the `active_object`
     to see if there is at least one vertex selected.
     """
-    if context.mode == "OBJECT":
-        return len(context.selected_objects) > 0
+    if context.mode == "EDIT_MODE":
+        # We need to switch to object mode temporarily so the vertex selection
+        # gets updated; the edit mode works in a temporary copy of the mesh
+        obj = context.active_object
+        with use_mode_for_object("OBJECT"):
+            pass
+        return any(v.select for v in get_vertices_of_object(obj))
     else:
-        return any(v.select for v in get_vertices_of_object(context.active_object))
+        return len(context.selected_objects) > 0
 
 
 @with_context
