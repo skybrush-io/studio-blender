@@ -1,21 +1,24 @@
-from bpy.props import FloatVectorProperty, IntProperty
+from bpy.props import FloatProperty, FloatVectorProperty, IntProperty
 from bpy.types import MeshVertex
 
+from math import inf
+
+from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.model.formation import (
     get_markers_from_formation,
     get_world_coordinates_of_markers_from_formation,
 )
 from .base import FormationOperator
 
-__all__ = ("GetSizeOfFormationOperator",)
+__all__ = ("GetFormationStatisticsOperator",)
 
 
-class GetSizeOfFormationOperator(FormationOperator):
+class GetFormationStatisticsOperator(FormationOperator):
     """Shows an information dialog that indicates the size of the currently
     selected formation.
     """
 
-    bl_idname = "skybrush.get_formation_size"
+    bl_idname = "skybrush.get_formation_stats"
     bl_label = "Formation Size Report"
     bl_description = "Returns the size of the currently selected formation in the Formations collection."
     bl_options = set({})
@@ -47,6 +50,13 @@ class GetSizeOfFormationOperator(FormationOperator):
         precision=5,
     )
 
+    min_distance = FloatProperty(
+        name="Minimum distance",
+        description="Minimum distance of any pair of points within the formation",
+        subtype="DISTANCE",
+        precision=4,
+    )
+
     def invoke(self, context, event):
         formation = self.get_formation(context)
 
@@ -70,11 +80,13 @@ class GetSizeOfFormationOperator(FormationOperator):
             )
 
             self.size = tuple(coords.ptp(axis=0))
+            _, _, self.min_distance = find_nearest_neighbors(coords)
         else:
             self.marker_count = 0
             self.vertex_count = 0
             self.empty_count = 0
             self.size = (0, 0, 0)
+            self.min_distance = inf
 
         self.nonempty_count = self.marker_count - self.vertex_count - self.empty_count
 

@@ -59,7 +59,7 @@ from sbstudio.plugin.operators import (
     DeselectFormationOperator,
     DetachMaterialsFromDroneTemplateOperator,
     FixConstraintOrderingOperator,
-    GetSizeOfFormationOperator,
+    GetFormationStatisticsOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     MoveStoryboardEntryDownOperator,
@@ -153,7 +153,7 @@ operators = (
     ValidateTrajectoriesOperator,
     SkybrushExportOperator,
     UseSelectedVertexGroupForFormationOperator,
-    GetSizeOfFormationOperator,
+    GetFormationStatisticsOperator,
 )
 
 #: List widgets in this addon.

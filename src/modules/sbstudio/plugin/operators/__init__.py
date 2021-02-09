@@ -9,7 +9,7 @@ from .create_takeoff_grid import CreateTakeoffGridOperator
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
 from .export_to_skyc import SkybrushExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
-from .get_formation_size import GetSizeOfFormationOperator
+from .get_formation_stats import GetFormationStatisticsOperator
 from .move_light_effect import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
@@ -40,7 +40,7 @@ __all__ = (
     "DeselectFormationOperator",
     "DetachMaterialsFromDroneTemplateOperator",
     "FixConstraintOrderingOperator",
-    "GetSizeOfFormationOperator",
+    "GetFormationStatisticsOperator",
     "MoveLightEffectDownOperator",
     "MoveLightEffectUpOperator",
     "MoveStoryboardEntryDownOperator",
