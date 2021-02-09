@@ -44,7 +44,7 @@ class StoryboardEditor(Panel):
             "entries",
             storyboard,
             "active_entry_index",
-            maxrows=10,
+            maxrows=6,
             sort_lock=True,
         )
 

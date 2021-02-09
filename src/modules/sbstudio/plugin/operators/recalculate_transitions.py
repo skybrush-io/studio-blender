@@ -74,6 +74,11 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         # Get all the drones
         drones = Collections.find_drones().objects
 
+        # If there are no drones, show a reasonable error message to the user
+        if not drones:
+            self.report({"ERROR"}, "You need to create some drones first")
+            return {"CANCELLED"}
+
         # Prepare a list consisting of triplets like this:
         # end of previous formation, formation, start of next formation
         entry_info = self._get_transitions_to_process(storyboard, entries)
@@ -168,17 +173,23 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
                     # Create keyframes for the influence of the constraint
                     ensure_action_exists_for_object(drone)
-                    keyframes = [
-                        (start_of_scene, 0.0),
-                        (end_of_previous, 0.0),
-                        (entry.frame_start, 1.0),
-                        (entry.frame_end, 1.0),
-                    ]
-                    if start_of_scene == end_of_previous:
-                        del keyframes[0:1]
+
+                    # Now construct the list of keyframes. We have to cater for
+                    # all sorts of edge cases as we need to ensure that no
+                    # keyframe X coordiate is repeated twice.
+                    keyframes = [(min(entry.frame_start - 1, end_of_previous), 0.0)]
+                    if start_of_scene < keyframes[0][0]:
+                        keyframes.insert(0, (start_of_scene, 0.0))
+
+                    keyframes.append((entry.frame_start, 1.0))
+                    if entry.frame_end > entry.frame_start:
+                        keyframes.append((entry.frame_end, 1.0))
+
                     if start_of_next is not None:
                         keyframes.append((start_of_next, 1.0))
                         keyframes.append((start_of_next + 1, 0.0))
+
+                    if end_of_scene > keyframes[-1][0]:
                         keyframes.append((end_of_scene, 0.0))
 
                     # Since 'keyframes' spans from the start of the scene to the
