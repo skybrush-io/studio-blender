@@ -165,49 +165,54 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                         # point of the formation
                         constraint.target = markers[target_index]
 
-                    # Construct the data path of the constraint we are going to
-                    # modify
-                    key = f"constraints[{constraint.name!r}].influence".replace(
-                        "'", '"'
-                    )
-
-                    # Create keyframes for the influence of the constraint
-                    ensure_action_exists_for_object(drone)
-
-                    # Now construct the list of keyframes. We have to cater for
-                    # all sorts of edge cases as we need to ensure that no
-                    # keyframe X coordiate is repeated twice.
-                    keyframes = [(min(entry.frame_start - 1, end_of_previous), 0.0)]
-                    if start_of_scene < keyframes[0][0]:
-                        keyframes.insert(0, (start_of_scene, 0.0))
-
-                    keyframes.append((entry.frame_start, 1.0))
-                    if entry.frame_end > entry.frame_start:
-                        keyframes.append((entry.frame_end, 1.0))
-
-                    if start_of_next is not None:
-                        keyframes.append((start_of_next, 1.0))
-                        keyframes.append((start_of_next + 1, 0.0))
-
-                    if end_of_scene > keyframes[-1][0]:
-                        keyframes.append((end_of_scene, 0.0))
-
-                    # Since 'keyframes' spans from the start of the scene to the
-                    # end, this will update all keyframes for the constraint.
-                    # We need this to handle cases when the user reorders the
-                    # formations.
-                    new_keyframe_points = set_keyframes(
-                        drone, key, keyframes, clear_range=True, interpolation="BEZIER"
-                    )
-
-                    # For the first formation, the takeoff should be abrupt,
-                    # not smooth, so tweak the keyframe a bit
-                    if is_first_formation:
-                        transition_duration = entry.frame_start - end_of_previous
-                        new_keyframe_points[0].handle_right = (
-                            transition_duration * 0.25,
-                            0.25,
+                    if constraint is not None:
+                        # Construct the data path of the constraint we are going to
+                        # modify
+                        key = f"constraints[{constraint.name!r}].influence".replace(
+                            "'", '"'
                         )
+
+                        # Create keyframes for the influence of the constraint
+                        ensure_action_exists_for_object(drone)
+
+                        # Now construct the list of keyframes. We have to cater for
+                        # all sorts of edge cases as we need to ensure that no
+                        # keyframe X coordiate is repeated twice.
+                        keyframes = [(min(entry.frame_start - 1, end_of_previous), 0.0)]
+                        if start_of_scene < keyframes[0][0]:
+                            keyframes.insert(0, (start_of_scene, 0.0))
+
+                        keyframes.append((entry.frame_start, 1.0))
+                        if entry.frame_end > entry.frame_start:
+                            keyframes.append((entry.frame_end, 1.0))
+
+                        if start_of_next is not None:
+                            keyframes.append((start_of_next, 1.0))
+                            keyframes.append((start_of_next + 1, 0.0))
+
+                        if end_of_scene > keyframes[-1][0]:
+                            keyframes.append((end_of_scene, 0.0))
+
+                        # Since 'keyframes' spans from the start of the scene to the
+                        # end, this will update all keyframes for the constraint.
+                        # We need this to handle cases when the user reorders the
+                        # formations.
+                        new_keyframe_points = set_keyframes(
+                            drone,
+                            key,
+                            keyframes,
+                            clear_range=True,
+                            interpolation="BEZIER",
+                        )
+
+                        # For the first formation, the takeoff should be abrupt,
+                        # not smooth, so tweak the keyframe a bit
+                        if is_first_formation:
+                            transition_duration = entry.frame_start - end_of_previous
+                            new_keyframe_points[0].handle_right = (
+                                transition_duration * 0.25,
+                                0.25,
+                            )
 
         bpy.ops.skybrush.fix_constraint_ordering()
 
