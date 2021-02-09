@@ -4,7 +4,7 @@ from .base import FormationOperator
 
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.model.formation import get_all_markers_from_formation
+from sbstudio.plugin.model.formation import get_markers_from_formation
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 __all__ = ("AppendFormationToStoryboardOperator",)
@@ -62,7 +62,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
         with create_position_evaluator() as get_positions_of:
             if last_formation is not None:
-                markers = get_all_markers_from_formation(last_formation)
+                markers = get_markers_from_formation(last_formation)
                 source = get_positions_of(markers, frame=last_frame)
             else:
                 drones = Collections.find_drones().objects
@@ -70,7 +70,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
             # TODO(ntamas): this works only if the target formation is
             # stationary
-            markers = get_all_markers_from_formation(formation)
+            markers = get_markers_from_formation(formation)
             target = get_positions_of(markers, frame=entry.frame_start)
 
         try:

@@ -1,4 +1,4 @@
-from bpy.types import Operator
+from bpy.types import Collection, Operator
 
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.selection import select_only
@@ -21,8 +21,10 @@ class FormationOperator(Operator):
         )
 
     def execute(self, context):
-        formation = context.scene.skybrush.formations.selected
-        return self.execute_on_formation(formation, context)
+        return self.execute_on_formation(self.get_formation(context), context)
+
+    def get_formation(self, context) -> Collection:
+        return getattr(context.scene.skybrush.formations, "selected", None)
 
     def select_formation(self, formation, context) -> None:
         """Selects the given formation, both in the scene and in the formations

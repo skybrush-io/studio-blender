@@ -3,17 +3,22 @@ import bpy
 from bpy.types import Collection, Object
 from functools import partial
 from mathutils import Vector
+from numpy import array, c_, dot, ones, zeros
 from typing import Iterable, List, Optional
 
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.objects import get_vertices_of_object_in_vertex_group_by_name
 from sbstudio.plugin.utils import create_object_in_collection
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 __all__ = (
     "add_objects_to_formation",
     "add_points_to_formation",
+    "count_markers_in_formation",
     "create_formation",
     "create_marker",
-    "get_all_markers_from_formation",
+    "get_markers_from_formation",
+    "get_world_coordinates_of_markers_from_formation",
     "is_formation",
 )
 
@@ -111,13 +116,89 @@ def add_points_to_formation(
         create_marker(location=point, name=marker_name, collection=formation, size=0.5)
 
 
-def get_all_markers_from_formation(formation) -> List[Object]:
+def count_markers_in_formation(formation: Collection) -> int:
+    """Returns the number of markers in the given formation.
+
+    Each mesh in the formation counts as one marker, _except_ if the mesh has
+    a vertex group whose name matches the corresponding property of the
+    object; in that case, all the vertices in the mesh are treated as markers.
+    """
+    result = 0
+
+    for obj in formation.objects:
+        if obj.skybrush.formation_vertex_group:
+            result += len(
+                get_vertices_of_object_in_vertex_group_by_name(
+                    obj, obj.skybrush.formation_vertex_group
+                )
+            )
+        else:
+            result += 1
+
+    return result
+
+
+def get_markers_from_formation(formation: Collection) -> List[Object]:
     """Returns a list containing all the markers in the formation.
 
     This function returns all the meshes that are direct children of the
     formation container.
     """
-    return [point for point in formation.objects]
+    result = []
+
+    for obj in formation.objects:
+        if obj.skybrush.formation_vertex_group:
+            result.extend(
+                get_vertices_of_object_in_vertex_group_by_name(
+                    obj, obj.skybrush.formation_vertex_group
+                )
+            )
+        else:
+            result.append(obj)
+
+    return result
+
+
+def get_world_coordinates_of_markers_from_formation(
+    formation: Collection,
+):
+    """Returns a list containing the world coordinates of the markers in the
+    formation, as a NumPy array, one marker per row.
+    """
+    vertices_by_obj = {}
+
+    result = []
+    num_rows = 0
+
+    for obj in formation.objects:
+        if obj.skybrush.formation_vertex_group:
+            vertices = get_vertices_of_object_in_vertex_group_by_name(
+                obj, obj.skybrush.formation_vertex_group
+            )
+            vertices_by_obj[obj] = vertices
+            num_rows += len(vertices)
+        else:
+            num_rows += 1
+
+    result = zeros((num_rows, 3))
+    row_index = 0
+
+    for obj in formation.objects:
+        vertices = vertices_by_obj.get(obj)
+        if vertices is not None:
+            num_vertices = len(vertices)
+            mw = array(obj.matrix_world)
+            if num_vertices:
+                coords = c_[array([v.co for v in vertices]), ones(num_vertices)]
+                result[row_index : (row_index + num_vertices), :] = dot(mw, coords.T)[
+                    0:3
+                ].T
+            row_index += num_vertices
+        else:
+            result[row_index, :] = get_position_of_object(obj)
+            row_index += 1
+
+    return result
 
 
 def is_formation(object) -> bool:

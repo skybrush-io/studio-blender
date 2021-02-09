@@ -17,8 +17,8 @@ __all__ = ("CreateFormationOperator",)
 
 
 class CreateFormationOperator(FormationOperator):
-    """Creates a new formation in the Formations collection and adds the
-    currently selected vertices to it.
+    """Creates a new formation in the Formations collection, optionally filling
+    it from the selection.
     """
 
     bl_idname = "skybrush.create_formation"
@@ -36,7 +36,12 @@ class CreateFormationOperator(FormationOperator):
     works_with_no_selected_formation = True
 
     def invoke(self, context, event):
-        self.name = propose_name("Formation {}", for_collection=True)
+        if context.mode == "EDIT_MESH":
+            # In edit mode, the name of the formation should be the same as
+            # the name of the object we are editing
+            self.name = propose_name(context.object.name, for_collection=True)
+        else:
+            self.name = propose_name("Formation {}", for_collection=True)
         self.contents = propose_mode_for_formation_update(context)
         return context.window_manager.invoke_props_dialog(self)
 

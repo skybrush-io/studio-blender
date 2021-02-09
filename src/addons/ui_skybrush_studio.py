@@ -13,7 +13,7 @@ bl_info = {
 import sys
 
 from bpy.props import PointerProperty
-from bpy.types import Scene
+from bpy.types import Object, Scene
 from pathlib import Path
 
 
@@ -40,6 +40,7 @@ from sbstudio.plugin.model import (
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
     DroneShowAddonProperties,
+    DroneShowAddonObjectProperties,
     FormationsPanelProperties,
     LEDControlPanelProperties,
     LightEffect,
@@ -58,6 +59,7 @@ from sbstudio.plugin.operators import (
     DeselectFormationOperator,
     DetachMaterialsFromDroneTemplateOperator,
     FixConstraintOrderingOperator,
+    GetSizeOfFormationOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     MoveStoryboardEntryDownOperator,
@@ -72,9 +74,11 @@ from sbstudio.plugin.operators import (
     SkybrushExportOperator,
     SwapColorsInLEDControlPanelOperator,
     UpdateFormationOperator,
+    UseSelectedVertexGroupForFormationOperator,
     ValidateTrajectoriesOperator,
 )
 from sbstudio.plugin.panels import (
+    DroneShowAddonObjectPropertiesPanel,
     ExportPanel,
     FormationsPanel,
     StoryboardEditor,
@@ -118,6 +122,7 @@ types = (
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
     DroneShowAddonProperties,
+    DroneShowAddonObjectProperties,
 )
 
 #: Operators in this addon; operators that require other operators must come
@@ -147,6 +152,8 @@ operators = (
     SwapColorsInLEDControlPanelOperator,
     ValidateTrajectoriesOperator,
     SkybrushExportOperator,
+    UseSelectedVertexGroupForFormationOperator,
+    GetSizeOfFormationOperator,
 )
 
 #: List widgets in this addon.
@@ -162,6 +169,7 @@ panels = (
     LightEffectsPanel,
     SafetyCheckPanel,
     ExportPanel,
+    DroneShowAddonObjectPropertiesPanel,
 )
 
 #: Headers in this addon
@@ -185,7 +193,9 @@ def register():
         register_header(header)
     for task in tasks:
         task.register()
+
     Scene.skybrush = PointerProperty(type=DroneShowAddonProperties)
+    Object.skybrush = PointerProperty(type=DroneShowAddonObjectProperties)
 
 
 def unregister():

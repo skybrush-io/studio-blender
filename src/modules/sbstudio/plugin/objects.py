@@ -1,6 +1,7 @@
 import bpy
 
-from typing import Any, Optional
+from bpy.types import MeshVertex, Object, Scene, VertexGroup
+from typing import Any, List, Optional
 
 from .utils import with_scene
 
@@ -12,9 +13,7 @@ __all__ = (
 
 
 @with_scene
-def create_object(
-    name: str, data: Any = None, scene: Optional[bpy.types.Scene] = None
-) -> Any:
+def create_object(name: str, data: Any = None, scene: Optional[Scene] = None) -> Object:
     """Creates a new generic Blender object in the given scene.
 
     Parameters:
@@ -33,8 +32,8 @@ def create_object(
 
 @with_scene
 def duplicate_object(
-    object, *, name: Optional[str] = None, scene: Optional[bpy.types.Scene] = None
-) -> Any:
+    object: Object, *, name: Optional[str] = None, scene: Optional[Scene] = None
+) -> Object:
     """Duplicates a Blender object under a different name.
 
     Parameters:
@@ -53,7 +52,7 @@ def duplicate_object(
     return link_object_to_scene(duplicate, scene=scene)
 
 
-def get_vertices_of_object(object):
+def get_vertices_of_object(object: Object):
     """Returns all the vertices in the given object, or an empty list if the
     object is not a mesh.
     """
@@ -61,8 +60,42 @@ def get_vertices_of_object(object):
     return getattr(data, "vertices", [])
 
 
+def get_vertices_of_object_in_vertex_group(
+    object: Object, group: VertexGroup
+) -> List[MeshVertex]:
+    """Returns all the vertices in the given object that are members of the
+    given vertex group.
+
+    Parameters:
+        object: the object to query
+        name: the name of the vertex group
+    """
+    result = []
+    mesh = object.data if object else None
+    if mesh is not None:
+        index = group.index
+        for vertex in mesh.vertices:
+            if any(g.group == index for g in vertex.groups):
+                result.append(vertex)
+    return result
+
+
+def get_vertices_of_object_in_vertex_group_by_name(
+    object: Object, name: str
+) -> List[MeshVertex]:
+    """Returns all the vertices in the given object that are members of the
+    given vertex group by name.
+
+    Parameters:
+        object: the object to query
+        name: the name of the vertex group
+    """
+    group = object.vertex_groups.get(name)
+    return get_vertices_of_object_in_vertex_group(object, group) if group else []
+
+
 @with_scene
-def link_object_to_scene(object, *, scene: Optional[bpy.types.Scene] = None):
+def link_object_to_scene(object: Object, *, scene: Optional[Scene] = None) -> Object:
     """Links a Blender object to the master collection of the given scene.
 
     Parameters:
@@ -71,7 +104,7 @@ def link_object_to_scene(object, *, scene: Optional[bpy.types.Scene] = None):
             use the current scene
 
     Returns:
-        object: the Blender object
+        the Blender object
     """
     parent = scene.collection
 

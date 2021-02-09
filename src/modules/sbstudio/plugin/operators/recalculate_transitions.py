@@ -10,7 +10,7 @@ from sbstudio.plugin.actions import (
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.keyframes import set_keyframes
-from sbstudio.plugin.model.formation import get_all_markers_from_formation
+from sbstudio.plugin.model.formation import get_markers_from_formation
 from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
 from sbstudio.plugin.tasks.safety_check import invalidate_caches
 from sbstudio.plugin.transition import (
@@ -103,7 +103,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                 if end_of_previous is None:
                     end_of_previous = start_of_scene
 
-                markers = get_all_markers_from_formation(formation)
+                markers = get_markers_from_formation(formation)
 
                 # We need to create a transition between the places where the drones
                 # are at the end of the previous formation and the points of the

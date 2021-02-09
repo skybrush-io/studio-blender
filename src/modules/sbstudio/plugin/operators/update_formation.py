@@ -7,7 +7,7 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import (
     add_objects_to_formation,
     add_points_to_formation,
-    get_all_markers_from_formation,
+    get_markers_from_formation,
 )
 from sbstudio.plugin.selection import (
     get_selected_objects,
@@ -121,7 +121,7 @@ class UpdateFormationOperator(FormationOperator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_formation(self, formation, context):
-        markers = get_all_markers_from_formation(formation)
+        markers = get_markers_from_formation(formation)
 
         objects, points = collect_objects_and_points_for_formation_update(
             self.update_with

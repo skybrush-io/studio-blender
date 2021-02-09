@@ -3,6 +3,7 @@ from bpy.types import Panel
 from sbstudio.plugin.operators import (
     CreateFormationOperator,
     DeselectFormationOperator,
+    GetSizeOfFormationOperator,
     RemoveFormationOperator,
     SelectFormationOperator,
     UpdateFormationOperator,
@@ -46,6 +47,7 @@ class FormationsPanel(Panel):
         row = layout.row()
         row.operator(SelectFormationOperator.bl_idname, text="Select")
         row.operator(DeselectFormationOperator.bl_idname, text="Deselect")
+        row.operator(GetSizeOfFormationOperator.bl_idname, text="Get Size")
 
         row = layout.row()
         row.operator(

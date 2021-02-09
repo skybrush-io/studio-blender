@@ -1,5 +1,5 @@
 from .errors import SkybrushStudioAddonError
-from .model.formation import get_all_markers_from_formation
+from .model.formation import get_markers_from_formation
 from .utils.identifiers import create_internal_id, is_internal_id
 
 __all__ = (
@@ -53,7 +53,7 @@ def find_transition_constraint_between(drone, formation):
         the constraint or `None` if no such constraint exists
     """
     # Get all the markers from the formation
-    markers = set(get_all_markers_from_formation(formation))
+    markers = set(get_markers_from_formation(formation))
 
     for constraint in drone.constraints:
         if constraint.type != "COPY_LOCATION":
