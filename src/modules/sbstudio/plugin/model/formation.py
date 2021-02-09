@@ -1,10 +1,10 @@
 import bpy
 
-from bpy.types import Collection, Object
+from bpy.types import Collection, MeshVertex, Object
 from functools import partial
 from mathutils import Vector
 from numpy import array, c_, dot, ones, zeros
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Union
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import get_vertices_of_object_in_vertex_group_by_name
@@ -138,7 +138,9 @@ def count_markers_in_formation(formation: Collection) -> int:
     return result
 
 
-def get_markers_from_formation(formation: Collection) -> List[Object]:
+def get_markers_from_formation(
+    formation: Collection,
+) -> List[Union[Object, MeshVertex]]:
     """Returns a list containing all the markers in the formation.
 
     This function returns all the meshes that are direct children of the

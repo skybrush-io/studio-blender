@@ -1,3 +1,5 @@
+import bpy
+
 from bpy.types import Collection, Context
 from typing import Optional
 
@@ -9,6 +11,7 @@ from .utils import with_context
 __all__ = (
     "add_to_selection",
     "deselect_all",
+    "ensure_vertex_select_mode_enabled",
     "get_selected_drones",
     "get_selected_objects_from_collection",
     "get_selected_vertices",
@@ -24,8 +27,13 @@ def deselect_all(*, context: Optional[Context] = None):
     """Deselects all objects in the given context (defaults to the current
     context).
     """
-    for obj in context.selected_objects:
-        obj.select_set(False)
+    if context.mode == "EDIT_MESH":
+        # In edit mode, we simply run the "Deselect All" action
+        bpy.ops.mesh.select_all(action="DESELECT")
+    else:
+        # In all other modes, we deselect the selected objects explicitly
+        for obj in context.selected_objects:
+            obj.select_set(False)
 
 
 @with_context
@@ -179,9 +187,21 @@ def remove_from_selection(objects, *, context: Optional[Context] = None):
     _set_selected_state_of_objects(objects, False, context=context)
 
 
-def _set_selected_state_of_objects(
-    objects, state, *, context: Optional[Context] = None
-):
+@with_context
+def ensure_vertex_select_mode_enabled(
+    enabled: bool = True, *, context: Optional[Context] = None
+) -> None:
+    """Ensures that thevertex selection mode is enabled in Blender's edit
+    mode (even if the edit mode itself is not enabled.)
+    """
+    msm = context.tool_settings.mesh_select_mode
+    if msm[0] != bool(enabled):
+        msm = list(msm)
+        msm[0] = bool(enabled)
+        context.tool_settings.mesh_select_mode = msm
+
+
+def _set_selected_state_of_objects(objects, state, *, context: Context):
     """Common implementation of `add_to_selection()` and
     `remove_from_selection()`.
     """

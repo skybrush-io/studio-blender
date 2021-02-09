@@ -8,7 +8,11 @@ from .utils import with_scene
 __all__ = (
     "create_object",
     "duplicate_object",
+    "get_vertices_of_object",
+    "get_vertices_of_object_in_vertex_group",
+    "get_vertices_of_object_in_vertex_group_by_name",
     "link_object_to_scene",
+    "object_contains_vertex",
 )
 
 
@@ -117,3 +121,10 @@ def link_object_to_scene(object: Object, *, scene: Optional[Scene] = None) -> Ob
         parent.link(object)
 
     return object
+
+
+def object_contains_vertex(obj: Object, vertex: MeshVertex) -> bool:
+    """Returns whether the given object contains the given mesh vertex."""
+    mesh = obj.data if obj else None
+    index = vertex.index
+    return mesh and len(mesh.vertices) > index and mesh.vertices[index] == vertex

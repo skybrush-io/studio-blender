@@ -100,6 +100,32 @@ def unregister_type(cls):
     bpy.utils.unregister_class(cls)
 
 
+def enter_edit_mode(obj=None, *, context=None):
+    """Enters edit mode in the current context."""
+    if obj is not None:
+        context = context or bpy.context
+        context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode="EDIT", toggle=False)
+
+
+@contextmanager
+def temporarily_exit_edit_mode(context=None) -> ContextManager[None]:
+    """Context manager that temporarily exits edit mode if the context is in
+    edit mode, and restores it upon exiting the context.
+
+    The context manager is a no-op if Blender is not in edit mode.
+    """
+    context = context or bpy.context
+    mode = context.mode
+    if mode != "EDIT_MESH":
+        yield
+    else:
+        ob = context.view_layer.objects.active
+        with use_mode_for_object("OBJECT"):
+            yield
+        enter_edit_mode(ob, context=context)
+
+
 @contextmanager
 def use_menu(menu, func):
     """Context manager that registers the given function in a Blender menu when
