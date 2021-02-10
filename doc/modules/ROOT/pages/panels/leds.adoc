@@ -31,7 +31,7 @@ image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to se
 
 They insert color animation keyframes at the given frame for the selected drones, according to the settings in the popup window.
 
-If the "Fade to color" checkbox is disabled, one keyframe with the previous color is inserted right before the actual frame and one with the selected color is added to the current frame (resulting in abrupt color change at the given frame). If the chekcbox is enabled, only one color keyframe will be added at the current frame, but with linear interpolation on the left (from the past) from the previous color keyframe.
+If the btn:[Fade to color] checkbox is disabled, one keyframe with the previous color is inserted right before the actual frame and one with the selected color is added to the current frame (resulting in abrupt color change at the given frame). If the chekcbox is enabled, only one color keyframe will be added at the current frame, but with linear interpolation on the left (from the past) from the previous color keyframe.
 
 The "Color to apply" option lets you select which color to use, the primary, the secondary or as a more advanced feature, a gradient color between these two. If the gradient mode is selected (assuming that you have selected multiple drones to color), the "Order in gradient" option lets you define how the gradient coloring is performed (along a given axis, as a distance from the cursor etc.).
 

@@ -1,5 +1,6 @@
 = Safety & Export tab
 :imagesdir: ../../assets/images
+:experimental:
 
 The Safety & Export tab in the sidebar of the Viewport editor lets you perform real-time verification of your drone animation and enables you to export your show into Skybrush Compiled format.
 
@@ -9,7 +10,7 @@ image::panels/safety_and_export.jpg[Safety & Export tab]
 
 The Safety Check panel lets you perform real-time frame-level or full post-processed verification of your drone animation to aid you towards completely safe drone flighs.
 
-Safety warnings of the actual frame appear as text on the left side of the 3D Viewport editor, while errorous drones are also highlighted with red as seen in the image below.
+Safety warnings of the actual frame appear in real-time as text on the left side of the 3D Viewport editor, while errorous drones are also highlighted in real-time with red as seen in the image below.
 
 image::panels/safety_check/safety_checks.jpg[Safety checks]
 
@@ -19,29 +20,29 @@ To enable or disable all safety checks together, use the checkbox at the top lef
 
 This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.
 
-The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone-pairs. This drone pair is also highlighted with red, along with a red line connecting them.
+The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone-pairs on the current frame. This drone pair is also highlighted with red, along with a red line connecting them.
 
-To enable or disable proximity warnings, use the "Show proximity warnings" checkbox.
+To enable or disable proximity warnings, use the btn:[Show proximity warnings] checkbox.
 
 === Altitude warnings
 
 This option lets you define a maximum altitude for your drone show. If there are drones above this altitude (measured along the `Z` axis), you get real-time altitude warnings.
 
-The text-based altitude warning on the left side of the 3D Viewport editor always shows you the maximum altitude of drones. Drones above the altitude threshold at a given frame are highlighted in red.
+The text-based altitude warning on the left side of the 3D Viewport editor always shows you the overall altitude range of drones on the current frame. Drones above the altitude threshold at a given frame are highlighted in red.
 
-To enable or disable altitude warnings, use the "Show altitude warnings" checkbox.
+To enable or disable altitude warnings, use the btn:[Show altitude warnings] checkbox.
 
 === Velocity warnings
 
 This option lets you define a maximum horizontal and vertical speed for your drone show. If there are drones above these velocity limits, you get real-time velocity warnings.
 
-The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal and vertical velocity of drones. Drones above the velocity thresholds at a given frame are highlighted in red.
+The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal and vertical velocity of drones on the current frame. Drones above the velocity thresholds at a given frame are highlighted in red.
 
-To enable or disable velocity warnings, use the "Show velocity warnings" checkbox.
+To enable or disable velocity warnings, use the btn:[Show velocity warnings] checkbox.
 
 === Validate Trajectories
 
-Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
+Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might take some time depending on the number of your drones and the number of frames selected).
 
 image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 
