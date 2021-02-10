@@ -4,7 +4,7 @@ from bpy.types import Collection, MeshVertex, Object
 from functools import partial
 from mathutils import Vector
 from numpy import array, c_, dot, ones, zeros
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import get_vertices_of_object_in_vertex_group_by_name
@@ -18,6 +18,7 @@ __all__ = (
     "create_formation",
     "create_marker",
     "get_markers_from_formation",
+    "get_markers_and_related_objects_from_formation",
     "get_world_coordinates_of_markers_from_formation",
     "is_formation",
 )
@@ -138,13 +139,48 @@ def count_markers_in_formation(formation: Collection) -> int:
     return result
 
 
+def get_markers_and_related_objects_from_formation(
+    formation: Collection,
+) -> List[Tuple[Union[Object, MeshVertex], Object]]:
+    """Returns a list containing all the markers and their corresponding
+    objects in the formation.
+
+    If a marker is a mesh vertex, returns the mesh vertex and the object
+    containing the mesh vertex in a tuple. Otherwise simply returns the
+    marker twice in a tuple.
+
+    The order in which the markers are returned from this function are
+    consistent with the order in which their positions are returned from
+    `get_world_coordinates_of_markers_from_formation()`.
+    """
+    result = []
+
+    for obj in formation.objects:
+        if obj.skybrush.formation_vertex_group:
+            result.extend(
+                (vertex, obj)
+                for vertex in get_vertices_of_object_in_vertex_group_by_name(
+                    obj, obj.skybrush.formation_vertex_group
+                )
+            )
+        else:
+            result.append((obj, obj))
+
+    return result
+
+
 def get_markers_from_formation(
     formation: Collection,
 ) -> List[Union[Object, MeshVertex]]:
     """Returns a list containing all the markers in the formation.
 
     This function returns all the meshes that are direct children of the
-    formation container.
+    formation container. Meshes that have a designated vertex group are replaced
+    with the vertices in the vertex group.
+
+    The order in which the markers are returned from this function are
+    consistent with the order in which their positions are returned from
+    `get_world_coordinates_of_markers_from_formation()`.
     """
     result = []
 
@@ -162,11 +198,29 @@ def get_markers_from_formation(
 
 
 def get_world_coordinates_of_markers_from_formation(
-    formation: Collection,
+    formation: Collection, *, frame: Optional[int] = None
 ):
     """Returns a list containing the world coordinates of the markers in the
     formation, as a NumPy array, one marker per row.
+
+    The order in which the markers are returned from this function are
+    consistent with the order in which they are returned from
+    `get_markers_from_formation()`.
+
+    Parameters:
+        formation: the formation to evaluate
+        frame: when not `None`, the index of the frame to evaluate the
+            coordinates in
     """
+    if frame is not None:
+        scene = bpy.context.scene
+        current_frame = scene.frame_current
+        scene.frame_set(frame)
+        try:
+            return get_world_coordinates_of_markers_from_formation(formation)
+        finally:
+            scene.frame_set(current_frame)
+
     vertices_by_obj = {}
 
     result = []

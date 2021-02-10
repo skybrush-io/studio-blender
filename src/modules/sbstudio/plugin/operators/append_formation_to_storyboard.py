@@ -4,7 +4,9 @@ from .base import FormationOperator
 
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.model.formation import get_markers_from_formation
+from sbstudio.plugin.model.formation import (
+    get_world_coordinates_of_markers_from_formation,
+)
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 __all__ = ("AppendFormationToStoryboardOperator",)
@@ -28,13 +30,18 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         formations = context.scene.skybrush.formations
         storyboard = getattr(context.scene.skybrush, "storyboard", None)
         if storyboard:
-            return not storyboard.contains_formation(formations.selected)
+            return (
+                not storyboard.entries
+                or storyboard.entries[-1].formation != formations.selected
+            )
         else:
             return False
 
     def execute_on_formation(self, formation, context):
         storyboard = getattr(context.scene.skybrush, "storyboard", None)
-        if not storyboard or storyboard.contains_formation(formation):
+        if not storyboard or (
+            storyboard.entries and storyboard.entries[-1].formation == formation
+        ):
             return {"CANCELLED"}
 
         safety_check = getattr(context.scene.skybrush, "safety_check", None)
@@ -62,22 +69,24 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
         with create_position_evaluator() as get_positions_of:
             if last_formation is not None:
-                markers = get_markers_from_formation(last_formation)
-                source = get_positions_of(markers, frame=last_frame)
+                source = get_world_coordinates_of_markers_from_formation(
+                    last_formation, frame=last_frame
+                )
+                source = [tuple(coord) for coord in source]
             else:
                 drones = Collections.find_drones().objects
                 source = get_positions_of(drones, frame=last_frame)
 
-            # TODO(ntamas): this works only if the target formation is
-            # stationary
-            markers = get_markers_from_formation(formation)
-            target = get_positions_of(markers, frame=entry.frame_start)
-
+            target = get_world_coordinates_of_markers_from_formation(
+                formation, frame=entry.frame_start
+            )
+            target = [tuple(coord) for coord in target]
         try:
             transition_duration = get_api().plan_transition(
                 source, target, **safety_kwds
             )
         except Exception:
+            raise
             self.report(
                 {"ERROR"},
                 "Error while invoking transition planner on the Skybrush Studio online service",

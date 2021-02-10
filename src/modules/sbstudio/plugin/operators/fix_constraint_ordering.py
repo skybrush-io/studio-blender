@@ -35,9 +35,8 @@ class FixConstraintOrderingOperator(StoryboardOperator):
         # Sort the constraints such that the ones corresponding to formations
         # that come later (in time) appear later in the constraint chain.
         formation_priority_map = {
-            get_id_for_formation_constraint(entry.formation): index
+            get_id_for_formation_constraint(entry): index
             for index, entry in enumerate(entries)
-            if entry.formation is not None
         }
 
         def key_function(constraint):

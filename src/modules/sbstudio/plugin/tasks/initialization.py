@@ -23,6 +23,28 @@ def setup_drone_collection(*args):
         scene.skybrush.settings.drone_collection = drones
 
 
+def remove_legacy_formation_constraints(*args):
+    """Removes legacy formation constraints from the file that were created
+    before we have migrated to formation constraints that refer a unique ID of
+    a storyboard entry instead of simply referring to a formation.
+    """
+    drones = Collections.find_drones(create=False)
+    if not drones:
+        return
+
+    to_delete = []
+    for drone in drones.objects:
+        to_delete.clear()
+
+        for constraint in drone.constraints:
+            if constraint.type == "COPY_LOCATION" and "[To " in constraint.name:
+                to_delete.append(constraint)
+
+        if to_delete:
+            for constraint in reversed(to_delete):
+                drone.constraints.remove(constraint)
+
+
 def update_bloom_effect(*args):
     enable_bloom_effect_if_needed()
 
@@ -32,4 +54,10 @@ class InitializationTask(Task):
     turns on the bloom effect on the scene if needed.
     """
 
-    functions = {"load_post": [update_bloom_effect, setup_drone_collection]}
+    functions = {
+        "load_post": [
+            update_bloom_effect,
+            setup_drone_collection,
+            remove_legacy_formation_constraints,
+        ]
+    }

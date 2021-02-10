@@ -5,9 +5,11 @@ from bpy.props import (
     CollectionProperty,
     EnumProperty,
     IntProperty,
+    StringProperty,
 )
 from bpy.types import Collection, Context, PropertyGroup
 from operator import attrgetter
+from uuid import uuid4
 from typing import Optional
 
 from sbstudio.plugin.constants import (
@@ -35,6 +37,12 @@ class StoryboardEntry(PropertyGroup):
     of the drone show.
     """
 
+    maybe_uuid_do_not_use = StringProperty(
+        name="Identifier",
+        description="Unique identifier for this storyboard entry; must not change throughout the lifetime of the entry.",
+        default="",
+        options={"HIDDEN"},
+    )
     is_name_customized = BoolProperty(
         name="Custom Name",
         description="Keeps the name of the storyboard entry when the associated formation changes",
@@ -89,6 +97,14 @@ class StoryboardEntry(PropertyGroup):
     def frame_end(self) -> int:
         """Returns the index of the last frame that is covered by the storyboard."""
         return self.frame_start + self.duration
+
+    @property
+    def id(self) -> str:
+        """Unique identifier of this storyboard entry."""
+        if not self.maybe_uuid_do_not_use:
+            # Chance of a collision is minimal so just use random numbers
+            self.maybe_uuid_do_not_use = uuid4().hex
+        return self.maybe_uuid_do_not_use
 
 
 class Storyboard(PropertyGroup, ListMixin):
@@ -278,6 +294,7 @@ class Storyboard(PropertyGroup, ListMixin):
         entries = list(self.entries)
         entries.sort(key=attrgetter("frame_start"))
 
+        # Check that entries do not overlap
         for index, (entry, next_entry) in enumerate(zip(entries, entries[1:])):
             if entry.frame_end > next_entry.frame_start:
                 raise StoryboardValidationError(
@@ -285,14 +302,7 @@ class Storyboard(PropertyGroup, ListMixin):
                     f"overlaps with next entry {next_entry.name!r}"
                 )
 
-        # Currently we don't support the same formation appearing multiple times
-        # in the storyboard. This should be improved later. TODO(ntamas)
-        formation_set = set(entry.formation for entry in entries)
-        if len(formation_set) < len(entries):
-            raise StoryboardValidationError(
-                "Each formation may appear only once in the storyboard"
-            )
-
+        # Check sizes of constraints
         drones = Collections.find_drones(create=False)
         num_drones = len(drones.objects) if drones else 0
         for entry in entries:
