@@ -11,6 +11,7 @@ from operator import attrgetter
 from typing import Optional
 
 from sbstudio.plugin.constants import (
+    Collections,
     DEFAULT_STORYBOARD_ENTRY_DURATION,
     DEFAULT_STORYBOARD_TRANSITION_DURATION,
 )
@@ -18,6 +19,7 @@ from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.props import FormationProperty
 from sbstudio.plugin.utils import with_context
 
+from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
 __all__ = ("StoryboardEntry", "Storyboard")
@@ -264,7 +266,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
     def validate_and_sort_entries(self) -> None:
         """Validates the entries in the storyboard and sorts them by start time,
-        keeping the active entry index point to the same entry as before.
+        keeping the active entry index point at the same entry as before.
 
         Returns:
             the list of entries in the storyboard, sorted by start time
@@ -290,6 +292,22 @@ class Storyboard(PropertyGroup, ListMixin):
             raise StoryboardValidationError(
                 "Each formation may appear only once in the storyboard"
             )
+
+        drones = Collections.find_drones(create=False)
+        num_drones = len(drones.objects) if drones else 0
+        for entry in entries:
+            formation = entry.formation
+            num_markers = count_markers_in_formation(formation)
+            if num_markers > num_drones:
+                if num_drones > 1:
+                    msg = f"you only have {num_drones} drones"
+                elif num_drones == 1:
+                    msg = "you only have one drone"
+                else:
+                    msg = "you have no drones"
+                raise StoryboardValidationError(
+                    f"Storyboard entry {entry.name!r} contains a formation with {num_markers} drones but {msg}"
+                )
 
         # TODO(ntamas): implement sorting. Unfortunately the API of the collection
         # is so limited that we would need to implement insertion sort here
