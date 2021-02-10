@@ -39,4 +39,8 @@ class DroneShowAddonObjectPropertiesPanel(Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object and getattr(context.object, "skybrush")
+        return (
+            context.object
+            and context.object.type == "MESH"
+            and getattr(context.object, "skybrush")
+        )
