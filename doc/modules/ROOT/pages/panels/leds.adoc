@@ -44,27 +44,73 @@ The bloom effect gives you a nice realistic look with shiny drones, however it c
 
 == Light Effects panel
 
-The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation.
+The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation dynamically.
 
 Light effects are parametrized and they are not burnt as color keyframes, so it is very easy to adjust them along with animation changes.
 
-The basic concept of the light effects is that they have a given dynamic intensity at every frame during the effect that defines how much the light effect is expressed on top of the base color at the given frame.
+Every light effect builds on a user defined color ramp, consisting of an arbitrary number of color stops at arbitrary positions on the color ramp (indexed between 0 and 1) and a given interpolation method between the defined color stops on the ramp.
+
+This color ramp is applied to the drones in many different ways. Light effects can spread across multiple drones and can also be animated in time, using the versatile functions detailed below.
 
 === Create Light Effect
 
-Use the plus sign next to the light effect list to add a new light effect to the end of the list.
+Use the btn:[+] button next to the light effect list to add a new light effect to the end of the list.
 
 === Remove Light Effect
 
-Use the minus sign next to the light effect list to remove the currently selected light effect from the list.
+Press the btn:[-] button next to the light effect list to remove the currently selected light effect from the list.
 
-=== Color Ramp functions
+=== Move Selected Light Effect Up
 
-Every light effect builds on a user defined color ramp, consisting of an arbitrary number of colors at arbitrary positions on the color ramp (indexed between 0 and 1) and a given interpolation method between the defined colors on the ramp.
+Press the btn:[▲] button next to the light effect list to move the selected light effect up by one slot in the list.
 
-Use the + and - signs below the light effect list to add or remove new colors to/from the color ramp associated with the selected light effect and use the other functions around the visual color ramp to change its properties.
+=== Move Selected Light Effect Down
 
-The way the color ramp is used in a given light effect is described below
+Press the btn:[▼] button next to the light effect list to move the selected light effect down by one slot in the list.
+
+=== Add a color stop to the color ramp
+
+Use the btn:[+] button below the light effect list to add a new color stops to the color ramp associated with the selected light effect.
+
+=== Remove a color stop from the color ramp
+
+Use the btn:[-] button below the light effect list to remove the selected color stop from the color ramp associated with the selected light effect.
+
+=== Color ramp tools
+
+Use the btn:[˅] button to select different tools for changing the color ramp. Currently available options:
+
+* Flip Color Ramp
+* Distribute Color Stops from Left
+* Distribute Color Stops evenly
+* Eyedropper tool for color selection
+* Reset Color Ramp
+
+=== Color mode
+
+Use the "Color mode" dropdown list to define the color mode used for color ramp interpolation. Possible values:
+
+* RGB (red, green, blue)
+* HSV (hue, saturation, value)
+* HSL (hue, saturation, lightness)
+
+=== Interpolation
+
+Use the Interpolation dropdown list to select the interpolation mode used for the color ramp. Possible values:
+
+* Ease
+* Cardinal
+* Linear
+* B-Spline
+* Constant
+
+=== Color stop position
+
+Enter a value to change the exact location of the selected color stop on the color ramp. To select a given color stop, press on the color stop icons above on the color ramp or select the active color stop explicitely by its index on the left.
+
+=== Color stop color
+
+Click on the color field at the bottom of the color ramp functions to change the color of the selected color stop. Use the popup chart to select a color and press on the color field at the bottom again to save the updated color.
 
 === Start Frame
 
@@ -100,8 +146,7 @@ Temporal:: All drones will go through all colors of the color ramp simultaneousl
 
 Gradient:: A single static color will be picked from the color ramp by all drones in an evenly distributed way, according to the order on the given gradient axes.
 
-Last color of color ramp:: The last color of the color ramp
-will be used by all drones during the whole light effect.
+Last color of color ramp:: The last color of the color ramp will be used by all drones during the whole light effect.
 
 First color of color ramp:: The first color of the color ramp will be used by all drones during the whole light effect.
 
@@ -111,7 +156,7 @@ This property defines which drones are affected by the given light effect. You c
 
 === Influence
 
-the influence parameter sets the overal transparency of the effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
+the influence parameter sets the overal transparency of the light effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
 
 TIP: The influence parameter can be animated with keyframes, which is a simple way to create flashes, for example.
 
