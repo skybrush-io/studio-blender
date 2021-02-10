@@ -24,11 +24,11 @@ You will see three new tabs related to *Skybrush Studio*:
 
 These tabs contain all panels, buttons, operators and functions that are specifically needed for drone show design.
 
-First of all, select the Formations tab and press the "Create Takeoff Grid" button.
+First of all, select the Formations tab and press the btn:[Create Takeoff Grid] button.
 
 image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
-Setup your takeoff grid with any convenient parameters and press OK.
+Setup your takeoff grid with any convenient parameters and press btn:[OK].
 
 This will create all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
 
@@ -39,7 +39,7 @@ To read more about the mentioned collections, please read the xref:glossary.adc[
 
 Formations are standalone parts of your final drone show, consisting of static or dynamic (animated) scenes.
 
-Use the "Create Formation" button on the Formations tab to create a formation as part of your drone show.
+Use the btn:[Create Formation] button on the Formations tab to create a formation as part of your drone show.
 
 image::panels/formations/create_formation.jpg[Create formation]
 
@@ -69,7 +69,7 @@ TIP: pay attention to use enough transition time for your drones between differe
 
 == 4. Create automatic transitions
 
-Use the "Recalculate transitions" button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
+Use the btn:[Recalculate transitions] button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
 
 While transitions are created, your drones in the Drones collection will also be attached to all your formations. The animation part of your show is now almost ready...
 
@@ -78,7 +78,7 @@ While transitions are created, your drones in the Drones collection will also be
 
 Use the LEDs tab in the sidebar of the 3D Viewport editor to add light animation to your show.
 
-Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors in the LED Control panel and press the Apply (change abruptly) or Fade to (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
+Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors in the LED Control panel and press the btn:[Apply] (change abruptly) or btn:[Fade to] (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
 
 image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
 
@@ -91,7 +91,7 @@ As a more advanced option, use the "Light Effects" panel in the LEds tab to crea
 
 Use the "Safety Check" panel in the "Safety & Export" tab in the sidebar of the Viewport editor to enable real-time verification checks on your animation. Setup your safety parameters with convenient values and watch your animation in the 3D Viewport editor. Drones and drone pairs not passing the safety checks (velocity, altitude, proximity) will be highlighted with red, while status information about the verification results will be visible on the left side of the window.
 
-Press the "Validate Trajectories" button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
+Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
 
 image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 
@@ -104,7 +104,7 @@ TIP: Interactive validation of the whole show is also possible in *Skybrush View
 
 == 7. Export your show to .skyc
 
-Once ready, use the "Export to .skyc" button of the Export panel on the "Safety & Export" tab to export your entire show into Skybrush Compiled format.
+Once ready, use the btn:[Export to .skyc] button of the Export panel on the "Safety & Export" tab to export your entire show into Skybrush Compiled format.
 
 The Skybrush Compiled format is compatible with other components of the *Skybrush* suite:
 

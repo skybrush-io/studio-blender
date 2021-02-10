@@ -1,5 +1,6 @@
 = LEDs tab
 :imagesdir: ../../assets/images
+:experimental:
 
 The LEDs tab in the sidebar of the Viewport editor helps you to create light animation for your drone show.
 
@@ -20,11 +21,11 @@ Press on the right dcolor field to set the secondary color you would like to use
 
 === Swap Colors
 
-Press the arrows in between the primary and secondary color fields to swap the two colors.
+Press the btn:[⇔] button in between the primary and secondary color fields to swap the two colors.
 
 === Apply / Fade to
 
-The Apply and "Fade to" buttons below the selected primary and secondary colors open the same popup window with different default values corresponding to their function.
+The btn:[Apply] and btn:[Fade to] buttons below the selected primary and secondary colors open the same popup window with different default values corresponding to their function.
 
 image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
 

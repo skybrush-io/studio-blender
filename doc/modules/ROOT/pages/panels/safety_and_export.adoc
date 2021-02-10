@@ -41,7 +41,7 @@ To enable or disable velocity warnings, use the "Show velocity warnings" checkbo
 
 === Validate Trajectories
 
-Press the "Validate Trajectories" button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
+Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
 
 image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 
@@ -62,7 +62,7 @@ The Skybrush Compiled format is a single-file descriptor of your complete drone 
 
 * If you want to execute your drone show on your real drones, use *Skybrush Live*.
 
-If you press the "Export to .skyc" button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 * Export all or only selected drones
 * Define the frame range of the output (Render / Preview / Storyboard)

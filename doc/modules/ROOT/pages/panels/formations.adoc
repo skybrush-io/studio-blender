@@ -1,5 +1,6 @@
 = Formations tab
 :imagesdir: ../../assets/images
+:experimental:
 
 The Formations tab in the sidebar of the 3D Viewport editor helps you to organize your animations and formations into a drone show.
 
@@ -12,15 +13,15 @@ The swarm panel helps you setup your drone show with all technical parts that ar
 
 === Max acceleration
 
-The "Max acceleration" button sets up a maximal acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
+The btn:[Max acceleration] button sets up a maximal acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
 
 === Create Takeoff Grid
 
-The "Create Takeoff Grid" button helps you setup your takeoff and landing grid (they are expected to be the same by default).
+The btn:[Create Takeoff Grid] button helps you setup your takeoff and landing grid (they are expected to be the same by default).
 
 image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
-You can define the number of rows and columns, the exact number of drones and the spacing between them. Once you press OK, a rectangular grid is created with the specified parameters.
+You can define the number of rows and columns, the exact number of drones and the spacing between them. Once you press btn:[OK], a rectangular grid is created with the specified parameters.
 
 This operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
 
@@ -31,7 +32,7 @@ With the Formations panel of the Formations tab you can create, select, deselect
 
 === Create Formation
 
-The "Create Formations" button creates sub-collections in your Formations collection, consisting of objects that are to be animated during a given scene of your drone show.
+The btn:[Create Formations] button creates sub-collections in your Formations collection, consisting of objects that are to be animated during a given scene of your drone show.
 
 image::panels/formations/create_formation.jpg[Create formation]
 
@@ -70,23 +71,23 @@ The Storyboard gives you the overall structure of your drone show, with your for
 
 === Create New Storyboard Entry
 
-Press the plus sign next to the formation list in the Storyboard to add a new entry to the end of the Storyboard.
+Press the btn:[+] button next to the formation list in the Storyboard to add a new entry to the end of the Storyboard.
 
 === Remove Selected Storyboard Entry
 
-Press the minus sign next to the formation list in the Storyboard to remove the selected storyboard entry from the list.
+Press the btn:[-] button next to the formation list in the Storyboard to remove the selected storyboard entry from the list.
 
 === Select Storyboard Entry for Current Frame
 
-Press the arrow next to the formation list in the Storyboard to select the storyboard entry that contains the current frame. If the current frame falls between storyboard entries, selects the next entry. Clears the selection if the current frame is after the end of the storyboard.
+Press the btn:[↥] button next to the formation list in the Storyboard to select the storyboard entry that contains the current frame. If the current frame falls between storyboard entries, the next entry will be selected. Pressing this button clears the selection if the current frame is after the end of the storyboard.
 
 === Move Selected Storyboard Entry Up
 
-Press the triangle pointing up next to the formation list in the Storyboard to move the selected entry up by one slot in the Storyboard.
+Press the btn:[▲] button next to the formation list in the Storyboard to move the selected entry up by one slot in the Storyboard.
 
 === Move Selected Storyboard Entry Down
 
-Press the triangle pointing down next to the formation list in the Storyboard to move the selected entry down by one slot in the Storyboard.
+Press the btn:[▼] button next to the formation list in the Storyboard to move the selected entry down by one slot in the Storyboard.
 
 === Formation
 
@@ -114,7 +115,7 @@ If you check this, you can keep the name of the Storyboard entry when the associ
 
 === Recalculate Transitions
 
-Once you are satisfied with your storyboard, you can press the "Recalculate Transitions" button to create automatic and optimal transitions between your formations without collisions.
+Once you are satisfied with your storyboard, you can press the btn:[Recalculate Transitions] button to create automatic and optimal transitions between your formations without collisions.
 
 image::panels/storyboard/recalculate_transitions.jpg[Recalculate Transitions]
 

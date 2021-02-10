@@ -1,5 +1,6 @@
 = Software installation
 :imagesdir: ../assets/images
+:experimental:
 
 The *Skybrush Studio Plugin for Blender* is a platform independent tool, such as Blender. The installation procedure is the same for Linux, macOS and Windows. Please follow the steps below.
 
@@ -20,8 +21,8 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 1. Open Blender and go to Edit -> Preferences -> Add-ons.
 2. (optional) Activate the "User" filter for the add-ons.
-3. Press the "Install..." button on the top right.
-4. In the popup window select the *Skybrush Studio Plugin for Blender* `.zip` file that you have downloaded previously to your computer, and press Enter.
+3. Press the btn:[Install...] button on the top right.
+4. In the popup window select the *Skybrush Studio Plugin for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
 5. Activate the "Interface: Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list.
 
 == Installing updates
