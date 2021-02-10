@@ -14,13 +14,13 @@ __all__ = ("GetFormationStatisticsOperator",)
 
 
 class GetFormationStatisticsOperator(FormationOperator):
-    """Shows an information dialog that indicates the size of the currently
-    selected formation.
+    """Shows an information dialog that indicates several useful properties of
+    the currently selected formation.
     """
 
     bl_idname = "skybrush.get_formation_stats"
-    bl_label = "Formation Size Report"
-    bl_description = "Returns the size of the currently selected formation in the Formations collection."
+    bl_label = "Formation Statistics"
+    bl_description = "Returns useful statistics about the currently selected formation in the Formations collection."
     bl_options = set({})
 
     marker_count = IntProperty(
