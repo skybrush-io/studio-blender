@@ -7,7 +7,6 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import (
     add_objects_to_formation,
     add_points_to_formation,
-    get_markers_from_formation,
 )
 from sbstudio.plugin.selection import (
     get_selected_objects,
@@ -121,9 +120,9 @@ class UpdateFormationOperator(FormationOperator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_formation(self, formation, context):
-        markers = get_markers_from_formation(formation)
+        objects_in_formation = formation.objects
 
-        objects, points = collect_objects_and_points_for_formation_update(
+        new_objects, new_points = collect_objects_and_points_for_formation_update(
             self.update_with
         )
 
@@ -131,19 +130,19 @@ class UpdateFormationOperator(FormationOperator):
         # formation; if there were any other users, do not delete the object as
         # the user might need it for something. Also do not delete objects that
         # would be re-added to the formation.
-        to_unlink = set(marker for marker in markers if marker.users > 1)
-        to_delete = set(markers) - to_unlink - set(objects)
+        to_unlink = set(obj for obj in objects_in_formation if obj.users > 1)
+        to_delete = set(objects_in_formation) - to_unlink - set(new_objects)
 
         # Unlink the markers from the formation that are used elsewhere
-        for marker in to_unlink:
-            formation.objects.unlink(marker)
+        for obj in to_unlink:
+            formation.objects.unlink(obj)
 
         # Delete the markers from the formation that are not used elsewhere
         # TODO(ntamas): it would be nicer not to change the selection
         select_only(to_delete)
         bpy.ops.object.delete()
 
-        add_points_to_formation(formation, points)
-        add_objects_to_formation(formation, objects)
+        add_points_to_formation(formation, new_points)
+        add_objects_to_formation(formation, new_objects)
 
         return {"FINISHED"}
