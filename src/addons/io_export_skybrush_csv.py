@@ -32,6 +32,7 @@ bl_info = {
 
 import bpy
 import logging
+import re
 import sys
 
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
@@ -63,7 +64,7 @@ logging.basicConfig(
 
 
 #############################################################################
-# Helper functions for the exporter
+# Helper functions and classes for the exporter
 #############################################################################
 
 
@@ -219,10 +220,11 @@ def _export_data_to_zip(data_dict: Dict[str, List[TimePosColor]], filepath: Path
     # write .csv files in a .zip file
     with ZipFile(filepath, "w", ZIP_DEFLATED) as zip_file:
         for name, data in data_dict.items():
+            safe_name = re.sub(r"[^A-Za-z0-9\.\+\-]", "_", name)
             lines = ["Time_msec,X,Y,Z,R,G,B"] + [
                 str(item) for item in data
             ]
-            zip_file.writestr(name + ".csv", "\n".join(lines))
+            zip_file.writestr(safe_name + ".csv", "\n".join(lines))
 
 
 def _write_skybrush_file(context, settings, filepath: Path) -> dict:
