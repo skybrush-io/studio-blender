@@ -40,8 +40,8 @@ class LightProgram:
 
     """
 
-    def __init__(self, colors: Sequence[Color4D] = []):
-        self.colors = sorted(colors, key=attrgetter("t"))
+    def __init__(self, colors: Sequence[Color4D] = None):
+        self.colors = sorted(colors, key=attrgetter("t")) if colors is not None else []
 
     def append(self, color: Color4D) -> None:
         """Add a color to the end of the light code."""
