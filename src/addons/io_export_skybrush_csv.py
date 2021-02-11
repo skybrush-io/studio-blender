@@ -86,12 +86,12 @@ class TimePosColor:
     B: int
 
     def __repr__(self):
-        return f"{self.t},{round(self.x, ndigits=2)},{round(self.y, ndigits=2)},{round(self.z, ndigits=2)},{self.R},{self.G},{self.B}"
+        return f"{self.t},{round(self.x, ndigits=3)},{round(self.y, ndigits=3)},{round(self.z, ndigits=3)},{self.R},{self.G},{self.B}"
 
 
 def _to_int_255(value: float) -> int:
     """Convert [0,1] float to clamped [0,255] int."""
-    return max(0, min(255, round(value * 255)))
+    return int(max(0, min(255, round(value * 255))))
 
 
 def _get_objects(context, settings):
@@ -105,7 +105,7 @@ def _get_objects(context, settings):
         objects passing all specified filters natural-sorted by their name
 
     """
-    for obj in sorted(context.scene.objects, key=attrgetter("name")):
+    for obj in context.scene.objects, key=attrgetter("name"):
         if (
             obj.visible_get()
             and obj.type in SUPPORTED_TYPES
