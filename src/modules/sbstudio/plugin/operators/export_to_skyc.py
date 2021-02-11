@@ -141,6 +141,8 @@ def _get_trajectories(
     Returns:
         dictionary of Trajectory objects indexed by object names
     """
+    # TODO(ntamas): temporarily suspend validation and light effects for
+    # the duration of the sampling
     return sample_positions_of_objects_in_frame_range(
         drones, frame_range, fps=settings["output_fps"], context=context, by_name=True
     )

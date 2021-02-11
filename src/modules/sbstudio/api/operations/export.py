@@ -113,14 +113,14 @@ class SkybrushExporter(SkybrushAPIOperationBase):
             is_skybrush_installed = False
 
         # temporary hack to see intermediate results
-        # self.to_json(r"d:\download\temp.json", format=SkybrushJSONFormat.RAW)
+        # self.save_to_json(r"d:\download\temp.json", format=SkybrushJSONFormat.RAW)
         # return
 
         if is_skybrush_installed:
             with TemporaryDirectory() as work_dir:
                 # first create a temporary JSON representation
                 json_output = Path(work_dir) / Path("show.json")
-                self.to_json(json_output, format=SkybrushJSONFormat.RAW)
+                self.save_to_json(json_output, format=SkybrushJSONFormat.RAW)
                 # then send it to skybrush to convert it to .skyc
                 importer = find_importer_function("skybrush.io.json.importer")
                 context = ImportContext()

@@ -82,7 +82,7 @@ class Response:
 
         return data
 
-    def to_file(self, filename: Path) -> None:
+    def save_to_file(self, filename: Path) -> None:
         """Writes response to a given file."""
         if self.content_type == "application/octet-stream":
             mode = "wb"
@@ -221,26 +221,37 @@ class SkybrushStudioAPI:
 
     def export_to_skyc(
         self,
-        show_title: str,
         validation: SafetyCheckParams,
         trajectories: Dict[str, Trajectory],
-        lights: Dict[str, LightProgram],
-        output: Path,
+        lights: Optional[Dict[str, LightProgram]] = None,
+        output: Optional[Path] = None,
+        show_title: Optional[str] = None,
         ndigits: float = 3,
-    ) -> None:
+    ) -> Optional[bytes]:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
         Parameters:
-            show_title: arbitrary show title
             validation: safety check parameters
             trajectories: dictionary of trajectories indexed by drone names
             lights: dictionary of light programs indexed by drone names
-            output: the file path where the output should be saved
+            output: the file path where the output should be saved or `None`
+                if the output must be returned instead of saving it to a file
+            show_title: arbitrary show title; `None` if no title is needed
             ndigits: round floats to this precision
 
         Note: drone names must match in trajectories and lights
 
+        Returns:
+            the drone show data in .skyc format or `None` if an output filename
+            was specified
         """
+
+        meta = {}
+        if show_title is not None:
+            meta["title"] = show_title
+
+        if lights is None:
+            lights = {name: LightProgram() for name in trajectories.keys()}
 
         data = {
             "input": {
@@ -263,14 +274,17 @@ class SkybrushStudioAPI:
                             for name in natsorted(trajectories.keys())
                         ]
                     },
-                    "meta": {"title": show_title},
+                    "meta": meta,
                 },
             },
             "output": {"format": "skyc"},
         }
 
         with self._send_request("operations/render", data) as response:
-            response.to_file(output)
+            if output:
+                response.save_to_file(output)
+            else:
+                return response.as_bytes()
 
     def generate_plots(
         self,
@@ -325,7 +339,7 @@ class SkybrushStudioAPI:
         }
 
         with self._send_request("operations/render", data) as response:
-            response.to_file(output)
+            response.save_to_file(output)
 
     def match_points(
         self, source: Sequence[Coordinate3D], target: Sequence[Coordinate3D]

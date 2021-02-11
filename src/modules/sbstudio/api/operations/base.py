@@ -59,7 +59,7 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
 
         return encoder.encode(self.as_dict(format=format, ndigits=ndigits))
 
-    def to_json(
+    def save_to_json(
         self,
         output: Path,
         format: SkybrushJSONFormat,
@@ -74,7 +74,6 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
             ndigits: number of digits for floats in the JSON output
 
         """
-
         with create_path_and_open(output, "w") as f:
             f.write(self.as_json(format=format, ndigits=ndigits))
 
@@ -121,7 +120,4 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
             # or write it to a file
             else:
                 log.info("response received, writing to file")
-                response.to_file(output)
-                return None
-
-        return None
+                response.save_to_file(output)

@@ -4,15 +4,19 @@ from bpy.types import Operator
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.props import FrameRangeProperty
-from sbstudio.plugin.utils import (
-    get_temporary_directory,
-    open_file_with_default_application,
-)
 from sbstudio.plugin.utils.sampling import sample_positions_of_objects_in_frame_range
+from sbstudio.viewer_bridge import (
+    SkybrushViewerBridge,
+    SkybrushViewerError,
+    SkybrushViewerNotFoundError,
+)
 
 from .export_to_skyc import get_drones_to_export, resolve_frame_range
 
 __all__ = ("ValidateTrajectoriesOperator",)
+
+#: Global object to access Skybrush Viewer and send it the trajectories to validate
+skybrush_viewer = SkybrushViewerBridge()
 
 
 class ValidateTrajectoriesOperator(Operator):
@@ -39,14 +43,6 @@ class ValidateTrajectoriesOperator(Operator):
         drones = get_drones_to_export(selected_only=self.selected_only)
         frame_range = resolve_frame_range(self.frame_range)
 
-        trajectories = sample_positions_of_objects_in_frame_range(
-            drones,
-            frame_range,
-            fps=4,
-            context=context,
-            by_name=True,
-        )
-
         safety_check = getattr(context.scene.skybrush, "safety_check", None)
         validation = SafetyCheckParams(
             max_velocity_xy=safety_check.velocity_xy_warning_threshold
@@ -63,31 +59,61 @@ class ValidateTrajectoriesOperator(Operator):
             else 3,
         )
 
-        output = get_temporary_directory() / "validation.pdf"
-        kwds = {
-            "trajectories": trajectories,
-            "output": output,
-            "validation": validation,
-        }
+        try:
+            running = skybrush_viewer.check_running()
+        except SkybrushViewerNotFoundError:
+            running = False
+        except SkybrushViewerError as ex:
+            self.report({"ERROR"}, str(ex))
+            return
+        except Exception:
+            self.report(
+                {"ERROR"}, "Error while checking whether Skybrush Viewer is running"
+            )
+            return {"CANCELLED"}
+
+        if not running:
+            self.report(
+                {"ERROR"},
+                "Skybrush Viewer is not running; please start it and try again",
+            )
+            return {"CANCELLED"}
+
+        # TODO(ntamas): temporarily suspend validation and light effects for
+        # the duration of the sampling
+        trajectories = sample_positions_of_objects_in_frame_range(
+            drones,
+            frame_range,
+            fps=4,
+            context=context,
+            by_name=True,
+        )
 
         try:
-            get_api().generate_plots(**kwds)
+            show_data = get_api().export_to_skyc(
+                trajectories=trajectories, validation=validation
+            )
         except Exception:
             self.report(
                 {"ERROR"},
-                "Error while invoking plot generation on the Skybrush Studio online service",
+                "Error while invoking function on the Skybrush Studio online service",
             )
-            return {"FINISHED"}
+            return {"CANCELLED"}
 
-        if output.exists():
-            open_file_with_default_application(output)
-        else:
+        try:
+            skybrush_viewer.load_show_for_validation(show_data)
+            return {"FINISHED"}
+        except SkybrushViewerNotFoundError:
             self.report(
                 {"ERROR"},
-                "Could not save generated plot from the Skybrush Studio online service",
+                "Skybrush Viewer is not running; please start it and try again",
             )
+        except SkybrushViewerError as ex:
+            self.report({"ERROR"}, str(ex))
+        except Exception:
+            self.report({"ERROR"}, "Error while sending show data to Skybrush Viewer")
 
-        return {"FINISHED"}
+        return {"CANCELLED"}
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
