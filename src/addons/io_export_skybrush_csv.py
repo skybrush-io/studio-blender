@@ -105,7 +105,7 @@ def _get_objects(context, settings):
         objects passing all specified filters natural-sorted by their name
 
     """
-    for obj in context.scene.objects, key=attrgetter("name"):
+    for obj in context.scene.objects:
         if (
             obj.visible_get()
             and obj.type in SUPPORTED_TYPES
