@@ -96,6 +96,14 @@ class StoryboardEntry(PropertyGroup):
         """
         return 0 <= (frame - self.frame_start) < self.duration
 
+    def extend_until(self, frame: int) -> None:
+        """Ensures that the storyboard entry does not finish before the given
+        frame.
+        """
+        diff = int(frame) - self.frame_end
+        if diff > 0:
+            self.duration += diff
+
     @property
     def frame_end(self) -> int:
         """Returns the index of the last frame that is covered by the storyboard."""

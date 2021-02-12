@@ -108,7 +108,7 @@ class TakeoffOperator(StoryboardOperator):
     def _run(self, storyboard, *, context) -> bool:
         bpy.ops.skybrush.prepare()
 
-        if not self._validate_takeoff_time(context):
+        if not self._validate_start_frame(context):
             return False
 
         drones = Collections.find_drones().objects
@@ -178,7 +178,7 @@ class TakeoffOperator(StoryboardOperator):
         # TODO(ntamas): add support for ordering the drones
         pass
 
-    def _validate_takeoff_time(self, context: Context) -> bool:
+    def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the takeoff time chosen by the user is valid."""
         storyboard = context.scene.skybrush.storyboard
         if storyboard.first_entry is not None:
