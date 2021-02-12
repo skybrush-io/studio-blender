@@ -65,7 +65,7 @@ class ValidateTrajectoriesOperator(Operator):
             running = False
         except SkybrushViewerError as ex:
             self.report({"ERROR"}, str(ex))
-            return
+            return {"CANCELLED"}
         except Exception:
             self.report(
                 {"ERROR"}, "Error while checking whether Skybrush Viewer is running"

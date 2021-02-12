@@ -58,10 +58,11 @@ class SkybrushViewerBridge:
             if url is None:
                 raise SkybrushViewerNotFoundError()
 
-            if url.endswith("/") and path.startswith("/"):
-                path = url + path[1:]
-            else:
-                path = url + path
+            if url.endswith("/"):
+                url = url[:-1]
+            if path.startswith("/"):
+                path = path[1:]
+            path = f"{url}/api/v1/{path}"
 
             request = Request(path, *args, **kwds)
 
@@ -83,9 +84,14 @@ class SkybrushViewerBridge:
                     raise SkybrushViewerError(
                         "Skybrush Viewer indicated an unexpected error"
                     )
-                elif err.code >= 400:
+                elif err.code == 404:
+                    # Not found
+                    self._discovery.invalidate()
+                    raise SkybrushViewerNotFoundError()
+                elif err.code == 400:
+                    # Bad request
                     raise SkybrushViewerError(
-                        "Skybrush Viewer indicated that the input has an invalid format"
+                        "Skybrush Viewer indicated that the input format is invalid"
                     )
                 else:
                     raise
@@ -115,7 +121,7 @@ class SkybrushViewerBridge:
 
     def check_running(self) -> bool:
         """Returns whether the Skybrush Viewer instance is up and running."""
-        result = self._send_request("/ping")
+        result = self._send_request("ping")
         return bool(result.get("result"))
 
     def load_show_for_validation(self, show_data: bytes) -> None:
@@ -123,7 +129,7 @@ class SkybrushViewerBridge:
         for validation.
         """
         result = self._send_request(
-            "/api/v1/load",
+            "load",
             data=show_data,
             headers={"Content-Type": "application/skybrush-compiled"},
         )
