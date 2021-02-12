@@ -10,6 +10,7 @@ from .collections import (
     ensure_object_exists_in_collection,
     find_empty_slot_in,
     get_object_in_collection,
+    sort_collection,
 )
 from .debounce import debounced
 from .decorators import with_context, with_scene, with_screen
@@ -30,6 +31,7 @@ __all__ = (
     "propose_name",
     "propose_names",
     "remove_if_unused",
+    "sort_collection",
     "with_context",
     "with_scene",
     "with_screen",

@@ -1,17 +1,11 @@
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.transition import get_id_for_formation_constraint
+from sbstudio.plugin.utils import sort_collection
 from sbstudio.utils import get_moves_required_to_sort_collection
 
 from .base import StoryboardOperator
 
 __all__ = ("FixConstraintOrderingOperator",)
-
-
-def sort_constraints_of_object(object, key):
-    constraints = object.constraints
-    moves = get_moves_required_to_sort_collection(constraints, key)
-    for source, target in moves:
-        constraints.move(source, target)
 
 
 class FixConstraintOrderingOperator(StoryboardOperator):
@@ -43,6 +37,6 @@ class FixConstraintOrderingOperator(StoryboardOperator):
             return formation_priority_map.get(constraint.name, 100000)
 
         for drone in drones:
-            sort_constraints_of_object(drone, key=key_function)
+            sort_collection(drone.constraints, key=key_function)
 
         return {"FINISHED"}

@@ -21,6 +21,7 @@ __all__ = (
     "get_markers_and_related_objects_from_formation",
     "get_world_coordinates_of_markers_from_formation",
     "is_formation",
+    "remove_formation",
 )
 
 
@@ -42,6 +43,7 @@ def create_formation(
         Collections.find_formations().children,
         name,
         factory=partial(bpy.data.collections.new, name),
+        remover=remove_formation,
     )
 
     add_points_to_formation(formation, points, name=name)
@@ -266,3 +268,20 @@ def is_formation(object) -> bool:
     # downwards instead
     formations = Collections.find_formations(create=False)
     return formations and object in formations.children.values()
+
+
+def remove_formation(formation: Collection) -> None:
+    """Removes the given formation and all the markers in it if they are
+    unused.
+    """
+    formations = Collections.find_formations(create=False)
+    if not formations:
+        return
+
+    formations.children.unlink(formation)
+
+    for obj in formation.objects:
+        if obj.users <= 1:
+            bpy.data.objects.remove(obj)
+
+    bpy.data.collections.remove(formation)

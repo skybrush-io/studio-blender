@@ -19,4 +19,8 @@ class RemoveFormationOperator(FormationOperator):
         select_only(formation, context=context)
         bpy.ops.object.delete()
         bpy.data.collections.remove(formation)
+
+        # TODO(ntamas): we also need to remove any constraints that were related
+        # to this formation
+
         return {"FINISHED"}

@@ -1,7 +1,14 @@
 """Utility functions directly related to the Blender API."""
 
+import bpy
+
+from bpy.types import Collection, Object
+
+from inspect import signature
 from itertools import count
 from typing import Any, Callable, Optional
+
+from sbstudio.utils import get_moves_required_to_sort_collection
 
 from .identifiers import create_internal_id
 
@@ -9,13 +16,15 @@ __all__ = (
     "create_object_in_collection",
     "find_empty_slot_in",
     "get_object_in_collection",
+    "sort_collection",
 )
 
 
 def create_object_in_collection(
-    collection,
+    collection: Collection,
     name: str,
     factory: Optional[Callable[[], Any]] = None,
+    remover: Optional[Callable[[Object], None]] = None,
     internal: bool = False,
     *args,
     **kwds,
@@ -37,6 +46,9 @@ def create_object_in_collection(
             collection by calling `link()` on the collection. When it is
             not specified, the `new()` or `load()` method of the collection will
             be used instead.
+        remover: optional remover function that is called with the existing
+            item and optionally the collection if an item with the given name
+            already exists
         internal: whether the object is an internal, Skybrush-specific object
             that should be marked explicitly
     """
@@ -44,7 +56,21 @@ def create_object_in_collection(
         collection, name, default=None, internal=internal
     )
     if existing is not None:
-        collection.remove(existing)
+        if callable(remover):
+            sig = signature(remover)
+            if len(sig.parameters) > 1:
+                remover(existing, collection)
+            else:
+                remover(existing)
+        elif hasattr(collection, "remove"):
+            collection.remove(existing)
+        elif hasattr(collection, "unlink"):
+            collection.unlink(existing)
+            if not existing.use_fake_user and existing.users == 0:
+                if isinstance(existing, Collection):
+                    bpy.data.collections.remove(existing)
+                elif isinstance(existing, Object):
+                    bpy.data.objects.remove(existing)
 
     if internal:
         name = create_internal_id(name)
@@ -63,7 +89,7 @@ def create_object_in_collection(
 
 
 def ensure_object_exists_in_collection(
-    collection,
+    collection: Collection,
     name: str,
     factory: Optional[Callable[[], Any]] = None,
     internal: bool = False,
@@ -104,12 +130,12 @@ def ensure_object_exists_in_collection(
         )
 
 
-def find_empty_slot_in(collection, start_from=0):
+def find_empty_slot_in(collection: Collection, start_from: int = 0):
     """Finds the first empty slot in the given indexable Blender collection.
 
     Parameters:
         collection: the Blender collection
-        start_from (int): the index to start the search from
+        start_from: the index to start the search from
 
     Returns:
         int: the index of the first empty slot in the collection
@@ -119,7 +145,9 @@ def find_empty_slot_in(collection, start_from=0):
             return index
 
 
-def get_object_in_collection(collection, name: str, internal: bool = False, **kwds):
+def get_object_in_collection(
+    collection: Collection, name: str, internal: bool = False, **kwds
+):
     """Returns a Blender object from a given Blender collection with the
     given name.
 
@@ -155,3 +183,12 @@ def get_object_in_collection(collection, name: str, internal: bool = False, **kw
         return kwds["default"]
     else:
         raise KeyError("No such object in collection: {0!r}".format(name))
+
+
+def sort_collection(collection: Collection, key: str) -> None:
+    """Sorts the given Blender collection using the given sorting key, with
+    the limited set of reordering methods provided by Blender.
+    """
+    moves = get_moves_required_to_sort_collection(collection, key)
+    for source, target in moves:
+        collection.move(source, target)

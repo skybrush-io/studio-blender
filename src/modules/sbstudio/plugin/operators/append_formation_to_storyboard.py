@@ -50,7 +50,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         last_formation = storyboard.last_formation
         last_frame = storyboard.frame_end
 
-        entry = storyboard.append_new_entry(
+        entry = storyboard.add_new_entry(
             name=formation.name, select=True, formation=formation
         )
 

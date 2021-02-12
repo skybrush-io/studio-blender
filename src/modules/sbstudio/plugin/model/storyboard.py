@@ -19,7 +19,7 @@ from sbstudio.plugin.constants import (
 )
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.props import FormationProperty
-from sbstudio.plugin.utils import with_context
+from sbstudio.plugin.utils import sort_collection, with_context
 
 from .formation import count_markers_in_formation
 from .mixins import ListMixin
@@ -84,6 +84,9 @@ class StoryboardEntry(PropertyGroup):
         options=set(),
     )
 
+    #: Sorting key for storyboard entries
+    sort_key = attrgetter("frame_start", "frame_end")
+
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the storyboard entry contains the given frame.
 
@@ -132,10 +135,23 @@ class Storyboard(PropertyGroup, ListMixin):
         else:
             return None
 
+    @active_entry.setter
+    def active_entry(self, entry: Optional[StoryboardEntry]):
+        if entry is None:
+            self.active_entry_index = -1
+            return
+
+        for i, entry_in_storyboard in enumerate(self.entries):
+            if entry_in_storyboard == entry:
+                self.active_entry_index = i
+                return
+        else:
+            self.active_entry_index = -1
+
     @with_context
-    def append_new_entry(
+    def add_new_entry(
         self,
-        name: str,
+        name: Optional[str] = None,
         frame_start: Optional[int] = None,
         duration: Optional[int] = None,
         *,
@@ -146,7 +162,9 @@ class Storyboard(PropertyGroup, ListMixin):
         """Appends a new entry to the end of the storyboard.
 
         Parameters:
-            name: the name of the new entry
+            name: the name of the new entry. `None` means to use the name of the
+                formation, which also means that either the name or the formation
+                must be specified.
             frame_start: the start frame of the new entry; `None` chooses a
                 sensible default
             duration: the duration of the new entry; `None` chooses a sensible
@@ -154,6 +172,13 @@ class Storyboard(PropertyGroup, ListMixin):
             formation: the formation that the newly added entry should refer to
             select: whether to select the newly added entry after it was created
         """
+        if name is None:
+            if formation is None:
+                raise ValueError(
+                    "at least one of the name and the formation must be specified"
+                )
+            name = formation.name
+
         scene = context.scene
         fps = scene.render.fps
         if frame_start is None:
@@ -163,7 +188,7 @@ class Storyboard(PropertyGroup, ListMixin):
                 else scene.frame_start
             )
 
-        if duration is None or duration <= 0:
+        if duration is None or duration < 0:
             duration = fps * DEFAULT_STORYBOARD_ENTRY_DURATION
 
         entry = self.entries.add()
@@ -185,7 +210,21 @@ class Storyboard(PropertyGroup, ListMixin):
             entry.formation = formation
 
         if select:
-            self.active_entry_index = len(self.entries) - 1
+            self.active_entry = entry
+
+        self._sort_entries()
+
+        # _sort_entries() might have invalidated our reference to the entry so
+        # we cannot use it any more; it might point to a different entry. So
+        # we recover it from the array bavsed on name and start time
+        for entry in self.entries:
+            if entry.name == name and entry.frame_start == frame_start:
+                break
+        else:
+            entry = None
+
+        if select:
+            self.active_entry = entry
 
         return entry
 
@@ -292,7 +331,7 @@ class Storyboard(PropertyGroup, ListMixin):
                 formations
         """
         entries = list(self.entries)
-        entries.sort(key=attrgetter("frame_start"))
+        entries.sort(key=StoryboardEntry.sort_key)
 
         # Check that entries do not overlap
         for index, (entry, next_entry) in enumerate(zip(entries, entries[1:])):
@@ -307,6 +346,9 @@ class Storyboard(PropertyGroup, ListMixin):
         num_drones = len(drones.objects) if drones else 0
         for entry in entries:
             formation = entry.formation
+            if formation is None:
+                continue
+
             num_markers = count_markers_in_formation(formation)
             if num_markers > num_drones:
                 if num_drones > 1:
@@ -319,20 +361,13 @@ class Storyboard(PropertyGroup, ListMixin):
                     f"Storyboard entry {entry.name!r} contains a formation with {num_markers} drones but {msg}"
                 )
 
-        # TODO(ntamas): implement sorting. Unfortunately the API of the collection
-        # is so limited that we would need to implement insertion sort here
-        # ourselves
-        """
-        if entries != list(self.entries):
-            active_entry = self.active_entry
-            new_active_index = entries.index(active_entry) if active_entry else 0
+        active_entry = self.active_entry
+        self._sort_entries()
+        self.active_entry = active_entry
 
-            # TODO(ntamas): sort here
-
-            self.active_entry_index = new_active_index
-        """
-
-        return entries
+        # Retrieve the entries again because _sort_entries() might have changed
+        # the ordering
+        return sorted(self.entries, key=StoryboardEntry.sort_key)
 
     def _on_active_entry_moving_down(self, this_entry, next_entry) -> bool:
         pad = next_entry.frame_start - this_entry.frame_end
@@ -353,3 +388,8 @@ class Storyboard(PropertyGroup, ListMixin):
         )
 
         return True
+
+    def _sort_entries(self) -> None:
+        """Sort the items in the storyboard in ascending order of start time."""
+        # Sort the items in the storyboard itself
+        sort_collection(self.entries, key=StoryboardEntry.sort_key)

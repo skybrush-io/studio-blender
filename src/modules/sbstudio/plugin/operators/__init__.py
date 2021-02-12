@@ -10,6 +10,7 @@ from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOper
 from .export_to_skyc import SkybrushExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
+from .land import LandOperator
 from .move_light_effect import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
@@ -26,6 +27,7 @@ from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .select_formation import SelectFormationOperator, DeselectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
+from .takeoff import TakeoffOperator
 from .update_formation import UpdateFormationOperator
 from .use_vgroup_for_formation import UseSelectedVertexGroupForFormationOperator
 from .validate_trajectories import ValidateTrajectoriesOperator
@@ -41,6 +43,7 @@ __all__ = (
     "DetachMaterialsFromDroneTemplateOperator",
     "FixConstraintOrderingOperator",
     "GetFormationStatisticsOperator",
+    "LandOperator",
     "MoveLightEffectDownOperator",
     "MoveLightEffectUpOperator",
     "MoveStoryboardEntryDownOperator",
@@ -56,5 +59,6 @@ __all__ = (
     "SwapColorsInLEDControlPanelOperator",
     "UpdateFormationOperator",
     "UseSelectedVertexGroupForFormationOperator",
+    "TakeoffOperator",
     "ValidateTrajectoriesOperator",
 )
