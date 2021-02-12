@@ -195,7 +195,7 @@ class SSDPAppDiscovery:
             f"\r\n"
         ).encode("ascii")
 
-        self._sock.sendto(message, ("127.0.0.1", 1900))
+        self._sock.sendto(message, ("239.255.255.250", 1900))
 
         try:
             # TODO(ntamas): reject packets that come from a different machine
