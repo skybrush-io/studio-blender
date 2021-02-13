@@ -325,7 +325,7 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
 
 def menu_func_export(self, context):
     self.layout.operator(
-        SkybrushCSVExportOperator.bl_idname, text="Skybrush-CSV (.zip)"
+        SkybrushCSVExportOperator.bl_idname, text="Skybrush CSV (.zip)"
     )
 
 
