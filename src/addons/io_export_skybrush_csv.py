@@ -33,17 +33,14 @@ bl_info = {
 import bpy
 import logging
 import re
-import sys
 
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 from dataclasses import dataclass
 from fnmatch import fnmatch
-from math import inf, isinf
-from operator import attrgetter
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from zipfile import ZipFile, ZIP_DEFLATED
 
 #############################################################################
@@ -166,7 +163,6 @@ def _get_frame_range_from_export_settings(context, settings):
     # define frame range and other variables
     fps = context.scene.render.fps
     fpsskip = int(fps / settings["output_fps"])
-    last_frames = {}
     if settings["frame_range"] == "RENDER":
         frame_range = [context.scene.frame_start, context.scene.frame_end, fpsskip]
     elif settings["frame_range"] == "PREVIEW":
@@ -221,9 +217,7 @@ def _export_data_to_zip(data_dict: Dict[str, List[TimePosColor]], filepath: Path
     with ZipFile(filepath, "w", ZIP_DEFLATED) as zip_file:
         for name, data in data_dict.items():
             safe_name = re.sub(r"[^A-Za-z0-9\.\+\-]", "_", name)
-            lines = ["Time_msec,X,Y,Z,R,G,B"] + [
-                str(item) for item in data
-            ]
+            lines = ["Time_msec,X,Y,Z,R,G,B"] + [str(item) for item in data]
             zip_file.writestr(safe_name + ".csv", "\n".join(lines))
 
 
