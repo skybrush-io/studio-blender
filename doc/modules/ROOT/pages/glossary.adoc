@@ -5,11 +5,15 @@
 [glossary]
 Collection:: Blender objects in a scene can be grouped into collections. Collections are listed in the Outliner editor. *Skybrush Studio Plugin for Blender* uses collections to group drones, formations and drone object templates. For more information on collections in general, please read the https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html[official Blender documentation].
 
-Drones collection:: This collection contains all your drone objects. It is created automatically with the "Create Takeoff Grid" operator.
+Drones collection:: This collection contains all your drone objects. It is created automatically with the "Create Takeoff Grid" operator, and you can re-assign it to a different collection in the Swarm tab if needed.
 
-Formations collection:: This collection contains all your formations, which are also collections. A formation collection contains empty meshes (one for each drone) that should be animated to give you static or dynamic formations of a specific scene in the Storyboard. The objects (empty meshes) in a formation collection appear in the 3D viewport editor preview as thin crosses.
+Formations:: A formation is a collection of _markers_, placed as a sub-collection in the dedicated _Formations collection_. Each marker specifies the desired position of one drone within the formation. Formations may be static or dynamic; in case of a dynamic formation, one must animate the positions of the markers within the formation using the standard Blender animation tools. You can read more about formations in the xref:concepts.adoc[Key concepts] chapter.
+
+Formations collection:: This collection contains all your formations, which are also collections. A formation contains _markers_ (see below) that specify the desired position of each drone within the formation.
 
 Formations tab:: The Formations tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains one panel that allows you to create formations and another to edit the Storyboard.
+
+Marker:: A marker is an object within a _formation_ that specifies the desired position of a single drone in the formation. A marker may be an empty or non-empty mesh, in which case the position of the mesh (in world coordinates) will be used as the desired position. Non-empty meshes may also contain a dedicated vertex group named `Drones`. When such a vertex group exists in a non-empty mesh, the positions of _all_ the vertices within the vertex group will be treated as markers instead of the position of the mesh itself. You can read more about markers in the xref:concepts.adoc[Key concepts] chapter.
 
 LEDs tab:: The LEDs tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains panels that allows you to add light animation to your drone show easily.
 
@@ -21,4 +25,4 @@ Storyboard:: The Storyboard is a simple list of formations (static or dynamic) t
 
 Takeoff grid:: The takeoff grid contains the takeoff positions of your drones. It should be your initial formation in your Storyboard. The takeoff grid can be created with the "Create Takeoff Grid" operator, which also initializes all necessary collections for your drone show design.
 
-Templates collection:: The templates collection contains all template objects necessary for the drone show. It is currently a single drone template that defines how all drones should look like in Blender.
+Templates collection:: The templates collection contains all template objects necessary for the drone show. It is currently a single drone template that defines how all drones should look like in Blender. In the vast majority of cases you should not need to modify anything in this collection.

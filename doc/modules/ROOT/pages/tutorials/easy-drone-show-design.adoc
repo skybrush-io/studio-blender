@@ -2,15 +2,15 @@
 :imagesdir: ../../assets/images
 :experimental:
 
-The *Skybrush Studio Plugin for Blender* is a great handy addon that extends Blender's capabilities specifically for professional drone show design. In this tutorial we will show step by step how to create a drone show from scratch with it.
+*Skybrush Studio Plugin for Blender* is an addon that extends Blender's capabilities specifically for professional drone show design. In this tutorial we will show step by step how to create a drone show from scratch with it.
 
-In this tutorial we assume the followings:
+In this tutorial we assume the following:
 
-* You have at least a basic understanding of Blender and its capabilities
-* You have successfully installed the *Skybrush Studio Plugin for Blender* to supplement Blender with all available Skybrush tools.
+* You have a basic understanding of Blender and its capabilities
+* You have successfully installed the *Skybrush Studio Plugin for Blender* to supplement Blender with all available Skybrush tools. Refer to the xref:install.adoc[Installation] chapter if you haven't done so yet.
+* You have read and understood the xref:concepts.adoc[Key concepts] chapter of this manual.
 
-
-== 1. Initialize your show framework
+== 1. Initialize the show framework in Blender
 
 Press kbd:[N] in the 3D Viewport editor to open its sidebar.
 
@@ -30,9 +30,9 @@ image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
 Setup your takeoff grid with any convenient parameters and press btn:[OK].
 
-This will create all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
+This will create all Skybrush-specific collections (Drones, Formations and Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
 
-To read more about the mentioned collections, please read the xref:glossary.adc[Glossary].
+To learn more about the mentioned collections, please read the xref:concepts.adoc[Key concepts] and the xref:glossary.adoc[Glossary].
 
 
 == 2. Create formations
@@ -43,33 +43,35 @@ Use the btn:[Create Formation] button on the Formations tab to create a formatio
 
 image::panels/formations/create_formation.jpg[Create formation]
 
-If you would like to create static formations, they can be initialized from many individual objects (one drone per object) or from vertices of objects (one drone per vertex).
+If you would like to create static formations, they can be initialized from many individual objects (one drone per object) or from selected vertices of a single mesh (one drone per vertex).
 
 If you wish to create animated formations, you have two options:
 
-1. You can create a static formation, which converts your objects/vertices into empty meshes. Once you have your formation, you can animate your empty meshes in it as needed.
+1. You can create a static formation, which either creates empty meshes based on the current positions of the selected objects or vertices, or places the meshes themselves in the formation. There is a subtle difference between the two options: when the mesh itself is placed in the formation, you need to keep the mesh in the scene, while if you create empties based on the selected meshes or vertices, you can remove the meshes afterwards as Skybrush will use the empties instead. Typically, if you already have an animated mesh, you should put the mesh in the formation and switch it to wireframe mode or hide it in the 3D viewport and the render later on so you only see the drones in the final result. This way the animation attached to the mesh will also be followed by the formation.
 
-2. You can create a vertex group of any vertices of an object. If you name it "Drones" and use that object as a formation, Skybrush will use its animated vertices in the formation.
+2. You can create a vertex group of any vertices of an object in Blender's Edit mode. Skybrush adds a dedicated property to each mesh that allows you to set the name of the vertex group that contains the vertices that should participate in the formation when the mesh itself is placed in the formation. By convention, this vertex group is usually called `Drones`, but you are free to use any other name as you see it fit -- just make sure that you set this name in the "Drone Show" panel of the Properties tab of the mesh.
 
-In either way, make sure that the number of vertices or objects you use match the size of your fleet. If your animation uses less objects than your fleet size, supplement it with placeholder objects.
+Either way, make sure that the number of markers (vertices or objects) you use in a formation matches the size of your fleet. If your formation uses less markers than your fleet size, supplement it with placeholder objects so Skybrush knows where to send the extra drones that do not participate in the formation., If your formation contains more markers than the number of drones in your fleet, Skybrush will complain loudly when you try to recalculate the transitions between the formations.
 
-TIP: If you work with vertices, in object Edit mode the https://docs.blender.org/manual/en/latest/modeling/meshes/editing/mesh/delete.html[Delete & Dissolve] and https://docs.blender.org/manual/en/2.81/modeling/meshes/editing/subdividing/loop.html#tool-mesh-loop-cut[Loop cut and Slide] operators are your friends to create the expected number of vertices in a single object.
+TIP: If you work with vertices in Edit mode, the https://docs.blender.org/manual/en/latest/modeling/meshes/editing/mesh/delete.html[Delete & Dissolve], the https://docs.blender.org/manual/en/2.81/modeling/meshes/editing/subdividing/loop.html#tool-mesh-loop-cut[Loop cut and Slide], the https://docs.blender.org/manual/en/latest/modeling/meshes/editing/mesh/cleanup.html#decimate-geometry[Decimate Geometry] and the https://docs.blender.org/manual/en/latest/modeling/meshes/editing/mesh/cleanup.html#merge-by-distance[Merge by Distance] operators are your friends to create the expected number of vertices in a single object.
 
-Repeat this phase with all scenes of your drone show and create separate drone show formations from all of them. These will all be listed in the Formations collection in the Outliner.
+Repeat this phase with all the formations of your drone show and create a separate formation collection for all of them. These collections will all be listed in the Formations collection in the Outliner.
 
 
-== 3. Create a Storyboard from formations
+== 3. Create a storyboard from formations
 
-The Storyboard defines the temporal structure of your drone show, consisting of formations coming one after another, with automatic or manual transitions between them.
+The storyboard defines the temporal structure of your drone show, consisting of formations coming one after another, with automatic or manual transitions between them.
 
-Check out the Storyboard panel in the Formations tab. Add your formations to the Storybard, define their starting time and duration.
+Check out the Storyboard panel in the Formations tab. Add your formations to the Storyboard, define their starting time and duration. Leave the transition type as _Auto_ for the time being to let Skybrush attempt to calculate the transitions between them.
 
-TIP: pay attention to use enough transition time for your drones between different formations in the Storyboard.
+TIP: Make sure that the time intervals of the formations do not overlap and pay attention to use enough transition time for your drones between different formations in the storyboard. A typical transition is usually between 15 and 30 seconds, depending on the size and complexity of your formations and the velocity and acceleration constraints.
 
 
 == 4. Create automatic transitions
 
 Use the btn:[Recalculate transitions] button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
+
+WARNING: One may assume that each drone is assigned to the nearest marker in the target formation. This is not true; it can be proven mathematically that doing so does not always yield collision-free trajectories even if the source and target formations are spaced out far enough. The algorithm in *Skybrush Studio* guarantees that if the minimum distance in the source and the target formations is large enough, then the generated trajectories will be collision-free.
 
 While transitions are created, your drones in the Drones collection will also be attached to all your formations. The animation part of your show is now almost ready...
 
@@ -82,34 +84,32 @@ Move the scene to the desired frame, select the drones you wish to paint, select
 
 image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
 
-TIP: In the popup window change the "Color to apply" propery to Gradient to create more spectacular coloring schemes according to the "Order in gradient" property selection.
+TIP: Select two distinct colors in the LEDs tab and change the "Color to apply" property to one of the _Gradient_ options in the popup panel to create more spectacular coloring schemes according to the "Order in gradient" property selection.
 
-As a more advanced option, use the "Light Effects" panel in the LEds tab to create more sophisticated, parametrized light effects for your show.
+As a more advanced option, use the "Light Effects" panel in the LEds tab to create more sophisticated, parametrized light effects for your show. The effects defined in the "Light Effects" panel are calculated on-the-fly, frame by frame in Blender, based on several criteria, including the positions of the drones and an optional associated mesh, so it is possible to create light effects where the color depends on how far the drones are from a certain mesh in the scene or whether they are inside or outside an invisible "helper" mesh.
 
 
 == 5. Check and verify your animation
 
 Use the "Safety Check" panel in the "Safety & Export" tab in the sidebar of the Viewport editor to enable real-time verification checks on your animation. Setup your safety parameters with convenient values and watch your animation in the 3D Viewport editor. Drones and drone pairs not passing the safety checks (velocity, altitude, proximity) will be highlighted with red, while status information about the verification results will be visible on the left side of the window.
 
-Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected).
+Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected). The results will appear in *Skybrush Viewer* so make sure that the viewer is running as a separate application on your computer before pressing the button.
 
 image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 
-Once ready, you will receive a `.pdf` file containing detailed validation checks.
-
 Correct your show to eliminate all safety check warnings to ensure maximal safety of your drones and the world below them...
-
-TIP: Interactive validation of the whole show is also possible in *Skybrush Viewer*. Check that out, too!
 
 
 == 7. Export your show to .skyc
 
-Once ready, use the btn:[Export to .skyc] button of the Export panel on the "Safety & Export" tab to export your entire show into Skybrush Compiled format.
+Once ready, use the btn:[Export to .skyc] button of the Export panel on the "Safety & Export" tab to export your entire show into Skybrush compiled show format.
 
-The Skybrush Compiled format is compatible with other components of the *Skybrush* suite:
+The Skybrush compiled show format is compatible with other components of the *Skybrush* suite:
 
 * If you wish to visualize or verify your show or you simply want to send a link with an interactive 3D visualization of the show to your clients, use *Skybrush Viewer*.
 
 * If you want to execute your drone show on your real drones, use *Skybrush Live*.
 
-We are done. Enjoy, mailto:support@collmot.com[send us feedback or ask] if you have any questions!
+The btn:[Export to .csv] button of the Export panel allows you to sample the drone trajectories and the corresponding RGB colors at regular intervals and save them to a CSV file that you can load in external tools for further post-processing.
+
+We are done. Enjoy, mailto:support@collmot.com[send us feedback or ask us] if you have any questions!
