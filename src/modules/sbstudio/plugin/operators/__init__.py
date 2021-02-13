@@ -24,6 +24,7 @@ from .recalculate_transitions import RecalculateTransitionsOperator
 from .remove_formation import RemoveFormationOperator
 from .remove_light_effect import RemoveLightEffectOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
+from .return_to_home import ReturnToHomeOperator
 from .select_formation import SelectFormationOperator, DeselectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
@@ -53,6 +54,7 @@ __all__ = (
     "RemoveFormationOperator",
     "RemoveLightEffectOperator",
     "RemoveStoryboardEntryOperator",
+    "ReturnToHomeOperator",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",
     "SkybrushExportOperator",

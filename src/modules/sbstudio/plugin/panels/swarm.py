@@ -3,6 +3,7 @@ from bpy.types import Panel
 from sbstudio.plugin.operators import (
     CreateTakeoffGridOperator,
     LandOperator,
+    ReturnToHomeOperator,
     TakeoffOperator,
 )
 
@@ -40,6 +41,7 @@ class SwarmPanel(Panel):
 
         layout.operator(CreateTakeoffGridOperator.bl_idname, icon="ADD")
 
-        row = layout.row()
+        row = layout.row(align=True)
         row.operator(TakeoffOperator.bl_idname, text="Takeoff", icon="TRIA_UP_BAR")
+        row.operator(ReturnToHomeOperator.bl_idname, text="RTH", icon="HOME")
         row.operator(LandOperator.bl_idname, text="Land", icon="TRIA_DOWN_BAR")

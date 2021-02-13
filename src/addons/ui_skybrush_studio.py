@@ -70,6 +70,7 @@ from sbstudio.plugin.operators import (
     RemoveFormationOperator,
     RemoveLightEffectOperator,
     RemoveStoryboardEntryOperator,
+    ReturnToHomeOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     SkybrushExportOperator,
@@ -158,6 +159,7 @@ operators = (
     GetFormationStatisticsOperator,
     TakeoffOperator,
     LandOperator,
+    ReturnToHomeOperator,
 )
 
 #: List widgets in this addon.

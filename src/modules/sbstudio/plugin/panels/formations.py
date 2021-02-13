@@ -44,7 +44,7 @@ class FormationsPanel(Panel):
         row.operator(CreateFormationOperator.bl_idname, icon="ADD", text="")
         row.operator(RemoveFormationOperator.bl_idname, icon="X", text="")
 
-        row = layout.row()
+        row = layout.row(alingn=True)
         row.operator(SelectFormationOperator.bl_idname, text="Select")
         row.operator(DeselectFormationOperator.bl_idname, text="Deselect")
         row.operator(GetFormationStatisticsOperator.bl_idname, text="Stats")
