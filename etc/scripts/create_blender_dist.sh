@@ -45,6 +45,7 @@ rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 
 # Copy our code as well
 cp -r src/modules/sbstudio ${BUILD_DIR}/vendor/skybrush
+cp src/addons/io_export_skybrush_csv.py ${BUILD_DIR}
 cp src/addons/ui_skybrush_studio.py ${BUILD_DIR}
 
 # Clean any __pycache__ and *.dist-info files
