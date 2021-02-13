@@ -15,9 +15,7 @@ include::pages/features.adoc[]
 
 include::pages/install.adoc[]
 
-include::pages/hardware.adoc[]
-
-include::pages/setup.adoc[]
+include::pages/concepts.adoc[]
 
 // ============================================================================
 

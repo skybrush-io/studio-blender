@@ -1,6 +1,0 @@
-= Hardware requirements
-:imagesdir: ../assets/images
-
-We suggest to follow the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio Plugin for Blender*.
-
-An additional requirement is that you need to have active internet connection (and a valid Skybrush licence) on your computer, as the plugin needs to communicate with the *Skybrush Studio Server* for certain tasks that either require strong computation or are not publicly available and are therefore executed in the cloud.

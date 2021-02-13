@@ -2,20 +2,27 @@
 :imagesdir: ../assets/images
 :experimental:
 
-The *Skybrush Studio Plugin for Blender* is a platform independent tool, such as Blender. The installation procedure is the same for Linux, macOS and Windows. Please follow the steps below.
+*Skybrush Studio Plugin for Blender* is a platform independent tool, just like
+Blender. The installation procedure is the same for Linux, macOS and Windows.
+Please follow the steps below.
 
 == Installation
 
-=== 1. Install Blender
+=== 1. Check hardware requirements
 
-There are many Blender versions out there, we always support compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently the 2.83.x version which can be downloaded from the given link.
+We suggest to follow the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio Plugin for Blender*.
 
-=== 2. Acquire Skybrush Studio for Blender
+An additional requirement is that you need to have active Internet connection on your computer as the plugin needs to communicate with the *Skybrush Studio Server* for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. You may use the plugin without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
 
-*Skybrush Studio for Blender* can be purchased from https://skybrush.io. If you obtain a valid licence, the latest plugin installation package can be downloaded from our site as a single `.zip` file. Please download it to your local computer first.
+=== 2. Install Blender
 
+There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 2.83.x.
 
-=== 3. Install the Skybrush Studio Plugin
+=== 3. Acquire Skybrush Studio for Blender
+
+*Skybrush Studio for Blender* can be purchased from https://skybrush.io. If you obtain a valid licence, the latest plugin installation package can be downloaded from our site as a single `.zip` file. Please download it to your computer first.
+
+=== 4. Install the Skybrush Studio Plugin
 
 image::install_blender_addons.jpg[Install Blender Add-ons]
 
@@ -31,7 +38,7 @@ If you have already installed *Skybrush Studio Plugin for Blender* and you recei
 
 NOTE: It might happen that the structure of the plugin also changes which might result in update failure. If you experience any error in the update process, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
 
-== Uninstall
+== Uninstallation
 
 If you decide to uninstall *Skybrush Studio Plugin for Blender* for any reasons, you have to do it manually as Blender does not support uninstall procedure for add-ons officially for the time being. The manual process is as follows:
 

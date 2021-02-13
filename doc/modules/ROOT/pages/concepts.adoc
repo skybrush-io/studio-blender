@@ -1,0 +1,95 @@
+= Key concepts
+:imagesdir: ../assets/images
+
+In this chapter we will explain the basic conventions and the key concepts of *Skybrush Studio Plugin for Blender* so you can start designing a drone show from scratch as smoothly as possible.
+
+Throughout this chapter (and in the rest of this manual) we assume familiarity with Blender itself; if you are new to Blender and 3D modeling in general, you should start with reading or watching a few Blender tutorials. The https://www.blender.org/support/tutorials/[Blender homepage] contains an extensive collection of tutorials. If you prefer to watch video tutorials, we recommend the https://www.youtube.com/playlist?list=PLa1F2ddGya_-UvuAqHAksYnB0qL9yWDO6[Blender Fundamentals] playlist from YouTube.
+
+
+== Units
+
+* Blender space units are treated as meters. Refer to the https://docs.blender.org/manual/en/latest/scene_layout/scene/properties.html#units[Blender manual] to set up the metric unit system.
+* Blender time units are treated as seconds.
+* You can use any convenient framerate you wish, just make sure that it is divisible with the desired output frame rate of your trajectories (e.g., 24 FPS -> 4 FPS or 25 FPS -> 5 FPS). Note that the internal control loops of most drones run at 1 kHz, 400 Hz or 100 Hz, therefore it is advisable to use 25 FPS instead of 24 to make sure that the trajectory and light samples align nicely with the control loop of the drone.
+
+
+== Mapping of time
+
+Blender uses relative time and this is preserved in the exported Skybrush compiled show files as well. The actual start time of a drone show (in wall clock time) will be set up during the execution phase later on in *Skybrush Live*.
+
+TIP: We strongly recommend you to start your frames with 0, not 1. Frame 0 in Blender will be relative time 0 s in the `.skyc` output in all cases, regardless of what frame range you export.
+
+
+== Coordinate system
+
+Blender uses a relative coordinate system with _X_, _Y_ and _Z_ axes. The real world has directions of North-South, East-West and Up-Down in geodetic coordinates (latitude, longitude, altitude).
+
+The mapping from relative to real coordinates is handled by *Skybrush Live* during the actual setup of your drone show according to the following rules:
+
+1. The origin (0, 0, 0) in Blender will be mapped to a so-called _show origin_ in *Skybrush Live*. This can be moved around freely in your geodetic coordinate system on the map or can be set to a specific value you prefer.
+
+2. The _X_, _Y_ and _Z_ axes will be mapped to relative directions of _front_, _left_ and _up_, respectively, where  _front_ will be called _show orientation_, which can be rotated freely in *Skybrush Live*.
+
+3. Ground level is always at _Z_ = 0.
+
+The table below summarizes all mappings between the relative and absolute coordinate system.
+
+[frame=none]
+.Mapping between relative and geodetic coordinate systems
+|===
+|Skybrush Studio Plugin for Blender | Skybrush Live
+
+|(relative coordinates)|(absolute/geodetic coordinates)
+
+| (0, 0, 0) | show origin
+| X | front (show orientation)
+| Y | left
+| Z | up
+| Z = 0 | ground level
+|===
+
+
+== The takeoff grid
+
+A typical drone show starts with the drones being arranged in a grid-like pattern on the ground. The spacing of the grid is usually between 2 to 4 meters, although it can be even smaller in crowded urban areas where it is hard to find large open spaces. A regular grid is easy to set up, but in certain cases it is more beneficial to shift every second row of the grid by half of the grid spacing to increase the distance between drones a bit further.
+
+*Skybrush Studio for Blender* will place the drones in a regular grid by default, but you can freely adjust the initial positions of the drones as needed to adapt the takeoff grid to the requirements of the area where the show will be performed.
+
+
+== Formations and transitions
+
+Most drone shows alternate between showing static or dynamic _formations_ (where the drones are arranged in patterns resembling familiar shapes, objects, animals or corporate logos) and performing _transitions_ between the formations. Formations are designed and choreographed artistically, while transitions are typically computed by a path planning algorithm that knows how to make the drones move from the end of one formation to the beginning of the next formation while keeping safe distances between drones to avoid collisions.
+
+In *Skybrush Studio for Blender*, formations are stored as sub-collections in a top-level collection named `Formations`. This is a convention that you need to stick to; the plugin will always look for this collection by name, and it will create one if it does not exist yet. Make sure not to rename this collection. Each sub-collection of the `Formations` collection is an individual formation, also identified primarily by its name so make sure to use unique names. The objects in a formation may be:
+
+* https://docs.blender.org/manual/en/latest/modeling/empties.html[Empties], each empty mesh representing a desired position of a single drone in the formation
+
+* https://docs.blender.org/manual/en/latest/modeling/meshes/index.html[Meshes], each mesh representing a desired position of a single drone in the formation
+
+* Meshes with a dedicated https://docs.blender.org/manual/en/latest/modeling/meshes/properties/vertex_groups/index.html[vertex group] named `Drones`, in which case the position of the mesh is ignored but each _vertex_ in the vertex group indicates a desired position of a drone in the formation
+
+We call the desired positions of the drones within a formation _markers_. Recall: markers may be the origins of empty or non-empty meshes, or the vertices in a dedicated vertex group of a mesh. It is possible to mix the three types of markers within a single formation, although the most common case is that either you have a number of empties in a formation, or a single mesh where a subset of vertices of the mesh are placed in a vertex group named `Drones`.
+
+
+== The storyboard
+
+*Skybrush Studio for Blender* arranges the formations into a list that we call the _storyboard_ of the show. Each entry in the storyboard consists of a _start frame_ when the formation should appear on the sky, a _duration_, and a reference to one of the formations in the `Formations` collection. Entries may not overlap with each other and one should ensure that there is enough time between formations to perform a transition. In a typical show, transitions last between 15-30 seconds, depending on the maximum velocity of the drones and the sizes of the formations.
+
+When the show timeline is within the start and end frame of a storyboard entry, *Skybrush Studio for Blender* ensures that the drones follow the formation markers using standard Blender constraints. When the show timeline is _between_ two formations, *Skybrush Studio for Blender* will smoothly animate the influence parameters of these constraints automatically to make the drones fly from one formation to the next one. The assignment between drones and markers is calculated on the *Skybrush Studio Server* when you click on the btn:[Recalculate Transitions] button in the plugin.
+
+
+== Return-to-home and landing
+
+A drone show does not end with the last visible formation on the sky -- one should also bring the drones back to the takeoff area in a safe manner. This is typically done in two parts: the _return-to-home_ (RTH) maneuver makes the drones fly back above the takeoff area to a designated altitude (typically between 10-20 meters), while the _landing_ maneuver lands them in a straight vertical line. In *Skybrush Studio for Blender*, the RTH maneuver is simply treated as a transition to an extra formation in which the desired positions of the drones are arranged in a grid identical to the takeoff grid, lifted 10-20 meters above ground. The landing maneuver is optional; the firmware running on Skybrush-compatible drones will land the drones automatically when they reach the end of the show trajectories, therefore you only need to design the RTH maneuver.
+
+NOTE: It is not guaranteed that each drone will land at the same position where it took off from. In the vast majority of cases, they will land at a different position in the grid. This is intentional; safe collision-free trajectories are easier and faster to design when the software is free to choose which drone should occupy which landing position.
+
+
+== Useful Blender settings
+
+We suggest you to check the following Blender settings before you start designing your drone show:
+
+* set the first frame of the scene to 0 (instead of the default 1)
+* set your rendering frame rate to a convenient value
+* If you use a preview frame range separately from the render frame range, make sure it is enabled, otherwise it will give back (0, 0) values in the Blender API that might result in errorous outputs in certain cases
+* in the View tab on the sidebar of the 3D Viewport Editor set up a convenient Clip Start and End value to make your drones visible during the whole show in case you need to render your show
