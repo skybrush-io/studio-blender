@@ -77,7 +77,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         self._sort_drones(drones)
 
-        # Prepare the points of the target formation to land to
+        # Prepare the points of the target formation to return-to-home to
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
@@ -109,7 +109,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         # Add a new storyboard entry with the given formation
         storyboard.add_new_entry(
-            formation=create_formation("Landing", target),
+            formation=create_formation("Return to home", target),
             frame_start=end_of_landing,
             duration=0,
             select=True,
@@ -142,7 +142,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         if last_frame is not None and self.start_frame < last_frame:
             self.report(
                 {"ERROR"},
-                f"Landing maneuver must not start before the last entry of the storyboard (frame {last_frame})",
+                f"Return to home maneuver must not start before the last entry of the storyboard (frame {last_frame})",
             )
             return False
 
