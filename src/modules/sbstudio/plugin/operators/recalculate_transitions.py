@@ -249,21 +249,39 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                 # Create keyframes for the influence of the constraint
                 ensure_action_exists_for_object(drone)
 
+                # Decide the start and end time of the "windup" period of the
+                # constraint where it gradually starts affecting the position
+                # of the drone. This period must be somewhere between the end
+                # of the previous formation and the start of the current
+                # formation.
+                windup_start = min(entry.frame_start - 1, end_of_previous)
+                windup_end = entry.frame_start
+
                 # Now construct the list of keyframes. We have to cater for
                 # all sorts of edge cases as we need to ensure that no
-                # keyframe X coordiate is repeated twice.
-                keyframes = [(min(entry.frame_start - 1, end_of_previous), 0.0)]
-                if start_of_scene < keyframes[0][0]:
+                # keyframe X coordiate is repeated twice. Let's start with
+                # specifying that the constraint must take no effect until the
+                # end of the previous storyboard entry
+                keyframes = [(windup_start, 0.0)]
+                if start_of_scene < windup_start:
                     keyframes.insert(0, (start_of_scene, 0.0))
 
-                keyframes.append((entry.frame_start, 1.0))
+                # Now we declare that the constraint must take full effect
+                # at the start of the storyboard entry and must keep on doing
+                # so until the end of the storyboard entry
+                keyframes.append((windup_end, 1.0))
                 if entry.frame_end > entry.frame_start:
                     keyframes.append((entry.frame_end, 1.0))
 
+                # If we have another formation that follows this one,
+                # the influence of the constraint must stay until the next
+                # formation starts, and then wind down
                 if start_of_next is not None:
                     keyframes.append((start_of_next, 1.0))
                     keyframes.append((start_of_next + 1, 0.0))
 
+                # The influence must become zero at the end of the scene if it
+                # is later than the next formation
                 if end_of_scene > keyframes[-1][0]:
                     keyframes.append((end_of_scene, 0.0))
 
