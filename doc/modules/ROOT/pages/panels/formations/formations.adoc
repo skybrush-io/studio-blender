@@ -2,25 +2,35 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-With the Formations panel of the Formations tab you can create, select, deselect, update or remove formations or you can add them to your Storyboard.
+With the Formations panel of the Formations tab you can create, select, deselect, update or remove formations or you can add them to your storyboard.
 
 image::panels/formations/formations.jpg[Formations panel]
 
-== Formation
+== Selecting the active formation
 
-Click on the btn:[Formation] button to edit a given formation in the Formations panel.
+Click on the btn:[Formation] button to select the formation to be edited in the Formations panel.
 
-== Create Formation
+== Creating a new formation
 
-The btn:[+] button creates sub-collections in your Formations collection, consisting of objects that are to be animated during a given scene of your drone show.
+The btn:[+] button creates a new formation. Remember that formations are essentially sub-collections in your Formations collection, consisting of (stationary or animated) markers that define the desired positions of the drones in a particular scene of your drone show.
 
 image::panels/formations/create_formation.jpg[Create formation]
 
-You can define a name for your new formation and select its initialization source. The source can be the actually selected objects, the selected vertices of an object, current positions of your drones or even an animated vertex group of an object.
+You can define a name for your new formation and choose how it should be initialized:
 
-== Remove Selected Formation
+Empty:: Creates an empty formation
 
-Press the btn:[✕] button to remove the selected formation from the Formations list and Formations collection entirely.
+Current positions of drones:: Creates a formation that contains one empty mesh for each drone, placed exactly at the current position of the drone. You can use this option to create a "snapshot" of the drone swarm at a given frame and use it again as a formation later on in the show.
+
+Selected objects:: Creates a formation that _contains_ the currently selected objects. If the locations of the objects were animated, the formation will be animated as well. Removing any of these objects from the scene will also remove them from the formation.
+
+Current positions of selected objects:: Creates a formation that contains one empty mesh for the position of each selected object. The empties are added to the formation, but the objects themselves are _not_ -- therefore, even if the objects were animated, the formation will only take a snapshot of the objects at the current frame. You are then free to remove the objects from the scene without affecting the formation.
+
+Current positions of selected vertices:: Creates a formation that contains one empty mesh for the position of each selected _vertex_ of the currently edited object. This option is therefore mostly useful in Blender's edit mode only; in object mode, all vertices of the selected object will be placed in the formation.
+
+== Removing a formation
+
+Press the btn:[✕] button to remove the selected formation from the Formations list and the Formations collection entirely. Meshes that were part of the formation but that were _not_ referenced from anywhere else in the Blender scene will also be removed from the scene. If you want to keep them, put them in another collection first or by assigning them to a https://docs.blender.org/manual/en/latest/interface/controls/templates/data_block.html?highlight=fake%20user[fake user] in Blender.
 
 == Select Formation
 
