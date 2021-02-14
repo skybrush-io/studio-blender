@@ -11,15 +11,11 @@ from sbstudio.plugin.materials import (
     get_material_for_led_light_color,
     create_keyframe_for_diffuse_color_of_material,
 )
-from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_material_from_drone_template,
 )
 from sbstudio.plugin.selection import select_only
-from sbstudio.plugin.utils import (
-    propose_name,
-    propose_names,
-)
+from sbstudio.plugin.utils import propose_names
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 
 __all__ = ("CreateTakeoffGridOperator",)
@@ -102,15 +98,13 @@ def _handle_drone_count_change(operator, context):
 
 
 class CreateTakeoffGridOperator(Operator):
-    """Blender operator that creates a takeoff grid and optionally the
-    corresponding set of drones.
+    """Blender operator that creates the takeoff grid and the corresponding set
+    of drones.
     """
 
     bl_idname = "skybrush.create_takeoff_grid"
     bl_label = "Create Takeoff Grid"
-    bl_description = (
-        "Creates a takeoff grid and optionally the corresponding set of drones"
-    )
+    bl_description = "Creates the takeoff grid and the corresponding set of drones"
     bl_options = {"REGISTER", "UNDO"}
 
     rows = IntProperty(
@@ -186,9 +180,6 @@ class CreateTakeoffGridOperator(Operator):
         drone_collection = Collections.find_drones()
 
         template_material = get_material_for_led_light_color(drone_template)
-
-        name = propose_name("Landing grid", for_collection=True)
-        create_formation(name, points)
 
         drones = []
         names = propose_names("Drone {}", len(points))
