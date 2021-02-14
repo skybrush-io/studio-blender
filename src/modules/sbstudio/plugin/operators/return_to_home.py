@@ -39,16 +39,6 @@ class ReturnToHomeOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
-    velocity = FloatProperty(
-        name="Velocity",
-        description="Average vertical velocity during the return-to-home maneuver",
-        default=4,
-        min=0.1,
-        soft_min=0.1,
-        soft_max=10,
-        unit="VELOCITY",
-    )
-
     @classmethod
     def poll(cls, context):
         if not super(cls, ReturnToHomeOperator).poll(context):
@@ -77,40 +67,34 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         self._sort_drones(drones)
 
-        # Prepare the points of the target formation to return-to-home to
+        # Prepare the points of the target formation to move to
+        first_frame = context.scene.frame_start
         with create_position_evaluator() as get_positions_of:
-            source = get_positions_of(drones, frame=self.start_frame)
+            source = get_positions_of(drones, frame=first_frame)
 
         target = [(x, y, self.altitude) for x, y, z in source]
 
         diffs = [s[2] - t[2] for s, t in zip(source, target)]
-        if min(diffs) < 0:
-            dist = abs(min(diffs))
-            self.report(
-                {"ERROR"},
-                f"At least one drone would have to land upwards by {dist}m",
-            )
-            return False
 
         # Calculate landing duration from max distance to travel and the
         # average velocity
         max_distance = max(diffs)
         fps = context.scene.render.fps
-        landing_duration = ceil((max_distance / self.velocity) * fps)
+        rth_duration = ceil((max_distance / self.velocity) * fps)
 
         # Extend the duration of the last formation to the frame where we want
-        # to start the landing
+        # to start the RTH maneuver
         if len(storyboard.entries) > 0:
             last_entry = storyboard.entries[-1]
             last_entry.extend_until(self.start_frame)
 
-        # Calculate when the landing should end
-        end_of_landing = self.start_frame + landing_duration
+        # Calculate when the RTH should end
+        end_of_rth = self.start_frame + rth_duration
 
         # Add a new storyboard entry with the given formation
         storyboard.add_new_entry(
             formation=create_formation("Return to home", target),
-            frame_start=end_of_landing,
+            frame_start=end_of_rth,
             duration=0,
             select=True,
             context=context,
@@ -136,7 +120,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             last_frame = None
 
         # TODO(ntamas): what if the last entry in the storyboard _is_ the
-        # landing, what shall we do then? Probably we should ignore it and look
+        # RTH, what shall we do then? Probably we should ignore it and look
         # at the penultimate entry.
 
         if last_frame is not None and self.start_frame < last_frame:
