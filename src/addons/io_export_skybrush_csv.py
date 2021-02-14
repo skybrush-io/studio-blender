@@ -253,6 +253,28 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     log.info("Export finished")
 
 
+def _make_annotations(cls):
+    """Converts class fields to annotations.
+
+    This is needed because apparently the syntax that Blender 2.80 uses for
+    the class properties (i.e. using IntProperty(), FloatProperty() etc) is
+    barfed upon by the linter. We stick to the older Blender 2.7x-style
+    annotation and then convert it on-the fly when the class is registered
+    as an operator.
+    """
+    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+
+    if bl_props:
+        if "__annotations__" not in cls.__dict__:
+            setattr(cls, "__annotations__", {})
+        annotations = cls.__dict__["__annotations__"]
+        for k, v in bl_props.items():
+            annotations[k] = v
+            delattr(cls, k)
+
+    return cls
+
+
 #############################################################################
 # Operator that allows the user to invoke the export operation
 #############################################################################
@@ -266,18 +288,18 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush CSV files (zipped)
-    filter_glob: StringProperty(default="*.zip", options={"HIDDEN"})
+    filter_glob = StringProperty(default="*.zip", options={"HIDDEN"})
     filename_ext = ".zip"
 
     # export objects with the given name filter
-    export_name_filter: StringProperty(
+    export_name_filter = StringProperty(
         name="Object name filter",
         default="drone_*",
         description="Define a name filter on the objects to be exported. Use the `*` wildcard for convenience.",
     )
 
     # output all objects or only selected ones
-    export_selected: BoolProperty(
+    export_selected = BoolProperty(
         name="Export selected objects only",
         default=True,
         description=(
@@ -287,7 +309,7 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     )
 
     # frame range
-    frame_range: EnumProperty(
+    frame_range = EnumProperty(
         name="Frame range",
         description="Choose a frame range to use for export",
         items=(
@@ -298,7 +320,7 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     )
 
     # output frame rate
-    output_fps: FloatProperty(
+    output_fps = FloatProperty(
         name="Frame rate",
         default=4,
         description="Temporal resolution of exported trajectory and light (frames per second)",
@@ -334,6 +356,7 @@ def menu_func_export(self, context):
 
 
 def register():
+    _make_annotations(SkybrushCSVExportOperator)
     bpy.utils.register_class(SkybrushCSVExportOperator)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
