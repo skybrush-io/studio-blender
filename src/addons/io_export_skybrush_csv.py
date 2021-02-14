@@ -262,18 +262,18 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush CSV files (zipped)
-    filter_glob = StringProperty(default="*.zip", options={"HIDDEN"})
+    filter_glob: StringProperty(default="*.zip", options={"HIDDEN"})
     filename_ext = ".zip"
 
     # export objects with the given name filter
-    export_name_filter = StringProperty(
+    export_name_filter: StringProperty(
         name="Object name filter",
         default="drone_*",
         description="Define a name filter on the objects to be exported. Use the `*` wildcard for convenience.",
     )
 
     # output all objects or only selected ones
-    export_selected = BoolProperty(
+    export_selected: BoolProperty(
         name="Export selected objects only",
         default=True,
         description=(
@@ -283,7 +283,7 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     )
 
     # frame range
-    frame_range = EnumProperty(
+    frame_range: EnumProperty(
         name="Frame range",
         description="Choose a frame range to use for export",
         items=(
@@ -294,7 +294,7 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     )
 
     # output frame rate
-    output_fps = FloatProperty(
+    output_fps: FloatProperty(
         name="Frame rate",
         default=4,
         description="Temporal resolution of exported trajectory and light (frames per second)",
