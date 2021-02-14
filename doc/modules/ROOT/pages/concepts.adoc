@@ -1,5 +1,6 @@
 = Key concepts
 :imagesdir: ../assets/images
+:experimental:
 
 In this chapter we will explain the basic conventions and the key concepts of *Skybrush Studio Plugin for Blender* so you can start designing a drone show from scratch as smoothly as possible.
 

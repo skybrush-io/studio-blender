@@ -9,4 +9,4 @@ To aid your drone show design, the following tabs are available currently, each 
 
 * xref:panels/formations.adoc[Formations]
 * xref:panels/leds.adoc[LEDs]
-* xref:panels/safety_export.adoc[Safety & Export]
+* xref:panels/safety_and_export.adoc[Safety & Export]
