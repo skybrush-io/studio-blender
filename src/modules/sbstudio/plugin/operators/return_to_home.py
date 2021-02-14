@@ -2,7 +2,7 @@ import bpy
 
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Context, Object
-from math import ceil
+from math import ceil, sqrt
 from typing import List
 
 from sbstudio.plugin.constants import Collections
@@ -41,7 +41,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     velocity = FloatProperty(
         name="Velocity",
-        description="Average vertical velocity during the return-to-home maneuver",
+        description="Average velocity during the return-to-home maneuver",
         default=4,
         min=0.1,
         soft_min=0.1,
@@ -84,9 +84,12 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         target = [(x, y, self.altitude) for x, y, z in source]
 
-        diffs = [s[2] - t[2] for s, t in zip(source, target)]
+        diffs = [
+            sqrt((s[0] - t[0]) ** 2 + (s[1] - t[1]) ** 2 + (s[2] - t[2]) ** 2)
+            for s, t in zip(source, target)
+        ]
 
-        # Calculate landing duration from max distance to travel and the
+        # Calculate RTH duration from max distance to travel and the
         # average velocity
         max_distance = max(diffs)
         fps = context.scene.render.fps
