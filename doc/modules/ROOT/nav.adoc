@@ -5,7 +5,7 @@
 * xref:tutorials/index.adoc[Tutorials]
 ** xref:tutorials/easy-drone-show-design.adoc[Quick guide to drone show design with Skybrush Studio]
 * xref:panels/index.adoc[Tabs and Panels]
-** xref:panels/formations/index.adoc[Formations Tab]
+** xref:panels/formations.adoc[Formations Tab]
 *** xref:panels/formations/swarm.adoc[Swawrm Panel]
 *** xref:panels/formations/formations.adoc[Formations Panel]
 *** xref:panels/formations/storyboard.adoc[Storyboard Panel]

@@ -4,6 +4,8 @@
 
 With the Formations panel of the Formations tab you can create, select, deselect, update or remove formations or you can add them to your Storyboard.
 
+image::panels/formations/formations.jpg[Formations panel]
+
 == Formation
 
 Click on the btn:[Formation] button to edit a given formation in the Formations panel.

@@ -4,6 +4,8 @@
 
 The Storyboard gives you the overall structure of your drone show, with your formations ordered in time.
 
+image::panels/storyboard/storyboard.jpg[Storyboard]
+
 == Create New Storyboard Entry
 
 Press the btn:[+] button next to the formation list in the Storyboard to add a new entry to the end of the Storyboard.
