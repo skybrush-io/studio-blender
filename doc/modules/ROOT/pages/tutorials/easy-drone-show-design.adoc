@@ -71,8 +71,6 @@ TIP: Make sure that the time intervals of the formations do not overlap and pay 
 
 Use the btn:[Recalculate transitions] button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
 
-WARNING: One may assume that each drone is assigned to the nearest marker in the target formation. This is not true; it can be proven mathematically that doing so does not always yield collision-free trajectories even if the source and target formations are spaced out far enough. The algorithm in *Skybrush Studio* guarantees that if the minimum distance in the source and the target formations is large enough, then the generated trajectories will be collision-free.
-
 While transitions are created, your drones in the Drones collection will also be attached to all your formations. The animation part of your show is now almost ready...
 
 
