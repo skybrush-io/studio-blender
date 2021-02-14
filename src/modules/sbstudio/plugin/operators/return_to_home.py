@@ -39,6 +39,16 @@ class ReturnToHomeOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
+    velocity = FloatProperty(
+        name="Velocity",
+        description="Average vertical velocity during the return-to-home maneuver",
+        default=4,
+        min=0.1,
+        soft_min=0.1,
+        soft_max=10,
+        unit="VELOCITY",
+    )
+
     @classmethod
     def poll(cls, context):
         if not super(cls, ReturnToHomeOperator).poll(context):
