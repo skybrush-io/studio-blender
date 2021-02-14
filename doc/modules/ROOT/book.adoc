@@ -35,6 +35,16 @@ include::pages/panels/index.adoc[]
 
 include::pages/panels/formations.adoc[]
 
+:leveloffset: +1
+
+include::pages/panels/formations/swarm.adoc[]
+
+include::pages/panels/formations/formations.adoc[]
+
+include::pages/panels/formations/storyboard.adoc[]
+
+:leveloffset: -1
+
 include::pages/panels/leds.adoc[]
 
 include::pages/panels/safety_and_export.adoc[]

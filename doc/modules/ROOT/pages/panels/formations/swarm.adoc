@@ -1,0 +1,51 @@
+= Swarm Panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+The swarm panel helps you setup your drone show with all technical parts that are not the sole responsibility of the drone show designer by default, such as the initial positions, the takeoff, return-to-home or landing procedures.
+
+image::panels/swarm/swarm.jpg[Swarm panel]
+
+== Drone collection
+
+Click on the btn:[Drones] button to select the collection that is your primary source of your drone objects. By default you do not have to change this setting, the btn:[Create Takeoff Grid] button below will create a "Drones" collection and set it as your primary source automatically.
+
+== Max acceleration
+
+The btn:[Max acceleration] button sets up a maximal acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
+
+== Create Takeoff Grid
+
+The btn:[Create Takeoff Grid] button helps you setup your takeoff and landing grid (they are expected to be the same by default).
+
+image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
+
+You can define the number of rows and columns, the exact number of drones and the spacing between them. Once you press btn:[OK], a rectangular grid is created with the specified parameters.
+
+This operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
+
+== Takeoff
+
+The btn:[Takeoff] button helps you to take off your drones at the given frame to the specified altitude and with the specified speed from your initial takeoff grid.
+
+image::panels/swarm/takeoff.jpg[Takeoff]
+
+This button should be pressed right after the takeoff grid is created, but no other formations are added yet.
+
+== Return to home (RTH)
+
+The btn:[RTH] button helps you to return your drones to home at the given frame to the specified altitude and with the specified speed from your last formation of the show.
+
+image::panels/swarm/return_to_home.jpg[Return to home]
+
+Note that return to home is not performed _at_ the specified altitude, it is initiated from the positions at the end of the last formation. However, all drones arrive _to_ the given altitude value, above the takeoff grid.
+
+This button should be pressed after all formations of the show are inserted to the storyboard, but before the landing entry is given.
+
+== Land
+
+The btn:[Land] button helps you to land your drones at the given frame to the specified altitude and with the specified speed from your last formation.
+
+image::panels/swarm/land.jpg[Land]
+
+This button should be pressed after the return to home entry is inserted to the storyboard.

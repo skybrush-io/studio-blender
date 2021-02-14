@@ -1,0 +1,57 @@
+= Storyboard panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+The Storyboard gives you the overall structure of your drone show, with your formations ordered in time.
+
+== Create New Storyboard Entry
+
+Press the btn:[+] button next to the formation list in the Storyboard to add a new entry to the end of the Storyboard.
+
+== Remove Selected Storyboard Entry
+
+Press the btn:[-] button next to the formation list in the Storyboard to remove the selected storyboard entry from the list.
+
+== Select Storyboard Entry for Current Frame
+
+Press the btn:[↥] button next to the formation list in the Storyboard to select the storyboard entry that contains the current frame. If the current frame falls between storyboard entries, the next entry will be selected. Pressing this button clears the selection if the current frame is after the end of the storyboard.
+
+== Move Selected Storyboard Entry Up
+
+Press the btn:[▲] button next to the formation list in the Storyboard to move the selected entry up by one slot in the Storyboard.
+
+== Move Selected Storyboard Entry Down
+
+Press the btn:[▼] button next to the formation list in the Storyboard to move the selected entry down by one slot in the Storyboard.
+
+== Formation
+
+Select a formation corresponding the the selected Storyboard entry.
+
+== Start Frame
+
+Set the frame when the given formation should start in the drone show.
+
+== Duration
+
+Set the duration of the given formation in the drone show. The end frame of the formation will be `Start Frame + Duration`.
+
+== Transition
+
+Set the type of transition between the previous formation and this one:
+
+* Manual transitions map the nth vertex of the initial formation to the nth vertex of the target formation.
+
+* Auto-matched transitions find an optimal mapping between vertices of the initial and the target formation.
+
+== Custom Name
+
+If you check this, you can keep the name of the Storyboard entry when the associated formation changes.
+
+== Recalculate Transitions
+
+Once you are satisfied with your storyboard, you can press the btn:[Recalculate Transitions] button to create automatic and optimal transitions between your formations without collisions.
+
+image::panels/storyboard/recalculate_transitions.jpg[Recalculate Transitions]
+
+This button also creates the constraints on your drones in your Drones collection to follow the given formations during their active time.

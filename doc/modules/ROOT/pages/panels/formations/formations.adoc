@@ -1,0 +1,47 @@
+= Formations panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+With the Formations panel of the Formations tab you can create, select, deselect, update or remove formations or you can add them to your Storyboard.
+
+== Formation
+
+Click on the btn:[Formation] button to edit a given formation in the Formations panel.
+
+== Create Formation
+
+The btn:[+] button creates sub-collections in your Formations collection, consisting of objects that are to be animated during a given scene of your drone show.
+
+image::panels/formations/create_formation.jpg[Create formation]
+
+You can define a name for your new formation and select its initialization source. The source can be the actually selected objects, the selected vertices of an object, current positions of your drones or even an animated vertex group of an object.
+
+== Remove Selected Formation
+
+Press the btn:[✕] button to remove the selected formation from the Formations list and Formations collection entirely.
+
+== Select Formation
+
+Press the btn:[Select] button to add the selected formation to the selection.
+
+== Deselect Formation
+
+Press the btn:[Deselect] button to remove the selected formation from the selection.
+
+== Formation Statistics
+
+Press the btn:[Stats] button to show different useful statistics about the selected formation, such as the number of its elements, size or minimum distance between its objects on the current frame.
+
+image::panels/formations/formation_stats.jpg[Formation stats]
+
+== Append to Storyboard
+
+Press the btn:[Append to Storyboard] button to append the selected formation to the end of the show, planning the transition between the last formation and the new one.
+
+== Update
+
+Press the btn:[Update] button to update the selected formation from the current selection or from the current positions of the drones.
+
+image::panels/formations/update_formation.jpg[Update formation]
+
+
