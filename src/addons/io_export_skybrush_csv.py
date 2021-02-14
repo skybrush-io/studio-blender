@@ -102,7 +102,11 @@ def _get_objects(context, settings):
         objects passing all specified filters natural-sorted by their name
 
     """
-    for obj in context.scene.objects:
+    # If Skybrush Studio for Blender is loaded, use the dedicated drone
+    # collection, otherwise use all the objects from the scene
+    skybrush = getattr(context.scene, "skybrush", None)
+    drone_collection = skybrush.settings.drone_collection if skybrush else context.scene
+    for obj in drone_collection.objects:
         if (
             obj.visible_get()
             and obj.type in SUPPORTED_TYPES
