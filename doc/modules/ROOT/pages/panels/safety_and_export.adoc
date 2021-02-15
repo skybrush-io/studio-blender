@@ -8,5 +8,5 @@ image::panels/safety_and_export.jpg[Safety & Export tab]
 
 The Safety and Export tab contains two panels:
 
-*** xref:panels/safety_and_export/safety_check.adoc[Safety check panel]
+*** xref:panels/safety_and_export/safety_check.adoc[Safety Check panel]
 *** xref:panels/safety_and_export/export.adoc[Export panel]

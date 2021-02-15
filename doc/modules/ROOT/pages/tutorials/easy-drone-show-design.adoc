@@ -108,9 +108,9 @@ image::panels/swarm/return_to_home.jpg[Return to home]
 
 == 7. Check and verify your animation
 
-Use the xref:panels/safety_and_export/safety_check.adoc[Safety check panel] in the "Safety & Export" tab in the sidebar of the Viewport editor to enable real-time verification checks on your animation.
+Use the xref:panels/safety_and_export/safety_check.adoc[Safety Check panel] in the "Safety & Export" tab in the sidebar of the Viewport editor to enable real-time verification checks on your animation.
 
-image::panels/safety_check/safety_check.jpg[Safety check panel]
+image::panels/safety_check/safety_check.jpg[Safety Check panel]
 
 Setup your safety parameters with convenient values and watch your animation in the 3D Viewport editor. Drones and drone pairs not passing the safety checks (velocity, altitude, proximity) will be highlighted with red, while status information about the verification results will be visible on the left side of the window.
 
@@ -125,9 +125,9 @@ Correct your show to eliminate all safety check warnings to ensure maximal safet
 
 After all your animations are finalized and verified, use the LEDs tab in the sidebar of the 3D Viewport editor to add light animation to your show.
 
-The first panel of interest for light design is the xref:panels/leds/led_control.adoc[LED control panel].
+The first panel of interest for light design is the xref:panels/leds/led_control.adoc[LED Control panel].
 
-image::panels/led_control/led_control.jpg[LED control panel]
+image::panels/led_control/led_control.jpg[LED Control panel]
 
 Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors and press the btn:[Apply] (change abruptly) or btn:[Fade to] (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
 
@@ -135,9 +135,9 @@ image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to se
 
 TIP: Select two distinct colors in the LEDs tab and change the "Color to apply" property to one of the _Gradient_ options in the popup panel to create more spectacular coloring schemes according to the "Order in gradient" property selection.
 
-As a more advanced option, use the xref:panels/leds/light_effects.adoc[Light effects panel] in the LEds tab to create more sophisticated, parametrized light effects for your show.
+As a more advanced option, use the xref:panels/leds/light_effects.adoc[Light Effects panel] in the LEds tab to create more sophisticated, parametrized light effects for your show.
 
-image::panels/light_effects/light_effects.jpg[Light effects panel]
+image::panels/light_effects/light_effects.jpg[Light Effects panel]
 
 The effects defined in the "Light Effects" panel are calculated on-the-fly, frame by frame in Blender, based on several criteria, including the positions of the drones and an optional associated mesh, so it is possible to create light effects where the color depends on how far the drones are from a certain mesh in the scene or whether they are inside or outside an invisible "helper" mesh.
 

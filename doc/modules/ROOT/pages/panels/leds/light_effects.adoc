@@ -4,7 +4,7 @@
 
 The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation dynamically.
 
-image::panels/light_effects/light_effects.jpg[Light effects panel]
+image::panels/light_effects/light_effects.jpg[Light Effects panel]
 
 Light effects are parametrized and they are not burnt as color keyframes, so it is very easy to adjust them along with animation changes.
 

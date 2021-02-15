@@ -4,7 +4,7 @@
 
 The LED Control panel provide a simple way to color your selected drones at individual keyframes.
 
-image::panels/led_control/led_control.jpg[LED control panel]
+image::panels/led_control/led_control.jpg[LED Control panel]
 
 == Primary color
 
