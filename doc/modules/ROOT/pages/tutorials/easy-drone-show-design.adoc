@@ -24,7 +24,7 @@ You will see three new tabs related to *Skybrush Studio*:
 
 These tabs contain all panels, buttons, operators and functions that are specifically needed for drone show design.
 
-The first panel of interest is the xref:panels/formations/swarm.adoc[Swawrm panel] on the Formations tab.
+The first panel of interest is the xref:panels/formations/swarm.adoc[Swarm panel] on the Formations tab.
 
 image::panels/swarm/swarm.jpg[Swarm panel]
 
