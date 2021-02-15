@@ -2,58 +2,44 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-The Storyboard gives you the overall structure of your drone show, with your formations ordered in time.
+The storyboard specifies the overall structure of your drone show. It consists of _entries_, where each entry contains a reference to a formation as well as a start frame and a duration. The location constraints added by Blender will ensure that each drone reaches one of the markers in the formation by the time the show reaches the start frame, and that the drone keeps on following its marker for the entire duration of the formation.
 
 image::panels/storyboard/storyboard.jpg[Storyboard]
 
-== Create New Storyboard Entry
+== Creating a new storyboard entry
 
-Press the btn:[+] button next to the formation list in the Storyboard to add a new entry to the end of the Storyboard.
+Press the btn:[+] button next to the formation list in the Storyboard panel to add a new entry to the end of the storyboard. The new entry will not refer to any particular formation so make sure you also pick the formation in the editor below the storyboard entry list after adding the entry.
 
-== Remove Selected Storyboard Entry
+== Editing a storyboard entry
 
-Press the btn:[-] button next to the formation list in the Storyboard to remove the selected storyboard entry from the list.
+Each storyboard entry has a label and an associated set of properties that define the timing and the transition corresponding to the storyboard entry. The label of the formation can be edited by double-clicking on the storyboard entry in the entry list. The widgets below the storyboard entry list allow you to edit the properties of the currently selected storyboard entry.
 
-== Select Storyboard Entry for Current Frame
+Formation:: Shows or sets the formation corresponding to the selected storyboard entry.
+Start Frame:: Shows or sets the frame when the formation of the selected storyboard entry should appear on the sky in the drone show.
+Duration:: Sets the duration of the selected storyboard entry in the drone show. The end frame of the formation will be the sum of the start frame and the duration, exclusive (i.e. the end frame is _not_ part of the formation).
+Transition:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Skybrush Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order; Blender will map the nth marker in the initial formation to the nth marker in the target formation.
+Custom Name:: Ticking this check box allows you to keep the label of the storyboard entry even if you change the associated formation. Unticking this will change the label of the storyboard entry to the name of the formation when you change the formation.
 
-Press the btn:[↥] button next to the formation list in the Storyboard to select the storyboard entry that contains the current frame. If the current frame falls between storyboard entries, the next entry will be selected. Pressing this button clears the selection if the current frame is after the end of the storyboard.
+== Removing a storyboard entry
 
-== Move Selected Storyboard Entry Up
+Press the btn:[-] button next to the formation list in the Storyboard panel to remove the selected storyboard entry from the list.
 
-Press the btn:[▲] button next to the formation list in the Storyboard to move the selected entry up by one slot in the Storyboard.
+== Finding the storyboard entry for the current frame
 
-== Move Selected Storyboard Entry Down
+// Note to ourselves: the arrows are not supported in PDF files so we spell it out.
 
-Press the btn:[▼] button next to the formation list in the Storyboard to move the selected entry down by one slot in the Storyboard.
+Press the upward pointing thin arrow button next to the formation list in the Storyboard panel to select the storyboard entry that contains the current frame. If the current frame falls between storyboard entries, the _next_ entry will be selected. Pressing this button clears the selection if the current frame is after the end of the storyboard.
 
-== Formation
+== Changing the order of formations
 
-Select a formation corresponding the the selected Storyboard entry.
+Press the btn:[▲] button next to the formation list in the Storyboard to move the selected entry up by one slot in the storyboard. Similarly, the btn:[▼] button next to the formation list moves the selected entry down by one slot in the storyboard. *Skybrush Studio* will automatically adjust the start times of the entries to ensure that they are in ascending order.
 
-== Start Frame
+NOTE: It is possible to mess up the order of entries in the storyboard by changing the start times explicitly in a way that they are not in ascending order any more. *Skybrush Studio* will fix the ordering of the entries the next time the transitions are recalculated, or before any operation for which the add-on needs the exact ordering of entries.
 
-Set the frame when the given formation should start in the drone show.
-
-== Duration
-
-Set the duration of the given formation in the drone show. The end frame of the formation will be `Start Frame + Duration`.
-
-== Transition
-
-Set the type of transition between the previous formation and this one:
-
-* Manual transitions map the nth vertex of the initial formation to the nth vertex of the target formation.
-
-* Auto-matched transitions find an optimal mapping between vertices of the initial and the target formation.
-
-== Custom Name
-
-If you check this, you can keep the name of the Storyboard entry when the associated formation changes.
-
-== Recalculate Transitions
+== Recalculating transitions
 
 Once you are satisfied with your storyboard, you can press the btn:[Recalculate Transitions] button to create automatic and optimal transitions between your formations without collisions.
 
 image::panels/storyboard/recalculate_transitions.jpg[Recalculate Transitions]
 
-This button also creates the constraints on your drones in your Drones collection to follow the given formations during their active time.
+The popup menu that appears when clicking on the button offers various options to recalculate all transitions or only a subset of them. The recalculation process also creates or updates the constraints on your drones in your Drones collection to follow the given formations during their associated time interval.

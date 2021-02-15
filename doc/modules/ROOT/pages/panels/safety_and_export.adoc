@@ -2,7 +2,7 @@
 :imagesdir: ../../assets/images
 :experimental:
 
-The Safety & Export tab in the sidebar of the Viewport editor lets you perform real-time verification of your drone animation and enables you to export your show into Skybrush Compiled format.
+The Safety & Export tab in the sidebar of the Viewport editor lets you perform real-time verification of your drone animation and enables you to export your show into Skybrush compiled (`.skyc`) format. If the Skybrush CSV export addon is enabled in Blender, it also allows you to export the sampled trajectories and lights in a set of zipped CSV files to allow further post-processing in external tools.
 
 image::panels/safety_and_export.jpg[Safety & Export tab]
 
@@ -10,19 +10,21 @@ image::panels/safety_and_export.jpg[Safety & Export tab]
 
 The Safety Check panel lets you perform real-time frame-level or full post-processed verification of your drone animation to aid you towards completely safe drone flighs.
 
-Safety warnings of the actual frame appear in real-time as text on the left side of the 3D Viewport editor, while errorous drones are also highlighted in real-time with red as seen in the image below.
+Safety warnings of the current frame appear in real time as text on the left side of the 3D Viewport editor, while errorous drones are also highlighted in real time with red as seen in the image below.
 
 image::panels/safety_check/safety_checks.jpg[Safety checks]
 
-To enable or disable all safety checks together, use the checkbox at the top left corner of the panel.
+The checkbox at the top left corner of the panel allows you to disable the safety checks entirely, although it is advised not to do so. One valid reason for disabling them temporarily is if you feel that the Blender UI has become sluggish and that the safety checks are responsible for that. The safety checks should have negligible impact on the overall performance of Blender so let us know if you found a situation where disabling the safety checks improved Blender's responsiveness significantly.
 
 === Proximity warnings
 
 This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.
 
-The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone-pairs on the current frame. This drone pair is also highlighted with red, along with a red line connecting them.
+The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone pairs on the current frame. This drone pair is also highlighted with red, along with a red line connecting them.
 
 To enable or disable proximity warnings, use the btn:[Show proximity warnings] checkbox.
+
+NOTE: Distances are measured between the centers of the drones, not between their edges. A safety distance of 3 meters with a drone whose arm length is 450mm means that you have less than two meters between the drones when the safety distance is breached, so make sure that you take the arm length and the props into account. *Skybrush Studio* is unaware of the physical dimensions of the drones.
 
 === Altitude warnings
 
@@ -40,15 +42,32 @@ The text-based velocity warning on the left side of the 3D Viewport editor alway
 
 To enable or disable velocity warnings, use the btn:[Show velocity warnings] checkbox.
 
-=== Validate Trajectories
+.Technical details
+****
+Velocity warnings are special in the sense that in order to accurately estimate the velocity of a drone in any given frame, you need to know the position of the drone in the _previous_ and in the _next_ frame as well. However, Blender does not allow its add-ons to query the position of an object in a specific frame without explicitly switching to that frame, and switching frames all the time automatically for sake of the velocity validation would render the UI useless. Therefore, *Skybrush Studio* will manage a cache of positions instead, for all the drones in a limited set of previously visited frames, and will attempt to estimate the velocity from the current frame and the information in the cache instead.
 
-Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might take some time depending on the number of your drones and the number of frames selected).
+The rules are as follows. If the cache contains information about the positions of the drones in nearby frames (because you have visited these frames before), *Skybrush Studio* will show the maximum velocities in the 3D Viewport and perform the validation accordingly. If there is not enough information about nearby frames, the validation will _not_ take place.
+
+The safest way to perform the real-time velocity validation is to start playing the show in the 3D Viewport because then Blender will visit the frames one by one. Another option is to scrub through the video by dragging the current frame marker in the Timeline panel of Blender, _slowly_. The definition of "slow" depends on the zoom level of the timeline - if the timeline is zoomed out to cover a ten-minute show, even a few pixels on the timeline may represent a jump that is large enough so that *Skybrush Studio* will not attempt an estimation.
+****
+
+=== Validating full or partial trajectories
+
+Press the btn:[Validate Trajectories] button to execute a full validation for a frame range instead of only for a single frame. This might take some time depending on the number of drones and the number of frames selected.
 
 image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 
-Once ready, you will receive a `.pdf` file containing detailed validation checks.
+The validation results are shown in *Skybrush Viewer* so make sure you start *Skybrush Viewer* first. The Blender add-on and the viewer app will find each other behind the scenes automatically.
 
-TIP: Interactive validation of the whole show is also possible in *Skybrush Viewer*. Check that out, too!
+In particular, *Skybrush Viewer* will offer you the following set of zoomable charts:
+
+* Altitude range of all the drones as a function of time, or the exact altitudes of the drones that you select on the sidebar of *Skybrush Viewer*.
+
+* Horizontal and vertical velocity range of all the drones as a function of time, or the exact horizontal and vertical velocities of the drones that you select on the sidebar of *Skybrush Viewer*.
+
+* Distance of the closest drone pair as a function of time.
+
+All the charts will also indicate the thresholds selected in the Safety Check panel so you can quickly decide whether any of the chart lines breach the safety limits.
 
 
 == Export panel
@@ -57,7 +76,7 @@ Once you are finished with your drone show, use the Export panel to export it fr
 
 === Export to .skyc
 
-The Skybrush Compiled format is a single-file descriptor of your complete drone show. It is used as the primary drone show format throughout the entire *Skybrush* suite:
+The Skybrush compiled show format is a single-file descriptor of your complete drone show. It is used as the primary drone show format throughout the entire *Skybrush* suite:
 
 * If you wish to visualize or verify your show or you simply want to send a link with an interactive 3D visualization of the show to your clients, use *Skybrush Viewer*.
 
@@ -68,3 +87,7 @@ If you press the btn:[Export to .skyc] button, you have to choose the path and f
 * Export all or only selected drones
 * Define the frame range of the output (Render / Preview / Storyboard)
 * Set output frame rate (make sure it is a submultiple of your render FPS)
+
+=== Export to .csv
+
+The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range.

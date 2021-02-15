@@ -46,6 +46,8 @@ Press the btn:[Update] button to update the selected formation from the current 
 
 image::panels/formations/update_formation.jpg[Update formation]
 
+You can also update formations simply by moving the markers in 3D space using the standard tools that Blender offers. New markers can be added simply by creating empty or non-empty meshes and adding them to the appropriate sub-collection of the Formations collection, or by extending the `Drones` vertex group in vertex-based meshes. Unneeded markers can simply be removed from the formations the same way you would remove any Blender object from its corresponding collection.
+
 == Formation statistics
 
 Press the btn:[Stats] button to show various useful statistics about the selected formation, such as the number of markers (empties, meshes or vertices), the size of the axis-aligned bounding box of the formation, or minimum distance between its markers on the current frame.
