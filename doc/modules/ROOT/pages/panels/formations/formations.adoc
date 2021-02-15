@@ -32,28 +32,28 @@ Current positions of selected vertices:: Creates a formation that contains one e
 
 Press the btn:[✕] button to remove the selected formation from the Formations list and the Formations collection entirely. Meshes that were part of the formation but that were _not_ referenced from anywhere else in the Blender scene will also be removed from the scene. If you want to keep them, put them in another collection first or by assigning them to a https://docs.blender.org/manual/en/latest/interface/controls/templates/data_block.html?highlight=fake%20user[fake user] in Blender.
 
-== Select Formation
+== Selecting a formation
 
-Press the btn:[Select] button to add the selected formation to the selection.
+The btn:[Select] button on the Formations panel adds the selected formation to the current selection in Blender. Similarly, the btn:[Deselect] button removes the markers of the selected formation from the current selection.
 
-== Deselect Formation
+Since formations may contain meshes as well as _vertices_ of meshes as markers, you may not necessarily see the result of the selection immediately. If you are in Edit mode and you attempt to select a formation that contains meshes, you need to switch back to Object mode. Similarly, if you are in Object mode and you attempt to select a formation that contains vertices a markers, you need to switch to Edit mode to be able to interact with the selected vertices.
 
-Press the btn:[Deselect] button to remove the selected formation from the selection.
+TIP: If you are in Object mode _and_ the formation being selected contains vertices _only_ (i.e. no meshes or empties), *Skybrush Studio* will automatically switch to Edit mode.
 
-== Formation Statistics
+== Updating a formation
 
-Press the btn:[Stats] button to show different useful statistics about the selected formation, such as the number of its elements, size or minimum distance between its objects on the current frame.
+Press the btn:[Update] button to update the selected formation from the current selection or from the current positions of the drones. This operation is essentially equivalent to removing all markers from the formation first, followed by the addition of the selection as if you were creating a formation from scratch.
+
+image::panels/formations/update_formation.jpg[Update formation]
+
+== Formation statistics
+
+Press the btn:[Stats] button to show various useful statistics about the selected formation, such as the number of markers (empties, meshes or vertices), the size of the axis-aligned bounding box of the formation, or minimum distance between its markers on the current frame.
 
 image::panels/formations/formation_stats.jpg[Formation stats]
 
-== Append to Storyboard
+== Appending a formation to the storyboard
 
-Press the btn:[Append to Storyboard] button to append the selected formation to the end of the show, planning the transition between the last formation and the new one.
-
-== Update
-
-Press the btn:[Update] button to update the selected formation from the current selection or from the current positions of the drones.
-
-image::panels/formations/update_formation.jpg[Update formation]
+Press the btn:[Append to Storyboard] button to append the selected formation to the end of the storyboard. *Skybrush Studio* will calculate the time needed to move from the end of the last formation to the newly added formation, according to the current acceleration and velocity limits, and set up the start time of the new formation accordingly.
 
 
