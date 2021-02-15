@@ -1,0 +1,120 @@
+= Light Effects panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation dynamically.
+
+Light effects are parametrized and they are not burnt as color keyframes, so it is very easy to adjust them along with animation changes.
+
+Every light effect builds on a user defined color ramp, consisting of an arbitrary number of color stops at arbitrary positions on the color ramp (indexed between 0 and 1) and a given interpolation method between the defined color stops on the ramp.
+
+This color ramp is applied to the drones in many different ways. Light effects can spread across multiple drones and can also be animated in time, using the versatile functions detailed below.
+
+== Create Light Effect
+
+Use the btn:[+] button next to the light effect list to add a new light effect to the end of the list.
+
+== Remove Light Effect
+
+Press the btn:[-] button next to the light effect list to remove the currently selected light effect from the list.
+
+== Move Selected Light Effect Up
+
+Press the btn:[▲] button next to the light effect list to move the selected light effect up by one slot in the list.
+
+== Move Selected Light Effect Down
+
+Press the btn:[▼] button next to the light effect list to move the selected light effect down by one slot in the list.
+
+== Add a color stop to the color ramp
+
+Use the btn:[+] button below the light effect list to add a new color stops to the color ramp associated with the selected light effect.
+
+== Remove a color stop from the color ramp
+
+Use the btn:[-] button below the light effect list to remove the selected color stop from the color ramp associated with the selected light effect.
+
+== Color ramp tools
+
+Use the btn:[˅] button to select different tools for changing the color ramp. Currently available options:
+
+* Flip Color Ramp
+* Distribute Color Stops from Left
+* Distribute Color Stops evenly
+* Eyedropper tool for color selection
+* Reset Color Ramp
+
+== Color mode
+
+Use the "Color mode" dropdown list to define the color mode used for color ramp interpolation. Possible values:
+
+* RGB (red, green, blue)
+* HSV (hue, saturation, value)
+* HSL (hue, saturation, lightness)
+
+== Interpolation
+
+Use the Interpolation dropdown list to select the interpolation mode used for the color ramp. Possible values:
+
+* Ease
+* Cardinal
+* Linear
+* B-Spline
+* Constant
+
+== Color stop position
+
+Enter a value to change the exact location of the selected color stop on the color ramp. To select a given color stop, press on the color stop icons above on the color ramp or select the active color stop explicitely by its index on the left.
+
+== Color stop color
+
+Click on the color field at the bottom of the color ramp functions to change the color of the selected color stop. Use the popup chart to select a color and press on the color field at the bottom again to save the updated color.
+
+== Start Frame
+
+Define the frame when the selected light effect should start during the drone show
+
+== Duration
+
+Define the duration of the light effect in frames. The end frame of the light effect will be `Start Frame + Duration`.
+
+== Fade in
+
+During the optional fade-in period the inner intensity of the light effect grows linearly from 0 to 1.
+
+== Fade out
+
+During the optional fade-out period the inner intensity of the light effect decays from 1 to 0.
+
+== Mesh
+
+Select the mesh related to the light effect. Used when the Output is set to "Distance" or to limit the light effect to the inside of this mesh when "Only inside" is checked.
+
+== Output
+
+The Output function determines the value that is passed through the color ramp to obtain the color to assign to a given drone.
+
+image::panels/light_effects/output.jpg[Output]
+
+Custom expression:: TODO(ntamas)
+
+Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected Mesh to the color ramp (i.e., closest drone from Mesh will pick the leftmost color in the ramp, farthest will pick the rightmost color, all the rest will get a value in between according to their distance ratio).
+
+Temporal:: All drones will go through all colors of the color ramp simultaneously throughout the total duration of the light effect.
+
+Gradient:: A single static color will be picked from the color ramp by all drones in an evenly distributed way, according to the order on the given gradient axes.
+
+Last color of color ramp:: The last color of the color ramp will be used by all drones during the whole light effect.
+
+First color of color ramp:: The first color of the color ramp will be used by all drones during the whole light effect.
+
+== Target
+
+This property defines which drones are affected by the given light effect. You can affect all drones, or only drones inside a given mesh.
+
+== Influence
+
+the influence parameter sets the overal transparency of the light effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
+
+TIP: The influence parameter can be animated with keyframes, which is a simple way to create flashes, for example.
+

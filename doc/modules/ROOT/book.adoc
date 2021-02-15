@@ -47,6 +47,14 @@ include::pages/panels/formations/storyboard.adoc[]
 
 include::pages/panels/leds.adoc[]
 
+:leveloffset: +1
+
+include::pages/panels/leds/led_control.adoc[]
+
+include::pages/panels/leds/light_effects.adoc[]
+
+:leveloffset: -1
+
 include::pages/panels/safety_and_export.adoc[]
 
 :leveloffset: -1

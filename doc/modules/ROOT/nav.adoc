@@ -10,5 +10,7 @@
 *** xref:panels/formations/formations.adoc[Formations panel]
 *** xref:panels/formations/storyboard.adoc[Storyboard panel]
 ** xref:panels/leds.adoc[LEDs]
+*** xref:panels/leds/led_control.adoc[LED Control panel]
+*** xref:panels/leds/light_effects.adoc[Light Effects panel]
 ** xref:panels/safety_and_export.adoc[Safety & Export]
 * xref:glossary.adoc[Glossary]
