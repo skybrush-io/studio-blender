@@ -18,13 +18,17 @@ image::tutorials/easy-drone-show-design/blender_3dviewport_with_skybrush_tabs.jp
 
 You will see three new tabs related to *Skybrush Studio*:
 
-* xref:panels/formations.adoc[Formations]
-* xref:panels/leds.adoc[LEDs]
-* xref:panels/safety_and_export.adoc[Safety & Export]
+* xref:panels/formations.adoc[Formations tab]
+* xref:panels/leds.adoc[LEDs tab]
+* xref:panels/safety_and_export.adoc[Safety & Export tab]
 
 These tabs contain all panels, buttons, operators and functions that are specifically needed for drone show design.
 
-First of all, select the Formations tab and press the btn:[Create Takeoff Grid] button.
+The first panel of interest is the xref:panels/formations/swarm.adoc[Swawrm panel] on the Formations tab.
+
+image::panels/swarm/swarm.jpg[Swarm panel]
+
+To initialize your drone show, first of all, press the btn:[Create Takeoff Grid] button and check out the parameters in the popup window.
 
 image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
@@ -35,11 +39,26 @@ This will create all Skybrush-specific collections (Drones, Formations and Templ
 To learn more about the mentioned collections, please read the xref:concepts.adoc[Key concepts] and the xref:glossary.adoc[Glossary].
 
 
-== 2. Create formations
+== 2. Create takeoff procedure automatically
+
+Drone shows typically consist of artistic formations and other technical parts that are usually not the responsibility of designers to deal with (such as takeoff, transitions between formations, return-to-home or the landing procedure). *Skybrush Studio* provides automated tools for handling these parts, if needed.
+
+To take off your drones, simply press the btn:[Takeoff] button on the Swarm panel and setup the parameters of the automatic takeoff procedure.
+
+image::panels/swarm/takeoff.jpg[Takeoff]
+
+After you press btn:[OK] on the Takeoff popup window, the "Takeoff" entry should appear in the Storyboard panel as the first entry.
+
+
+== 3. Create formations
 
 Formations are standalone parts of your final drone show, consisting of static or dynamic (animated) scenes.
 
-Use the btn:[Create Formation] button on the Formations tab to create a formation as part of your drone show.
+The xref:panels/formations/formations.adoc[Formations panel] will be your guide to deal with formations.
+
+image::panels/formations/formations.jpg[Formations panel]
+
+Use the btn:[+] button on the Formations panel to create a formation as part of your drone show.
 
 image::panels/formations/create_formation.jpg[Create formation]
 
@@ -58,38 +77,42 @@ TIP: If you work with vertices in Edit mode, the https://docs.blender.org/manual
 Repeat this phase with all the formations of your drone show and create a separate formation collection for all of them. These collections will all be listed in the Formations collection in the Outliner.
 
 
-== 3. Create a storyboard from formations
+== 4. Create a storyboard from formations
 
 The storyboard defines the temporal structure of your drone show, consisting of formations coming one after another, with automatic or manual transitions between them.
 
-Check out the Storyboard panel in the Formations tab. Add your formations to the Storyboard, define their starting time and duration. Leave the transition type as _Auto_ for the time being to let Skybrush attempt to calculate the transitions between them.
+Check out the xref:panels/formations/storyboard.adoc[Storyboard panel] in the Formations tab.
+
+image::panels/storyboard/storyboard.jpg[Storyboard]
+
+Add your formations to the Storyboard, define their starting time and duration. Leave the transition type as _Auto_ for the time being to let Skybrush attempt to calculate the transitions between them.
 
 TIP: Make sure that the time intervals of the formations do not overlap and pay attention to use enough transition time for your drones between different formations in the storyboard. A typical transition is usually between 15 and 30 seconds, depending on the size and complexity of your formations and the velocity and acceleration constraints.
 
 
-== 4. Create automatic transitions
+== 5. Create automatic transitions
 
 Use the btn:[Recalculate transitions] button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
 
 While transitions are created, your drones in the Drones collection will also be attached to all your formations. The animation part of your show is now almost ready...
 
 
-== 5. Add lights to your show
+== 6. Add return-to-home and land to the end of your show
 
-Use the LEDs tab in the sidebar of the 3D Viewport editor to add light animation to your show.
+After all your artistic formations are ready, press the btn:[RTH] and btn:[Land] buttons on the Swarm panel in the Formations tab to add automatic return-to-home and land procedures to your drones, the same way you added the takeoff procedure at the beginning.
 
-Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors in the LED Control panel and press the btn:[Apply] (change abruptly) or btn:[Fade to] (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
+Popup windows for each button appear to be able to setup the parameteres of these smart functions. On success, the proper entries should also appear at the end of your storyboard.
 
-image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
-
-TIP: Select two distinct colors in the LEDs tab and change the "Color to apply" property to one of the _Gradient_ options in the popup panel to create more spectacular coloring schemes according to the "Order in gradient" property selection.
-
-As a more advanced option, use the "Light Effects" panel in the LEds tab to create more sophisticated, parametrized light effects for your show. The effects defined in the "Light Effects" panel are calculated on-the-fly, frame by frame in Blender, based on several criteria, including the positions of the drones and an optional associated mesh, so it is possible to create light effects where the color depends on how far the drones are from a certain mesh in the scene or whether they are inside or outside an invisible "helper" mesh.
+image::panels/swarm/return_to_home.jpg[Return to home]
 
 
-== 5. Check and verify your animation
+== 7. Check and verify your animation
 
-Use the "Safety Check" panel in the "Safety & Export" tab in the sidebar of the Viewport editor to enable real-time verification checks on your animation. Setup your safety parameters with convenient values and watch your animation in the 3D Viewport editor. Drones and drone pairs not passing the safety checks (velocity, altitude, proximity) will be highlighted with red, while status information about the verification results will be visible on the left side of the window.
+Use the xref:panels/safety_and_export/safety_check.adoc[Safety check panel] in the "Safety & Export" tab in the sidebar of the Viewport editor to enable real-time verification checks on your animation.
+
+image::panels/safety_check/safety_check.jpg[Safety check panel]
+
+Setup your safety parameters with convenient values and watch your animation in the 3D Viewport editor. Drones and drone pairs not passing the safety checks (velocity, altitude, proximity) will be highlighted with red, while status information about the verification results will be visible on the left side of the window.
 
 Press the btn:[Validate Trajectories] button to get a full validation for a frame range, not just for a single frame (this might time some time depending on the number of your drones and the number of frames selected). The results will appear in *Skybrush Viewer* so make sure that the viewer is running as a separate application on your computer before pressing the button.
 
@@ -98,9 +121,32 @@ image::panels/safety_check/validate_trajectories.jpg[Validate Trajectories]
 Correct your show to eliminate all safety check warnings to ensure maximal safety of your drones and the world below them...
 
 
-== 7. Export your show to .skyc
+== 8. Add lights to your show
 
-Once ready, use the btn:[Export to .skyc] button of the Export panel on the "Safety & Export" tab to export your entire show into Skybrush compiled show format.
+After all your animations are finalized and verified, use the LEDs tab in the sidebar of the 3D Viewport editor to add light animation to your show.
+
+The first panel of interest for light design is the xref:panels/leds/led_control.adoc[LED control panel].
+
+image::panels/led_control/led_control.jpg[LED control panel]
+
+Move the scene to the desired frame, select the drones you wish to paint, select a color or two colors and press the btn:[Apply] (change abruptly) or btn:[Fade to] (fade linearly from last keyframe) buttons to add color animation keyframes to the given drones at the given frame.
+
+image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
+
+TIP: Select two distinct colors in the LEDs tab and change the "Color to apply" property to one of the _Gradient_ options in the popup panel to create more spectacular coloring schemes according to the "Order in gradient" property selection.
+
+As a more advanced option, use the xref:panels/leds/light_effects.adoc[Light effects panel] in the LEds tab to create more sophisticated, parametrized light effects for your show.
+
+image::panels/light_effects/light_effects.jpg[Light effects panel]
+
+The effects defined in the "Light Effects" panel are calculated on-the-fly, frame by frame in Blender, based on several criteria, including the positions of the drones and an optional associated mesh, so it is possible to create light effects where the color depends on how far the drones are from a certain mesh in the scene or whether they are inside or outside an invisible "helper" mesh.
+
+
+== 9. Export your show to .skyc
+
+Once ready with both the animations and light program, use the btn:[Export to .skyc] button of the xref:panels/safety_and_export/export.adoc[Export panel] on the "Safety & Export" tab to export your entire show into Skybrush compiled show format.
+
+image::panels/export/export.jpg[Export panel]
 
 The Skybrush compiled show format is compatible with other components of the *Skybrush* suite:
 
@@ -110,4 +156,6 @@ The Skybrush compiled show format is compatible with other components of the *Sk
 
 The btn:[Export to .csv] button of the Export panel allows you to sample the drone trajectories and the corresponding RGB colors at regular intervals and save them to a CSV file that you can load in external tools for further post-processing.
 
-We are done. Enjoy, mailto:support@collmot.com[send us feedback or ask us] if you have any questions!
+== 10. Enjoy
+
+We are done. Check out your show in *Skybrush Viewer* or execute it with *Skybrush Live*. Enjoy, mailto:support@collmot.com[send us feedback or ask us] if you have any questions!

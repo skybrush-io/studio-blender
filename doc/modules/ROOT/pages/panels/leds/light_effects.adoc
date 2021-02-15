@@ -4,6 +4,8 @@
 
 The Light Effects panel lets you create advanced light effects that are applied on top of your base color animation dynamically.
 
+image::panels/light_effects/light_effects.jpg[Light effects panel]
+
 Light effects are parametrized and they are not burnt as color keyframes, so it is very easy to adjust them along with animation changes.
 
 Every light effect builds on a user defined color ramp, consisting of an arbitrary number of color stops at arbitrary positions on the color ramp (indexed between 0 and 1) and a given interpolation method between the defined color stops on the ramp.

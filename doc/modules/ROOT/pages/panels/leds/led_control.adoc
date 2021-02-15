@@ -4,6 +4,8 @@
 
 The LED Control panel provide a simple way to color your selected drones at individual keyframes.
 
+image::panels/led_control/led_control.jpg[LED control panel]
+
 == Primary color
 
 Press on the left color field to set the primary color you would like to set on the selected drones. Selecting a color does not set color keyframes yet, it just indicates your desired color.
