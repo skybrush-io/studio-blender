@@ -33,10 +33,6 @@ class DroneShowAddonObjectPropertiesPanel(Panel):
             UseSelectedVertexGroupForFormationOperator.bl_idname, text="Use selected"
         )
 
-        layout.separator()
-
-        layout.operator(UseSelectedVertexGroupForFormationOperator.bl_idname)
-
     @classmethod
     def poll(cls, context):
         return (
