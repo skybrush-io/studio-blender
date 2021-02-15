@@ -8,5 +8,7 @@ image::panels/leds.jpg[LEDs tab]
 
 The LEDs tab contains two panels:
 
-* xref:panels/leds/led_control.adoc[LED Control panel]
-* xref:panels/leds/light_effects.adoc[Light Effects panel]
+* xref:panels/leds/led_control.adoc[LED control panel]
+* xref:panels/leds/light_effects.adoc[Light effects panel]
+
+
