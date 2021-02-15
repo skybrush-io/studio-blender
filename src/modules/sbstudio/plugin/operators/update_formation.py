@@ -1,6 +1,7 @@
 import bpy
 
 from bpy.props import EnumProperty
+from bpy.types import Context, Scene
 from mathutils import Vector
 
 from sbstudio.plugin.constants import Collections
@@ -20,28 +21,43 @@ from .base import FormationOperator
 __all__ = ("UpdateFormationOperator",)
 
 
-def get_options_for_formation_update():
+#: Formation update options, kept here in dictionary to ensure that Python has
+#: a reference to their strings all the time -- there is a bug in Blender that
+#: would cause it to crash if we do not have a reference
+FORMATION_UPDATE_ITEMS = {
+    "EMPTY": ("EMPTY", "Empty", "", 1),
+    "ALL_DRONES": ("ALL_DRONES", "Current positions of drones", "", 2),
+    "SELECTED_OBJECTS": ("SELECTED_OBJECTS", "Selected objects", "", 3),
+    "POSITIONS_OF_SELECTED_OBJECTS": (
+        "POSITIONS_OF_SELECTED_OBJECTS",
+        "Current positions of selected objects",
+        "",
+        4,
+    ),
+    "POSITIONS_OF_SELECTED_VERTICES": (
+        "POSITIONS_OF_SELECTED_VERTICES",
+        "Current positions of selected vertices",
+        "",
+        5,
+    ),
+}
+
+
+def get_options_for_formation_update(scene: Scene, context: Context):
     """Returns a list containing the options that we support in the
     'Initialize with' property of the 'Create Formation' operator and in the
     'Update to' property of the 'Update Formation' operator.
     """
-    return [
-        ("EMPTY", "Empty", "", 1),
-        ("ALL_DRONES", "Current positions of drones", "", 2),
-        ("SELECTED_OBJECTS", "Selected objects", "", 3),
-        (
-            "POSITIONS_OF_SELECTED_OBJECTS",
-            "Current positions of selected objects",
-            "",
-            4,
-        ),
-        (
-            "POSITIONS_OF_SELECTED_VERTICES",
-            "Current positions of selected vertices",
-            "",
-            5,
-        ),
-    ]
+    global FORMATION_UPDATE_ITEMS
+
+    items = ["EMPTY", "ALL_DRONES"]
+
+    if context and context.mode == "EDIT_MESH":
+        items.extend(["POSITIONS_OF_SELECTED_VERTICES"])
+    else:
+        items.extend(["SELECTED_OBJECTS", "POSITIONS_OF_SELECTED_OBJECTS"])
+
+    return [FORMATION_UPDATE_ITEMS[item] for item in items]
 
 
 def propose_mode_for_formation_update(context) -> str:
@@ -52,7 +68,7 @@ def propose_mode_for_formation_update(context) -> str:
     Returns:
         the proposed value or `None` if the previous setting should be used
     """
-    if context.mode == "EDIT_MESH":
+    if context and context.mode == "EDIT_MESH":
         # We are in Edit mode.
         # TODO(ntamas): use "SELECTED_VERTICES" once we have implemented
         # using vertex groups in a formation
@@ -111,8 +127,7 @@ class UpdateFormationOperator(FormationOperator):
 
     update_with = EnumProperty(
         name="Update with",
-        items=get_options_for_formation_update(),
-        default="ALL_DRONES",
+        items=get_options_for_formation_update,
     )
 
     def invoke(self, context, event):

@@ -29,8 +29,7 @@ class CreateFormationOperator(FormationOperator):
     name = StringProperty(name="Name", description="Name of the new formation")
     contents = EnumProperty(
         name="Initialize with",
-        items=get_options_for_formation_update(),
-        default="ALL_DRONES",
+        items=get_options_for_formation_update,
     )
 
     works_with_no_selected_formation = True

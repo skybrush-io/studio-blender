@@ -22,11 +22,11 @@ Empty:: Creates an empty formation
 
 Current positions of drones:: Creates a formation that contains one empty mesh for each drone, placed exactly at the current position of the drone. You can use this option to create a "snapshot" of the drone swarm at a given frame and use it again as a formation later on in the show.
 
-Selected objects:: Creates a formation that _contains_ the currently selected objects. If the locations of the objects were animated, the formation will be animated as well. Removing any of these objects from the scene will also remove them from the formation.
+Selected objects:: _(Only in Object mode)_ Creates a formation that _contains_ the currently selected objects. If the locations of the objects were animated, the formation will be animated as well. Removing any of these objects from the scene will also remove them from the formation.
 
-Current positions of selected objects:: Creates a formation that contains one empty mesh for the position of each selected object. The empties are added to the formation, but the objects themselves are _not_ -- therefore, even if the objects were animated, the formation will only take a snapshot of the objects at the current frame. You are then free to remove the objects from the scene without affecting the formation.
+Current positions of selected objects:: _(Only in Object mode)_ Creates a formation that contains one empty mesh for the position of each selected object. The empties are added to the formation, but the objects themselves are _not_ -- therefore, even if the objects were animated, the formation will only take a snapshot of the objects at the current frame. You are then free to remove the objects from the scene without affecting the formation.
 
-Current positions of selected vertices:: Creates a formation that contains one empty mesh for the position of each selected _vertex_ of the currently edited object. This option is therefore mostly useful in Blender's edit mode only; in object mode, all vertices of the selected object will be placed in the formation.
+Current positions of selected vertices:: _(Only in Edit mode)_ Creates a formation that contains one empty mesh for the position of each selected _vertex_ of the currently edited object.
 
 == Removing a formation
 
