@@ -118,6 +118,10 @@ def run_safety_check(scene, depsgraph):
     snapshot = create_position_snapshot_for_drones_in_collection(drones, frame=frame)
     _position_snapshot_cache[frame] = snapshot
 
+    # Get actual formation status as a string
+    storyboard = scene.skybrush.storyboard
+    formation_status = storyboard.get_formation_status_at_frame(frame)
+
     # Check min/max altitude
     positions = list(snapshot.values())
     if max_altitude is not None:
@@ -168,6 +172,7 @@ def run_safety_check(scene, depsgraph):
         drones_over_max_velocity_z = []
 
     safety_check.set_safety_check_result(
+        formation_status=formation_status,
         nearest_neighbors=nearest_neighbors,
         min_altitude=min_altitude_found,
         max_altitude=max_altitude_found,

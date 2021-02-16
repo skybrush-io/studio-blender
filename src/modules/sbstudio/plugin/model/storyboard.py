@@ -309,6 +309,32 @@ class Storyboard(PropertyGroup, ListMixin):
 
         return closest
 
+    def get_formation_status_at_frame(self, frame: int) -> str:
+        """Returns the name of the storyboard entry containing the given frame
+        or multiple names with '->' in between if frame is between entries.
+
+        Returns:
+            the name of the storyboard entry containing the given frame, or
+            `name1 -> name2` if the current frame is during a transition
+            between entries
+        """
+        index = self.get_index_of_entry_containing_frame(frame)
+        if index >= 0:
+            return self.entries[index].name
+
+        index = self.get_index_of_entry_after_frame(frame)
+        if index < 0:
+            last = self.last_entry
+            if last is None:
+                return ""
+
+            return "{} ->".format(last.name)
+
+        if index == 0:
+            return "-> {}".format(self.entries[index].name)
+
+        return "{} -> {}".format(self.entries[index - 1].name, self.entries[index].name)
+
     @property
     def last_entry(self) -> Optional[StoryboardEntry]:
         """Returns the last entry of the storyboard or `None` if the storyboard

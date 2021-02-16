@@ -83,6 +83,10 @@ class SafetyCheckOverlay(Overlay):
         blf.size(font_id, int(11 * self._ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
 
+        blf.position(font_id, left_margin, y, 0)
+        blf.draw(font_id, safety_check.formation_status)
+        y -= line_height
+
         if safety_check.min_distance_is_valid:
             set_warning_color_iff(safety_check.should_show_proximity_warning, font_id)
             blf.position(font_id, left_margin, y, 0)

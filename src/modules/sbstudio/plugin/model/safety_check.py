@@ -1,4 +1,4 @@
-from bpy.props import BoolProperty, FloatProperty
+from bpy.props import BoolProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
 from typing import Optional, List, Tuple
 
@@ -67,6 +67,12 @@ class SafetyCheckProperties(PropertyGroup):
     to the user. Others represent parameters of the safety checks and hence
     they can be modified by the user.
     """
+
+    formation_status = StringProperty(
+        name="Formation status",
+        description="The string representation of the formation status at the given frame",
+        default="",
+    )
 
     enabled = BoolProperty(
         name="Enable safety checks",
@@ -275,6 +281,7 @@ class SafetyCheckProperties(PropertyGroup):
         """Clears the result of the last safety check."""
         global _safety_check_result
 
+        self.formation_status = ""
         self.min_altitude = 0
         self.max_altitude = 0
         self.min_distance = 0
@@ -292,6 +299,7 @@ class SafetyCheckProperties(PropertyGroup):
 
     def set_safety_check_result(
         self,
+        formation_status: Optional[str] = None,
         nearest_neighbors: Optional[Tuple[float, Coordinate3D, Coordinate3D]] = None,
         min_altitude: Optional[float] = None,
         max_altitude: Optional[float] = None,
@@ -303,6 +311,10 @@ class SafetyCheckProperties(PropertyGroup):
     ) -> None:
         """Clears the result of the last minimum distance calculation."""
         global _safety_check_result
+
+        if formation_status is not None:
+            self.formation_status = formation_status
+            refresh = True
 
         if nearest_neighbors is not None:
             first, second, distance = nearest_neighbors
