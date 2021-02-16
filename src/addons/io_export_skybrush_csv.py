@@ -294,8 +294,8 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     # export objects with the given name filter
     export_name_filter = StringProperty(
         name="Object name filter",
-        default="drone_*",
-        description="Define a name filter on the objects to be exported. Use the `*` wildcard for convenience.",
+        default="",
+        description="Define a name filter on the selected objects to be exported. Use the `*` wildcard for convenience.",
     )
 
     # output all objects or only selected ones
