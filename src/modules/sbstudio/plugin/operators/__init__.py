@@ -30,6 +30,7 @@ from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperato
 from .swap_colors import SwapColorsInLEDControlPanelOperator
 from .takeoff import TakeoffOperator
 from .update_formation import UpdateFormationOperator
+from .update_time_markers_from_storyboard import UpdateTimeMarkersFromStoryboardOperator
 from .use_vgroup_for_formation import UseSelectedVertexGroupForFormationOperator
 from .validate_trajectories import ValidateTrajectoriesOperator
 
@@ -60,6 +61,7 @@ __all__ = (
     "SkybrushExportOperator",
     "SwapColorsInLEDControlPanelOperator",
     "UpdateFormationOperator",
+    "UpdateTimeMarkersFromStoryboardOperator",
     "UseSelectedVertexGroupForFormationOperator",
     "TakeoffOperator",
     "ValidateTrajectoriesOperator",

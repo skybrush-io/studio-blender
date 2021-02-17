@@ -77,6 +77,7 @@ from sbstudio.plugin.operators import (
     SwapColorsInLEDControlPanelOperator,
     TakeoffOperator,
     UpdateFormationOperator,
+    UpdateTimeMarkersFromStoryboardOperator,
     UseSelectedVertexGroupForFormationOperator,
     ValidateTrajectoriesOperator,
 )
@@ -143,6 +144,7 @@ operators = (
     MoveStoryboardEntryUpOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     RemoveStoryboardEntryOperator,
+    UpdateTimeMarkersFromStoryboardOperator,
     CreateLightEffectOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
