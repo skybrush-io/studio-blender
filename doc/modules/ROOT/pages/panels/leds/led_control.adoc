@@ -2,38 +2,84 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-The LED Control panel provide a simple way to color your selected drones at individual keyframes.
+The LED Control panel provide a simple way to adjust the color of the LED light
+of individual drones by inserting keyframes at the appropriate frames.
 
 image::panels/led_control/led_control.jpg[LED Control panel]
 
-== Primary color
+The color of the LED light is assumed to be controlled by an emissive material
+that is placed at the first material slot in the material list of the drone
+mesh. The name of the material starts with `LED color of ...` by convention,
+but this is not enforced -- you can rename the material, but you need to keep
+in mind that *Skybrush Studio for Blender* will always adjust the first material.
+If the material is not an emissive material, Skybrush will fall back to
+adjusting the diffuse color of the material instead.
 
-Press on the left color field to set the primary color you would like to set on the selected drones. Selecting a color does not set color keyframes yet, it just indicates your desired color.
+All the operations in this panel insert or modify keyframes on a Blender action
+that is attached to the color of the material as outlined above. You can achieve
+the same effect by inserting or modifying keyframes yourself; the power of this
+panel lies in the fact that it allows you to manipulate the keyframes of multiple
+drones at the same time, optionally taking into account the current positions of
+the drones as well when deciding what the final color should be.
 
-== Secondary color
-
-Press on the right dcolor field to set the secondary color you would like to use in some light effects when coloring selected drones. Selecting a color does not set color keyframes yet, it just indicates your desired secondary color.
-
-== Swap Colors
+== Primary and secondary colors
 
 // Unicode arrow chars mostly not supported in PDF
 
-Press the arrow button in between the primary and secondary color fields to swap the two colors.
+The panel provides color pickers for two colors that are called _primary_ and
+_secondary_, respectively. Changing the color in the color pickers does _not_
+add, remove or modify keyframes yet, they simply indicate your desired colors
+in the next steps. The primary and secondary colors can be swapped by clicking
+on the arrow button between the color pickers.
 
-== Apply / Fade to
+== Applying colors
 
-The btn:[Apply] and btn:[Fade to] buttons below the selected primary and secondary colors open the same popup window with different default values corresponding to their function.
+The btn:[Apply] and btn:[Fade to] buttons below the selected primary and
+secondary colors open a popup window that looks like the one on the screenshot
+below. Both buttons insert color animation keyframes at the given frame for the
+_selected_ drones, according to the settings in the popup window. They have no
+effect if none of the drones are seleced.
 
 image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
 
-They insert color animation keyframes at the given frame for the selected drones, according to the settings in the popup window.
+If the btn:[Fade to color] checkbox is disabled in the panel, then _one_
+keyframe with the _original_ color of the drone is inserted right before the
+current frame and one with the _selected_ (primary or secondary) color is added
+to the current frame, resulting in an abrupt color change at the given frame.
+If the checkbox is enabled, only one color keyframe will be added at the
+current frame, with linear interpolation on the left (from the past) from the
+previous color keyframe, no matter where it is in the timeline. This creates a
+fading effect starting from the previous keyframe.
 
-If the btn:[Fade to color] checkbox is disabled, one keyframe with the previous color is inserted right before the actual frame and one with the selected color is added to the current frame (resulting in abrupt color change at the given frame). If the chekcbox is enabled, only one color keyframe will be added at the current frame, but with linear interpolation on the left (from the past) from the previous color keyframe.
+The "Color to apply" option lets you select which color to apply on the drone
+in the current keyframe. The straightforward options are the primary and the
+secondary colors, but there is a third option that creates a _gradient_
+between the primary and secondary colors if multiple drones are selected.
 
-The "Color to apply" option lets you select which color to use, the primary, the secondary or as a more advanced feature, a gradient color between these two. If the gradient mode is selected (assuming that you have selected multiple drones to color), the "Order in gradient" option lets you define how the gradient coloring is performed (along a given axis, as a distance from the cursor etc.).
+In the gradient mode, all the drones in the selection are sorted first according
+to some criterion. The first drone gets the primary color, the last drone gets
+the secondary color, and all the drones in between them get assigned to a mix
+of the two colors according to where they are in the ordered sequence. The
+"Order in gradient" option defines what the sorting criteria should be. The
+followig options are available:
 
-== Use Bloom Effect
+Default:: Drones are ordered in exactly the same way they appear in the `Drones` collection.
+Random:: Drones are ordered randomly before the operator is applied. You get a new random order every time you invoke the operator.
+X coordinate:: Drones are ordered by their X coordinate.
+Y coordinate:: Drones are ordered by their Y coordinate.
+Z coordinate:: Drones are ordered by their Z coordinate.
+Distance from 3D cursor:: Drones are ordered according to their distance from the current position of the 3D cursor in Blender.
 
-Specifies whether the bloom effect should automatically be enabled on the 3D View.
+Ties are broken according to the order of the drones in the `Drones` collection.
 
-The bloom effect gives you a nice realistic look with shiny drones, however it can be very misleading in terms of the final sensed color.
+== Enabling or disabling the bloom effect
+
+The btn:[Use bloom effect] checkbox allows you to enable or disable the bloom
+effect that is applied to the 3D view. The bloom effect adds a not-so-subtle
+glow around the drones (and all other bright meshes), but it comes with a caveat:
+the RGB color that you see in the 3D view is not _exactly_ the same as the RGB
+color that you apply to the drones but a brighter variant of it. On one hand, the
+bloom effect can be misleading during a fade-out to black because the fade-out
+seems to start later (and fade-ins seem to start earlier). On the other hand,
+this behaviour is in fact a good approximation of how the LED lights behave on
+a typical show drone.

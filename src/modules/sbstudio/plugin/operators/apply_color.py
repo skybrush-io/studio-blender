@@ -54,7 +54,7 @@ class ApplyColorsToSelectedDronesOperator(Operator):
     gradient_mode = EnumProperty(
         name="Order in gradient",
         items=[
-            ("SELECTION", "Selection", "", 1),
+            ("DEFAULT", "Default", "", 1),
             ("RANDOM", "Random", "", 2),
             ("X", "X coordinate", "", 3),
             ("Y", "Y coordinate", "", 4),
@@ -66,8 +66,7 @@ class ApplyColorsToSelectedDronesOperator(Operator):
 
     def execute(self, context):
         # This code path is invoked after an undo-redo
-        self._run(context)
-        return {"FINISHED"}
+        return {"FINISHED"} if self._run(context) else {"CANCELLED"}
 
     def invoke(self, context, event):
         # Inherit the colors from the LED control panel
@@ -89,21 +88,29 @@ class ApplyColorsToSelectedDronesOperator(Operator):
         selection = get_selected_drones()
         num_selected = len(selection)
         if not num_selected:
-            return
+            self.report({"INFO"}, "Select some drones first to apply colors")
+            return False
 
         selection = self._sort_selection(selection, context)
 
         frame = context.scene.frame_current
         for index, drone in enumerate(selection):
-            self._apply_color_to_single_drone(
-                drone, frame, index, index / (num_selected - 1)
-            )
+            ratio = index / (num_selected - 1) if num_selected > 1 else 0.5
+            self._apply_color_to_single_drone(drone, frame, index, ratio)
+
+        return True
 
     def _sort_selection(self, selection, context):
         """Sorts the list of selected drones in gradient mode, based on the
         order selected by the user.
         """
         if self.color != "GRADIENT":
+            return selection
+
+        if self.gradient_mode == "DEFAULT":
+            # Default ordering is the order in which the drones appear in the
+            # Drones collection; this is reflected by the selection array by
+            # default
             return selection
 
         if self.gradient_mode == "RANDOM":
