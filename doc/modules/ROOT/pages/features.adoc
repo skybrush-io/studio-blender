@@ -5,7 +5,7 @@ Formations::
 * Smart tools for static/dynamic formation creation
 * Easy integration of internal or external 3D animations
 * Automatic transitions between formations
-* Smart return-to-home and landing
+* Smart takeoff, return-to-home and landing
 
 Lights::
 * Dedicated color animation design tools
@@ -20,7 +20,7 @@ Event synchronization::
 Safety::
 * Smooth velocity and acceleration limited path planning
 * Real-time velocity, altitude and proximity checks
-* Integrated visual feedback on safety warnings
+* Integrated visual feedback on real-time safety warnings
 * Interactive, zoomable velocity, altitude and proximity charts
 
 Export & Compatibility::
