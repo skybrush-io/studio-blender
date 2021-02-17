@@ -8,7 +8,7 @@ class UpdateFrameRangeFromStoryboardOperator(StoryboardOperator):
 
     bl_idname = "skybrush.update_frame_range_from_storyboard"
     bl_label = "Update Frame Range from Storyboard"
-    bl_description = "Update frame range to be synchronized with the storyboard"
+    bl_description = "Updates the frame range to be synchronized with the storyboard"
 
     def execute_on_storyboard(self, storyboard, context):
         frame_start = min(storyboard.frame_start, 0)
