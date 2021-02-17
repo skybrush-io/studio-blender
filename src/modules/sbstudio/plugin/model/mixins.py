@@ -3,7 +3,7 @@ class ListMixin:
     represent a list.
 
     The requirement for using this mixin is that the class must have a property
-    named `netries` and a property named `active_entry_index`.
+    named `entries` and a property named `active_entry_index`.
     """
 
     def move_active_entry_down(self) -> None:
