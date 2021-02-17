@@ -1,3 +1,4 @@
+from math import inf
 from typing import List, Optional, Sequence, Tuple
 
 import bpy
@@ -275,15 +276,11 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
                 # If we have another formation that follows this one,
                 # the influence of the constraint must stay until the next
-                # formation starts, and then wind down
+                # formation starts, and then wind down. Otherwise, the influence
+                # must stay 1 indefinitely.
                 if start_of_next is not None:
                     keyframes.append((start_of_next, 1.0))
                     keyframes.append((start_of_next + 1, 0.0))
-
-                # The influence must become zero at the end of the scene if it
-                # is later than the next formation
-                if end_of_scene > keyframes[-1][0]:
-                    keyframes.append((end_of_scene, 0.0))
 
                 # Since 'keyframes' spans from the start of the scene to the
                 # end, this will update all keyframes for the constraint.
@@ -293,7 +290,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                     drone,
                     key,
                     keyframes,
-                    clear_range=True,
+                    clear_range=(None, inf),
                     interpolation="BEZIER",
                 )
 

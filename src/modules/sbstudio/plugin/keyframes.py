@@ -71,7 +71,7 @@ def set_keyframes(
     object,
     data_path: str,
     values: Sequence[Tuple[float, Optional[Union[float, Sequence[float]]]]],
-    clear_range: bool = False,
+    clear_range: Optional[Tuple[Optional[float], Optional[float]]] = None,
     interpolation: Optional[str] = None,
 ) -> list:
     """Sets the values of multiple keyframes to specific values, optionally
@@ -85,7 +85,8 @@ def set_keyframes(
             sorted by time. The value may be `None` for keyframes where we want
             to keep the current value.
         clear_range: whether to remove any additional keyframes in the range
-            spanned by the values
+            spanned by the values. It may also be a tuple consisting of two
+            frames if you want to specify the range to clear explicitly.
         interpolation: interpolation type to set for the affected keyframes;
             `None` to use the Blender default
 
@@ -97,9 +98,14 @@ def set_keyframes(
 
     is_array = any(isinstance(value[1], (tuple, list)) for value in values)
 
-    if clear_range and len(values) >= 2:
-        frame_start, frame_end = values[0][0], values[-1][0]
-        clear_keyframes(object, frame_start, frame_end, data_path)
+    if clear_range is not None:
+        clear_range = list(clear_range)
+        if clear_range[0] is None:
+            clear_range[0] = values[0][0]
+        if clear_range[1] is None:
+            clear_range[1] = values[-1][0]
+        if clear_range[1] > clear_range[0]:
+            clear_keyframes(object, clear_range[0], clear_range[1], data_path)
 
     target, sep, prop = data_path.rpartition(".")
     target = object.path_resolve(target) if sep else object
