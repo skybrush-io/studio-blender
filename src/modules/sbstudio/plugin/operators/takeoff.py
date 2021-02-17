@@ -27,11 +27,11 @@ class TakeoffOperator(StoryboardOperator):
     only_with_valid_storyboard = True
 
     start_frame = IntProperty(
-        name="Start Frame", description="Start frame of the takeoff maneuver"
+        name="at frame", description="Start frame of the takeoff maneuver"
     )
 
     velocity = FloatProperty(
-        name="Velocity",
+        name="with velocity",
         description="Average vertical velocity during the takeoff maneuver",
         default=1.5,
         min=0.1,
@@ -41,7 +41,7 @@ class TakeoffOperator(StoryboardOperator):
     )
 
     altitude = FloatProperty(
-        name="Altitude",
+        name="to altitude",
         description="Altitude to take off to",
         default=6,
         soft_min=0,

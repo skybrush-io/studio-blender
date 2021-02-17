@@ -27,26 +27,26 @@ class LandOperator(StoryboardOperator):
     only_with_valid_storyboard = True
 
     start_frame = IntProperty(
-        name="Start Frame", description="Start frame of the landing maneuver"
-    )
-
-    altitude = FloatProperty(
-        name="Altitude",
-        description="Altitude to land to",
-        default=0,
-        soft_min=-50,
-        soft_max=50,
-        unit="LENGTH",
+        name="at frame", description="Start frame of the landing maneuver"
     )
 
     velocity = FloatProperty(
-        name="Velocity",
+        name="with velocity",
         description="Average vertical velocity during the landing maneuver",
         default=1,
         min=0.1,
         soft_min=0.1,
         soft_max=10,
         unit="VELOCITY",
+    )
+
+    altitude = FloatProperty(
+        name="to altitude",
+        description="Altitude to land to",
+        default=0,
+        soft_min=-50,
+        soft_max=50,
+        unit="LENGTH",
     )
 
     @classmethod

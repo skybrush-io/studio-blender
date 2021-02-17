@@ -27,26 +27,26 @@ class ReturnToHomeOperator(StoryboardOperator):
     only_with_valid_storyboard = True
 
     start_frame = IntProperty(
-        name="Start Frame", description="Start frame of the return-to-home maneuver"
-    )
-
-    altitude = FloatProperty(
-        name="Altitude",
-        description="Altitude to return-to-home to",
-        default=10,
-        soft_min=-50,
-        soft_max=50,
-        unit="LENGTH",
+        name="at frame", description="Start frame of the return-to-home maneuver"
     )
 
     velocity = FloatProperty(
-        name="Velocity",
+        name="with velocity",
         description="Average velocity during the return-to-home maneuver",
         default=4,
         min=0.1,
         soft_min=0.1,
         soft_max=10,
         unit="VELOCITY",
+    )
+
+    altitude = FloatProperty(
+        name="to altitude",
+        description="Altitude to return-to-home to",
+        default=10,
+        soft_min=-50,
+        soft_max=50,
+        unit="LENGTH",
     )
 
     @classmethod
