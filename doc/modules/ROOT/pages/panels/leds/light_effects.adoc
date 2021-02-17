@@ -29,13 +29,13 @@ Below the list of light effects there are standard Blender widgets to set up the
 * The btn:[+] button below the light effect list adds a new color stop to the color ramp.
 * The btn:[-] button below the light effect list removes the selected color stop from the color ramp.
 * The btn:[v] button reveals additional, less common (but nevertheless very useful) operators that can be applied to the entire color ramp:
-* * Flip Color Ramp
-* * Distribute Color Stops from Left
-* * Distribute Color Stops evenly
-* * Eyedropper tool for color selection
-* * Reset Color Ramp
+** Flip Color Ramp
+** Distribute Color Stops from Left
+** Distribute Color Stops evenly
+** Eyedropper tool for color selection
+** Reset Color Ramp
 * The "Color mode" dropdown list selects the color space in which the interpolation of the color ramp takes place. You can choose between RGB (red, green, blue), HSV (hue, saturation, value) and HSL (hue, saturation, lightness) color spaces.
-* The "Interpolation" dropdown list selects the interpolation mode used for the color ramp. 
+* The "Interpolation" dropdown list selects the interpolation mode used for the color ramp.
 
 Refer to the documentation of the https://docs.blender.org/manual/en/latest/interface/controls/templates/color_ramp.html[Color ramp widget] in Blender's own documentation for more details.
 

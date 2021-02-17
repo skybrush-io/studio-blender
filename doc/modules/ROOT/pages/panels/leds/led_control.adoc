@@ -2,7 +2,7 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-The LED Control panel provide a simple way to adjust the color of the LED light
+The LED Control panel provides a simple way to adjust the color of the LED light
 of individual drones by inserting keyframes at the appropriate frames.
 
 image::panels/led_control/led_control.jpg[LED Control panel]
