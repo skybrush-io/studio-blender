@@ -18,15 +18,15 @@ The btn:[Max acceleration] button sets up a maximal acceleration (in all directi
 
 == Create Takeoff Grid
 
-The btn:[Create Takeoff Grid] button helps you set up your takeoff and landing grid. The takeoff and the landing grid is assumed to be the same by default.
+The btn:[Create Takeoff Grid] button helps you set up your takeoff and landing grid. The takeoff and the landing grid is assumed to be the same by default, but you can change them later on if needed.
 
 image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
 You can define the number of rows and columns, the exact number of drones and the spacing between them. Once you press btn:[OK], a rectangular grid is created with the specified parameters.
 
-This operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
+This operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, will add the first "Takeoff grid" entry to the storyboard and will also initialize your drones in the 3D Viewport editor.
 
-TIP: Once the takeoff grid is created, you are free to re-arrange the placement of the drones within the grid using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions in the first frame of the scene.
+TIP: Once the takeoff grid is created, you are free to modify the created "Takeoff grid" formation to re-arrange the placement of the drones using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions by simply changing the takeoff positions in the "Takeoff grid" formation.
 
 == Takeoff
 

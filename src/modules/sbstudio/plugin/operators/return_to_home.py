@@ -78,7 +78,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         self._sort_drones(drones)
 
         # Prepare the points of the target formation to move to
-        first_frame = context.scene.frame_start
+        first_frame = storyboard.frame_start
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=first_frame)
 
@@ -97,9 +97,8 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         # Extend the duration of the last formation to the frame where we want
         # to start the RTH maneuver
-        if len(storyboard.entries) > 0:
-            last_entry = storyboard.entries[-1]
-            last_entry.extend_until(self.start_frame)
+        if len(storyboard) > 0:
+            storyboard.last_entry.extend_until(self.start_frame)
 
         # Calculate when the RTH should end
         end_of_rth = self.start_frame + rth_duration
@@ -125,7 +124,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         pass
 
     def _validate_start_frame(self, context: Context) -> bool:
-        """Returns whether the takeoff time chosen by the user is valid."""
+        """Returns whether the return to home time chosen by the user is valid."""
         storyboard = context.scene.skybrush.storyboard
         if storyboard.last_entry is not None:
             last_frame = context.scene.skybrush.storyboard.frame_end

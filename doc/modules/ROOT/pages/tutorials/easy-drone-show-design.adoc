@@ -34,7 +34,7 @@ image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
 Setup your takeoff grid with any convenient parameters and press btn:[OK].
 
-This will create all Skybrush-specific collections (Drones, Formations and Templates) that you will need for your drone show, and will also initialize your drones in the 3D Viewport editor.
+This will create all Skybrush-specific collections (Drones, Formations and Templates) that you will need for your drone show, will add the first "Takeoff grid" entry to the storyboard and will also initialize your drones in the 3D Viewport editor.
 
 To learn more about the mentioned collections, please read the xref:concepts.adoc[Key concepts] and the xref:glossary.adoc[Glossary].
 
@@ -47,7 +47,7 @@ To take off your drones, simply press the btn:[Takeoff] button on the Swarm pane
 
 image::panels/swarm/takeoff.jpg[Takeoff]
 
-After you press btn:[OK] on the Takeoff popup window, the "Takeoff" entry should appear in the Storyboard panel as the first entry.
+After you press btn:[OK] on the Takeoff popup window, the "Takeoff" entry should appear in the Storyboard panel as the second entry.
 
 
 == 3. Create formations

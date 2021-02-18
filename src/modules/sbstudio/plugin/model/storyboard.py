@@ -132,6 +132,10 @@ class Storyboard(PropertyGroup, ListMixin):
         description="Index of the storyboard entry currently being edited",
     )
 
+    def __len__(self):
+        """Returns the number of entries in the storyboard."""
+        return len(self.entries)
+
     @property
     def active_entry(self) -> Optional[StoryboardEntry]:
         """The active storyboard entry currently selected for editing, or
@@ -224,7 +228,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
         # _sort_entries() might have invalidated our reference to the entry so
         # we cannot use it any more; it might point to a different entry. So
-        # we recover it from the array bavsed on name and start time
+        # we recover it from the array based on name and start time
         for entry in self.entries:
             if entry.name == name and entry.frame_start == frame_start:
                 break
@@ -352,6 +356,16 @@ class Storyboard(PropertyGroup, ListMixin):
         """
         entry = self.last_entry
         return entry.formation if entry else None
+
+    @property
+    def second_entry(self) -> StoryboardEntry:
+        """Returns the second entry of the storyboard or `None` if the storyboard
+        contains less entries.
+        """
+        if self.length > 1:
+            return self.entries[1]
+        else:
+            return None
 
     def validate_and_sort_entries(self) -> None:
         """Validates the entries in the storyboard and sorts them by start time,

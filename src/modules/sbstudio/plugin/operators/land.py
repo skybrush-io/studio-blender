@@ -100,7 +100,7 @@ class LandOperator(StoryboardOperator):
 
         # Extend the duration of the last formation to the frame where we want
         # to start the landing
-        if len(storyboard.entries) > 0:
+        if len(storyboard) > 0:
             last_entry = storyboard.entries[-1]
             last_entry.extend_until(self.start_frame)
 

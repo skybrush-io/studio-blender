@@ -23,7 +23,7 @@ class MoveStoryboardEntryDownOperator(StoryboardOperator):
 
         return (
             storyboard.active_entry is not None
-            and storyboard.active_entry_index < len(storyboard.entries) - 1
+            and storyboard.active_entry_index < len(storyboard) - 1
         )
 
     def execute_on_storyboard(self, storyboard, context):

@@ -11,14 +11,11 @@ class UpdateFrameRangeFromStoryboardOperator(StoryboardOperator):
     bl_description = "Updates the frame range to be synchronized with the storyboard"
 
     def execute_on_storyboard(self, storyboard, context):
-        frame_start = min(storyboard.frame_start, 0)
-        frame_end = storyboard.frame_end
-
         if context.scene.use_preview_range:
-            context.scene.frame_preview_start = frame_start
-            context.scene.frame_preview_end = frame_end
+            context.scene.frame_preview_start = storyboard.frame_start
+            context.scene.frame_preview_end = storyboard.frame_end
         else:
-            context.scene.frame_start = frame_start
-            context.scene.frame_end = frame_end
+            context.scene.frame_start = storyboard.frame_start
+            context.scene.frame_end = storyboard.frame_end
 
         return {"FINISHED"}

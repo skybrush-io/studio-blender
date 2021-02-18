@@ -7,10 +7,12 @@ from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.materials import (
     get_material_for_led_light_color,
     create_keyframe_for_diffuse_color_of_material,
 )
+from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_material_from_drone_template,
 )
@@ -204,3 +206,17 @@ class CreateTakeoffGridOperator(Operator):
         select_only(drone)
 
         enable_bloom_effect_if_needed()
+
+        # Add a new storyboard entry with the initial formation
+        storyboard = context.scene.skybrush.storyboard
+        if len(storyboard) > 0:
+            raise StoryboardValidationError(
+                "Takeoff grid can be only initialized with an empty storyboard." ""
+            )
+        storyboard.add_new_entry(
+            formation=create_formation("Takeoff grid", points),
+            frame_start=context.scene.frame_start,
+            duration=0,
+            select=True,
+            context=context,
+        )

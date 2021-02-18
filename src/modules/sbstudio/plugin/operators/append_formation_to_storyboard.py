@@ -95,9 +95,10 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
         # To get nicer-looking frame counts, we round the end of the
         # transition up to the next whole second. We need to take into account
-        # whether the scene starts from frame 1 or 0, though.
+        # whether the scene starts from frame 1 or 0 or anything else
+        # stored in storyboard.frame_start, though.
         new_start = ceil(last_frame + transition_duration * fps)
-        diff = ceil((new_start - context.scene.frame_start) / fps) * fps
-        entry.frame_start = context.scene.frame_start + diff
+        diff = ceil((new_start - storyboard.frame_start) / fps) * fps
+        entry.frame_start = storyboard.frame_start + diff
 
         return {"FINISHED"}
