@@ -362,7 +362,7 @@ class Storyboard(PropertyGroup, ListMixin):
         """Returns the second entry of the storyboard or `None` if the storyboard
         contains less entries.
         """
-        if self.length > 1:
+        if len(self) > 1:
             return self.entries[1]
         else:
             return None
