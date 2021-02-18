@@ -221,7 +221,11 @@ def _export_data_to_zip(data_dict: Dict[str, List[TimePosColor]], filepath: Path
     with ZipFile(filepath, "w", ZIP_DEFLATED) as zip_file:
         for name, data in data_dict.items():
             safe_name = re.sub(r"[^A-Za-z0-9\.\+\-]", "_", name)
-            lines = ["Time_msec,X,Y,Z,R,G,B"] + [str(item) for item in data]
+            lines = [
+                ",".join(
+                    ["Time [msec]", "x [m]", "y [m]", "z [m]", "Red", "Green", "Blue"]
+                )
+            ] + [str(item) for item in data]
             zip_file.writestr(safe_name + ".csv", "\n".join(lines))
 
 
