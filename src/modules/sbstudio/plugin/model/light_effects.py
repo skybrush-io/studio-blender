@@ -212,8 +212,11 @@ class LightEffect(PropertyGroup):
                 else:
                     sort_key = None
             else:
-                sort_key = OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
-                sort_key = lambda index: sort_key(positions[index])
+                query_axes = (
+                    OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
+                    or OUTPUT_TYPE_TO_AXIS_SORT_KEY["default"]
+                )
+                sort_key = lambda index: query_axes(positions[index])
 
             order = list(range(num_positions))
             if sort_key is not None:
