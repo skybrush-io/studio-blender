@@ -40,7 +40,13 @@ class CreateFormationOperator(FormationOperator):
             # the name of the object we are editing
             self.name = propose_name(context.object.name, for_collection=True)
         else:
-            self.name = propose_name("Formation {}", for_collection=True)
+            # In object mode, the name of the formation should be the same as
+            # the name of the selected object if there is a single selection
+            if len(context.selected_objects) == 1:
+                name_proposal = context.selected_objects[0].name
+            else:
+                name_proposal = "Formation {}"
+            self.name = propose_name(name_proposal, for_collection=True)
         self.contents = propose_mode_for_formation_update(context)
         return context.window_manager.invoke_props_dialog(self)
 
