@@ -294,7 +294,9 @@ class SafetyCheckProperties(PropertyGroup):
 
     def ensure_overlays_enabled_if_needed(self) -> None:
         _get_overlay().enabled = (
-            self.altitude_warning_enabled or self.proximity_warning_enabled
+            self.altitude_warning_enabled
+            or self.proximity_warning_enabled
+            or self.velocity_warning_enabled
         )
 
     def set_safety_check_result(

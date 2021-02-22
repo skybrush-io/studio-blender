@@ -87,13 +87,16 @@ class SafetyCheckOverlay(Overlay):
         blf.draw(font_id, safety_check.formation_status)
         y -= line_height
 
-        if safety_check.min_distance_is_valid:
+        if (
+            safety_check.proximity_warning_enabled
+            and safety_check.min_distance_is_valid
+        ):
             set_warning_color_iff(safety_check.should_show_proximity_warning, font_id)
             blf.position(font_id, left_margin, y, 0)
             blf.draw(font_id, f"Min distance: {safety_check.min_distance:.1f} m")
             y -= line_height
 
-        if safety_check.max_altitude_is_valid:
+        if safety_check.altitude_warning_enabled and safety_check.max_altitude_is_valid:
             set_warning_color_iff(safety_check.should_show_altitude_warning, font_id)
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
@@ -102,7 +105,10 @@ class SafetyCheckOverlay(Overlay):
             )
             y -= line_height
 
-        if safety_check.max_velocities_are_valid:
+        if (
+            safety_check.velocity_warning_enabled
+            and safety_check.max_velocities_are_valid
+        ):
             set_warning_color_iff(safety_check.should_show_velocity_warning, font_id)
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
