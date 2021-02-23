@@ -72,7 +72,13 @@ rm -rf "${TMP_DIR}/${ZIP_STEM}"
 
 # Create a single-file Python entry point
 cat ${BUILD_DIR}/ui_skybrush_studio.py | sed -n '/BLENDER ADD-ON INFO ENDS HERE/,$p' >${BUILD_DIR}/entrypoint.py
-echo -e "\n\nregister()\n" >>${BUILD_DIR}/entrypoint.py
+cat >>${BUILD_DIR}/entrypoint.py <<EOF
+
+register()
+
+from sbstudio.plugin.api import set_fallback_api_key, get_api
+set_fallback_api_key("NNAs8w.hApopcx8s68YZAuRAGofbboqzFwx7KikdT0Q")
+EOF
 PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py \
 	--add-python-path ${BUILD_DIR}/vendor/skybrush \
 	--add-python-module sbstudio.plugin.utils.platform \
