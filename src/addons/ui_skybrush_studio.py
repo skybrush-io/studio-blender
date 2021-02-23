@@ -7,6 +7,8 @@ bl_info = {
     "category": "Interface",
 }
 
+# BLENDER ADD-ON INFO ENDS HERE ### DO NOT REMOVE THIS LINE #################
+
 #############################################################################
 # imports needed to set up the Python path properly
 

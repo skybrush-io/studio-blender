@@ -71,16 +71,19 @@ mv "${TMP_DIR}/${ZIP_STEM}.zip" "${OUTPUT_DIR}"
 rm -rf "${TMP_DIR}/${ZIP_STEM}"
 
 # Create a single-file Python entry point
-cat ${BUILD_DIR}/ui_skybrush_studio.py >${BUILD_DIR}/entrypoint.py
+cat ${BUILD_DIR}/ui_skybrush_studio.py | sed -n '/BLENDER ADD-ON INFO ENDS HERE/,$p' >${BUILD_DIR}/entrypoint.py
 echo -e "\n\nregister()\n" >>${BUILD_DIR}/entrypoint.py
 PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py \
 	--add-python-path ${BUILD_DIR}/vendor/skybrush \
 	--add-python-module sbstudio.plugin.utils.platform \
 	--add-python-module natsort \
 	>${OUTPUT_DIR}/${ZIP_STEM}.py.orig
-.venv/bin/pyminifier --gzip ${OUTPUT_DIR}/${ZIP_STEM}.py.orig >${OUTPUT_DIR}/${ZIP_STEM}.py
-# cp ${OUTPUT_DIR}/${ZIP_STEM}.py.orig ${OUTPUT_DIR}/${ZIP_STEM}.py
-rm ${OUTPUT_DIR}/${ZIP_STEM}.py.orig
+if [ "x${MINIFY}" = x1 ]; then
+  .venv/bin/pyminifier --gzip ${OUTPUT_DIR}/${ZIP_STEM}.py.orig >${OUTPUT_DIR}/${ZIP_STEM}.py
+  rm ${OUTPUT_DIR}/${ZIP_STEM}.py.orig
+else
+  mv ${OUTPUT_DIR}/${ZIP_STEM}.py.orig ${OUTPUT_DIR}/${ZIP_STEM}.py
+fi
 
 # Attach the single-file entry point to the bootloader(s)
 .venv/bin/python etc/scripts/append_to_bootloader.py \
@@ -98,5 +101,5 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 echo "Bundle created successfully in ${OUTPUT_DIR}/${ZIP_STEM}.zip"
-echo "Single-file script created successfully in ${OUTPUT_DIR}/${ZIP_STEM}.py"
+echo "Single-file Windows executable created successfully in ${OUTPUT_DIR}/${ZIP_STEM}-win64.exe"
 
