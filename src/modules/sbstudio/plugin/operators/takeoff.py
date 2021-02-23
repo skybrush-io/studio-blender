@@ -144,7 +144,7 @@ class TakeoffOperator(StoryboardOperator):
 
         # Calculate when the takeoff should end
         end_of_takeoff = self.start_frame + takeoff_duration
-        if len(storyboard) > 1:
+        if len(storyboard.entries) > 1:
             first_frame = storyboard.second_entry.frame_start
             if first_frame < end_of_takeoff:
                 self.report(
@@ -166,7 +166,7 @@ class TakeoffOperator(StoryboardOperator):
 
         # Recalculate the transitions leading from and to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
-        if len(storyboard) > 2:
+        if len(storyboard.entries) > 2:
             bpy.ops.skybrush.recalculate_transitions(scope="FROM_SELECTED")
 
         return True
@@ -182,7 +182,7 @@ class TakeoffOperator(StoryboardOperator):
         """Returns whether the takeoff time chosen by the user is valid."""
         storyboard = context.scene.skybrush.storyboard
         # Note: we assume here that the first entry is the takeoff grid on ground
-        if len(storyboard) > 0:
+        if len(storyboard.entries) > 0:
             frame = storyboard.first_entry.frame_end
             if self.start_frame < frame:
                 self.report(
@@ -190,7 +190,7 @@ class TakeoffOperator(StoryboardOperator):
                     f"Takeoff maneuver must start after the first (takeoff grid) entry of the storyboard (frame {frame})",
                 )
                 return False
-            if len(storyboard) > 1:
+            if len(storyboard.entries) > 1:
                 frame = storyboard.second_entry.frame_start
                 if frame is not None and self.start_frame >= frame:
                     self.report(

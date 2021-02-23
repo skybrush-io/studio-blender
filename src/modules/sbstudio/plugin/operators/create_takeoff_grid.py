@@ -209,7 +209,7 @@ class CreateTakeoffGridOperator(Operator):
 
         # Add a new storyboard entry with the initial formation
         storyboard = context.scene.skybrush.storyboard
-        if len(storyboard) > 0:
+        if len(storyboard.entries) > 0:
             raise StoryboardValidationError(
                 "Takeoff grid can be only initialized with an empty storyboard." ""
             )

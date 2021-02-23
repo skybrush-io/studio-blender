@@ -97,7 +97,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         # Extend the duration of the last formation to the frame where we want
         # to start the RTH maneuver
-        if len(storyboard) > 0:
+        if len(storyboard.entries) > 0:
             storyboard.last_entry.extend_until(self.start_frame)
 
         # Calculate when the RTH should end

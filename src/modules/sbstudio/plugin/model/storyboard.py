@@ -132,10 +132,6 @@ class Storyboard(PropertyGroup, ListMixin):
         description="Index of the storyboard entry currently being edited",
     )
 
-    def __len__(self):
-        """Returns the number of entries in the storyboard."""
-        return len(self.entries)
-
     @property
     def active_entry(self) -> Optional[StoryboardEntry]:
         """The active storyboard entry currently selected for editing, or
