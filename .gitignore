@@ -3,6 +3,7 @@
 __pycache__/
 dev/
 dist/
+dist-*/
 doc/*.pdf
 tmp/
 
