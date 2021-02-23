@@ -5,7 +5,11 @@ __all__ = ("DroneShowAddonGlobalSettings",)
 
 
 class DroneShowAddonGlobalSettings(AddonPreferences):
-    """Global settings of the Skybrush Studio addon."""
+    """Global settings of the Skybrush Studio addon.
+
+    This is active only when the addon is installed in the Blender add-on manager,
+    not when it is provided to Blender dynamically at startup.
+    """
 
     bl_idname = "ui_skybrush_studio"
 
