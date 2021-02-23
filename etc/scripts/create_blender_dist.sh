@@ -82,6 +82,15 @@ PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py
 # cp ${OUTPUT_DIR}/${ZIP_STEM}.py.orig ${OUTPUT_DIR}/${ZIP_STEM}.py
 rm ${OUTPUT_DIR}/${ZIP_STEM}.py.orig
 
+# Attach the single-file entry point to the bootloader(s)
+.venv/bin/python etc/scripts/append_to_bootloader.py \
+	--bootloader-dir "${REPO_ROOT}"/../sbstudio-bootloader/dist \
+	--output-dir ${OUTPUT_DIR} \
+	${OUTPUT_DIR}/${ZIP_STEM}.py
+
+# Remove the single-file entry point, not needed any more
+rm ${OUTPUT_DIR}/${ZIP_STEM}.py
+
 # Clean up after ourselves
 rm -rf "${BUILD_DIR}"
 
