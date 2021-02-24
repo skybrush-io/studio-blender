@@ -1,9 +1,9 @@
 = Skybrush Studio for Blender
 :imagesdir: ../assets/images
 
-This is the main documentation of *Skybrush Studio for Blender*, a plugin for Blender to design professional drone shows.
+This is the main documentation of *Skybrush Studio for Blender*, a professional drone show designer framework integrated into Blender.
 
-image::skybrush_studio_for_blender_small.jpg[Skybrush Studio Plugin for Blender]
+image::skybrush_studio_for_blender_small.jpg[Skybrush Studio for Blender]
 
 To get a quick overview of the drone show design process with *Skybrush Studio for Blender*, we recommend to familiarize yourself with the xref:concepts.adoc[basic concepts] first, and then read the tutorial titled xref:tutorials/easy-drone-show-design.adoc[Quick guide to drone show design with Skybrush Studio].
 

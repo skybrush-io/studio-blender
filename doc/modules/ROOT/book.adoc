@@ -1,4 +1,4 @@
-= Skybrush Studio User Guide: Blender plugin
+= Skybrush Studio for Blender User Guide
 CollMot Robotics Ltd. <hello@skybrush.io>
 :doctype: book
 :encoding: utf-8

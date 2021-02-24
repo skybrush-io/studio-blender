@@ -2,7 +2,7 @@
 :imagesdir: ../assets/images
 :experimental:
 
-*Skybrush Studio Plugin for Blender* is a platform independent tool, just like
+*Skybrush Studio for Blender* is a platform independent tool, just like
 Blender. The installation procedure is the same for Linux, macOS and Windows.
 Please follow the steps below.
 
@@ -10,9 +10,9 @@ Please follow the steps below.
 
 === 1. Check hardware requirements
 
-We suggest to follow the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio Plugin for Blender*.
+We suggest to follow the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio for Blender*.
 
-An additional requirement is that you need to have active Internet connection on your computer as the plugin needs to communicate with the *Skybrush Studio Server* for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. You may use the plugin without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
+An additional requirement is that you need to have active Internet connection on your computer as *Skybrush Studio* needs to communicate with the *Skybrush Studio Server* for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. You may use the software without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
 
 === 2. Install Blender
 
@@ -20,11 +20,11 @@ There are many Blender versions out there, we aim for compatibility with the htt
 
 === 3. Acquire Skybrush Studio for Blender
 
-*Skybrush Studio for Blender* can be purchased from https://skybrush.io. If you obtain a valid licence, the latest plugin installation package can be downloaded from our site as a single ZIP file. Please download it to your computer first. If you have received a trial from us via email, please follow the instructions in the email to acquire the plugin.
+*Skybrush Studio for Blender* can be purchased from https://skybrush.io. If you obtain a valid licence, the latest installation package can be downloaded from our site as a single `.zip` file. Please download it to your computer first.
 
-=== 4. Install the Skybrush Studio Plugin
+=== 4. Install Skybrush Studio for Blender
 
-The plugin may come in one of two formats: either as a single ZIP file containing the code of the plugin, or as an executable file (typically an `.exe`) that you need to place next to Blender's own executable. Please follow one of the instruction sets below, depending on whether you have received a ZIP or an executable.
+*Skybrush Studio for Blender* may come in one of two formats: either as a single ZIP file containing the code of the software, or as an executable file (typically an `.exe`) that you need to place next to Blender's own executable. Please follow one of the instruction sets below, depending on whether you have received a ZIP or an executable.
 
 ==== Installation from a ZIP file
 
@@ -35,7 +35,7 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 1. Open Blender and go to Edit -> Preferences -> Add-ons.
 2. (optional) Activate the "User" filter for the add-ons.
 3. Press the btn:[Install...] button on the top right.
-4. In the popup window select the *Skybrush Studio Plugin for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
+4. In the popup window select the *Skybrush Studio for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
 5. Activate the "Interface: Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list.
 
 ==== Installation from an executable on Windows
@@ -44,25 +44,17 @@ This section applies if you have received an executable file (typically named `s
 
 1. Open the file manager of your operating system and copy the executable in the same folder where Blender is installed. Look for a file named `blender.exe` if you are uncertain.
 
-2. Start the executable file you have received from us. This will in turn provide the code of the plugin to Blender and start it up.
+2. Start the executable file you have received from us. This will in turn provide the code of our software to Blender and start it up.
 
 == Installing updates
 
-If you have already installed *Skybrush Studio Plugin for Blender* and you receive an update for it, simply follow the same installation procedure as before to overwrite old files with new ones.
+If you have already installed *Skybrush Studio for Blender* and you receive an update for it, simply follow the same installation procedure as before to overwrite old files with new ones.
 
-NOTE: It might happen that the structure of the plugin also changes which might result in update failure. If you experience any error in the update process, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
+NOTE: It might happen that the structure of the software also changes which might result in update failure. If you experience any error in the update process, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
 
 == Uninstallation
 
-If you decide to uninstall *Skybrush Studio Plugin for Blender* for any reason, please follow one of the following sets of instructions, depending on whether you have received a ZIP bundle or a single executable from us:
-
-=== Uninstalling a ZIP bundle
-
-1. Start Blender and open the add-on manager by navigating to Edit -> Preferences -> Add-ons.
-2. (optional) Activate the "User" filter for the add-ons.
-3. Find Skybrush Studio in the list of add-ons, expand its row by clicking on the small arrow in the front of the row, and press the btn:[Remove] button that appears in the add-on manager.
-
-=== Uninstalling the executable version of the add-on
+If you decide to uninstall *Skybrush Studio for Blender* for any reasons, you have to do it manually as Blender does not support uninstall procedure for add-ons officially for the time being. The manual process is as follows:
 
 1. Open the file manager of your operating system and navigate to the folder containing Blender.
 2. Find the original executable that we provided to you and remove it.

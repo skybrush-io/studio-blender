@@ -2,7 +2,7 @@
 :imagesdir: ../assets/images
 :experimental:
 
-In this chapter we will explain the basic conventions and the key concepts of *Skybrush Studio Plugin for Blender* so you can start designing a drone show from scratch as smoothly as possible.
+In this chapter we will explain the basic conventions and the key concepts of *Skybrush Studio for Blender* so you can start designing a drone show from scratch as smoothly as possible.
 
 Throughout this chapter (and in the rest of this manual) we assume familiarity with Blender itself; if you are new to Blender and 3D modeling in general, you should start with reading or watching a few Blender tutorials. The https://www.blender.org/support/tutorials/[Blender homepage] contains an extensive collection of tutorials. If you prefer to watch video tutorials, we recommend the https://www.youtube.com/playlist?list=PLa1F2ddGya_-UvuAqHAksYnB0qL9yWDO6[Blender Fundamentals] playlist from YouTube.
 
@@ -38,7 +38,7 @@ The table below summarizes all mappings between the relative and absolute coordi
 [frame=none]
 .Mapping between relative and geodetic coordinate systems
 |===
-|Skybrush Studio Plugin for Blender | Skybrush Live
+|Skybrush Studio for Blender | Skybrush Live
 
 |(relative coordinates)|(absolute/geodetic coordinates)
 
@@ -61,7 +61,7 @@ A typical drone show starts with the drones being arranged in a grid-like patter
 
 Most drone shows alternate between showing static or dynamic _formations_ (where the drones are arranged in patterns resembling familiar shapes, objects, animals or corporate logos) and performing _transitions_ between the formations. Formations are designed and choreographed artistically, while transitions are typically computed by a path planning algorithm that knows how to make the drones move from the end of one formation to the beginning of the next formation while keeping safe distances between drones to avoid collisions.
 
-In *Skybrush Studio for Blender*, formations are stored as sub-collections in a top-level collection named `Formations`. This is a convention that you need to stick to; the plugin will always look for this collection by name, and it will create one if it does not exist yet. Make sure not to rename this collection. Each sub-collection of the `Formations` collection is an individual formation, also identified primarily by its name so make sure to use unique names. The objects in a formation may be:
+In *Skybrush Studio for Blender*, formations are stored as sub-collections in a top-level collection named `Formations`. This is a convention that you need to stick to; *Skybrush Studio* will always look for this collection by name, and it will create one if it does not exist yet. Make sure not to rename this collection. Each sub-collection of the `Formations` collection is an individual formation, also identified primarily by its name so make sure to use unique names. The objects in a formation may be:
 
 * https://docs.blender.org/manual/en/latest/modeling/empties.html[Empties], each empty mesh representing a desired position of a single drone in the formation
 
@@ -76,7 +76,7 @@ We call the desired positions of the drones within a formation _markers_. Recall
 
 *Skybrush Studio for Blender* arranges the formations into a list that we call the _storyboard_ of the show. Each entry in the storyboard consists of a _start frame_ when the formation should appear on the sky, a _duration_, and a reference to one of the formations in the `Formations` collection. Entries may not overlap with each other and one should ensure that there is enough time between formations to perform a transition. In a typical show, transitions last between 15-30 seconds, depending on the maximum velocity of the drones and the sizes of the formations.
 
-When the show timeline is within the start and end frame of a storyboard entry, *Skybrush Studio for Blender* ensures that the drones follow the formation markers using standard Blender constraints. When the show timeline is _between_ two formations, *Skybrush Studio for Blender* will smoothly animate the influence parameters of these constraints automatically to make the drones fly from one formation to the next one. The assignment between drones and markers is calculated on the *Skybrush Studio Server* when you click on the btn:[Recalculate Transitions] button in the plugin.
+When the show timeline is within the start and end frame of a storyboard entry, *Skybrush Studio for Blender* ensures that the drones follow the formation markers using standard Blender constraints. When the show timeline is _between_ two formations, *Skybrush Studio for Blender* will smoothly animate the influence parameters of these constraints automatically to make the drones fly from one formation to the next one. The assignment between drones and markers is calculated on the *Skybrush Studio Server* when you click on the btn:[Recalculate Transitions] button on the storyboard panel.
 
 
 == Return-to-home and landing

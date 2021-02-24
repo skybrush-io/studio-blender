@@ -2,12 +2,12 @@
 :imagesdir: ../../assets/images
 :experimental:
 
-*Skybrush Studio Plugin for Blender* is an addon that extends Blender's capabilities specifically for professional drone show design. In this tutorial we will show step by step how to create a drone show from scratch with it.
+*Skybrush Studio for Blender* is a professional drone show designer framework integrated into Blender. In this tutorial we will show step by step how to create a drone show from scratch with it.
 
 In this tutorial we assume the following:
 
 * You have a basic understanding of Blender and its capabilities
-* You have successfully installed the *Skybrush Studio Plugin for Blender* to supplement Blender with all available Skybrush tools. Refer to the xref:install.adoc[Installation] chapter if you haven't done so yet.
+* You have successfully installed the *Skybrush Studio for Blender* to supplement Blender with all available Skybrush tools. Refer to the xref:install.adoc[Installation] chapter if you haven't done so yet.
 * You have read and understood the xref:concepts.adoc[Key concepts] chapter of this manual.
 
 == 1. Initialize the show framework in Blender

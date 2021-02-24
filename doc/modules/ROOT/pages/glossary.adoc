@@ -3,7 +3,7 @@
 :imagesdir: ../assets/images
 
 [glossary]
-Collection:: Blender objects in a scene can be grouped into collections. Collections are listed in the Outliner editor. *Skybrush Studio Plugin for Blender* uses collections to group drones, formations and drone object templates. For more information on collections in general, please read the https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html[official Blender documentation].
+Collection:: Blender objects in a scene can be grouped into collections. Collections are listed in the Outliner editor. *Skybrush Studio for Blender* uses collections to group drones, formations and drone object templates. For more information on collections in general, please read the https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html[official Blender documentation].
 
 Drones collection:: This collection contains all your drone objects. It is created automatically with the "Create Takeoff Grid" operator, and you can re-assign it to a different collection in the Swarm tab if needed.
 
@@ -19,7 +19,7 @@ LEDs tab:: The LEDs tab is a Skybrush-specific new tab in the sidebar of the 3D 
 
 Safety & Export tab:: The Safety & Export tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor, containing of two panels: one allows you to perform real-time safety verification of your animation and another to export your drone show in Skybrush Compiled Format (`.skyc`).
 
-SKYC:: `.skyc` stands for *Skybrush Compiled* format. It is our most common show definition file type that contains all information related to a drone show (all drone trajectories and light animations, pyro events, suggested geofence definitions, music, designer notes to the operators etc.). The final output of *Skybrush Studio Plugin for Blender* is always a single `.skyc` file that can be opened by other components of the *Skybrush* suite, such as *Skybrush Viewer* and *Skybrush Live*.
+SKYC:: `.skyc` stands for *Skybrush Compiled* format. It is our most common show definition file type that contains all information related to a drone show (all drone trajectories and light animations, pyro events, suggested geofence definitions, music, designer notes to the operators etc.). The final output of *Skybrush Studio for Blender* is always a single `.skyc` file that can be opened by other components of the *Skybrush* suite, such as *Skybrush Viewer* and *Skybrush Live*.
 
 Storyboard:: The Storyboard is a simple list of formations (static or dynamic) that are organized in time with proper timing to give you the overall structure of your drone show animation. The Storyboard can be edited in the "Formations" tab of the sidebar in the 3D Viewport editor.
 
