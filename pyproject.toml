@@ -3,9 +3,11 @@ name = "skybrush-studio-for-blender"
 version = "1.8.0"
 description = "Skybrush Studio for Blender is a professional drone show designer framework integrated into Blender"
 license = "Proprietary"
-authors = ["CollMot Robotics Ltd. <info@collmot.com>"]
+authors = ["CollMot Robotics Ltd. <hello@skybrush.io>"]
 maintainers = ["Tamas Nepusz <tamas@collmot.com>", "Gabor Vasarhelyi <vasarhelyi@collmot.com>"]
 homepage = "https:\\skybrush.io"
+repository = "https://git.collmot.com/skybrush/plugin-blender"
+documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [[tool.poetry.source]]
 name = "collmot"
