@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Appends a bundled single-file Python distribution of the Blender plugin to
-the end of the bootloader executable (compiled separately in the
+"""Appends a bundled single-file Python distribution of Skybrush Studio for
+Blender to the end of the bootloader executable (compiled separately in the
 sbstudio-bootloader project) and produces the final executable that can be
 distributed without revealing the source code.
 """

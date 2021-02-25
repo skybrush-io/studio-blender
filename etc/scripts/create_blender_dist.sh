@@ -1,7 +1,8 @@
 #!/bin/bash
 #
-# Bash script that creates a single ZIP file containing the full code of the
-# Blender plugin so it can simply be extracted in the Blender plugins folder.
+# Bash script that creates a single ZIP file containing the full code of
+# Skybrush Studio for Blender so it can simply be extracted in the
+# Blender addons folder.
 
 OUTPUT_DIR="./dist"
 TMP_DIR="./tmp"

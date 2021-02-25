@@ -1,4 +1,4 @@
-"""Global and file-specific state of the Skybrush Studio plugin."""
+"""Global and file-specific state of Skybrush Studio for Blender."""
 
 import bpy
 import json
@@ -39,8 +39,8 @@ class StateBase(metaclass=ABCMeta):
 
 
 class _SkybrushStudioFileState:
-    """Class representing the state of a single .blend file loaded into the
-    Skybrush Studio Blender plugin.
+    """Class representing the state of a single .blend file loaded into
+    Skybrush Studio for Blender.
     """
 
     _initialized: bool = False
@@ -77,7 +77,7 @@ _file_specific_state = _SkybrushStudioFileState()
 
 
 def get_file_specific_state() -> _SkybrushStudioFileState:
-    """Returns the file-specific state of the Skybrush Studio plugin."""
+    """Returns the file-specific state of Skybrush Studio for Blender."""
     return _file_specific_state
 
 

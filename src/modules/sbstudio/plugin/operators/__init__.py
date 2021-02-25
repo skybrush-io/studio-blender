@@ -1,4 +1,4 @@
-"""Blender operators registered by the Skybrush Studio plugin."""
+"""Blender operators registered by Skybrush Studio for Blender."""
 
 from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator

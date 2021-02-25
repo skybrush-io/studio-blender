@@ -40,7 +40,7 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 ==== Installation from an executable on Windows
 
-This section applies if you have received an executable file (typically named `skybrush-blender-plugin-...-win64.exe`) from us.
+This section applies if you have received an executable file (typically named `skybrush-studio-for-blender-...-win64.exe`) from us.
 
 1. Open the file manager of your operating system and copy the executable in the same folder where Blender is installed. Look for a file named `blender.exe` if you are uncertain.
 

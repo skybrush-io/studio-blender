@@ -8,8 +8,8 @@ __all__ = ("PrepareSceneOperator",)
 
 
 class PrepareSceneOperator(Operator):
-    """Blender operator that prepares a Blender file to be used with the
-    Skybrush Studio plugin.
+    """Blender operator that prepares a Blender file to be used with
+    Skybrush Studio for Blender.
 
     This involves:
 
