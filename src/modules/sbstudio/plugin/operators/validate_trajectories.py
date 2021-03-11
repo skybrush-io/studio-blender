@@ -89,9 +89,15 @@ class ValidateTrajectoriesOperator(Operator):
             by_name=True,
         )
 
+        # Calculate the start time of the validated range, in seconds
+        fps = context.scene.render.fps
+        start_of_scene = context.scene.frame_start
+        timestamp_offset = (frame_range[0] - start_of_scene) / fps
         try:
             show_data = get_api().export_to_skyc(
-                trajectories=trajectories, validation=validation
+                trajectories=trajectories,
+                validation=validation,
+                timestamp_offset=timestamp_offset if timestamp_offset != 0 else None,
             )
         except Exception:
             self.report(
@@ -102,6 +108,10 @@ class ValidateTrajectoriesOperator(Operator):
 
         try:
             skybrush_viewer.load_show_for_validation(show_data)
+            self.report(
+                {"INFO"},
+                "Now switch to the Skybrush Viewer window to view the results",
+            )
             return {"FINISHED"}
         except SkybrushViewerNotFoundError:
             self.report(

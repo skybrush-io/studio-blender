@@ -227,6 +227,7 @@ class SkybrushStudioAPI:
         output: Optional[Path] = None,
         show_title: Optional[str] = None,
         ndigits: float = 3,
+        timestamp_offset: Optional[float] = None,
     ) -> Optional[bytes]:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
@@ -238,6 +239,9 @@ class SkybrushStudioAPI:
                 if the output must be returned instead of saving it to a file
             show_title: arbitrary show title; `None` if no title is needed
             ndigits: round floats to this precision
+            timestamp_offset: when specified, adds this timestamp offset to the
+                metadata of the .skyc file, which is then used later for display
+                purposes in Skybrush Viewer
 
         Note: drone names must match in trajectories and lights
 
@@ -249,6 +253,9 @@ class SkybrushStudioAPI:
         meta = {}
         if show_title is not None:
             meta["title"] = show_title
+
+        if timestamp_offset is not None:
+            meta["timestampOffset"] = timestamp_offset
 
         if lights is None:
             lights = {name: LightProgram() for name in trajectories.keys()}
