@@ -358,7 +358,7 @@ class Storyboard(PropertyGroup, ListMixin):
         """Returns the second entry of the storyboard or `None` if the storyboard
         contains less entries.
         """
-        if len(self) > 1:
+        if len(self.entries) > 1:
             return self.entries[1]
         else:
             return None
@@ -379,10 +379,11 @@ class Storyboard(PropertyGroup, ListMixin):
 
         # Check that entries do not overlap
         for index, (entry, next_entry) in enumerate(zip(entries, entries[1:])):
-            if entry.frame_end > next_entry.frame_start:
+            if entry.frame_end >= next_entry.frame_start:
                 raise StoryboardValidationError(
-                    f"Storyboard entry {entry.name!r} at index {index + 1} "
-                    f"overlaps with next entry {next_entry.name!r}"
+                    f"Storyboard entry {entry.name!r} at index {index + 1} and "
+                    f"frame {next_entry.frame_start} overlaps with next entry "
+                    f"{next_entry.name!r}"
                 )
 
         # Check sizes of constraints
