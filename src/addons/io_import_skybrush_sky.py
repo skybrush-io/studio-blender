@@ -1,5 +1,5 @@
-"""Blender add-on that allows the user to open a Skybrush (.sky) file directly
-in Blender and let the scene render itself automatically.
+"""Blender add-on that allows the user to open a Skybrush script (.sky) file
+directly in Blender and let the scene render itself automatically.
 """
 
 bl_info = {
@@ -114,9 +114,9 @@ def _run_script(filename, context, parameters):
 
 
 class SkybrushImportOperator(Operator, ImportHelper):
-    """Imports a Skybrush file directly into Blender."""
+    """Imports a Skybrush script file directly into Blender."""
 
-    bl_idname = "import.skybrush"
+    bl_idname = "import.skybrush_sky"
     bl_label = "Import Skybrush SKY"
     bl_options = {"REGISTER"}
 
@@ -207,7 +207,7 @@ class SkybrushImportOperator(Operator, ImportHelper):
 
 
 class SkybrushReimportOperator(Operator):
-    """Re-imports the last imported Skybrush file into Blender."""
+    """Re-imports the last imported Skybrush script file into Blender."""
 
     bl_idname = "script.skybrush_reimport"
     bl_label = "Reload Skybrush SKY"
@@ -232,7 +232,7 @@ class SkybrushReimportOperator(Operator):
         if cls._last_operation:
             _run_script(**cls._last_operation)
         else:
-            self.report({"ERROR"}, "No Skybrush file has been imported yet")
+            self.report({"ERROR"}, "No Skybrush script file has been imported yet")
         return {"FINISHED"}
 
 
@@ -242,7 +242,9 @@ class SkybrushReimportOperator(Operator):
 
 
 def menu_func_import(self, context):
-    self.layout.operator(SkybrushImportOperator.bl_idname, text="Skybrush (.sky)")
+    self.layout.operator(
+        SkybrushImportOperator.bl_idname, text="Skybrush Script (.sky)"
+    )
 
 
 def register():
