@@ -408,7 +408,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
 
 #############################################################################
-# Boilerplate to register this as an item in the File / Import menu
+# Boilerplate to register this as an item in the File / Export menu
 #############################################################################
 
 
