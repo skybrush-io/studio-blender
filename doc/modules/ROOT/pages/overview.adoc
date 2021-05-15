@@ -8,6 +8,7 @@ https://skybrush.io/[*Skybrush*] is a modular software suite, consisting of the 
 * *Skybrush Studio* - drone show designer framework
 * *Skybrush Viewer* - 3D drone show visualiser for testing and presentation purposes
 * *Skybrush Live* - drone show management and fleet control framework
+* *Skybrush Sidekick* - companion app to *Skybrush Live* that operates an independent, fallback communication channel
 * *Skybrush Backstage* - drone inventory and log management framework
 
 In this manual our focus is on *Skybrush Studio for Blender*, which is an implementation of *Skybrush Studio* modules and functions in https://www.blender.org/[Blender], an open-source 3D creation suite.
