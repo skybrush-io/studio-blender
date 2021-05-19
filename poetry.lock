@@ -12,8 +12,24 @@ url = "https://pypi.collmot.com/simple"
 reference = "collmot"
 
 [[package]]
+name = "inquirerpy"
+version = "0.2.0"
+description = "Enhaced Python port of Inquirer.js"
+category = "main"
+optional = true
+python-versions = "*"
+
+[package.dependencies]
+prompt-toolkit = ">=3.0.1"
+
+[package.source]
+type = "legacy"
+url = "https://pypi.collmot.com/simple"
+reference = "collmot"
+
+[[package]]
 name = "natsort"
-version = "7.1.0"
+version = "7.1.1"
 description = "Simple yet flexible natural sorting in Python."
 category = "main"
 optional = false
@@ -35,6 +51,22 @@ description = "NumPy is the fundamental package for array computing with Python.
 category = "main"
 optional = true
 python-versions = ">=3.6"
+
+[package.source]
+type = "legacy"
+url = "https://pypi.collmot.com/simple"
+reference = "collmot"
+
+[[package]]
+name = "prompt-toolkit"
+version = "3.0.18"
+description = "Library for building powerful interactive command lines in Python"
+category = "main"
+optional = true
+python-versions = ">=3.6.1"
+
+[package.dependencies]
+wcwidth = "*"
 
 [package.source]
 type = "legacy"
@@ -89,18 +121,19 @@ reference = "collmot"
 
 [[package]]
 name = "skybrush-studio"
-version = "0.9.0"
+version = "2.1.0"
 description = "Drone show designer tools and scripting language"
 category = "main"
 optional = true
 python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
+inquirerpy = ">=0.2.0,<0.3.0"
 numpy = "1.19.3"
 pyledctrl = ">=3.1.0,<4.0.0"
 
 [package.extras]
-cli = ["PyInquirer (>=1.0.3,<2.0.0)", "flockwave-logger (>=1.5.0,<2.0.0)", "natsort (>=7.0.1,<8.0.0)", "tablib (>=2.0.0,<3.0.0)", "tqdm (>=4.48.0,<5.0.0)"]
+cli = ["flockwave-logger (>=1.5.0,<2.0.0)", "natsort (>=7.0.1,<8.0.0)", "tablib (>=2.0.0,<3.0.0)", "tqdm (>=4.48.0,<5.0.0)"]
 json = ["jsonref (>=0.2,<0.3)"]
 report = ["matplotlib (>=3.3.0,<4.0.0)"]
 
@@ -111,7 +144,7 @@ reference = "collmot"
 
 [[package]]
 name = "tqdm"
-version = "4.56.0"
+version = "4.60.0"
 description = "Fast, Extensible Progress Meter"
 category = "main"
 optional = true
@@ -119,7 +152,21 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 
 [package.extras]
 dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+notebook = ["ipywidgets (>=6)"]
 telegram = ["requests"]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.collmot.com/simple"
+reference = "collmot"
+
+[[package]]
+name = "wcwidth"
+version = "0.2.5"
+description = "Measures the displayed width of unicode strings in a terminal"
+category = "main"
+optional = true
+python-versions = "*"
 
 [package.source]
 type = "legacy"
@@ -132,16 +179,20 @@ standalone = ["skybrush-studio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "cca154bd645283f0b25739b991b75dbdd4eebaf2d886e56e164559919f5d89c9"
+content-hash = "3c368079087ccb2140ad1888cab0536a46a60d32aed0246bd8793bd17cb1d464"
 
 [metadata.files]
 click = [
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
 ]
+inquirerpy = [
+    {file = "InquirerPy-0.2.0-py3-none-any.whl", hash = "sha256:e2e5b4bbba0efd496980fc5679c2e21a017bf61f27ef1c6d0e404f56b6ae8f7e"},
+    {file = "InquirerPy-0.2.0.tar.gz", hash = "sha256:14320eded5989d0658ec79ec581e5ff4ac34f8aa4c2e7af0abe1d15dacdaf4ed"},
+]
 natsort = [
-    {file = "natsort-7.1.0-py3-none-any.whl", hash = "sha256:161dfaa30a820a4a274d4eab1f693300990a1be05ae5724af0cc6d3b530fc979"},
-    {file = "natsort-7.1.0.tar.gz", hash = "sha256:33f3f1003e2af4b4df20908fe62aa029999d136b966463746942efbfc821add3"},
+    {file = "natsort-7.1.1-py3-none-any.whl", hash = "sha256:d0f4fc06ca163fa4a5ef638d9bf111c67f65eedcc7920f98dec08e489045b67e"},
+    {file = "natsort-7.1.1.tar.gz", hash = "sha256:00c603a42365830c4722a2eb7663a25919551217ec09a243d3399fa8dd4ac403"},
 ]
 numpy = [
     {file = "numpy-1.19.3-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:942d2cdcb362739908c26ce8dd88db6e139d3fa829dd7452dd9ff02cba6b58b2"},
@@ -179,6 +230,10 @@ numpy = [
     {file = "numpy-1.19.3-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:9a0669787ba8c9d3bb5de5d9429208882fb47764aa79123af25c5edc4f5966b9"},
     {file = "numpy-1.19.3.zip", hash = "sha256:35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72"},
 ]
+prompt-toolkit = [
+    {file = "prompt_toolkit-3.0.18-py3-none-any.whl", hash = "sha256:bf00f22079f5fadc949f42ae8ff7f05702826a97059ffcc6281036ad40ac6f04"},
+    {file = "prompt_toolkit-3.0.18.tar.gz", hash = "sha256:e1b4f11b9336a28fa11810bc623c357420f69dfdb6d2dac41ca2c21a55c033bc"},
+]
 pyclean = [
     {file = "pyclean-2.0.0-py3-none-any.whl", hash = "sha256:ac9bb87f0fffe12acbc2292150f92ec30ca1935acf2b45e9fa24dc64efe9b379"},
     {file = "pyclean-2.0.0.tar.gz", hash = "sha256:06e62e5a26f9b0eaebe249a1a74db17daf35c0216688b6fceb8f55f0d6eb7a40"},
@@ -191,10 +246,14 @@ pyminifier = [
     {file = "pyminifier-2.1.tar.gz", hash = "sha256:e192618fe901830e9298825b32828bc9555ae8649e05af37bfab2db328546777"},
 ]
 skybrush-studio = [
-    {file = "skybrush-studio-0.9.0.tar.gz", hash = "md5:2a09938337c1c4b10d0fa2e7d2ba12a7"},
-    {file = "skybrush_studio-0.9.0-py3-none-any.whl", hash = "md5:bd1aa4b5f735353f46a5db4f53816b01"},
+    {file = "skybrush-studio-2.1.0.tar.gz", hash = "md5:65333a698a6b6a875ffb1eecd478915f"},
+    {file = "skybrush_studio-2.1.0-py3-none-any.whl", hash = "md5:b3533ddab1666077c491ad5c4bf535ab"},
 ]
 tqdm = [
-    {file = "tqdm-4.56.0-py2.py3-none-any.whl", hash = "sha256:4621f6823bab46a9cc33d48105753ccbea671b68bab2c50a9f0be23d4065cb5a"},
-    {file = "tqdm-4.56.0.tar.gz", hash = "sha256:fe3d08dd00a526850568d542ff9de9bbc2a09a791da3c334f3213d8d0bbbca65"},
+    {file = "tqdm-4.60.0-py2.py3-none-any.whl", hash = "sha256:daec693491c52e9498632dfbe9ccfc4882a557f5fa08982db1b4d3adbe0887c3"},
+    {file = "tqdm-4.60.0.tar.gz", hash = "sha256:ebdebdb95e3477ceea267decfc0784859aa3df3e27e22d23b83e9b272bf157ae"},
+]
+wcwidth = [
+    {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
+    {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
 ]
