@@ -21,5 +21,5 @@ set VENV_PYTHONPATH="%REPO_ROOT%\.venv\Lib\site-packages"
 FOR %%A in (natsort pyledctrl) DO mklink /D "dev\vendor\skybrush\%%A" "%VENV_PYTHONPATH%\%%A"
 
 :: skybrush is included as a development version for the time being
-mklink /D "dev\vendor\skybrush\skybrush" "%REPO_ROOT%\..\skybrush\skybrush"
+mklink /D "dev\vendor\skybrush\skybrush" "%REPO_ROOT%\..\skybrush\src\skybrush"
 
