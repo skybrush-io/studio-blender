@@ -101,6 +101,9 @@ fi
 # Remove the single-file entry point, not needed any more
 rm ${OUTPUT_DIR}/${ZIP_STEM}.py
 
+# Create macOS launcher app
+etc/scripts/_build_macos_launcher.sh "${BUILD_DIR}" "${OUTPUT_DIR}"
+
 # Clean up after ourselves
 rm -rf "${BUILD_DIR}"
 
@@ -109,4 +112,5 @@ echo "------------------------------------------------------------------------"
 echo ""
 echo "Bundle created successfully in ${OUTPUT_DIR}/${ZIP_STEM}.zip"
 echo "Single-file Windows executable created successfully in ${OUTPUT_DIR}/${ZIP_STEM}-win64.exe"
+echo "macOS launcher created successfully in ${OUTPUT_DIR}"
 
