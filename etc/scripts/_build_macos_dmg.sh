@@ -9,6 +9,7 @@ set -e
 
 SCRIPT_ROOT=`dirname $0`
 REPO_ROOT="${SCRIPT_ROOT}/../.."
+NAME="Skybrush Studio for Blender"
 
 ###############################################################################
 
@@ -29,16 +30,22 @@ echo "You may also close this window with Command-Q."
 EOF
 
 platypus \
-	-a "Skybrush Studio for Blender" \
-	-o "Text Window" \
-	-V "${VERSION}" \
-	-u "CollMot Robotics Ltd" \
-	-I com.collmot.skybrush.studio.blender \
-	-R \
-	-y \
-	-f dist/${EXECUTABLE} \
-	"${BUILD_DIR}/launch.sh"
+    -a "${NAME}" \
+    -o "Text Window" \
+    -V "${VERSION}" \
+    -u "CollMot Robotics Ltd" \
+    -I com.collmot.skybrush.studio.blender \
+    -R \
+    -y \
+    -f dist/${EXECUTABLE} \
+    "${BUILD_DIR}/launch.sh"
 
 rm "${BUILD_DIR}/launch.sh"
-rm -rf "${OUTPUT_DIR}/Skybrush Studio for Blender.app"
-mv "${BUILD_DIR}/Skybrush Studio for Blender.app" "${OUTPUT_DIR}"
+rm -rf "${OUTPUT_DIR}/${NAME} ${VERSION}.dmg"
+hdiutil create \
+    -volname "${NAME} ${VERSION}" \
+    -srcfolder "${BUILD_DIR}/${NAME}.app" \
+    -ov \
+    -format UDZO \
+    "${OUTPUT_DIR}/${NAME} ${VERSION}.dmg"
+

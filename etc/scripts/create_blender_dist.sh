@@ -101,8 +101,8 @@ fi
 # Remove the single-file entry point, not needed any more
 rm ${OUTPUT_DIR}/${ZIP_STEM}.py
 
-# Create macOS launcher app
-etc/scripts/_build_macos_launcher.sh "${BUILD_DIR}" "${OUTPUT_DIR}"
+# Create macOS launcher app in a disk image
+etc/scripts/_build_macos_dmg.sh "${BUILD_DIR}" "${OUTPUT_DIR}"
 
 # Clean up after ourselves
 rm -rf "${BUILD_DIR}"
