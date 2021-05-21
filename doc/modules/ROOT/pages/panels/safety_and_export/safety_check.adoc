@@ -6,7 +6,7 @@ The Safety Check panel lets you perform real-time frame-level or full post-proce
 
 image::panels/safety_check/safety_check.jpg[Safety Check panel]
 
-Safety warnings of the current frame appear in real time as text on the left side of the 3D Viewport editor, while errorous drones are also highlighted in real time with red as seen in the image below.
+Safety warnings of the current frame appear in real time as text on the left side of the 3D Viewport editor, while drones with warnings are also highlighted in real time with red as seen in the image below.
 
 image::panels/safety_check/real_time_safety_checks.jpg[Real time safety checks]
 

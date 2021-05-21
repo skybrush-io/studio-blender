@@ -92,5 +92,5 @@ We suggest you to check the following Blender settings before you start designin
 
 * set the first frame of the scene to 0 (instead of the default 1)
 * set your rendering frame rate to a convenient value
-* If you use a preview frame range separately from the render frame range, make sure it is enabled, otherwise it will give back (0, 0) values in the Blender API that might result in errorous outputs in certain cases
+* If you use a preview frame range separately from the render frame range, make sure it is enabled, otherwise it will return (0, 0) values in the Blender API that might result in erroneous output in certain cases
 * in the View tab on the sidebar of the 3D Viewport Editor set up a convenient Clip Start and End value to make your drones visible during the whole show in case you need to render your show
