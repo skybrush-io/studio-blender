@@ -226,6 +226,7 @@ class SkybrushStudioAPI:
         lights: Optional[Dict[str, LightProgram]] = None,
         output: Optional[Path] = None,
         show_title: Optional[str] = None,
+        show_type: str = "outdoor",
         ndigits: float = 3,
         timestamp_offset: Optional[float] = None,
     ) -> Optional[bytes]:
@@ -238,6 +239,7 @@ class SkybrushStudioAPI:
             output: the file path where the output should be saved or `None`
                 if the output must be returned instead of saving it to a file
             show_title: arbitrary show title; `None` if no title is needed
+            show_type: type of the show; must be one of `outdoor` or `indoor`
             ndigits: round floats to this precision
             timestamp_offset: when specified, adds this timestamp offset to the
                 metadata of the .skyc file, which is then used later for display
@@ -265,6 +267,7 @@ class SkybrushStudioAPI:
                 "format": "json",
                 "data": {
                     "version": 1,
+                    "environment": {"type": show_type},
                     "settings": {"validation": validation.as_dict(ndigits=ndigits)},
                     "swarm": {
                         "drones": [

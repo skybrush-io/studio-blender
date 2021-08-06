@@ -22,7 +22,13 @@ class ExportPanel(Panel):
     bl_category = "Safety & Export"
 
     def draw(self, context):
+        scene = context.scene
+        settings = scene.skybrush.settings
+
         layout = self.layout
+
+        if settings:
+            layout.prop(settings, "show_type")
 
         layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
 

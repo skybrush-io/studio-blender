@@ -1,4 +1,4 @@
-from bpy.props import BoolProperty, FloatProperty, PointerProperty
+from bpy.props import BoolProperty, EnumProperty, FloatProperty, PointerProperty
 from bpy.types import Collection, PropertyGroup
 
 from sbstudio.plugin.utils.bloom import set_bloom_effect_enabled
@@ -30,6 +30,26 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         min=0.1,
         soft_min=0.1,
         soft_max=20,
+    )
+
+    show_type = EnumProperty(
+        name="Show type",
+        description="Specifies whether the drone show is an outdoor or an indoor show",
+        default="OUTDOOR",
+        items=[
+            (
+                "OUTDOOR",
+                "Outdoor",
+                "Outdoor show, for drones that navigate using a geodetic (GPS) coordinate system",
+                1,
+            ),
+            (
+                "INDOOR",
+                "Indoor",
+                "Indoor show, for drones that navigate using a local (XYZ) coordinate system",
+                2,
+            ),
+        ],
     )
 
     use_bloom_effect = BoolProperty(
