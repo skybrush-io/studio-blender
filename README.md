@@ -10,7 +10,7 @@ The output of Skybrush Studio for Blender is a single .skyc file. Using .skyc fi
 
 To install Skybrush Studio for Blender, **DO NOT** follow the official
 [Blender add-on guide](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html),
-as it does not give a solution to easily install external python dependencies.
+as it does not give a solution to easily install external Python dependencies.
 
 Instead, a complete installation guide is available in the [online documentation](https://doc.collmot.com/public/skybrush-plugin-blender/latest/install.html)
 
