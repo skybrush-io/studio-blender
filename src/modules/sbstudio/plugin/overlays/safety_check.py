@@ -76,13 +76,19 @@ class SafetyCheckOverlay(Overlay):
         left_panel_width = context.area.regions[2].width
         total_height = context.area.height
 
-        left_margin = left_panel_width + 19 * self._ui_scale
+        # Margin width was changed between Blender 2.83 and Blender 2.90
+        if bpy.app.version < (2, 90):
+            left_margin = left_panel_width + 19 * self._ui_scale
+        else:
+            left_margin = left_panel_width + 10 * self._ui_scale
+
         y = total_height - 112 * self._ui_scale
         line_height = 20 * self._ui_scale
 
         blf.size(font_id, int(11 * self._ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
 
+        blf.color(font_id, 1, 1, 1, 1)
         blf.position(font_id, left_margin, y, 0)
         blf.draw(font_id, safety_check.formation_status)
         y -= line_height

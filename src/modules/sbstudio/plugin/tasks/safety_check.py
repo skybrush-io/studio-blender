@@ -118,7 +118,7 @@ def run_safety_check(scene, depsgraph):
     snapshot = create_position_snapshot_for_drones_in_collection(drones, frame=frame)
     _position_snapshot_cache[frame] = snapshot
 
-    # Get actual formation status as a string
+    # Get formation status as a string
     storyboard = scene.skybrush.storyboard
     formation_status = storyboard.get_formation_status_at_frame(frame)
 
