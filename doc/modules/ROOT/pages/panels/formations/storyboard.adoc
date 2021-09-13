@@ -43,3 +43,7 @@ Once you are satisfied with your storyboard, you can press the btn:[Recalculate 
 image::panels/storyboard/recalculate_transitions.jpg[Recalculate Transitions]
 
 The popup menu that appears when clicking on the button offers various options to recalculate all transitions or only a subset of them. The recalculation process also creates or updates the constraints on your drones in your Drones collection to follow the given formations during their associated time interval.
+
+== Updating Time Markers from the Storyboard
+
+The main cues of the Storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers and update them based on the actual storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel.
