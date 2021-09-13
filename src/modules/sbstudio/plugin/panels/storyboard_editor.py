@@ -7,6 +7,7 @@ from sbstudio.plugin.operators import (
     RecalculateTransitionsOperator,
     RemoveStoryboardEntryOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
+    UpdateTimeMarkersFromStoryboardOperator,
 )
 
 
@@ -83,4 +84,14 @@ class StoryboardEditor(Panel):
         col.emboss = "NORMAL"
         col.operator_menu_enum(
             RecalculateTransitionsOperator.bl_idname, "scope", icon="SHADERFX"
+        )
+
+        #####################################################################
+
+        row = layout.row(align=True)
+
+        row.operator(
+            UpdateTimeMarkersFromStoryboardOperator.bl_idname,
+            icon="ANCHOR_CENTER",
+            text="Update Time Markers",
         )
