@@ -5,21 +5,25 @@
 ECHO off
 
 set SCRIPT_ROOT=%~dp0
-set REPO_ROOT="%SCRIPT_ROOT%\..\.."
-
+set REPO_ROOT=%SCRIPT_ROOT%\..\..
+set SKYBRUSH_ROOT=%REPO_ROOT%\..\skybrush
 cd %REPO_ROOT%
 
 call poetry install -E standalone
 
-rmdir /Q /S "dev\"
-mkdir "dev\vendor\skybrush"
-mklink /D "dev\addons" "%REPO_ROOT%\src\addons"
-mklink /D "dev\modules" "%REPO_ROOT%\src\modules"
+rmdir /Q /S dev\
+mkdir dev\vendor\skybrush
+mklink /D dev\addons %REPO_ROOT%\src\addons
+mklink /D dev\modules %REPO_ROOT%\src\modules
 
-set VENV_PYTHONPATH="%REPO_ROOT%\.venv\Lib\site-packages"
-::FOR %%A in (natsort pyledctrl skybrush) DO mklink /D "dev\vendor\skybrush\%%A" "%VENV_PYTHONPATH%\%%A"
-FOR %%A in (natsort pyledctrl) DO mklink /D "dev\vendor\skybrush\%%A" "%VENV_PYTHONPATH%\%%A"
+set VENV_PYTHONPATH=%REPO_ROOT%\.venv\Lib\site-packages
+::FOR %%A in (natsort pyledctrl skybrush) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
+FOR %%A in (natsort pyledctrl) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
 
 :: skybrush is included as a development version for the time being
-mklink /D "dev\vendor\skybrush\skybrush" "%REPO_ROOT%\..\skybrush\src\skybrush"
+set VENV_PYTHONPATH=%SKYBRUSH_ROOT%\.venv\Lib\site-packages
+mklink /D dev\vendor\skybrush\skybrush %SKYBRUSH_ROOT%\src\skybrush
+FOR %%A in (jsonref.py proxytypes.py) DO mklink dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
+
+cd etc/scripts
 
