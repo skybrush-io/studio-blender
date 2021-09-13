@@ -261,12 +261,22 @@ def _make_annotations(cls):
     """Converts class fields to annotations.
 
     This is needed because apparently the syntax that Blender 2.80 uses for
-    the class properties (i.e. using IntProperty(), FloatProperty() etc) is
-    barfed upon by the linter. We stick to the older Blender 2.7x-style
-    annotation and then convert it on-the fly when the class is registered
-    as an operator.
+    the class properties (i.e. using IntProperty(), FloatProperty() etc) confuses
+    Python static type checkers like Pyright or Pylance. We stick to the older
+    Blender 2.7x-style annotations and then convert them on-the fly when the
+    class is registered as an operator.
     """
-    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+    # Before Blender 2.93, properties in Blender classes were instances of
+    # tuples so we look for that. Blender 2.93 changed this to
+    # bpy.props._PropertyDeferred
+    try:
+        from bpy.props import _PropertyDeferred
+    except ImportError:
+        _PropertyDeferred = tuple
+
+    bl_props = {
+        k: v for k, v in cls.__dict__.items() if isinstance(v, _PropertyDeferred)
+    }
 
     if bl_props:
         if "__annotations__" not in cls.__dict__:

@@ -222,7 +222,7 @@ def _get_lights(
     return lights
 
 
-def _write_skybrush_file(context, settings, filepath: Path) -> dict:
+def _write_skybrush_file(context, settings, filepath: Path) -> None:
     """Creates Skybrush-compatible output from blender trajectories and color
     animation.
 
@@ -232,7 +232,6 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
         context: the main Blender context
         settings: export settings
         filepath: the output path where the export should write
-
     """
 
     log.info(f"Exporting show content to {filepath}")
@@ -253,9 +252,11 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     lights = _get_lights(drones, settings, frame_range, context=context)
 
     # get automatic show title
-    show_title = "Show '{}' exported from Blender".format(
-        bpy.path.basename(filepath).split(".")[0]
-    )
+    show_title = str(bpy.path.basename(filepath).split(".")[0])
+
+    # get show type
+    settings = getattr(context.scene.skybrush, "settings", None)
+    show_type = (settings.show_type if settings else "OUTDOOR").lower()
 
     # get validation parameters
     safety_check = getattr(context.scene.skybrush, "safety_check", None)
@@ -272,6 +273,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     log.info("Exporting to .skyc")
     get_api().export_to_skyc(
         show_title=show_title,
+        show_type=show_type,
         validation=validation,
         trajectories=trajectories,
         lights=lights,

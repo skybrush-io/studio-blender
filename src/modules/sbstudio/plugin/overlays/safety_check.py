@@ -1,4 +1,3 @@
-import bgl
 import blf
 import bpy
 import gpu
@@ -9,6 +8,15 @@ from typing import List, Sequence
 from sbstudio.model.types import Coordinate3D
 
 from .base import Overlay
+
+try:
+    import gpu.state
+
+    has_gpu_state_module = True
+except ImportError:
+    import bgl
+
+    has_gpu_state_module = False
 
 __all__ = ("SafetyCheckOverlay",)
 
@@ -76,13 +84,19 @@ class SafetyCheckOverlay(Overlay):
         left_panel_width = context.area.regions[2].width
         total_height = context.area.height
 
-        left_margin = left_panel_width + 19 * self._ui_scale
+        # Margin width was changed between Blender 2.83 and Blender 2.90
+        if bpy.app.version < (2, 90):
+            left_margin = left_panel_width + 19 * self._ui_scale
+        else:
+            left_margin = left_panel_width + 10 * self._ui_scale
+
         y = total_height - 112 * self._ui_scale
         line_height = 20 * self._ui_scale
 
         blf.size(font_id, int(11 * self._ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
 
+        blf.color(font_id, 1, 1, 1, 1)
         blf.position(font_id, left_margin, y, 0)
         blf.draw(font_id, safety_check.formation_status)
         y -= line_height
@@ -118,7 +132,10 @@ class SafetyCheckOverlay(Overlay):
             y -= line_height
 
     def draw_3d(self) -> None:
-        bgl.glEnable(bgl.GL_BLEND)
+        if has_gpu_state_module:
+            gpu.state.blend_set("ALPHA")
+        else:
+            bgl.glEnable(bgl.GL_BLEND)
 
         if self._markers is not None:
             if self._shader_batches is None:
@@ -127,8 +144,12 @@ class SafetyCheckOverlay(Overlay):
             if self._shader_batches:
                 self._shader.bind()
                 self._shader.uniform_float("color", (1, 0, 0, 1))
-                bgl.glLineWidth(5)
-                bgl.glPointSize(20)
+                if has_gpu_state_module:
+                    gpu.state.line_width_set(5)
+                    gpu.state.point_size_set(20)
+                else:
+                    bgl.glLineWidth(5)
+                    bgl.glPointSize(20)
                 for batch in self._shader_batches:
                     batch.draw(self._shader)
 
