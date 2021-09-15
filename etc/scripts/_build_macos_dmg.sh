@@ -38,6 +38,7 @@ platypus \
     -R \
     -y \
     -f dist/${EXECUTABLE} \
+    -i assets/icons/mac/skybrush.icns \
     "${BUILD_DIR}/launch.sh"
 
 rm "${BUILD_DIR}/launch.sh"
