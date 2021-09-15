@@ -1,6 +1,6 @@
 name: skybrush-studio-for-blender
 title: Skybrush Studio for Blender
-version: '1.10.0'
+version: latest
 nav:
   - modules/ROOT/nav.adoc
 
