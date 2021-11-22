@@ -99,6 +99,7 @@ class ValidateTrajectoriesOperator(Operator):
                 validation=validation,
                 timestamp_offset=timestamp_offset if timestamp_offset != 0 else None,
             )
+            assert show_data is not None
         except Exception:
             self.report(
                 {"ERROR"},

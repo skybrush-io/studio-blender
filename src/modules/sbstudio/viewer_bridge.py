@@ -204,6 +204,8 @@ class SSDPAppDiscovery:
             f"\r\n"
         ).encode("ascii")
 
+        # Apparently, sending a datagram to 127.0.0.1 does not work even if we
+        # are only interested in Viewer instances running on the same machine
         self._sock.sendto(message, ("239.255.255.250", 1900))
 
         # There may be pending SSDP responses in the queue so we read at most
@@ -216,7 +218,10 @@ class SSDPAppDiscovery:
             location = None
 
             try:
-                # TODO(ntamas): reject packets that come from a different machine
+                # TODO(ntamas): reject packets that come from a different machine.
+                # Unfortunately it's complicated; we would need something like
+                # the 'netifaces' module to get all IP addresses reliably, and
+                # it is not platform-independent
                 data, addr = self._sock.recvfrom(65507)
             except SocketTimeoutError:
                 return

@@ -1,4 +1,5 @@
 import json
+from os import environ
 import re
 
 from contextlib import contextmanager
@@ -262,12 +263,16 @@ class SkybrushStudioAPI:
         if lights is None:
             lights = {name: LightProgram() for name in trajectories.keys()}
 
+        environment = {"type": show_type}
+
+        # TODO(ntamas): add cameras to environment in the "environment" key
+
         data = {
             "input": {
                 "format": "json",
                 "data": {
                     "version": 1,
-                    "environment": {"type": show_type},
+                    "environment": environment,
                     "settings": {"validation": validation.as_dict(ndigits=ndigits)},
                     "swarm": {
                         "drones": [
