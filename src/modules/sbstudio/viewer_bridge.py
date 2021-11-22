@@ -71,7 +71,6 @@ class SkybrushViewerBridge:
             try:
                 with urlopen(request) as response:
                     result = load(response)
-                    print("Got", repr(result))
                     if isinstance(result, dict):
                         return result
                     else:
@@ -176,7 +175,6 @@ class SSDPAppDiscovery:
         if force:
             self.invalidate()
         self._update_url_if_needed()
-        print("Returning URL:", self._url)
         return self._url
 
     def invalidate(self) -> None:
