@@ -2,6 +2,8 @@
 current machine and for posting data to it.
 """
 
+from datetime import datetime
+from email.utils import parsedate_to_datetime
 from errno import ECONNREFUSED
 from json import load
 from socket import (
@@ -51,9 +53,9 @@ class SkybrushViewerBridge:
             SkybrushViewerError: in case of request errors, server errors or if
                 the Skybrush Viewer instance is not running
         """
-        force, success = False, False
+        force = False
 
-        while not success:
+        while True:
             url = self._discovery.discover(force=force)
             if url is None:
                 raise SkybrushViewerNotFoundError()
@@ -62,13 +64,14 @@ class SkybrushViewerBridge:
                 url = url[:-1]
             if path.startswith("/"):
                 path = path[1:]
-            path = f"{url}/api/v1/{path}"
+            url_and_path = f"{url}/api/v1/{path}"
 
-            request = Request(path, *args, **kwds)
+            request = Request(url_and_path, *args, **kwds)
 
             try:
                 with urlopen(request) as response:
                     result = load(response)
+                    print("Got", repr(result))
                     if isinstance(result, dict):
                         return result
                     else:
@@ -112,12 +115,11 @@ class SkybrushViewerBridge:
                 self._discovery.invalidate()
                 raise
 
-            if not success:
-                if force:
-                    raise SkybrushViewerNotFoundError()
-                else:
-                    # try again with a non-cached URL
-                    force = True
+            if force:
+                raise SkybrushViewerNotFoundError()
+            else:
+                # try again with a non-cached URL
+                force = True
 
     def check_running(self) -> bool:
         """Returns whether the Skybrush Viewer instance is up and running."""
@@ -174,6 +176,7 @@ class SSDPAppDiscovery:
         if force:
             self.invalidate()
         self._update_url_if_needed()
+        print("Returning URL:", self._url)
         return self._url
 
     def invalidate(self) -> None:
@@ -190,7 +193,7 @@ class SSDPAppDiscovery:
             self._url = self._update_url()
             self._last_checked_at = monotonic()
 
-    def _update_url(self) -> None:
+    def _update_url(self) -> Optional[str]:
         """Updates the URL of the running service instance unconditionally."""
         message = (
             f"M-SEARCH * HTTP/1.1\r\n"
@@ -203,18 +206,50 @@ class SSDPAppDiscovery:
 
         self._sock.sendto(message, ("239.255.255.250", 1900))
 
-        try:
-            # TODO(ntamas): reject packets that come from a different machine
-            data, addr = self._sock.recvfrom(65507)
-        except SocketTimeoutError:
-            return
+        # There may be pending SSDP responses in the queue so we read at most
+        # 10 times, looking for messages where the date is not too old
+        attempts = 10
+        location = None
+        while attempts > 0:
+            attempts -= 1
+            date_ok = False
+            location = None
 
-        if not data.startswith(b"HTTP/1.1 200 OK\r\n"):
-            return
+            try:
+                # TODO(ntamas): reject packets that come from a different machine
+                data, addr = self._sock.recvfrom(65507)
+            except SocketTimeoutError:
+                return
 
-        lines = data.split(b"\r\n")
-        for line in lines:
-            key, _, value = line.partition(b":")
-            key = key.decode("ascii", "replace").upper().strip()
-            if key == "LOCATION":
-                return value.decode("ascii", "replace").strip()
+            if not data.startswith(b"HTTP/1.1 200 OK\r\n"):
+                continue
+
+            lines = data.split(b"\r\n")
+            for line in lines:
+                key, _, value = line.partition(b":")
+                key = key.decode("ascii", "replace").upper().strip()
+                if key == "LOCATION":
+                    location = value.decode("ascii", "replace").strip()
+                elif key == "DATE":
+                    try:
+                        parsed_date = parsedate_to_datetime(
+                            value.decode("ascii", "replace")
+                        )
+                    except ValueError:
+                        continue
+
+                    if (
+                        parsed_date.tzinfo is None
+                        or parsed_date.tzinfo.utcoffset(parsed_date) is None
+                    ):
+                        diff = parsed_date - datetime.now()
+                    else:
+                        diff = parsed_date - datetime.now(parsed_date.tzinfo)
+
+                    if abs(diff.total_seconds()) < 5:
+                        date_ok = True
+
+            if location and date_ok:
+                break
+
+        return location
