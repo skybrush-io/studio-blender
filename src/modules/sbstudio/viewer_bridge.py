@@ -125,14 +125,25 @@ class SkybrushViewerBridge:
         result = self._send_request("ping")
         return bool(result.get("result"))
 
-    def load_show_for_validation(self, show_data: bytes) -> None:
+    def load_show_for_validation(
+        self, show_data: bytes, *, filename: Optional[str] = None
+    ) -> None:
         """Asks the running Skybrush Viewer instance to load the given show data
         for validation.
+
+        Parameters:
+            show_data: the raw show data in .skyc format
+            filename: name of the file that the data was generated from; used
+                for data transfer to Skybrush Viewer
         """
+        headers = {"Content-Type": "application/skybrush-compiled"}
+        if filename:
+            headers["X-Skybrush-Viewer-Title"] = filename[:512]
+
         result = self._send_request(
             "load",
             data=show_data,
-            headers={"Content-Type": "application/skybrush-compiled"},
+            headers=headers,
         )
 
         if not result.get("result"):

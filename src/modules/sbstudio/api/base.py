@@ -228,7 +228,7 @@ class SkybrushStudioAPI:
         output: Optional[Path] = None,
         show_title: Optional[str] = None,
         show_type: str = "outdoor",
-        ndigits: float = 3,
+        ndigits: int = 3,
         timestamp_offset: Optional[float] = None,
     ) -> Optional[bytes]:
         """Export drone show data into Skybrush Compiled Format (.skyc).

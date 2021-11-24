@@ -1,3 +1,5 @@
+import bpy
+
 from bpy.props import BoolProperty
 from bpy.types import Operator
 
@@ -93,6 +95,7 @@ class ValidateTrajectoriesOperator(Operator):
         fps = context.scene.render.fps
         start_of_scene = context.scene.frame_start
         timestamp_offset = (frame_range[0] - start_of_scene) / fps
+        filename = bpy.data.filepath or None
         try:
             show_data = get_api().export_to_skyc(
                 trajectories=trajectories,
@@ -108,7 +111,7 @@ class ValidateTrajectoriesOperator(Operator):
             return {"CANCELLED"}
 
         try:
-            skybrush_viewer.load_show_for_validation(show_data)
+            skybrush_viewer.load_show_for_validation(show_data, filename=filename)
             self.report(
                 {"INFO"},
                 "Now switch to the Skybrush Viewer window to view the results",
