@@ -1,5 +1,5 @@
 [version]
-current = "1.10.0"
+current = "1.10.1"
 regex = '''
   (?P<major>\d+)
   \.
@@ -15,7 +15,3 @@ tag_template = "{new_version}"
 [[file]]
 src = "pyproject.toml"
 search = 'version = "{current_version}"'
-
-[[before_commit]]
-name = "Run pre-commit hooks"
-cmd = "pre-commit run --all-files"
