@@ -5,7 +5,9 @@ frame.
 
 import bpy
 
+from contextlib import contextmanager
 from math import hypot
+from typing import Iterator
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.constants import Collections
@@ -22,6 +24,9 @@ from .base import Task
 #: Cache that stores the positions in the last few frames visited by the user
 #: in the hope that we can estimate the velocities from it in the current frame
 _position_snapshot_cache = LRUCache(5)
+
+#: Suspension counter. Safety checks are suspended if this counter is positive
+_suspension_counter = 0
 
 #: Zero velocity tuple, used frequently in velocity estimations when no data is
 #: available
@@ -92,6 +97,10 @@ def estimate_velocities_of_drones_at_frame(snapshot, *, frame, scene):
 
 # @debounced(delay=0.1)
 def run_safety_check(scene, depsgraph):
+    global _suspension_counter
+    if _suspension_counter > 0:
+        return
+
     safety_check = scene.skybrush.safety_check
 
     if safety_check.enabled:
@@ -208,6 +217,19 @@ def run_tasks_post_load(*args):
     """Runs all the tasks that should be completed after loading a file."""
     invalidate_caches()
     ensure_overlays_enabled()
+
+
+@contextmanager
+def suspended_safety_checks() -> Iterator[None]:
+    """Context manager that suspends safety checks when the context is entered
+    and re-enables them when the context is exited.
+    """
+    global _suspension_counter
+    _suspension_counter += 1
+    try:
+        yield
+    finally:
+        _suspension_counter -= 1
 
 
 class SafetyCheckTask(Task):

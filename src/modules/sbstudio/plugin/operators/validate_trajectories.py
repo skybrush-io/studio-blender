@@ -5,6 +5,8 @@ from bpy.types import Operator
 
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.plugin.api import get_api
+from sbstudio.plugin.tasks.light_effects import suspended_light_effects
+from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.props import FrameRangeProperty
 from sbstudio.plugin.utils.sampling import sample_positions_of_objects_in_frame_range
 from sbstudio.viewer_bridge import (
@@ -81,15 +83,14 @@ class ValidateTrajectoriesOperator(Operator):
             )
             return {"CANCELLED"}
 
-        # TODO(ntamas): temporarily suspend validation and light effects for
-        # the duration of the sampling
-        trajectories = sample_positions_of_objects_in_frame_range(
-            drones,
-            frame_range,
-            fps=4,
-            context=context,
-            by_name=True,
-        )
+        with suspended_safety_checks(), suspended_light_effects():
+            trajectories = sample_positions_of_objects_in_frame_range(
+                drones,
+                frame_range,
+                fps=4,
+                context=context,
+                by_name=True,
+            )
 
         # Calculate the start time of the validated range, in seconds
         fps = context.scene.render.fps
