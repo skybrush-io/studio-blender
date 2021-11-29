@@ -39,7 +39,9 @@ rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
-# Install dependencies
+# Install dependencies. setuptools < 58 is needed because pyminifier is
+# unmaintained and setuptools deprecated use_2to3 in version 58
+.venv/bin/pip install "setuptools==57.5.0"
 .venv/bin/pip install -U pip wheel pyclean pyminifier
 .venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
