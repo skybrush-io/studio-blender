@@ -70,10 +70,8 @@ def create_icosphere(
         object: the created mesh object
     """
     with use_b_mesh() as bm:
-        # "diameter = radius" may look weird, but actually it is correct. It is
-        # probably a bug in Blender.
         bmesh.ops.create_icosphere(
-            bm, subdivisions=2, diameter=radius, matrix=Matrix(), calc_uvs=True
+            bm, subdivisions=2, radius=radius, matrix=Matrix(), calc_uvs=True
         )
         obj = create_object_from_bmesh(bm, name=name or "Icosphere")
 
