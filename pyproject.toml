@@ -26,7 +26,7 @@ test_matcher = "tests.test_matcher:main"
 
 [tool.poetry.dev-dependencies]
 pyclean = "^2.0.0"
-pyminifier = "^2.1"
+pyminifier = "^3.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
