@@ -70,9 +70,17 @@ def create_icosphere(
         object: the created mesh object
     """
     with use_b_mesh() as bm:
-        bmesh.ops.create_icosphere(
-            bm, subdivisions=2, radius=radius, matrix=Matrix(), calc_uvs=True
-        )
+        if bpy.app.version < (3, 0, 0):
+            # Blender 2.93 and earlier. The Python API incorrectly uses 'diameter'
+            # for the name of the parameter; it actually expects the radius there.
+            bmesh.ops.create_icosphere(
+                bm, subdivisions=2, diameter=radius, matrix=Matrix(), calc_uvs=True
+            )
+        else:
+            # Blender 3.0 and later. The Python API naming is consistent here.
+            bmesh.ops.create_icosphere(
+                bm, subdivisions=2, radius=radius, matrix=Matrix(), calc_uvs=True
+            )
         obj = create_object_from_bmesh(bm, name=name or "Icosphere")
 
     obj.location = center
