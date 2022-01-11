@@ -247,16 +247,24 @@ def menu_func_import(self, context):
     )
 
 
+def menu_func_reimport(self, context):
+    self.layout.operator(
+        SkybrushReimportOperator.bl_idname, text="Reload Current Skybrush Script"
+    )
+
+
 def register():
     register_operator(SkybrushImportOperator)
     register_operator(SkybrushReimportOperator)
     register_in_menu("File / Import", menu_func_import)
+    register_in_menu("Blender / System", menu_func_reimport)
 
 
 def unregister():
     unregister_operator(SkybrushReimportOperator)
     unregister_operator(SkybrushImportOperator)
     unregister_from_menu("File / Import", menu_func_import)
+    unregister_from_menu("Blender / System", menu_func_reimport)
 
 
 if __name__ == "__main__":
