@@ -218,9 +218,14 @@ def get_shader_node_and_input_for_diffuse_color_of_material(material):
             input = node.inputs["Base Color"]
             return node, input
         except KeyError:
-            raise SkybrushStudioAddonError(
-                "Material does not have a diffuse color shader node"
-            )
+            try:
+                node = nodes["Principled BSDF"]
+                input = node.inputs["Emission"]
+                return node, input
+            except KeyError:
+                raise SkybrushStudioAddonError(
+                    "Material does not have a diffuse color shader node"
+                )
 
 
 def set_specular_reflection_intensity_of_material(material, intensity):

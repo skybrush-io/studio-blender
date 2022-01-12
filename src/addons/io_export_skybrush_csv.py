@@ -14,13 +14,21 @@ the online converter:
 
     https://account.skybrush.io
 
+To install this addon:
+
+    1. Open Blender
+    2. Navigate to Edit -> Preferences
+    3. Select the Add-ons tab
+    4. Press 'Install...'
+    5. Select this file and press 'Install Add-on'
+
 """
 
 bl_info = {
     "name": "Export Skybrush-compatible CSV Format (.zip)",
     "author": "CollMot Robotics Ltd.",
     "description": "Export object trajectories and color animation to a Skybrush-compatible simple CSV format",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (2, 83, 0),
     "location": "File > Export > Skybrush-CSV",
     "category": "Import-Export",
@@ -95,8 +103,8 @@ def _get_objects(context, settings):
     """Return generator for objects to export.
 
     Parameters:
-        context - the main Blender context
-        settings - export settings
+        context: the main Blender context
+        settings: export settings
 
     Yields:
         objects passing all specified filters natural-sorted by their name
@@ -123,7 +131,7 @@ def _get_location(obj):
     """Return global location of an object at the actual frame.
 
     Parameters:
-        obj - a Blender object
+        obj: a Blender object
 
     Return:
         location of object in the world frame
@@ -132,23 +140,87 @@ def _get_location(obj):
     return tuple(obj.matrix_world.translation)
 
 
-def _get_color(obj):
+def _get_shader_node_and_input_for_diffuse_color_of_material(material):
+    """Returns a reference to the shader node and its input that controls the
+    diffuse color of the given material.
+
+    The material must use a principled BSDF or an emission shader.
+
+    Parameters:
+        material: the Blender material to update
+
+    Raises:
+        ValueError: if the material does not use shader nodes
+    """
+    nodes = material.node_tree.nodes
+    try:
+        node = nodes["Emission"]
+        input = node.inputs["Color"]
+        return node, input
+    except KeyError:
+        try:
+            node = nodes["Principled BSDF"]
+            input = node.inputs["Base Color"]
+            return node, input
+        except KeyError:
+            try:
+                node = nodes["Principled BSDF"]
+                input = node.inputs["Emission"]
+                return node, input
+            except KeyError:
+                raise ValueError("Material does not have a diffuse color shader node")
+
+
+def _get_color(obj, frame):
     """Return diffuse_color of an object at the actual frame.
 
     Parameters:
-        obj - a Blender object
+        obj: a Blender object
+        frame: the current frame
 
     Return:
         color of object as an R, G, B tuple in [0-255]
 
     """
-    if not obj.active_material or not obj.active_material.diffuse_color:
+    # if there is no material or diffuse color, we return black
+    material = obj.active_material
+    if not material or not material.diffuse_color:
         return (0, 0, 0)
 
+    # if color is not animated with nodes, use a single color (that can be
+    # an animated color as well, which is already evaluated at the given frame)
+    if not material.use_nodes:
+        return (
+            _to_int_255(material.diffuse_color[0]),
+            _to_int_255(material.diffuse_color[1]),
+            _to_int_255(material.diffuse_color[2]),
+        )
+
+    # if a shader node is used, sample it on the given frame
+    node, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
+    animation = material.node_tree.animation_data
+    # if it is not animated, get the default value
+    if not animation:
+        rgb = input.default_value[:3]
+    # if it is animated, evaluate shader node on the given frame
+    else:
+        index = node.inputs.find(input.name)
+        data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
+        rgb = [0, 0, 0]
+        for fc in animation.action.fcurves:
+            if fc.data_path != data_path:
+                continue
+
+            # iterate channels (r, g, b) only
+            if fc.array_index not in (0, 1, 2):
+                continue
+
+            rgb[fc.array_index] = fc.evaluate(frame)
+
     return (
-        _to_int_255(obj.active_material.diffuse_color[0]),
-        _to_int_255(obj.active_material.diffuse_color[1]),
-        _to_int_255(obj.active_material.diffuse_color[2]),
+        _to_int_255(rgb[0]),
+        _to_int_255(rgb[1]),
+        _to_int_255(rgb[2]),
     )
 
 
@@ -156,8 +228,8 @@ def _get_frame_range_from_export_settings(context, settings):
     """Get framerange and related variables.
 
     Parameters:
-        context - the main Blender context
-        settings - export settings
+        context: the main Blender context
+        settings: export settings
 
     Return:
         framerange to be used during the export. Framerange is a 3-tuple
@@ -187,9 +259,9 @@ def _get_trajectories_and_lights(
     """Get trajectories and lights of all selected/picked objects.
 
     Parameters:
-        context - the main Blender context
-        settings - export settings
-        framerange - the framerange used for exporting
+        context: the main Blender context
+        settings: export settings
+        framerange: the framerange used for exporting
 
     Return:
         drone show data in lists of TimePosColor entries, in a dictionary, indexed by object names
@@ -209,7 +281,7 @@ def _get_trajectories_and_lights(
         context.scene.frame_set(frame)
         for obj in _get_objects(context, settings):
             pos = _get_location(obj)
-            color = _get_color(obj)
+            color = _get_color(obj, frame)
             data[obj.name].append(TimePosColor(int(frame / fps * 1000), *pos, *color))
 
     return data
@@ -233,7 +305,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> dict:
     """Creates Skybrush-compatible CSV output from blender trajectories and
     color animation.
 
-    This is a helper function for SkybrushExportOperator
+    This is a helper function for SkybrushCSVExportOperator
 
     Parameters:
         context: the main Blender context

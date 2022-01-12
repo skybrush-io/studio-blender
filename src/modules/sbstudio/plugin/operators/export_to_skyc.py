@@ -186,21 +186,36 @@ def _get_lights(
             ]
             continue
 
-        # if color is not animated, use a single color
-        animation = material.node_tree.animation_data
-        if not animation:
-            light_dict[name] = [ts] + [
-                [x] * num_frames for x in material.diffuse_color[:3]
-            ]
-            continue
+        # if shader nodes are not used, we check plain diffuse color animation
+        if not material.use_nodes:
+            animation = material.animation_data
+            data_path = "diffuse_color"
+            # if there is no plain diffuse color animation, we return static default color
+            if not animation or data_path not in [
+                fc.data_path for fc in animation.action.fcurves
+            ]:
+                light_dict[name] = [ts] + [
+                    [x] * num_frames for x in material.diffuse_color[:3]
+                ]
+                continue
+        # if a shader node is used, sample it on all frames first
+        else:
+            animation = material.node_tree.animation_data
+            node, input = get_shader_node_and_input_for_diffuse_color_of_material(
+                material
+            )
+            index = node.inputs.find(input.name)
+            data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
+            # if shader node is not animated, get its default color for all frames
+            if not animation:
+                light_dict[name] = [ts] + [
+                    [x] * num_frames for x in input.default_value[:3]
+                ]
+                continue
 
-        # if color is animated, sample it on all frames first
+        # if we have any kind of animation, evaluate it for all frames
         light_dict[name] = [None] * 4
         light_dict[name][0] = ts
-        node, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
-        index = node.inputs.find(input.name)
-        data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
-
         for fc in animation.action.fcurves:
             if fc.data_path != data_path:
                 continue
