@@ -16,15 +16,23 @@ An additional requirement is that you need to have active Internet connection on
 
 === 2. Install Blender
 
-There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 2.83.x.
+There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 2.93.x.
 
 === 3. Acquire Skybrush Studio for Blender
 
-*Skybrush Studio for Blender* can be purchased from https://skybrush.io. If you obtain a valid licence, the latest installation package can be downloaded from our site as a single `.zip` file. Please download it to your computer first.
+*Skybrush Studio for Blender* can be obtained from https://skybrush.io. If you obtain a valid licence, the latest installation package can be downloaded from our site as a single `.zip` file. Please download it to your computer first.
 
 === 4. Install Skybrush Studio for Blender
 
-*Skybrush Studio for Blender* may come in one of two formats: either as a single ZIP file containing the code of the software, or as an executable file (typically an `.exe`) that you need to place next to Blender's own executable. Please follow one of the instruction sets below, depending on whether you have received a ZIP or an executable.
+*Skybrush Studio for Blender* may come in one of three formats:
+
+* as a single ZIP file containing the code of the software
+* as an executable file (typically an `.exe`) that you need to place next to
+  Blender's own executable,
+* or a disk image (typically a `.dmg` file on macOS)
+
+Please follow one of the instruction sets below, depending on whether you have
+received a ZIP, an executable or a disk image.
 
 ==== Installation from a ZIP file
 
@@ -45,6 +53,18 @@ This section applies if you have received an executable file (typically named `s
 1. Open the file manager of your operating system and copy the executable in the same folder where Blender is installed. Look for a file named `blender.exe` if you are uncertain.
 
 2. Start the executable file you have received from us. This will in turn provide the code of our software to Blender and start it up.
+
+==== Installation from a disk image on macOS
+
+This section applies if you have received a disk image (typically named `Skybrush Studio for Blender ... .dmg`) from us on macOS.
+
+1. Double-click on the `.dmg` file in Finder to mount it.
+
+2. Drag the application icon inside the disk image to the `/Applications` folder, next to Blender's own icon.
+
+3. Eject the disk image in Finder. You can now remove the disk image if you don't need it any more.
+
+4. Double-click on the application icon inside `/Applications`. This will in turn provide the code of our software to Blender and start it up.
 
 == Installing updates
 
