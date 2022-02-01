@@ -52,11 +52,11 @@ cp src/addons/ui_skybrush_studio.py ${BUILD_DIR}
 .venv/bin/pyclean ${BUILD_DIR}
 rm -rf ${BUILD_DIR}/vendor/skybrush/*.dist-info
 
-# Minify the source code with pyminifier
+# Strip the comments from the source code
 if [ "x${MINIFY}" = x1 ]; then
   for file in `find ${BUILD_DIR}/vendor/skybrush/sbstudio -name "*.py"`; do
     if [ -s "$file" ]; then
-      .venv/bin/pyminifier -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
+      .venv/bin/python etc/scripts/strip_comments.py -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
     fi
   done
 fi

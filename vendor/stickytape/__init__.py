@@ -114,15 +114,15 @@ class ModuleWriterGenerator(object):
 
     def _minify(self, source, module_path):
         from pyminifier.compression import gz_pack
-        from pyminifier.minification import minify
-        from pyminifier.token_utils import listified_tokenizer
-        from types import SimpleNamespace
+        # from pyminifier.minification import minify
+        # from pyminifier.token_utils import listified_tokenizer
+        # from types import SimpleNamespace
 
-        if "natsort" not in module_path:
-            tokens = listified_tokenizer(source)
-            options = SimpleNamespace()
-            options.tabs = False
-            source = minify(tokens, options)
+        # if "natsort" not in module_path:
+        #     tokens = listified_tokenizer(source)
+        #     options = SimpleNamespace()
+        #     options.tabs = False
+        #     source = minify(tokens, options)
 
         return gz_pack(source)
 
