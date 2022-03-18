@@ -1,4 +1,8 @@
-"""Takes a Python script and strips all comments from it."""
+"""Takes a Python script and strips all comments from it.
+
+Used to cut down on the size of the addon when installed. Not meant for
+obfuscation.
+"""
 
 import sys
 import token

@@ -56,7 +56,7 @@ rm -rf ${BUILD_DIR}/vendor/skybrush/*.dist-info
 if [ "x${MINIFY}" = x1 ]; then
   for file in `find ${BUILD_DIR}/vendor/skybrush/sbstudio -name "*.py"`; do
     if [ -s "$file" ]; then
-      .venv/bin/python etc/scripts/strip_comments.py -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
+      .venv/bin/python etc/scripts/_strip_comments.py -o ${BUILD_DIR}/tmp.py $file && mv ${BUILD_DIR}/tmp.py $file
     fi
   done
 fi
@@ -92,7 +92,7 @@ else
 fi
 
 # Attach the single-file entry point to the bootloader(s)
-.venv/bin/python etc/scripts/append_to_bootloader.py \
+.venv/bin/python etc/scripts/_append_to_bootloader.py \
 	--bootloader-dir "${REPO_ROOT}"/../sbstudio-bootloader/dist \
 	--output-dir ${OUTPUT_DIR} \
 	${OUTPUT_DIR}/${ZIP_STEM}.py

@@ -2,7 +2,11 @@
 """Appends a bundled single-file Python distribution of Skybrush Studio for
 Blender to the end of the bootloader executable (compiled separately in the
 sbstudio-bootloader project) and produces the final executable that can be
-distributed without revealing the source code.
+distributed. The final executable invokes Blender and pipes the code of the
+plugin into it so it does not mess up the Blender installation of the user.
+
+This script is called from create_blender_dist.sh; in most cases you should
+not need to call it directly.
 """
 
 import sys
