@@ -2,6 +2,7 @@ import bpy
 
 from bpy.types import Collection, MeshVertex, Object
 from functools import partial
+from itertools import count
 from mathutils import Vector
 from numpy import array, c_, dot, ones, zeros
 from typing import Iterable, List, Optional, Tuple, Union
@@ -23,6 +24,13 @@ __all__ = (
     "is_formation",
     "remove_formation",
 )
+
+
+def _get_marker_name(formation: str, index: int) -> str:
+    """Proposes a new name for a marker with the given index in the given
+    formation.
+    """
+    return f"{formation} - {index + 1}"
 
 
 def create_formation(
@@ -71,6 +79,7 @@ def create_marker(
             use `None` to add it to the scene collection
     """
     collection = collection or bpy.context.scene.scene_collection
+    assert collection is not None
 
     marker = bpy.data.objects.new(name, None)
     marker.empty_display_size = size
@@ -102,7 +111,6 @@ def add_points_to_formation(
     points: Optional[Iterable[Vector]],
     *,
     name: Optional[str] = None,
-    start_from: int = 1,
 ) -> None:
     """Creates new markers in a formation object.
 
@@ -110,13 +118,28 @@ def add_points_to_formation(
         formation: the formation to create the markers in
         points: the points to add to the formation
         name: the name of the formation
-        start_from: the index of the first point to add; used when naming the
-            newly added markers
     """
-    name = name or formation.name
-    for index, point in enumerate(points or [], start_from):
-        marker_name = f"{name} / {index}"
+    formation_name = name or formation.name or ""
+    existing_names = set(obj.name for obj in formation.objects)
+
+    index = 0
+    for index in count():
+        name_candidate = _get_marker_name(formation_name, index)
+        if name_candidate not in existing_names:
+            break
+
+    for point in points or []:
+        while True:
+            marker_name = _get_marker_name(formation_name, index)
+            if marker_name in existing_names:
+                index += 1
+            else:
+                break
+
         create_marker(location=point, name=marker_name, collection=formation, size=0.5)
+
+        existing_names.add(marker_name)
+        index += 1
 
 
 def count_markers_in_formation(formation: Collection) -> int:

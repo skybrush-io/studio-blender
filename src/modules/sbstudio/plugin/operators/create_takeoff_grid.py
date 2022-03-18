@@ -6,13 +6,13 @@ from numpy import mgrid, zeros
 from typing import List
 
 from sbstudio.model.types import Coordinate3D
-from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.constants import Collections, Formations, Templates
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.materials import (
     get_material_for_led_light_color,
     create_keyframe_for_diffuse_color_of_material,
 )
-from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_material_from_drone_template,
 )
@@ -203,20 +203,22 @@ class CreateTakeoffGridOperator(Operator):
 
             drones.append(drone)
 
-        select_only(drone)
+        select_only(drones)
 
         enable_bloom_effect_if_needed()
 
-        # Add a new storyboard entry with the initial formation
-        storyboard = context.scene.skybrush.storyboard
-        if len(storyboard.entries) > 0:
-            raise StoryboardValidationError(
-                "Takeoff grid can be only initialized with an empty storyboard." ""
+        # Add a new storyboard entry with the initial formation if there is no
+        # takeoff grid yet, or extend the existing grid with the new set of
+        # points if there is one
+        takeoff_grid = Formations.find_takeoff_grid(create=False)
+        if not takeoff_grid:
+            storyboard = context.scene.skybrush.storyboard
+            storyboard.add_new_entry(
+                formation=create_formation("Takeoff grid", points),
+                frame_start=context.scene.frame_start,
+                duration=0,
+                select=True,
+                context=context,
             )
-        storyboard.add_new_entry(
-            formation=create_formation("Takeoff grid", points),
-            frame_start=context.scene.frame_start,
-            duration=0,
-            select=True,
-            context=context,
-        )
+        else:
+            add_points_to_formation(takeoff_grid, points)
