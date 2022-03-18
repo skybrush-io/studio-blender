@@ -51,7 +51,7 @@ class LandOperator(StoryboardOperator):
 
     @classmethod
     def poll(cls, context):
-        if not super(cls, LandOperator).poll(context):
+        if not super().poll(context):
             return False
 
         drones = Collections.find_drones(create=False)

@@ -51,7 +51,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     @classmethod
     def poll(cls, context):
-        if not super(cls, ReturnToHomeOperator).poll(context):
+        if not super().poll(context):
             return False
 
         drones = Collections.find_drones(create=False)
