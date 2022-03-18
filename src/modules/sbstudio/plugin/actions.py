@@ -34,7 +34,7 @@ def ensure_action_exists_for_object(object, name: Optional[str] = None) -> Actio
     if not object.animation_data:
         object.animation_data_create()
 
-    action = ensure_object_exists_in_collection(
+    action, _ = ensure_object_exists_in_collection(
         bpy.data.actions, name or get_name_of_action_for_object(object)
     )
     object.animation_data.action = action

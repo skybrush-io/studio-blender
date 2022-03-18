@@ -6,7 +6,7 @@ from bpy.types import Collection, Object
 
 from inspect import signature
 from itertools import count
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Tuple
 
 from sbstudio.utils import get_moves_required_to_sort_collection
 
@@ -95,7 +95,7 @@ def ensure_object_exists_in_collection(
     internal: bool = False,
     *args,
     **kwds,
-):
+) -> Tuple[Any, bool]:
     """Ensures that a Blender object with the given name exists in the given
     collection.
 
@@ -116,17 +116,22 @@ def ensure_object_exists_in_collection(
             that should be marked explicitly
 
     Returns:
-        the existing object in the collection or a newly created one if no
-        object with the given name existed in the collection before
+        a tuple containing the existing object in the collection or a newly
+        created one if no object with the given name existed in the collection
+        before, and a boolean that encodes whether this is a newly created
+        object or not
     """
     existing = get_object_in_collection(
         collection, name, default=None, internal=internal
     )
     if existing is not None:
-        return existing
+        return existing, False
     else:
-        return create_object_in_collection(
-            collection, name, factory, internal, *args, **kwds
+        return (
+            create_object_in_collection(
+                collection, name, factory, internal=internal, *args, **kwds
+            ),
+            True,
         )
 
 

@@ -71,8 +71,8 @@ class Collections:
         """
         coll = bpy.data.collections
         if create:
-            result = ensure_object_exists_in_collection(coll, key)
-            if on_created:
+            result, is_new = ensure_object_exists_in_collection(coll, key)
+            if is_new and on_created:
                 on_created(result)
             return result
         else:
@@ -95,9 +95,10 @@ class Templates:
         templates = Collections.find_templates()
         coll = templates.objects
         if create:
-            return ensure_object_exists_in_collection(
+            drone, _ = ensure_object_exists_in_collection(
                 coll, cls.DRONE, factory=cls._create_drone_template
             )
+            return drone
         else:
             return get_object_in_collection(coll, cls.DRONE)
 

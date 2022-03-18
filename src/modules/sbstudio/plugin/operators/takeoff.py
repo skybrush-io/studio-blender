@@ -92,7 +92,7 @@ class TakeoffOperator(StoryboardOperator):
 
     @classmethod
     def poll(cls, context):
-        if not super(cls, TakeoffOperator).poll(context):
+        if not super().poll(context):
             return False
 
         drones = Collections.find_drones(create=False)

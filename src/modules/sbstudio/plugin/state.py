@@ -98,7 +98,7 @@ def _save(key: str, state: StateBase) -> None:
     data = json.dumps(state.to_json())
 
     key = "." + create_internal_id(key)
-    block = ensure_object_exists_in_collection(bpy.data.texts, key)
+    block, _ = ensure_object_exists_in_collection(bpy.data.texts, key)
     block.from_string(data)
 
 
