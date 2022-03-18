@@ -99,25 +99,41 @@ def get_vertices_of_object_in_vertex_group_by_name(
 
 
 @with_scene
-def link_object_to_scene(object: Object, *, scene: Optional[Scene] = None) -> Object:
+def link_object_to_scene(
+    object: Object, *, scene: Optional[Scene] = None, allow_nested: bool = False
+) -> Object:
     """Links a Blender object to the master collection of the given scene.
 
     Parameters:
         object: the Blender object to link to the scene
         scene: the Blender scene to link the object to; `None` means to
             use the current scene
+        allow_nested: whether the Blender object is allowed to be linked to
+            some sub-collection of the scene. When this property is ``True``
+            and the object is already part of the scene indirectly via some
+            collection, it will not be linked to the scene directly.
 
     Returns:
         the Blender object
     """
+    assert scene is not None
     parent = scene.collection
+    is_collection = isinstance(object, bpy.types.Collection)
+    parent = parent.children if is_collection else parent.objects
 
-    if isinstance(object, bpy.types.Collection):
-        parent = parent.children
+    if allow_nested:
+        # Nested membership is allowed so we simply check whether the scene
+        # already uses the object indirectly
+        num_refs = scene.user_of_id(object)
+        if object is scene.skybrush.settings.drone_collection:
+            # This reference does not count
+            num_refs -= 1
+        should_link = num_refs < 1
     else:
-        parent = parent.objects
+        # We need to check whether the scene references the object directly
+        should_link = object not in parent.values()
 
-    if object not in parent.values():
+    if should_link:
         parent.link(object)
 
     return object

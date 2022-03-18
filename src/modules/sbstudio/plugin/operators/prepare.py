@@ -30,9 +30,9 @@ class PrepareSceneOperator(Operator):
         formations = Collections.find_formations()
         templates = Collections.find_templates()
 
-        link_object_to_scene(drones)
-        link_object_to_scene(formations)
-        link_object_to_scene(templates)
+        link_object_to_scene(drones, allow_nested=True)
+        link_object_to_scene(formations, allow_nested=True)
+        link_object_to_scene(templates, allow_nested=True)
 
         # Create the drone template as well
         Templates.find_drone()
