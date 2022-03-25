@@ -21,9 +21,6 @@ skybrush-studio = { version = "^2.1.0", optional = true }
 [tool.poetry.extras]
 standalone = ["skybrush-studio"]
 
-[tool.poetry.scripts]
-test_matcher = "tests.test_matcher:main"
-
 [tool.poetry.dev-dependencies]
 pyclean = "^2.0.0"
 pyminifier = "^3.0.2"
