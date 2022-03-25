@@ -1,5 +1,7 @@
 """Blender add-on that allows the user to open any supported Skybrush format
 directly in Blender and let the scene render itself automatically.
+
+Requires the `skybrush-studio` Python module. Contact us if you are interested.
 """
 
 bl_info = {
@@ -11,6 +13,8 @@ bl_info = {
     "location": "File > Import > Skybrush",
     "category": "Import-Export",
 }
+
+__license__ = "GPLv3"
 
 #############################################################################
 # imports needed to set up the Python path properly
@@ -85,12 +89,8 @@ logging.basicConfig(
 
 importers = {
     "csv": {"suffix": ".zip", "func": "skybrush.io.csv.importer"},
-    #    "dac": {"ext": ".dac", "func": "skybrush.io.dac.importer"}, # TODO: what is this format?
-    #    "json": {"ext": ".json", "func": "skybrush.io.json.importer"},
-    #    "lbs": {"ext": ".lbs", "func": "skybrush.io.lbs.importer"}, # TODO: what is this format?
     "sky": {"suffix": ".sky", "func": "skybrush.io.sky.importer"},
     "skyc": {"suffix": ".skyc", "func": "skybrush.io.skyc.importer"},
-    #    "ugcs": {"ext": ".zip", "func": "skybrush.io.ugcs.importer"}, # TODO: folder? .path?
 }
 
 

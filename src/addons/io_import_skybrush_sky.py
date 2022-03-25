@@ -1,5 +1,7 @@
 """Blender add-on that allows the user to open a Skybrush script (.sky) file
 directly in Blender and let the scene render itself automatically.
+
+Requires the `skybrush-studio` Python module. Contact us if you are interested.
 """
 
 bl_info = {
@@ -11,6 +13,8 @@ bl_info = {
     "location": "File > Import > Skybrush",
     "category": "Import-Export",
 }
+
+__license__ = "GPLv3"
 
 
 #############################################################################

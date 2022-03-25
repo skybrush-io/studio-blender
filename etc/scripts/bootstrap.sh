@@ -26,5 +26,8 @@ cd vendor/skybrush/
 VENV_PYTHONPATH=`ls -d ../../../.venv/lib/python*/site-packages | sed -e 's#/$##'`
 
 for dependency in natsort pyledctrl skybrush; do
-    ln -s "${VENV_PYTHONPATH}/${dependency}"
+    if [ -d "${VENV_PYTHONPATH}/${dependency}" ]; then
+        ln -s "${VENV_PYTHONPATH}/${dependency}"
+    fi
 done
+

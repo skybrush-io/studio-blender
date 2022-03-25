@@ -7,6 +7,8 @@ bl_info = {
     "category": "Interface",
 }
 
+__license__ = "GPLv3"
+
 # BLENDER ADD-ON INFO ENDS HERE ### DO NOT REMOVE THIS LINE #################
 
 #############################################################################
