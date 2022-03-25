@@ -1,6 +1,8 @@
 Skybrush Studio for Blender
 ===========================
 
+![Skybrush Studio for Blender screenshot](/doc/screenshot_small.jpg)
+
 This repo contains [Skybrush Studio for Blender](https://skybrush.io),
 a professional drone show designer framework integrated into
 [Blender](https://blender.org).
