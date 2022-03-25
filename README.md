@@ -28,7 +28,7 @@ to create the ZIP version and the executables on your own, you either need to
 [download it from us](https://skybrush.io) or [build the ZIP
 yourself](#building-the-plugin). Once you obtained the ZIP version of the
 plugin, follow the installation guide in our [online
-documentation](https://doc.collmot.com/public/skybrush-plugin-blender/latest/install.html)
+documentation](https://doc.collmot.com/public/skybrush-studio-for-blender/latest/install.html)
 
 To install standalone add-ons, such as the .csv exporter, you can follow the official Blender add-on install guide.
 
