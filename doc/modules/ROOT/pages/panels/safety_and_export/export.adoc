@@ -24,7 +24,7 @@ If you press the btn:[Export to .skyc] button, you have to choose the path and f
 
 The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range.
 
-TIP: We recommend using Skybrush Live for drone show control, together with the official Skybrush Compiled Format (.skyc), as it might contain a lot more information about your show in a lot more optimized way, then this simple baked .csv.
+TIP: We recommend using Skybrush Live for drone show control, together with the official Skybrush Compiled Format (.skyc), as it contains a lot more information about your show in a more optimized way than this simple CSV representation.
 
 If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
