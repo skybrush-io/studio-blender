@@ -39,6 +39,7 @@ __license__ = "GPLv3"
 
 import bpy
 import logging
+import os
 import re
 
 from bpy.props import BoolProperty, StringProperty, EnumProperty, FloatProperty
@@ -113,6 +114,9 @@ def _get_objects(context, settings):
     # collection, otherwise use all the objects from the scene
     skybrush = getattr(context.scene, "skybrush", None)
     drone_collection = skybrush.settings.drone_collection if skybrush else context.scene
+    if drone_collection is None:
+        return
+
     for obj in drone_collection.objects:
         if (
             obj.visible_get()
@@ -271,14 +275,15 @@ def _get_trajectories_and_lights(
     fps = context.scene.render.fps
     data = {}
     context.scene.frame_set(frame_range[0])
+    objects = list(_get_objects(context, settings))
     # initialize trajectories and lights
-    for obj in _get_objects(context, settings):
+    for obj in objects:
         data[obj.name] = []
     # parse trajectories and lights
     for frame in range(frame_range[0], frame_range[1] + frame_range[2], frame_range[2]):
         log.debug(f"processing frame {frame}")
         context.scene.frame_set(frame)
-        for obj in _get_objects(context, settings):
+        for obj in objects:
             pos = _get_location(obj)
             color = _get_color(obj, frame)
             data[obj.name].append(TimePosColor(int(frame / fps * 1000), *pos, *color))
@@ -419,6 +424,18 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
             "frame_range": self.frame_range,
             "output_fps": self.output_fps,
         }
+
+        if os.path.basename(filepath).lower() == self.filename_ext.lower():
+            self.report({"ERROR_INVALID_INPUT"}, "Filename must not be empty")
+            return {"CANCELLED"}
+
+        objects = list(_get_objects(context, settings))
+        if not objects:
+            if self.export_selected:
+                self.report({"WARNING"}, "No objects were selected; export cancelled")
+            else:
+                self.report({"WARNING"}, "There are no objects to export; export cancelled")
+            return {"CANCELLED"}
 
         _write_skybrush_file(context, settings, filepath)
 
