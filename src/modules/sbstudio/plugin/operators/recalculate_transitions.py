@@ -187,6 +187,156 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         return result
 
+    def _update_transition_constraint_influence(
+        self,
+        drone,
+        entry: StoryboardEntry,
+        constraint,
+        *,
+        start_of_scene: int,
+        end_of_previous: Optional[int],
+        start_of_next: Optional[int],
+    ) -> None:
+        """Updates the F-curve of the influence parameter of the constraint that
+        attaches a given drone to the formation of a given storyboard entry.
+
+        Parameters:
+            drone: the drone that the transition constraint affects
+            entry: the storyboard entry corresponding to the constraint
+            constraint: the constraint whose influence F-curve is to be modified
+            start_of_scene: the first frame of the Blender scene
+            end_of_previous: end frame of the _previous_ storyboard entry, or
+                ``None`` if this is the first storyboard entry
+            start_of_next: start frame of the _next_ storyboard entry, or ``None``
+                if this entry is the last entry in the storyboard
+        """
+        # Construct the data path of the constraint we are going to
+        # modify
+        key = f"constraints[{constraint.name!r}].influence".replace("'", '"')
+
+        # Create keyframes for the influence of the constraint
+        ensure_action_exists_for_object(drone)
+
+        # Decide the start and end time of the "windup" period of the
+        # constraint where it gradually starts affecting the position
+        # of the drone. This period must be somewhere between the end
+        # of the previous formation and the start of the current
+        # formation.
+        windup_start = min(
+            entry.frame_start - 1,
+            end_of_previous if end_of_previous is not None else start_of_scene,
+        )
+        windup_end = entry.frame_start
+
+        # Now construct the list of keyframes. We have to cater for
+        # all sorts of edge cases as we need to ensure that no
+        # keyframe X coordinate is repeated twice. Let's start with
+        # specifying that the constraint must take no effect until the
+        # end of the previous storyboard entry
+        keyframes: List[Tuple[int, float]] = [(windup_start, 0.0)]
+        if start_of_scene < windup_start:
+            keyframes.insert(0, (start_of_scene, 0.0))
+
+        # Now we declare that the constraint must take full effect
+        # at the start of the storyboard entry and must keep on doing
+        # so until the end of the storyboard entry
+        keyframes.append((windup_end, 1.0))
+        if entry.frame_end > windup_end:
+            keyframes.append((entry.frame_end, 1.0))
+
+        # If we have another formation that follows this one,
+        # the influence of the constraint must stay until the next
+        # formation starts, and then jump straight to zero. Otherwise, the
+        # influence must stay 1 indefinitely.
+        if start_of_next is not None:
+            keyframes.append((start_of_next, 1.0))
+            keyframes.append((start_of_next + 1, 0.0))
+
+        # Since 'keyframes' spans from the start of the scene to the
+        # end, this will update all keyframes for the constraint.
+        # We need this to handle cases when the user reorders the
+        # formations.
+        set_keyframes(
+            drone,
+            key,
+            keyframes,
+            clear_range=(None, inf),
+            interpolation="BEZIER",
+        )
+
+    def _update_transition_constraint_properties(
+        self, drone, entry: StoryboardEntry, marker, obj
+    ):
+        """Updates the constraint that attaches a drone to its target in the
+        transition.
+
+        Parameters:
+            drone: the drone to update
+            entry: the storyboard entry; it will be used to select the appropriate
+                constraint that corresponds to the drone _and_ the entry
+            marker: the marker that the drone will be transitioning to; ``None``
+                if the drone is not matched to a target in this transition
+            obj: the parent mesh of the marker if the marker is a vertex in a
+                Blender mesh, or the marker itself if the marker is a target
+                mesh on its own (typically a Blender empty object)
+
+        Returns:
+            the Blender constraint that corresponds to the drone and the
+            storyboard entry, or ``None`` if no such constraint is needed
+            because the drone is unmatched
+        """
+        constraint = find_transition_constraint_between(
+            drone=drone, storyboard_entry=entry
+        )
+        if marker is None:
+            # This drone will not participate in this formation so
+            # we need to delete the constraint that ties the drone
+            # to the formation
+            if constraint is not None:
+                drone.constraints.remove(constraint)
+            return None
+
+        # If we don't have a constraint between the drone and the storyboard
+        # entry, create one
+        if constraint is None:
+            constraint = create_transition_constraint_between(
+                drone=drone, storyboard_entry=entry
+            )
+        else:
+            # Make sure that the name of the constraint contains the
+            # name of the formation even if the user renamed it
+            set_constraint_name_from_storyboard_entry(constraint, entry)
+
+        # Set the target of the constraint to the appropriate point of the
+        # formation
+        if marker is obj:
+            # The marker itself is an object so it can be a constraint
+            # target on its own
+            constraint.target = marker
+        else:
+            # The marker is a vertex in a mesh so we need to create or
+            # find a vertex group that contains the vertex only, and
+            # use the vertex group as a subtarget
+            index = marker.index
+            vertex_group_name = create_internal_id(f"Vertex {index}")
+            vertex_groups = obj.vertex_groups
+            try:
+                vertex_group = vertex_groups[vertex_group_name]
+            except KeyError:
+                # No such group, let's create it
+                vertex_group = vertex_groups.new(name=vertex_group_name)
+
+            # Ensure that the vertex group contains the target vertex
+            # only in case the mesh was modified. Let's hope that
+            # Blender is smart enough to make this a no-op if the vertex
+            # group is okay as-is
+            vertex_group.add([index], 1, "REPLACE")
+
+            constraint.target = obj
+            constraint.subtarget = vertex_group_name
+
+        return constraint
+
     def _update_transition_for_storyboard_entry(
         self,
         entry: StoryboardEntry,
@@ -214,18 +364,16 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             # free segment, nothing to do here
             return
 
-        if end_of_previous is None:
-            end_of_previous = start_of_scene
-
         markers_and_objects = get_markers_and_related_objects_from_formation(formation)
         num_markers = len(markers_and_objects)
 
         try:
+            frame = end_of_previous if end_of_previous is not None else start_of_scene
             mapping = self._calculate_mapping_for_storyboard_entry(
                 entry,
                 drones,
                 num_targets=num_markers,
-                get_positions_of=partial(get_positions_of, frame=end_of_previous),
+                get_positions_of=partial(get_positions_of, frame=frame),
             )
         except SkybrushStudioAPIError:
             self.report(
@@ -239,107 +387,23 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         # will not participate in the formation
         for source_index, drone in enumerate(drones):
             target_index = mapping[source_index]
-            constraint = find_transition_constraint_between(
-                drone=drone, storyboard_entry=entry
+            if target_index is None:
+                marker, obj = None, None
+            else:
+                marker, obj = markers_and_objects[target_index]
+
+            constraint = self._update_transition_constraint_properties(
+                drone, entry, marker, obj
             )
 
-            if target_index is None:
-                # This drone will not participate in this formation so
-                # we need to delete the constraint that ties the drone
-                # to the formation
-                if constraint is not None:
-                    drone.constraints.remove(constraint)
-            else:
-                # If we don't have a constraint between the drone
-                # and the formation, create one
-                if constraint is None:
-                    constraint = create_transition_constraint_between(
-                        drone=drone, storyboard_entry=entry
-                    )
-                else:
-                    # Make sure that the name of the constraint contains the
-                    # name of the formation even if the user renamed it
-                    set_constraint_name_from_storyboard_entry(constraint, entry)
-
-                # Set the target of the constraint to the appropriate
-                # point of the formation
-                marker, obj = markers_and_objects[target_index]
-                if marker is obj:
-                    # The marker itself is an object so it can be a constraint
-                    # target on its own
-                    constraint.target = marker
-                else:
-                    # The marker is a vertex in a mesh so we need to create or
-                    # find a vertex group that contains the vertex only, and
-                    # use the vertex group as a subtarget
-                    index = marker.index
-                    vertex_group_name = create_internal_id(f"Vertex {index}")
-                    vertex_groups = obj.vertex_groups
-                    try:
-                        vertex_group = vertex_groups[vertex_group_name]
-                    except KeyError:
-                        # No such group, let's create it
-                        vertex_group = vertex_groups.new(name=vertex_group_name)
-
-                    # Ensure that the vertex group contains the target vertex
-                    # only in case the mesh was modified. Let's hope that
-                    # Blender is smart enough to make this a no-op if the vertex
-                    # group is okay as-is
-                    vertex_group.add([index], 1, "REPLACE")
-
-                    constraint.target = obj
-                    constraint.subtarget = vertex_group_name
-
             if constraint is not None:
-                # Construct the data path of the constraint we are going to
-                # modify
-                key = f"constraints[{constraint.name!r}].influence".replace("'", '"')
-
-                # Create keyframes for the influence of the constraint
-                ensure_action_exists_for_object(drone)
-
-                # Decide the start and end time of the "windup" period of the
-                # constraint where it gradually starts affecting the position
-                # of the drone. This period must be somewhere between the end
-                # of the previous formation and the start of the current
-                # formation.
-                windup_start = min(entry.frame_start - 1, end_of_previous)
-                windup_end = entry.frame_start
-
-                # Now construct the list of keyframes. We have to cater for
-                # all sorts of edge cases as we need to ensure that no
-                # keyframe X coordinate is repeated twice. Let's start with
-                # specifying that the constraint must take no effect until the
-                # end of the previous storyboard entry
-                keyframes = [(windup_start, 0.0)]
-                if start_of_scene < windup_start:
-                    keyframes.insert(0, (start_of_scene, 0.0))
-
-                # Now we declare that the constraint must take full effect
-                # at the start of the storyboard entry and must keep on doing
-                # so until the end of the storyboard entry
-                keyframes.append((windup_end, 1.0))
-                if entry.frame_end > entry.frame_start:
-                    keyframes.append((entry.frame_end, 1.0))
-
-                # If we have another formation that follows this one,
-                # the influence of the constraint must stay until the next
-                # formation starts, and then wind down. Otherwise, the influence
-                # must stay 1 indefinitely.
-                if start_of_next is not None:
-                    keyframes.append((start_of_next, 1.0))
-                    keyframes.append((start_of_next + 1, 0.0))
-
-                # Since 'keyframes' spans from the start of the scene to the
-                # end, this will update all keyframes for the constraint.
-                # We need this to handle cases when the user reorders the
-                # formations.
-                set_keyframes(
+                self._update_transition_constraint_influence(
                     drone,
-                    key,
-                    keyframes,
-                    clear_range=(None, inf),
-                    interpolation="BEZIER",
+                    entry,
+                    constraint,
+                    start_of_scene=start_of_scene,
+                    end_of_previous=end_of_previous,
+                    start_of_next=start_of_next,
                 )
 
     def _get_transitions_to_process(
