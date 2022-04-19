@@ -1,3 +1,4 @@
+from functools import partial
 from math import inf
 from typing import List, Optional, Sequence, Tuple
 
@@ -5,6 +6,7 @@ import bpy
 
 from bpy.props import EnumProperty
 
+from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
 )
@@ -94,7 +96,6 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         with create_position_evaluator() as get_positions_of:
             # Grab some common constants that we will need
             start_of_scene = min(context.scene.frame_start, storyboard.frame_start)
-            end_of_scene = max(context.scene.frame_end, storyboard.frame_end)
 
             # Iterate through the entries for which we need to recalculate the
             # transitions
@@ -106,7 +107,6 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                     start_of_scene=start_of_scene,
                     end_of_previous=end_of_previous,
                     start_of_next=start_of_next,
-                    end_of_scene=end_of_scene,
                 )
 
         bpy.ops.skybrush.fix_constraint_ordering()
@@ -115,16 +115,87 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         return {"FINISHED"}
 
+    def _calculate_mapping_for_storyboard_entry(
+        self, entry: StoryboardEntry, drones, *, num_targets: int, get_positions_of
+    ) -> List[Optional[int]]:
+        """Calculates the mapping of drones and positions for a storyboard
+        entry.
+
+        This function must be called only if the storyboard entry contains a
+        formation (i.e. it is not a free segment).
+
+        Parameters:
+            entry: the storyboard entry
+            drones: the drones to consider
+            num_targets: number of target points that the drones should be
+                mapped to; used for manual mapping so we can avoid querying
+                all the coordinates if they are not needed
+            get_positions_of: a callable that can be called with the list of
+                drones and that returns the current coordinates of the drones
+
+        Returns:
+            a list where the i-th element contains the index of the target point
+            that the i-th drone was matched to, or ``None`` if the drone was
+            left unmatched
+
+        Raises:
+            SkybrushStudioAPIError: if an error happens while querying the
+                remote API that calculates the mapping
+        """
+        formation = entry.formation
+        if formation is None:
+            raise RuntimeError(
+                "mapping function called for storyboard entry with no formation"
+            )
+
+        num_drones = len(drones)
+
+        result: List[Optional[int]] = [None] * num_drones
+
+        # We need to create a transition between the places where the drones
+        # are at the end of the previous formation and the points of the
+        # current formation
+        if entry.transition_type == "AUTO":
+            # Auto mapping with our API
+            source = get_positions_of(drones)
+            target = [
+                tuple(pos)
+                for pos in get_world_coordinates_of_markers_from_formation(
+                    formation, frame=entry.frame_start
+                )
+            ]
+            try:
+                match = get_api().match_points(source, target)
+            except Exception as ex:
+                if not isinstance(ex, SkybrushStudioAPIError):
+                    raise SkybrushStudioAPIError from ex
+                else:
+                    raise
+
+            # At this point we have the inverse mapping: match[i] tells the
+            # index of the drone that the i-th target point was matched to, or
+            # ``None`` if the target point was left unmatched. We need to invert
+            # the mapping
+            for target_index, drone_index in enumerate(match):
+                if drone_index is not None:
+                    result[drone_index] = target_index
+
+        else:
+            # Manual mapping
+            length = min(num_drones, num_targets)
+            result[:length] = range(length)
+
+        return result
+
     def _update_transition_for_storyboard_entry(
         self,
-        entry,
+        entry: StoryboardEntry,
         drones,
         *,
         get_positions_of,
         start_of_scene: int,
         end_of_previous: Optional[int],
         start_of_next: Optional[int],
-        end_of_scene: int,
     ):
         """Updates the transition constraints corresponding to the given
         storyboard entry.
@@ -137,7 +208,6 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                 `None` if this is the last storyboard entry
             end_of_previous: the frame where the _previous_ storyboard entry
                 ended; `None` if this is the first storyboard entry
-            end_of_scene: the last frame of the scene
         """
         formation = entry.formation
         if formation is None:
@@ -147,50 +217,28 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         if end_of_previous is None:
             end_of_previous = start_of_scene
 
-        num_drones = len(drones)
-
         markers_and_objects = get_markers_and_related_objects_from_formation(formation)
         num_markers = len(markers_and_objects)
 
-        # We need to create a transition between the places where the drones
-        # are at the end of the previous formation and the points of the
-        # current formation
-        if entry.transition_type == "AUTO":
-            # Auto mapping with our API
-            source = get_positions_of(drones, frame=end_of_previous)
-            target = [
-                tuple(pos)
-                for pos in get_world_coordinates_of_markers_from_formation(
-                    formation, frame=entry.frame_start
-                )
-            ]
-            try:
-                match = get_api().match_points(source, target)
-            except Exception:
-                self.report(
-                    {"ERROR"},
-                    "Error while invoking transition planner on the Skybrush Studio online service",
-                )
-                return {"CANCELLED"}
-            source, target = None, None
-        else:
-            # Manual mapping
-            match = list(range(min(num_drones, num_markers)))
-            if num_drones < num_markers:
-                match.extend([None] * (num_markers - num_drones))
-
-        # match[i] now contains the index of the drone that the i-th
-        # target point was matched to. We need to invert the mapping.
-        inverted_mapping = [None] * num_drones
-        for target_index, source_index in enumerate(match):
-            if source_index is not None:
-                inverted_mapping[source_index] = target_index
+        try:
+            mapping = self._calculate_mapping_for_storyboard_entry(
+                entry,
+                drones,
+                num_targets=num_markers,
+                get_positions_of=partial(get_positions_of, frame=end_of_previous),
+            )
+        except SkybrushStudioAPIError:
+            self.report(
+                {"ERROR"},
+                "Error while invoking transition planner on the Skybrush Studio online service",
+            )
+            return {"CANCELLED"}
 
         # Now we have the index of the target point that each drone
         # should be mapped to, and we have `None` for those drones that
         # will not participate in the formation
         for source_index, drone in enumerate(drones):
-            target_index = inverted_mapping[source_index]
+            target_index = mapping[source_index]
             constraint = find_transition_constraint_between(
                 drone=drone, storyboard_entry=entry
             )
@@ -260,7 +308,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
                 # Now construct the list of keyframes. We have to cater for
                 # all sorts of edge cases as we need to ensure that no
-                # keyframe X coordiate is repeated twice. Let's start with
+                # keyframe X coordinate is repeated twice. Let's start with
                 # specifying that the constraint must take no effect until the
                 # end of the previous storyboard entry
                 keyframes = [(windup_start, 0.0)]
@@ -296,14 +344,14 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
     def _get_transitions_to_process(
         self, storyboard: Storyboard, entries: Sequence[StoryboardEntry]
-    ) -> List[Tuple[float, StoryboardEntry, float]]:
+    ) -> List[Tuple[Optional[int], StoryboardEntry, Optional[int]]]:
         """Processes the storyboard entries and selects the ones for which we
         need to recalculate the transitions, based on the scope parameter of
         the operator.
 
         Returns:
             for each entry where the transition _to_ the formation of the entry
-            has to be recalculated, a tuple containing the end of the
+            has to be recalculated, a tuple containing the end frame of the
             previous formation (`None` if this is the first formation in the
             entire storyboard), the storyboard entry itself, and the start frame
             of the next formation (`None` if this is the last formation in the
