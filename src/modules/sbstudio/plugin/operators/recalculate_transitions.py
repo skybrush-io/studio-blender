@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from math import inf
 from typing import List, Optional, Sequence, Tuple
@@ -33,13 +35,115 @@ from .base import StoryboardOperator
 __all__ = ("RecalculateTransitionsOperator",)
 
 
+class InfluenceCurveTransitionType(Enum):
+    """Possible types of a transition phase of an influence curve."""
+
+    LINEAR = "linear"
+    SMOOTH_FROM_LEFT = "smoothFromLeft"
+    SMOOTH_FROM_RIGHT = "smoothFromRight"
+    SMOOTH = "smooth"
+
+
+@dataclass
+class InfluenceCurveDescriptor:
+    """Dataclass that describes how the influence curve of a constraint should
+    look like.
+
+    We currently work with one type of influence curve at the moment. The curve
+    starts from zero at the start of the scene, stays zero until (and including)
+    a _windup start frame_, then transitions to 1 until (and including) a
+    _start frame_. The transition can be linear, smooth from the left,
+    smooth from the right or completely smooth. The curve will then either stay
+    1 indefinitely, or stay 1 until a designated _end frame_, and then jump
+    straight back to zero.
+
+    The key points of the influence curve are described by this data class. It
+    also provides a method to apply these points to an existing constraint.
+    """
+
+    scene_start_frame: int
+    """The start frame of the entire scene."""
+
+    windup_start_frame: Optional[int]
+    """The windup start frame, i.e. the _last_ frame when the influence curve
+    should still be zero before winding up to full influence. `None` means that
+    it is the same as the start frame of the scene.
+
+    When this frame is earlier than the start frame of the scene, it is assumed
+    to be equal to the start frame of the scene.
+    """
+
+    start_frame: int
+    """The first frame when the influence should become equal to 1. Must be
+    larger than the windup start frame; when it is smaller or equal, it is
+    assumed to be one larger than the windup start frame.
+    """
+
+    end_frame: Optional[int] = None
+    """The last frame when the influence is still equal to 1; ``None`` means
+    that the influence curve stays 1 infinitely.
+
+    The end frame must be larger than or equal to the start frame; when it is
+    smaller, it is assumed to be equal to the start frame.
+    """
+
+    windup_type: InfluenceCurveTransitionType = InfluenceCurveTransitionType.SMOOTH
+    """The type of the windup transition."""
+
+    def apply(self, object, data_path: str) -> None:
+        """Applies the influence curve descriptor to the given data path of the
+        given Blender object by updating the keyframes appropriately.
+
+        Parameters:
+            object: the object on which the keyframes are to be set
+            data_path: the data path to use
+        """
+        keyframes: List[Tuple[int, float]] = [(self.scene_start_frame, 0.0)]
+        if (
+            self.windup_start_frame is not None
+            and self.windup_start_frame > self.scene_start_frame
+        ):
+            keyframes.append((self.windup_start_frame, 0.0))
+
+        frame = max(self.start_frame, keyframes[-1][0] + 1)
+        start_of_transition = len(keyframes) - 1
+        keyframes.append((frame, 1.0))
+
+        if self.end_frame is not None:
+            end_frame = max(self.end_frame, frame)
+            if end_frame > frame:
+                keyframes.append((end_frame, 1.0))
+
+            keyframes.append((end_frame + 1, 0.0))
+
+        keyframe_objs = set_keyframes(
+            object,
+            data_path,
+            keyframes,
+            clear_range=(None, inf),
+            interpolation="LINEAR",
+        )
+
+        if self.windup_type != InfluenceCurveTransitionType.LINEAR:
+            kf = keyframe_objs[start_of_transition]
+            kf.interpolation = "BEZIER"
+            if self.windup_type == InfluenceCurveTransitionType.SMOOTH_FROM_RIGHT:
+                kf.handle_right_type = "VECTOR"
+            else:
+                kf.handle_right_type = "AUTO_CLAMPED"
+            if self.windup_type == InfluenceCurveTransitionType.SMOOTH_FROM_LEFT:
+                kf.handle_left_type = "VECTOR"
+            else:
+                kf.handle_left_type = "AUTO_CLAMPED"
+
+
 class RecalculateTransitionsOperator(StoryboardOperator):
     """Recalculates all transitions in the show based on the current storyboard."""
 
     bl_idname = "skybrush.recalculate_transitions"
     bl_label = "Recalculate Transitions"
     bl_description = (
-        "Recalculates all transitions in the show based on the current storyboard."
+        "Recalculates all transitions in the show based on the current storyboard"
     )
     bl_options = {"UNDO"}
 
@@ -99,13 +203,13 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
             # Iterate through the entries for which we need to recalculate the
             # transitions
-            for end_of_previous, entry, start_of_next in entry_info:
+            for previous_entry, entry, start_of_next in entry_info:
                 self._update_transition_for_storyboard_entry(
                     entry,
                     drones,
                     get_positions_of=get_positions_of,
+                    previous_entry=previous_entry,
                     start_of_scene=start_of_scene,
-                    end_of_previous=end_of_previous,
                     start_of_next=start_of_next,
                 )
 
@@ -188,14 +292,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         return result
 
     def _update_transition_constraint_influence(
-        self,
-        drone,
-        entry: StoryboardEntry,
-        constraint,
-        *,
-        start_of_scene: int,
-        end_of_previous: Optional[int],
-        start_of_next: Optional[int],
+        self, drone, constraint, descriptor: InfluenceCurveDescriptor
     ) -> None:
         """Updates the F-curve of the influence parameter of the constraint that
         attaches a given drone to the formation of a given storyboard entry.
@@ -203,12 +300,8 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         Parameters:
             drone: the drone that the transition constraint affects
             entry: the storyboard entry corresponding to the constraint
-            constraint: the constraint whose influence F-curve is to be modified
-            start_of_scene: the first frame of the Blender scene
-            end_of_previous: end frame of the _previous_ storyboard entry, or
-                ``None`` if this is the first storyboard entry
-            start_of_next: start frame of the _next_ storyboard entry, or ``None``
-                if this entry is the last entry in the storyboard
+            descriptor: the descriptor that describes how the influence F-curve
+                should look like
         """
         # Construct the data path of the constraint we are going to
         # modify
@@ -217,52 +310,8 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         # Create keyframes for the influence of the constraint
         ensure_action_exists_for_object(drone)
 
-        # Decide the start and end time of the "windup" period of the
-        # constraint where it gradually starts affecting the position
-        # of the drone. This period must be somewhere between the end
-        # of the previous formation and the start of the current
-        # formation.
-        windup_start = min(
-            entry.frame_start - 1,
-            end_of_previous if end_of_previous is not None else start_of_scene,
-        )
-        windup_end = entry.frame_start
-
-        # Now construct the list of keyframes. We have to cater for
-        # all sorts of edge cases as we need to ensure that no
-        # keyframe X coordinate is repeated twice. Let's start with
-        # specifying that the constraint must take no effect until the
-        # end of the previous storyboard entry
-        keyframes: List[Tuple[int, float]] = [(windup_start, 0.0)]
-        if start_of_scene < windup_start:
-            keyframes.insert(0, (start_of_scene, 0.0))
-
-        # Now we declare that the constraint must take full effect
-        # at the start of the storyboard entry and must keep on doing
-        # so until the end of the storyboard entry
-        keyframes.append((windup_end, 1.0))
-        if entry.frame_end > windup_end:
-            keyframes.append((entry.frame_end, 1.0))
-
-        # If we have another formation that follows this one,
-        # the influence of the constraint must stay until the next
-        # formation starts, and then jump straight to zero. Otherwise, the
-        # influence must stay 1 indefinitely.
-        if start_of_next is not None:
-            keyframes.append((start_of_next, 1.0))
-            keyframes.append((start_of_next + 1, 0.0))
-
-        # Since 'keyframes' spans from the start of the scene to the
-        # end, this will update all keyframes for the constraint.
-        # We need this to handle cases when the user reorders the
-        # formations.
-        set_keyframes(
-            drone,
-            key,
-            keyframes,
-            clear_range=(None, inf),
-            interpolation="BEZIER",
-        )
+        # Apply the influence curve to the drone
+        descriptor.apply(drone, key)
 
     def _update_transition_constraint_properties(
         self, drone, entry: StoryboardEntry, marker, obj
@@ -343,8 +392,8 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         drones,
         *,
         get_positions_of,
+        previous_entry: StoryboardEntry,
         start_of_scene: int,
-        end_of_previous: Optional[int],
         start_of_next: Optional[int],
     ):
         """Updates the transition constraints corresponding to the given
@@ -352,12 +401,12 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         Parameters:
             entry: the storyboard entry
+            previous_entry: the storyboard entry that precedes the given entry;
+                `None` if the given entry is the first one
             drones: the drones in the scene
             start_of_scene: the first frame of the scene
             start_of_next: the frame where the _next_ storyboard entry starts;
                 `None` if this is the last storyboard entry
-            end_of_previous: the frame where the _previous_ storyboard entry
-                ended; `None` if this is the first storyboard entry
         """
         formation = entry.formation
         if formation is None:
@@ -366,14 +415,14 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         markers_and_objects = get_markers_and_related_objects_from_formation(formation)
         num_markers = len(markers_and_objects)
+        end_of_previous = previous_entry.frame_end if previous_entry else start_of_scene
 
         try:
-            frame = end_of_previous if end_of_previous is not None else start_of_scene
             mapping = self._calculate_mapping_for_storyboard_entry(
                 entry,
                 drones,
                 num_targets=num_markers,
-                get_positions_of=partial(get_positions_of, frame=frame),
+                get_positions_of=partial(get_positions_of, frame=end_of_previous),
             )
         except SkybrushStudioAPIError:
             self.report(
@@ -381,6 +430,11 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                 "Error while invoking transition planner on the Skybrush Studio online service",
             )
             return {"CANCELLED"}
+
+        # Calculate how many drones will participate in the transition
+        num_drones_transitioning = sum(
+            1 for target_index in mapping if target_index is not None
+        )
 
         # Now we have the index of the target point that each drone
         # should be mapped to, and we have `None` for those drones that
@@ -397,31 +451,49 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             )
 
             if constraint is not None:
+                # windup_start_frame can be later than end_of_previous for
+                # staggered departures.
+
+                windup_start_frame = end_of_previous
+                start_frame = entry.frame_start
+                if entry.is_staggered:
+                    windup_start_frame += (
+                        entry.pre_delay_per_drone_in_frames * source_index
+                    )
+                    start_frame -= entry.post_delay_per_drone_in_frames * (
+                        num_drones_transitioning - source_index - 1
+                    )
+
+                # start_frame can be earlier than entry.frame_start for
+                # staggered arrivals.
+                descriptor = InfluenceCurveDescriptor(
+                    scene_start_frame=start_of_scene,
+                    windup_start_frame=windup_start_frame,
+                    start_frame=start_frame,
+                    end_frame=start_of_next,
+                )
                 self._update_transition_constraint_influence(
-                    drone,
-                    entry,
-                    constraint,
-                    start_of_scene=start_of_scene,
-                    end_of_previous=end_of_previous,
-                    start_of_next=start_of_next,
+                    drone, constraint, descriptor
                 )
 
     def _get_transitions_to_process(
         self, storyboard: Storyboard, entries: Sequence[StoryboardEntry]
-    ) -> List[Tuple[Optional[int], StoryboardEntry, Optional[int]]]:
+    ) -> List[Tuple[Optional[StoryboardEntry], StoryboardEntry, Optional[int]]]:
         """Processes the storyboard entries and selects the ones for which we
         need to recalculate the transitions, based on the scope parameter of
         the operator.
 
         Returns:
             for each entry where the transition _to_ the formation of the entry
-            has to be recalculated, a tuple containing the end frame of the
-            previous formation (`None` if this is the first formation in the
-            entire storyboard), the storyboard entry itself, and the start frame
-            of the next formation (`None` if this is the last formation in the
+            has to be recalculated, a tuple containing the previous storyboard
+            entry (`None` if this is the first formation in the entire
+            storyboard), the current storyboard entry, and the start frame of
+            the next formation (`None` if this is the last formation in the
             entire storyboard)
         """
-        entry_info = []
+        entry_info: List[
+            Tuple[Optional[StoryboardEntry], StoryboardEntry, Optional[int]]
+        ] = []
         active_index = int(storyboard.active_entry_index)
         num_entries = len(entries)
 
@@ -444,16 +516,18 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         else:
             condition = constant(False)
 
+        prev_entry: Optional[StoryboardEntry] = None
         for index, entry in enumerate(entries):
             if condition(index):
                 entry_info.append(
                     (
-                        None if index == 0 else entries[index - 1].frame_end,
+                        prev_entry,
                         entry,
                         None
                         if index == num_entries - 1
                         else entries[index + 1].frame_start,
                     )
                 )
+            prev_entry = entry
 
         return entry_info

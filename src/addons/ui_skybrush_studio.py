@@ -95,6 +95,8 @@ from sbstudio.plugin.panels import (
     LightEffectsPanel,
     SafetyCheckPanel,
     SwarmPanel,
+    TransitionEditorFromCurrentFormation,
+    TransitionEditorIntoCurrentFormation,
 )
 from sbstudio.plugin.plugin_helpers import (
     register_header,
@@ -179,6 +181,8 @@ panels = (
     SwarmPanel,
     FormationsPanel,
     StoryboardEditor,
+    TransitionEditorFromCurrentFormation,
+    TransitionEditorIntoCurrentFormation,
     LEDControlPanel,
     LightEffectsPanel,
     SafetyCheckPanel,

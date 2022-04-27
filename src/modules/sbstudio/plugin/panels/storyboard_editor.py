@@ -1,5 +1,8 @@
 from bpy.types import Panel
 
+from typing import Optional
+
+from sbstudio.plugin.model.storyboard import Storyboard
 from sbstudio.plugin.operators import (
     CreateNewStoryboardEntryOperator,
     MoveStoryboardEntryDownOperator,
@@ -31,7 +34,7 @@ class StoryboardEditor(Panel):
         layout.use_property_decorate = False
 
         scene = context.scene
-        storyboard = scene.skybrush.storyboard
+        storyboard: Optional[Storyboard] = scene.skybrush.storyboard
         if not storyboard:
             return
 
@@ -72,8 +75,15 @@ class StoryboardEditor(Panel):
             col.prop(entry, "formation")
             col.prop(entry, "frame_start")
             col.prop(entry, "duration")
-            col.prop(entry, "transition_type")
             col.prop(entry, "is_name_customized")
+            col.popover(
+                "OBJECT_PT_skybrush_transition_editor_pre",
+                icon="TRACKING_CLEAR_BACKWARDS",
+            )
+            col.popover(
+                "OBJECT_PT_skybrush_transition_editor_post",
+                icon="TRACKING_CLEAR_FORWARDS",
+            )
 
         #####################################################################
 

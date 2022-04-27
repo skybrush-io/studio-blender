@@ -6,6 +6,10 @@ from .object_props import DroneShowAddonObjectPropertiesPanel
 from .safety_check import SafetyCheckPanel
 from .storyboard_editor import StoryboardEditor
 from .swarm import SwarmPanel
+from .transition_editor import (
+    TransitionEditorFromCurrentFormation,
+    TransitionEditorIntoCurrentFormation,
+)
 
 __all__ = (
     "DroneShowAddonObjectPropertiesPanel",
@@ -16,4 +20,6 @@ __all__ = (
     "SafetyCheckPanel",
     "StoryboardEditor",
     "SwarmPanel",
+    "TransitionEditorFromCurrentFormation",
+    "TransitionEditorIntoCurrentFormation",
 )

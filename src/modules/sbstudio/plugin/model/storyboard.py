@@ -4,6 +4,7 @@ from bpy.props import (
     BoolProperty,
     CollectionProperty,
     EnumProperty,
+    FloatProperty,
     IntProperty,
     StringProperty,
 )
@@ -53,7 +54,7 @@ class StoryboardEntry(PropertyGroup):
         description=(
             "Formation to use in this storyboard entry. Leave empty to mark this "
             "interval in the show as a segment that should not be affected by "
-            "formation constraints."
+            "formation constraints"
         ),
         update=_handle_formation_change,
         options=set(),
@@ -75,13 +76,43 @@ class StoryboardEntry(PropertyGroup):
             ("MANUAL", "Manual", "", 1),
             ("AUTO", "Auto", "", 2),
         ],
-        name="Transition",
+        name="Type",
         description="Type of transition between the previous formation and this one. "
         "Manual transitions map the nth vertex of the initial formation to the nth "
         "vertex of the target formation; auto-matched transitions find an "
-        "optimal mapping between vertices of the initial and the target formation.",
+        "optimal mapping between vertices of the initial and the target formation",
         default="AUTO",
         options=set(),
+    )
+    is_staggered = BoolProperty(
+        name="Staggered",
+        description=(
+            "Whether the transition should be staggered. Note that collision-free "
+            "trajectories are guaranteed only for normal (non-staggered) "
+            "transitions"
+        ),
+        default=False,
+        options=set(),
+    )
+    pre_delay_per_drone_in_frames = FloatProperty(
+        name="Departure delay",
+        description=(
+            "Number of frames to wait between the start times of drones "
+            "in a staggered transition"
+        ),
+        min=0,
+        unit="TIME",
+        step=100,  # button step is 1/100th of step
+    )
+    post_delay_per_drone_in_frames = FloatProperty(
+        name="Arrival delay",
+        description=(
+            "Number of frames to wait between the arrival times of drones "
+            "in a staggered transition"
+        ),
+        min=0,
+        unit="TIME",
+        step=100,  # button step is 1/100th of step
     )
 
     #: Sorting key for storyboard entries
@@ -243,7 +274,29 @@ class Storyboard(PropertyGroup, ListMixin):
         return any(entry.formation == formation for entry in self.entries)
 
     @property
-    def first_entry(self) -> StoryboardEntry:
+    def entry_after_active_entry(self) -> Optional[StoryboardEntry]:
+        """The storyboard entry that follows the currently selected entry for
+        editing, or `None` if there is no such entry.
+        """
+        index = self.active_entry_index
+        if index is not None and index >= 0 and index < len(self.entries) - 1:
+            return self.entries[index + 1]
+        else:
+            return None
+
+    @property
+    def entry_before_active_entry(self) -> Optional[StoryboardEntry]:
+        """The storyboard entry that precedes the currently selected entry for
+        editing, or `None` if there is no such entry.
+        """
+        index = self.active_entry_index
+        if index is not None and self.entries and index > 0:
+            return self.entries[index - 1]
+        else:
+            return None
+
+    @property
+    def first_entry(self) -> Optional[StoryboardEntry]:
         """Returns the first entry of the storyboard or `None` if the storyboard
         is empty.
         """
@@ -353,8 +406,30 @@ class Storyboard(PropertyGroup, ListMixin):
         entry = self.last_entry
         return entry.formation if entry else None
 
+    def get_transition_duration_into_current_entry(self) -> int:
+        """Returns the duration of the transition leading into the currently
+        selected formation, in frames; zero if no formation is selected or the
+        first formation is selected.
+        """
+        prev, current = self.entry_before_active_entry, self.active_entry
+        if prev is not None and current is not None:
+            return current.frame_start - prev.frame_end
+        else:
+            return 0
+
+    def get_transition_duration_from_current_entry(self) -> int:
+        """Returns the duration of the transition leading from the currently
+        selected formation to the next one, in frames; zero if no formation is
+        selected or the last formation is selected.
+        """
+        current, next = self.active_entry, self.entry_after_active_entry
+        if next is not None and current is not None:
+            return next.frame_start - current.frame_end
+        else:
+            return 0
+
     @property
-    def second_entry(self) -> StoryboardEntry:
+    def second_entry(self) -> Optional[StoryboardEntry]:
         """Returns the second entry of the storyboard or `None` if the storyboard
         contains less entries.
         """

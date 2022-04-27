@@ -1,0 +1,101 @@
+from bpy.types import Panel
+
+from typing import List, Optional
+
+from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
+
+
+def format_transition_duration(duration: int) -> str:
+    """Formats the duration of a transition in a nice human-readable manner."""
+    if duration > 1:
+        return f"{duration} frames"
+    elif duration > 0:
+        return "Single-frame transition"
+    else:
+        return "Zero-frame transition"
+
+
+class TransitionEditorBase(Panel):
+    """Base class for transition editors."""
+
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    @classmethod
+    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+        """Returns the entry that the transition editor will edit."""
+        return None
+
+    @classmethod
+    def poll(cls, context) -> bool:
+        storyboard: Optional[Storyboard] = context.scene.skybrush.storyboard
+        if storyboard:
+            return cls._get_entry(storyboard) is not None
+        else:
+            return False
+
+    @classmethod
+    def _get_info_labels(
+        cls, storyboard: Storyboard, entry: StoryboardEntry
+    ) -> List[str]:
+        return []
+
+    def draw(self, context):
+        storyboard: Optional[Storyboard] = context.scene.skybrush.storyboard
+        if not storyboard:
+            return
+
+        entry = self._get_entry(storyboard)
+        if entry is None:
+            return
+
+        layout = self.layout
+        for label in self._get_info_labels(storyboard, entry):
+            layout.label(text=label)
+
+        layout.prop(entry, "transition_type")
+        layout.prop(entry, "is_staggered")
+        if entry.is_staggered:
+            layout.prop(entry, "pre_delay_per_drone_in_frames")
+            layout.prop(entry, "post_delay_per_drone_in_frames")
+
+
+class TransitionEditorIntoCurrentFormation(TransitionEditorBase):
+    """Edits the transition into the currently selected formation."""
+
+    bl_idname = "OBJECT_PT_skybrush_transition_editor_pre"
+    bl_label = "Transition from previous"
+    bl_description = "Edits the transition into the currently selected formation"
+
+    @classmethod
+    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+        entry = storyboard.active_entry
+        return entry if entry != storyboard.first_entry else None
+
+    @classmethod
+    def _get_info_labels(
+        cls, storyboard: Storyboard, entry: StoryboardEntry
+    ) -> List[str]:
+        duration = storyboard.get_transition_duration_into_current_entry()
+        return [format_transition_duration(duration)]
+
+
+class TransitionEditorFromCurrentFormation(TransitionEditorBase):
+    """Edits the transition to the formation that follows the currently selected
+    formation.
+    """
+
+    bl_idname = "OBJECT_PT_skybrush_transition_editor_post"
+    bl_label = "Transition to next"
+    bl_description = "Edits the transition to the formation that follows the currently selected formation"
+
+    @classmethod
+    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+        return storyboard.entry_after_active_entry if storyboard else None
+
+    @classmethod
+    def _get_info_labels(
+        cls, storyboard: Storyboard, entry: StoryboardEntry
+    ) -> List[str]:
+        duration = storyboard.get_transition_duration_from_current_entry()
+        return [format_transition_duration(duration)]
