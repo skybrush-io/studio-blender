@@ -392,7 +392,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         drones,
         *,
         get_positions_of,
-        previous_entry: StoryboardEntry,
+        previous_entry: Optional[StoryboardEntry],
         start_of_scene: int,
         start_of_next: Optional[int],
     ):

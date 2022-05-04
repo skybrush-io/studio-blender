@@ -119,7 +119,7 @@ def collect_objects_and_points_for_formation_update(selection):
 
 
 class UpdateFormationOperator(FormationOperator):
-    """Blender operator that removes the selected formation."""
+    """Blender operator that updates the markers in the selected formation."""
 
     bl_idname = "skybrush.update_formation"
     bl_label = "Update Selected Formation"

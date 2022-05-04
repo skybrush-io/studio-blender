@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, List, Optional, Sequence, Tuple, TypeVar
 
 from sbstudio.model.types import Coordinate3D, RGBAColor
 
@@ -14,6 +14,8 @@ __all__ = (
     "get_moves_required_to_sort_collection",
     "simplify_path",
 )
+
+T = TypeVar("T")
 
 
 def alpha_over_in_place(source: RGBAColor, background: RGBAColor) -> None:
@@ -105,11 +107,8 @@ def get_moves_required_to_sort_collection(
 
 
 def simplify_path(
-    points: Sequence[Any],
-    *,
-    eps: float,
-    distance_func: Callable[[List[Any], Any, Any], float]
-) -> Sequence[Any]:
+    points: Sequence[T], *, eps: float, distance_func: Callable[[List[T], T, T], float]
+) -> Sequence[T]:
     """Simplifies a sequence of points to a similar sequence with fewer
     points, using a distance function and an acceptable error term.
 

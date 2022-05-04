@@ -190,9 +190,12 @@ def get_object_in_collection(
         raise KeyError("No such object in collection: {0!r}".format(name))
 
 
-def sort_collection(collection: Collection, key: str) -> None:
+def sort_collection(collection: Collection, key: Callable[[Any], int]) -> None:
     """Sorts the given Blender collection using the given sorting key, with
     the limited set of reordering methods provided by Blender.
+
+    The collection needs to have a method named ``move()`` that takes two
+    indices and moves the item at the source index to the given target index.
     """
     moves = get_moves_required_to_sort_collection(collection, key)
     for source, target in moves:
