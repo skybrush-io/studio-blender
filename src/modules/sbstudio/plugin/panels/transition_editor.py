@@ -3,6 +3,7 @@ from bpy.types import Panel
 from typing import List, Optional
 
 from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
+from sbstudio.plugin.operators import RecalculateTransitionsOperator
 
 
 def format_transition_duration(duration: int) -> str:
@@ -40,6 +41,10 @@ class TransitionEditorBase(Panel):
     ) -> List[str]:
         return []
 
+    @classmethod
+    def _get_recalculation_scope(cls) -> str:
+        return "ALL"
+
     def draw(self, context):
         storyboard: Optional[Storyboard] = context.scene.skybrush.storyboard
         if not storyboard:
@@ -54,10 +59,15 @@ class TransitionEditorBase(Panel):
             layout.label(text=label)
 
         layout.prop(entry, "transition_type")
-        layout.prop(entry, "is_staggered")
+        layout.prop(entry, "transition_schedule")
         if entry.is_staggered:
             layout.prop(entry, "pre_delay_per_drone_in_frames")
             layout.prop(entry, "post_delay_per_drone_in_frames")
+
+        props = layout.operator(
+            RecalculateTransitionsOperator.bl_idname, text="Recalculate"
+        )
+        props.scope = self._get_recalculation_scope()
 
 
 class TransitionEditorIntoCurrentFormation(TransitionEditorBase):
@@ -79,6 +89,10 @@ class TransitionEditorIntoCurrentFormation(TransitionEditorBase):
         duration = storyboard.get_transition_duration_into_current_entry()
         return [format_transition_duration(duration)]
 
+    @classmethod
+    def _get_recalculation_scope(cls) -> str:
+        return "TO_SELECTED"
+
 
 class TransitionEditorFromCurrentFormation(TransitionEditorBase):
     """Edits the transition to the formation that follows the currently selected
@@ -99,3 +113,7 @@ class TransitionEditorFromCurrentFormation(TransitionEditorBase):
     ) -> List[str]:
         duration = storyboard.get_transition_duration_from_current_entry()
         return [format_transition_duration(duration)]
+
+    @classmethod
+    def _get_recalculation_scope(cls) -> str:
+        return "FROM_SELECTED"

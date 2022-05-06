@@ -84,14 +84,18 @@ class StoryboardEntry(PropertyGroup):
         default="AUTO",
         options=set(),
     )
-    is_staggered = BoolProperty(
-        name="Staggered",
+    transition_schedule = EnumProperty(
+        items=[
+            ("SYNCHRONIZED", "Synchronized", "", 1),
+            ("STAGGERED", "Staggered", "", 2),
+        ],
+        name="Schedule",
         description=(
-            "Whether the transition should be staggered. Note that collision-free "
-            "trajectories are guaranteed only for normal (non-staggered) "
-            "transitions"
+            "Time schedule of departures and arrivals during the transition between "
+            "the previous formation and this one. Note that collision-free "
+            "trajectories are guaranteed only for synchronized transitions"
         ),
-        default=False,
+        default="SYNCHRONIZED",
         options=set(),
     )
     pre_delay_per_drone_in_frames = FloatProperty(
@@ -147,6 +151,11 @@ class StoryboardEntry(PropertyGroup):
             # Chance of a collision is minimal so just use random numbers
             self.maybe_uuid_do_not_use = uuid4().hex
         return self.maybe_uuid_do_not_use
+
+    @property
+    def is_staggered(self) -> bool:
+        """Whether the transition is staggered."""
+        return self.transition_schedule == "STAGGERED"
 
 
 class Storyboard(PropertyGroup, ListMixin):

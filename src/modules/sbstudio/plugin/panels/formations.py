@@ -5,6 +5,7 @@ from sbstudio.plugin.operators import (
     DeselectFormationOperator,
     GetFormationStatisticsOperator,
     RemoveFormationOperator,
+    ReorderFormationMarkersOperator,
     SelectFormationOperator,
     UpdateFormationOperator,
     AppendFormationToStoryboardOperator,
@@ -56,7 +57,13 @@ class FormationsPanel(Panel):
             icon="FORWARD",
         )
 
-        row = layout.row()
+        row = layout.row(align=True)
         row.operator(
             UpdateFormationOperator.bl_idname, text="Update", icon="FILE_REFRESH"
+        )
+        row.operator_menu_enum(
+            ReorderFormationMarkersOperator.bl_idname,
+            "type",
+            icon="SORTSIZE",
+            text="Reorder",
         )

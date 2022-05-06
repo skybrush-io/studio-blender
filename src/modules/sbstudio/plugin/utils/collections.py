@@ -6,9 +6,7 @@ from bpy.types import Collection, Object
 
 from inspect import signature
 from itertools import count
-from typing import Any, Callable, Optional, Tuple
-
-from sbstudio.utils import get_moves_required_to_sort_collection
+from typing import Any, Callable, List, Optional, Tuple, Sequence
 
 from .identifiers import create_internal_id
 
@@ -190,6 +188,75 @@ def get_object_in_collection(
         raise KeyError("No such object in collection: {0!r}".format(name))
 
 
+def _get_actions_required_to_sort_collection_with_move_method(
+    items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
+) -> List[Tuple[int, int]]:
+    """Given a list of items and an optional sorting key function, returns a
+    list of from-to pairs representing steps that are needed to sort the list
+    with single-item moves. This is useful for sorting Blender collections
+    with its `move()` method.
+    """
+    result = []
+    num_items = len(items)
+
+    if num_items:
+        if key:
+            items = [key(item) for item in items]
+
+        indexes = sorted(range(num_items), key=items.__getitem__)
+
+        for front, index in enumerate(indexes):
+            if index != front:
+                result.append((index, front))
+                for j in range(front + 1, num_items):
+                    if indexes[j] >= front and indexes[j] < index:
+                        indexes[j] += 1
+
+    return result
+
+
+# >>> from sbstudio.plugin.utils import _get_actions_required_to_sort_collection_with_move_method as get_moves
+# >>> print(get_moves([10, 40, 30, 20, 50]))
+# [(3, 1), (3, 2)]
+# >>> print(get_moves([30, 20, 10, 40]))
+# [(2, 0), (2, 1)]
+# print(get_moves([50, 70, 40, 30, 20, 60, 10]))
+# [(6, 0), (5, 1), (5, 2), (5, 3), (6, 5)]
+
+
+def _get_actions_required_to_sort_collection_with_relinking(
+    items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
+) -> List[Any]:
+    """Given a list of items and an optional sorting key function, returns a
+    list of steps that are needed to sort the list when we are provided only
+    with an `unlink()` method that removes an item from the list and a
+    `link()` method that appends an item to the list.
+
+    The result is a list of items; each item in this list should be unlinked
+    first and then immediately re-linked.
+    """
+    if len(items) < 2:
+        return []
+
+    if key:
+        sorted_items = sorted(items, key=key, reverse=True)
+    else:
+        sorted_items = sorted(items, reverse=True)
+
+    start = 0
+    items = list(items)
+    while sorted_items:
+        try:
+            start = items.index(sorted_items[-1], start) + 1
+        except ValueError:
+            sorted_items.reverse()
+            return sorted_items
+        else:
+            sorted_items.pop()
+    else:
+        return []
+
+
 def sort_collection(collection: Collection, key: Callable[[Any], int]) -> None:
     """Sorts the given Blender collection using the given sorting key, with
     the limited set of reordering methods provided by Blender.
@@ -197,6 +264,21 @@ def sort_collection(collection: Collection, key: Callable[[Any], int]) -> None:
     The collection needs to have a method named ``move()`` that takes two
     indices and moves the item at the source index to the given target index.
     """
-    moves = get_moves_required_to_sort_collection(collection, key)
-    for source, target in moves:
-        collection.move(source, target)
+    if hasattr(collection, "move"):
+        # Collection has a move() method so we sort using that. This branch is
+        # used for, e.g., bpy.data.objects["Drone 1"].constraints
+        moves = _get_actions_required_to_sort_collection_with_move_method(
+            collection, key
+        )
+        for source, target in moves:
+            collection.move(source, target)
+    elif hasattr(collection, "link") and hasattr(collection, "unlink"):
+        # Collection has no move() method but it has link() and unlink(). We
+        # assume that link() adds an object at the end of the collection.
+        # This branch is used for, e.g., bpy.data.collections["Formation"].objects
+        items = _get_actions_required_to_sort_collection_with_relinking(collection, key)
+        for item in items:
+            collection.unlink(item)
+            collection.link(item)
+    else:
+        raise TypeError("collection needs move(), link() or unlink() methods")

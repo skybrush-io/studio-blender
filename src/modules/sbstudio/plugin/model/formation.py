@@ -205,7 +205,9 @@ def get_markers_from_formation(
 
     The order in which the markers are returned from this function are
     consistent with the order in which their positions are returned from
-    `get_world_coordinates_of_markers_from_formation()`.
+    `get_world_coordinates_of_markers_from_formation()`. The order is also
+    consistent with the order of objects within the formation collection
+    according to Blender.
     """
     result = []
 
@@ -230,7 +232,8 @@ def get_world_coordinates_of_markers_from_formation(
 
     The order in which the markers are returned from this function are
     consistent with the order in which they are returned from
-    `get_markers_from_formation()`.
+    `get_markers_from_formation()`. The order is also consistent with the
+    order of objects within the formation collection according to Blender.
 
     Parameters:
         formation: the formation to evaluate
