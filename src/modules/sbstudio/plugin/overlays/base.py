@@ -3,7 +3,10 @@ Blender 3D view and that can be enabled or disabled on-demand.
 """
 
 from abc import ABCMeta
+from typing import Callable
+
 from bpy.types import SpaceView3D
+
 
 __all__ = ("Overlay",)
 
@@ -15,6 +18,19 @@ class Overlay(metaclass=ABCMeta):
     Add a `draw_3d()` method in derived classes to draw in 3D space.
     Add a `draw_2d()` method in derived classes to draw in 2D space; this is
     useful for text overlays.
+    """
+
+    _enabled: bool
+    """Whether the overlay is enabled."""
+
+    _handler_2d: object
+    """Handle to the registered Blender 2D draw handler, used when unregistering
+    the overlay.
+    """
+
+    _handler_3d: object
+    """Handle to the registered Blender 3D draw handler, used when unregistering
+    the overlay.
     """
 
     def __init__(self):
@@ -48,12 +64,14 @@ class Overlay(metaclass=ABCMeta):
         if self._enabled:
             self.prepare()
             if hasattr(self, "draw_3d"):
+                handler: Callable[[], None] = getattr(self, "draw_3d")
                 self._handler_3d = SpaceView3D.draw_handler_add(
-                    self.draw_3d, (), "WINDOW", getattr(self, "event", "POST_VIEW")
+                    handler, (), "WINDOW", getattr(self, "event", "POST_VIEW")
                 )
             if hasattr(self, "draw_2d"):
+                handler: Callable[[], None] = getattr(self, "draw_2d")
                 self._handler_2d = SpaceView3D.draw_handler_add(
-                    self.draw_2d, (), "WINDOW", getattr(self, "event", "POST_PIXEL")
+                    handler, (), "WINDOW", getattr(self, "event", "POST_PIXEL")
                 )
 
     def prepare(self) -> None:
