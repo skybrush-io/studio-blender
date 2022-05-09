@@ -20,7 +20,10 @@ class TransitionEditorBase(Panel):
     """Base class for transition editors."""
 
     bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+
+    # Prevent the panel from appearing on its own in "Misc"
+    bl_region_type = "WINDOW"
+    bl_options = {"INSTANCED"}
 
     @classmethod
     def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
