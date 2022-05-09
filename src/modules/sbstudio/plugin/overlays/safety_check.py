@@ -3,11 +3,11 @@ import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
-from typing import List, Sequence
+from typing import Any, List, Optional, Sequence
 
 from sbstudio.model.types import Coordinate3D
 
-from .base import Overlay
+from .base import ShaderOverlay
 
 try:
     import gpu.state
@@ -32,20 +32,21 @@ def set_warning_color_iff(condition: bool, font_id: int) -> None:
         blf.color(font_id, 1, 1, 1, 1)
 
 
-class SafetyCheckOverlay(Overlay):
+class SafetyCheckOverlay(ShaderOverlay):
     """Overlay that marks the closest pair of drones and all drones above the
     altitude threshold in the 3D view.
     """
 
+    _markers: Optional[MarkerList] = None
+    _shader_batches: Any
+
     def __init__(self):
         super().__init__()
 
-        self._markers = None
-        self._ui_scale = 1
         self._shader_batches = None
 
     @property
-    def markers(self):
+    def markers(self) -> Optional[MarkerList]:
         return self._markers
 
     @markers.setter
@@ -62,14 +63,6 @@ class SafetyCheckOverlay(Overlay):
             self._markers = None
 
         self._shader_batches = None
-
-    def prepare(self) -> None:
-        self._shader = gpu.shader.from_builtin("3D_UNIFORM_COLOR")
-        self._ui_scale = (
-            bpy.context.preferences.system.pixel_size
-            * bpy.context.preferences.system.dpi
-            / 72
-        )
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
@@ -154,13 +147,13 @@ class SafetyCheckOverlay(Overlay):
                     batch.draw(self._shader)
 
     def dispose(self) -> None:
-        self._shader = None
+        super().dispose()
         self._shader_batches = None
 
-    def _create_shader_batches(self) -> None:
+    def _create_shader_batches(self):
         batches, points, lines = [], [], []
 
-        for marker_points in self._markers:
+        for marker_points in self._markers or ():
             points.extend(marker_points)
 
             if marker_points:

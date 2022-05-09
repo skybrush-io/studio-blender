@@ -3,10 +3,12 @@ Blender 3D view and that can be enabled or disabled on-demand.
 """
 
 from abc import ABCMeta
-from typing import Callable
+from typing import Callable, ClassVar
 
 from bpy.types import SpaceView3D
 
+import bpy
+import gpu
 
 __all__ = ("Overlay",)
 
@@ -87,3 +89,28 @@ class Overlay(metaclass=ABCMeta):
         release references to shaders, batches and vertex buffers.
         """
         pass
+
+
+class ShaderOverlay(Overlay):
+    """Overlay subclass that works with a Blender built-in shader."""
+
+    shader_type: ClassVar[str] = "3D_UNIFORM_COLOR"
+
+    _ui_scale: float
+
+    def __init__(self):
+        super().__init__()
+
+        self._shader = None
+        self._ui_scale = 1
+
+    def prepare(self) -> None:
+        self._shader = gpu.shader.from_builtin(self.shader_type)
+        self._ui_scale = (
+            bpy.context.preferences.system.pixel_size
+            * bpy.context.preferences.system.dpi
+            / 72
+        )
+
+    def dispose(self) -> None:
+        self._shader = None
