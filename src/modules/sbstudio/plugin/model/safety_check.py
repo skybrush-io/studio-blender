@@ -1,6 +1,6 @@
 from bpy.props import BoolProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional, List, Tuple
+from typing import Optional, List, Sequence, Tuple, overload
 
 from sbstudio.model.safety_check import SafetyCheckResult
 from sbstudio.model.types import Coordinate3D
@@ -16,6 +16,16 @@ _overlay = None
 #: Current safety check result object. This cannot be an attribute of
 #: SafetyCheckProperties for some reason; Blender PropertyGroup objects are weird.
 _safety_check_result = SafetyCheckResult()
+
+
+@overload
+def _get_overlay() -> SafetyCheckOverlay:
+    ...
+
+
+@overload
+def _get_overlay(create: bool) -> Optional[SafetyCheckOverlay]:
+    ...
 
 
 def _get_overlay(create: bool = True):
@@ -368,10 +378,11 @@ class SafetyCheckProperties(PropertyGroup):
         overlay = _get_overlay(create=False)
 
         if overlay:
-            markers = []
+            markers: List[Sequence[Coordinate3D]] = []
 
             if self.should_show_proximity_warning:
-                markers.append(_safety_check_result.closest_pair)
+                if _safety_check_result.closest_pair is not None:
+                    markers.append(_safety_check_result.closest_pair)
 
             if self.should_show_altitude_warning:
                 markers.extend(
