@@ -28,6 +28,9 @@ class ReorderFormationMarkersOperator(FormationOperator):
             ("X", "Sort by X coordinate", "", 3),
             ("Y", "Sort by Y coordinate", "", 4),
             ("Z", "Sort by Z coordinate", "", 5),
+            ("EVERY_2", "Every 2nd", "", 6),
+            ("EVERY_3", "Every 3rd", "", 7),
+            ("EVERY_4", "Every 4th", "", 8),
         ],
         name="Type",
         description="Reordering to perform on the formation",
@@ -78,6 +81,15 @@ class ReorderFormationMarkersOperator(FormationOperator):
     def _execute_on_formation_Z(self, markers) -> List[int]:
         return self._sort_by_axis(markers, axis=2)
 
+    def _execute_on_formation_EVERY_2(self, markers) -> List[int]:
+        return self._sweep(markers, step=2)
+
+    def _execute_on_formation_EVERY_3(self, markers) -> List[int]:
+        return self._sweep(markers, step=3)
+
+    def _execute_on_formation_EVERY_4(self, markers) -> List[int]:
+        return self._sweep(markers, step=4)
+
     @staticmethod
     def _sort_by_axis(markers, *, axis: int) -> List[int]:
         with create_position_evaluator() as get_positions_of:
@@ -87,3 +99,13 @@ class ReorderFormationMarkersOperator(FormationOperator):
             return coords[x][axis]
 
         return sorted(range(len(markers)), key=key_func)
+
+    @staticmethod
+    def _sweep(markers, *, step: int) -> List[int]:
+        num_markers = len(markers)
+        if not num_markers or step < 2:
+            return markers
+        else:
+            return sum(
+                (list(range(start, num_markers, step)) for start in range(step)), []
+            )
