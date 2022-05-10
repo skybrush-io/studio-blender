@@ -67,3 +67,6 @@ class FormationsPanel(Panel):
             icon="SORTSIZE",
             text="Reorder",
         )
+
+        row = layout.row()
+        row.prop(formations, "order_overlay_enabled")
