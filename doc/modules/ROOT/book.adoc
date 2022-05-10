@@ -1,6 +1,6 @@
 = Skybrush Studio for Blender User Guide
 CollMot Robotics Ltd. <hello@skybrush.io>
-v1.9.2, {docdatetime}
+v2.0.0, {docdatetime}
 :doctype: book
 :encoding: utf-8
 :homepage: https://skybrush.io
