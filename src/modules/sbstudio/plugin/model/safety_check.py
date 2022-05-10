@@ -312,7 +312,7 @@ class SafetyCheckProperties(PropertyGroup):
     def set_safety_check_result(
         self,
         formation_status: Optional[str] = None,
-        nearest_neighbors: Optional[Tuple[float, Coordinate3D, Coordinate3D]] = None,
+        nearest_neighbors: Optional[Tuple[Coordinate3D, Coordinate3D, float]] = None,
         min_altitude: Optional[float] = None,
         max_altitude: Optional[float] = None,
         drones_over_max_altitude: Optional[List[Coordinate3D]] = None,
@@ -323,6 +323,8 @@ class SafetyCheckProperties(PropertyGroup):
     ) -> None:
         """Clears the result of the last minimum distance calculation."""
         global _safety_check_result
+
+        refresh = False
 
         if formation_status is not None:
             self.formation_status = formation_status
