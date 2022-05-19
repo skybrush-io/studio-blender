@@ -20,7 +20,7 @@ DEFAULT_STORYBOARD_ENTRY_DURATION = 20
 #: in seconds
 DEFAULT_STORYBOARD_TRANSITION_DURATION = 20
 
-#: Default duraition of newly created light effects, in seconds
+#: Default duration of newly created light effects, in seconds
 DEFAULT_LIGHT_EFFECT_DURATION = 10
 
 #: Drone radius
