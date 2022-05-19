@@ -143,6 +143,37 @@ def _get_location(obj):
     return tuple(obj.matrix_world.translation)
 
 
+def _find_shader_node_by_name_and_type(material, name: str, type: str):
+    """Finds the first shader node with the given name and expected type in the
+    shader node tree of the given material.
+
+    Lookup by name will likely fail if Blender is localized; in this case we
+    will return the _first_ shader node that matches the given type.
+
+    Parameters:
+        name: the name of the shader node
+        type: the expected type of the shader node
+
+    Raises:
+        ValueError: if there is no such shader node in the material
+    """
+    nodes = material.node_tree.nodes
+
+    try:
+        node = nodes[name]
+        if node.type == type:
+            return node
+    except KeyError:
+        pass
+
+    # Lookup by name failed, let's try the slower way
+    for node in nodes:
+        if node.type == type:
+            return node
+
+    raise KeyError(f"no shader node with type {type!r} in material")
+
+
 def _get_shader_node_and_input_for_diffuse_color_of_material(material):
     """Returns a reference to the shader node and its input that controls the
     diffuse color of the given material.
@@ -155,19 +186,22 @@ def _get_shader_node_and_input_for_diffuse_color_of_material(material):
     Raises:
         ValueError: if the material does not use shader nodes
     """
-    nodes = material.node_tree.nodes
     try:
-        node = nodes["Emission"]
+        node = _find_shader_node_by_name_and_type(material, "Emission", "EMISSION")
         input = node.inputs["Color"]
         return node, input
     except KeyError:
         try:
-            node = nodes["Principled BSDF"]
+            node = _find_shader_node_by_name_and_type(
+                material, "Principled BSDF", "BSDF_PRINCIPLED"
+            )
             input = node.inputs["Base Color"]
             return node, input
         except KeyError:
             try:
-                node = nodes["Principled BSDF"]
+                node = _find_shader_node_by_name_and_type(
+                    material, "Principled BSDF", "BSDF_PRINCIPLED"
+                )
                 input = node.inputs["Emission"]
                 return node, input
             except KeyError:
@@ -434,7 +468,9 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
             if self.export_selected:
                 self.report({"WARNING"}, "No objects were selected; export cancelled")
             else:
-                self.report({"WARNING"}, "There are no objects to export; export cancelled")
+                self.report(
+                    {"WARNING"}, "There are no objects to export; export cancelled"
+                )
             return {"CANCELLED"}
 
         _write_skybrush_file(context, settings, filepath)
