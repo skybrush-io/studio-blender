@@ -96,6 +96,24 @@ class InfluenceCurveDescriptor:
     windup_type: InfluenceCurveTransitionType = InfluenceCurveTransitionType.SMOOTH
     """The type of the windup transition."""
 
+    def __init__(
+        self,
+        scene_start_frame: int,
+        windup_start_frame: Optional[int],
+        start_frame: int,
+        end_frame: Optional[int] = None,
+        windup_type: InfluenceCurveTransitionType = InfluenceCurveTransitionType.SMOOTH,
+    ):
+        # Note that explicit __init__() method implementation is needed to
+        # ensure that int type arguments are truly ints
+        self.scene_start_frame = round(scene_start_frame)
+        self.windup_start_frame = (
+            None if windup_start_frame is None else round(windup_start_frame)
+        )
+        self.start_frame = round(start_frame)
+        self.end_frame = None if end_frame is None else round(end_frame)
+        self.windup_type = windup_type
+
     def apply(self, object, data_path: str) -> None:
         """Applies the influence curve descriptor to the given data path of the
         given Blender object by updating the keyframes appropriately.
