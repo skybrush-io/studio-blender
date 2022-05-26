@@ -8,6 +8,7 @@ import bpy
 from bpy.props import EnumProperty
 
 from sbstudio.api.errors import SkybrushStudioAPIError
+from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
 )
@@ -369,6 +370,10 @@ def update_transition_for_storyboard_entry(
     Returns:
         the mapping from drone index to marker index in the current
         formation, or `None` if the entry is a free segment
+
+    Raises:
+        SkybrushStudioError: if an error happens while calculating transitions
+
     """
     formation = entry.formation
     if formation is None:
@@ -462,6 +467,11 @@ def update_transition_for_storyboard_entry(
                 start_frame -= entry.post_delay_per_drone_in_frames * (
                     num_drones_transitioning - arrival_index - 1
                 )
+                if windup_start_frame >= start_frame:
+                    raise SkybrushStudioError(
+                        f"Not enough time to plan staggered transition to formation {entry.name!r}. "
+                        f"Try decreasing departure or arrival delay or allow more time for the transition."
+                    )
 
             # start_frame can be earlier than entry.frame_start for
             # staggered arrivals.
