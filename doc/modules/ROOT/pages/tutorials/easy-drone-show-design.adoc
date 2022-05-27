@@ -85,7 +85,7 @@ Check out the xref:panels/formations/storyboard.adoc[Storyboard panel] in the Fo
 
 image::panels/storyboard/storyboard.jpg[Storyboard]
 
-Add your formations to the Storyboard, define their starting time and duration. Leave the transition type as _Auto_ for the time being to let Skybrush attempt to calculate the transitions between them.
+Add your formations to the Storyboard, define their starting time and duration. Leave the transition type as _Auto_ and the transition schedule as _Synchronized_ for the time being to let Skybrush attempt to calculate the transitions between them. Later on you can experiment with more advanced, _Manual_ and _Staggered_ transitions, too.
 
 TIP: Make sure that the time intervals of the formations do not overlap and pay attention to use enough transition time for your drones between different formations in the storyboard. A typical transition is usually between 15 and 30 seconds, depending on the size and complexity of your formations and the velocity and acceleration constraints.
 
