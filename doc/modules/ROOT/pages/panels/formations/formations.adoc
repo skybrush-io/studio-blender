@@ -52,16 +52,16 @@ You can also update formations simply by moving the markers in 3D space using th
 
 Points in every formation have a specific order. This gets useful when staggered transitions are created between two formations and thus drones do not depart from or arrive to a given formation at the same time, but in a delayed manner, one after another, in the order they are represented in the formations.
 
-Reordering a formation can be issued any time with opening the btn:[Reorder] drop down list and selecting the preferred reordering operator. Note that reordering is instantaneous; using multiple reorder operators is possible, each one will take the actual order and apply its own effect upon that to create the new order. The following reorder operators are implemented:
+Reordering a formation can be issued any time with opening the btn:[Reorder] drop down list and selecting the preferred reordering operator. Note that reordering is instantaneous; using multiple reorder operators is possible, each one will take the current order and apply its own modifications to create the new order. The following reorder operators are implemented:
 
 Sort by name:: sort by the name of items in the formation (default sorting)
-Shuffle:: apply a randomization on the order
-Reverse:: reverse the actual order
-Sort by X/Y/Z coordinate:: sort the actual order according to the X/Y/Z coordinate value of each point in the formation
-Every 2nd/3rd/4th:: take every 2nd/3rd/4th item first and repeat until all items are assigned to a new order
-Ensure safety distance:: take first item, then take the next that is far enough from it and repeat the process until every item is taken
+Shuffle:: shuffle the items in the formation to a completely random order
+Reverse:: reverse the current order
+Sort by X/Y/Z coordinate:: sort the current order according to the X/Y/Z coordinate value of each point in the formation
+Every 2nd/3rd/4th:: pick every 2nd/3rd/4th item and repeat until all items are assigned to the new ordering
+Ensure safety distance:: pick the first item, then iteratively pick the next item that is far enough from all previous items picked (based on the distance limit set in the safety settings). When the list is exhausted, start from the beginning with the remaining items, ignoring the items picked in the previous round(s) in distance calculations. Repeat the process until every item is processed. The result is an ordering where consecutive items strive to respect the distance limit.
 
-TIP: to visualize the current order of a formation, enable the btn:[Show order of formations] checkbox, which will connect all points in the formation with linear line segments between each consecutive point in the actual order colored from green to red.
+TIP: to visualize the current order of a formation, enable the btn:[Show order of formations] checkbox, which will connect all points in the formation with linear line segments between each consecutive point in the current order colored from green to red.
 
 == Formation statistics
 
