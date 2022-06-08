@@ -12,6 +12,7 @@ documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 [[tool.poetry.source]]
 name = "collmot"
 url = "https://pypi.collmot.com/simple/"
+secondary = true
 
 [tool.poetry.dependencies]
 python = "^3.7"

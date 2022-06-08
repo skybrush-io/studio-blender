@@ -19,7 +19,7 @@ reference = "collmot"
 
 [[package]]
 name = "natsort"
-version = "8.0.2"
+version = "8.1.0"
 description = "Simple yet flexible natural sorting in Python."
 category = "main"
 optional = false
@@ -29,11 +29,6 @@ python-versions = ">=3.6"
 fast = ["fastnumbers (>=2.0.0)"]
 icu = ["PyICU (>=1.0.0)"]
 
-[package.source]
-type = "legacy"
-url = "https://pypi.collmot.com/simple"
-reference = "collmot"
-
 [[package]]
 name = "netifaces"
 version = "0.11.0"
@@ -41,11 +36,6 @@ description = "Portable network interface information."
 category = "main"
 optional = true
 python-versions = "*"
-
-[package.source]
-type = "legacy"
-url = "https://pypi.collmot.com/simple"
-reference = "collmot"
 
 [[package]]
 name = "numpy"
@@ -55,23 +45,13 @@ category = "main"
 optional = true
 python-versions = ">=3.7"
 
-[package.source]
-type = "legacy"
-url = "https://pypi.collmot.com/simple"
-reference = "collmot"
-
 [[package]]
 name = "pyclean"
-version = "2.0.0"
+version = "2.2.0"
 description = "Pure Python cross-platform pyclean. Clean up your Python bytecode."
 category = "dev"
 optional = false
 python-versions = "*"
-
-[package.source]
-type = "legacy"
-url = "https://pypi.collmot.com/simple"
-reference = "collmot"
 
 [[package]]
 name = "pyledctrl"
@@ -132,7 +112,7 @@ standalone = ["skybrush-studio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "7fcfdf51d00a2f0039753d214577e05f9566e56da5e1cc81381526c320854313"
+content-hash = "bed04a1abd7f53cc4e1fb7f371bc4a801e52cd3e6134a71b307a5de3fa8e7987"
 
 [metadata.files]
 flockwave-net = [
@@ -140,8 +120,8 @@ flockwave-net = [
     {file = "flockwave_net-2.0.2-py3-none-any.whl", hash = "md5:28ef9817b6d162eb94ff9dd1b256bfaa"},
 ]
 natsort = [
-    {file = "natsort-8.0.2-py3-none-any.whl", hash = "sha256:09cff3cabb617f9794f643758ab5b337c1c0af1a6df11edf5c04de496fd7fb26"},
-    {file = "natsort-8.0.2.tar.gz", hash = "sha256:feb87e0ce1dc1f8f3f21e18a85216c790e746d76a5ff6889563394605f504a2b"},
+    {file = "natsort-8.1.0-py3-none-any.whl", hash = "sha256:f59988d2f24e77b6b56f8a8f882d5df6b3b637e09e075abc67b486d59fba1a4b"},
+    {file = "natsort-8.1.0.tar.gz", hash = "sha256:c7c1f3f27c375719a4dfcab353909fe39f26c2032a062a8c80cc844eaaca0445"},
 ]
 netifaces = [
     {file = "netifaces-0.11.0-cp27-cp27m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:eb4813b77d5df99903af4757ce980a98c4d702bbcb81f32a0b305a1537bdf0b1"},
@@ -206,8 +186,8 @@ numpy = [
     {file = "numpy-1.21.1.zip", hash = "sha256:dff4af63638afcc57a3dfb9e4b26d434a7a602d225b42d746ea7fe2edf1342fd"},
 ]
 pyclean = [
-    {file = "pyclean-2.0.0-py3-none-any.whl", hash = "sha256:ac9bb87f0fffe12acbc2292150f92ec30ca1935acf2b45e9fa24dc64efe9b379"},
-    {file = "pyclean-2.0.0.tar.gz", hash = "sha256:06e62e5a26f9b0eaebe249a1a74db17daf35c0216688b6fceb8f55f0d6eb7a40"},
+    {file = "pyclean-2.2.0-py3-none-any.whl", hash = "sha256:5f99597b76249b71b86d8e9aff1e69dfdc0b1976d14ce366e07b28dc6f7a8ee6"},
+    {file = "pyclean-2.2.0.tar.gz", hash = "sha256:48f1801804fa2f04f2c64348da8bd61797fc9722e1120c470d5cc67a205843c7"},
 ]
 pyledctrl = [
     {file = "pyledctrl-3.2.1-py3-none-any.whl", hash = "md5:da95ddc3f91b8268330c4f4531d92823"},
