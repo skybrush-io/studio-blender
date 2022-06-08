@@ -112,7 +112,7 @@ standalone = ["skybrush-studio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "bed04a1abd7f53cc4e1fb7f371bc4a801e52cd3e6134a71b307a5de3fa8e7987"
+content-hash = "0c7f010faade1dabbdfb694af8d3cebba10e2cdbea5a3e170d6f45baf410b12f"
 
 [metadata.files]
 flockwave-net = [

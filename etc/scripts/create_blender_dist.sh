@@ -55,7 +55,7 @@ mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
 echo -n "--> Installing dependencies... "
-.venv/bin/pip install -q -U pip wheel pyclean pyminifier
+.venv/bin/pip install -q -U pip wheel pyclean
 .venv/bin/pip install -q -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 echo "done."
@@ -94,7 +94,11 @@ rm -rf "${TMP_DIR}/${ZIP_STEM}"
 echo "done."
 
 if [ "x${BOOTLOADER_DIR}" != x ]; then
-	echo -n "--> Creating executables... "
+    echo -n "--> Creating executables... "
+
+    # pyminifier only needed here, but we need our patched version that works
+    # with Python 3
+    .venv/bin/pip install -q -U pyminifier>=3.0.0
 
     # Create a single-file Python entry point
     cat ${BUILD_DIR}/ui_skybrush_studio.py | sed -n '/BLENDER ADD-ON INFO ENDS HERE/,$p' >${BUILD_DIR}/entrypoint.py
@@ -126,14 +130,14 @@ EOF
     # Remove the single-file entry point, not needed any more
     rm ${OUTPUT_DIR}/${ZIP_STEM}.py
 
-	echo "done."
+    echo "done."
 
     # Create macOS launcher app in a disk image
-	echo -n "--> Creating macOS disk image... "
+    echo -n "--> Creating macOS disk image... "
     etc/scripts/_build_macos_dmg.sh "${BUILD_DIR}" "${OUTPUT_DIR}" >/dev/null 2>/dev/null
-	echo "done."
+    echo "done."
 else
-	echo "[-] Skipping executables - no bootloader code present."
+    echo "[-] Skipping executables - no bootloader code present."
 fi
 
 # Clean up after ourselves

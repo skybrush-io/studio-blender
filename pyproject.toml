@@ -17,14 +17,14 @@ secondary = true
 [tool.poetry.dependencies]
 python = "^3.7"
 natsort = "^8.0.0"
-skybrush-studio = { version = "^2.1.0", optional = true }
+skybrush-studio = { version = "^2.1.0", optional = true, source = "collmot" }
 
 [tool.poetry.extras]
 standalone = ["skybrush-studio"]
 
 [tool.poetry.dev-dependencies]
 pyclean = "^2.0.0"
-pyminifier = "^3.0.2"
+pyminifier = { version = "^3.0.2", source = "collmot" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
