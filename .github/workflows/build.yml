@@ -18,6 +18,7 @@ jobs:
           poetry-version: '1.0'
       - name: Build add-on
         run: etc/scripts/create_blender_dist.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
+          name: skybrush-studio-blender
           path: ./dist/*.zip
