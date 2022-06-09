@@ -9,6 +9,7 @@ from sbstudio.plugin.model.formation import (
     add_objects_to_formation,
     add_points_to_formation,
 )
+from sbstudio.plugin.objects import remove_objects
 from sbstudio.plugin.selection import (
     get_selected_objects,
     get_selected_vertices_grouped_by_objects,
@@ -153,10 +154,9 @@ class UpdateFormationOperator(FormationOperator):
             formation.objects.unlink(obj)
 
         # Delete the markers from the formation that are not used elsewhere
-        # TODO(ntamas): it would be nicer not to change the selection
-        select_only(to_delete)
-        bpy.ops.object.delete()
+        remove_objects(to_delete)
 
+        # Add the new points and objects to the formation
         add_points_to_formation(formation, new_points)
         add_objects_to_formation(formation, new_objects)
 

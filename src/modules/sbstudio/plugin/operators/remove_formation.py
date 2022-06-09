@@ -1,6 +1,6 @@
 import bpy
 
-from sbstudio.plugin.selection import select_only
+from sbstudio.plugin.objects import remove_objects
 
 from .base import FormationOperator
 
@@ -15,10 +15,7 @@ class RemoveFormationOperator(FormationOperator):
     bl_description = "Remove the selected formation from the show"
 
     def execute_on_formation(self, formation, context):
-        # TODO(ntamas): it would be nicer to keep the selection
-        select_only(formation, context=context)
-        bpy.ops.object.delete()
-        bpy.data.collections.remove(formation)
+        remove_objects(formation)
 
         # TODO(ntamas): we also need to remove any constraints that were related
         # to this formation

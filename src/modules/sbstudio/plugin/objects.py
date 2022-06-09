@@ -1,7 +1,7 @@
 import bpy
 
-from bpy.types import MeshVertex, Object, Scene, VertexGroup
-from typing import Any, List, Optional
+from bpy.types import Collection, Context, MeshVertex, Object, Scene, VertexGroup
+from typing import Any, Iterable, List, Optional, Union
 
 from .utils import with_scene
 
@@ -13,6 +13,7 @@ __all__ = (
     "get_vertices_of_object_in_vertex_group_by_name",
     "link_object_to_scene",
     "object_contains_vertex",
+    "remove_objects",
 )
 
 
@@ -144,3 +145,37 @@ def object_contains_vertex(obj: Object, vertex: MeshVertex) -> bool:
     mesh = obj.data if obj else None
     index = vertex.index
     return mesh and len(mesh.vertices) > index and mesh.vertices[index] == vertex
+
+
+def remove_objects(objects: Union[Iterable[Object], Collection]) -> None:
+    """Removes the given objects from the current scene. Also supports removing
+    an entire collection.
+    """
+    collection: Optional[Collection] = None
+    to_remove: Iterable[Object]
+
+    if isinstance(objects, Collection):
+        collection = objects
+        to_remove = collection.objects
+    else:
+        to_remove = objects
+
+    for obj in to_remove:
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+    if collection:
+        bpy.data.collections.remove(collection)
+
+    """
+    # Prevent a circular import with lazy imports
+    from .selection import select_only
+
+    # TODO(ntamas): it would be nicer not to change the selection
+    select_only(objects, context=context)
+    for obj in objects:
+        obj.hide_set(False)
+
+    result = bpy.ops.object.delete()
+    if result != {"FINISHED"}:
+        raise RuntimeError(f"Blender operator returned {result!r}, expected FINISHED")
+    """
