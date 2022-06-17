@@ -18,25 +18,9 @@ An additional requirement is that you need to have active Internet connection on
 
 There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 2.93.x.
 
-=== 3. Acquire Skybrush Studio for Blender
+=== 3. Install Skybrush Studio for Blender
 
-*Skybrush Studio for Blender* can be obtained from https://skybrush.io. If you obtain a valid licence, the latest installation package can be downloaded from our site as a single `.zip` file. Please download it to your computer first.
-
-=== 4. Install Skybrush Studio for Blender
-
-*Skybrush Studio for Blender* may come in one of three formats:
-
-* as a single ZIP file containing the code of the software
-* as an executable file (typically an `.exe`) that you need to place next to
-  Blender's own executable,
-* or a disk image (typically a `.dmg` file on macOS)
-
-Please follow one of the instruction sets below, depending on whether you have
-received a ZIP, an executable or a disk image.
-
-==== Installation from a ZIP file
-
-This section applies if you have received a ZIP file from us.
+*Skybrush Studio for Blender* can be downloaded from https://skybrush.io as a single `.zip` file. Please download it to your computer first, then follow the instructions below.
 
 image::install_blender_addons.jpg[Install Blender Add-ons]
 
@@ -46,26 +30,6 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 4. In the popup window select the *Skybrush Studio for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
 5. Activate the "Interface: Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list.
 
-==== Installation from an executable on Windows
-
-This section applies if you have received an executable file (typically named `skybrush-studio-for-blender-...-win64.exe`) from us.
-
-1. Open the file manager of your operating system and copy the executable in the same folder where Blender is installed. Look for a file named `blender.exe` if you are uncertain.
-
-2. Start the executable file you have received from us. This will in turn provide the code of our software to Blender and start it up.
-
-==== Installation from a disk image on macOS
-
-This section applies if you have received a disk image (typically named `Skybrush Studio for Blender ... .dmg`) from us on macOS.
-
-1. Double-click on the `.dmg` file in Finder to mount it.
-
-2. Drag the application icon inside the disk image to the `/Applications` folder, next to Blender's own icon.
-
-3. Eject the disk image in Finder. You can now remove the disk image if you don't need it any more.
-
-4. Double-click on the application icon inside `/Applications`. This will in turn provide the code of our software to Blender and start it up.
-
 == Installing updates
 
 If you have already installed *Skybrush Studio for Blender* and you receive an update for it, simply follow the same installation procedure as before to overwrite old files with new ones.
@@ -74,7 +38,9 @@ NOTE: It might happen that the structure of the software also changes which migh
 
 == Uninstallation
 
-If you decide to uninstall *Skybrush Studio for Blender* for any reasons, you have to do it manually as Blender does not support uninstall procedure for add-ons officially for the time being. The manual process is as follows:
+If you decide to uninstall *Skybrush Studio for Blender* for any reasons, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
 
-1. Open the file manager of your operating system and navigate to the folder containing Blender.
-2. Find the original executable that we provided to you and remove it.
+1. Deactivate the add-on first in Blender's add-on manager.
+2. Open the file manager of your operating system and navigate to the folder containing the Blender add-ons. Refer to https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html[Blender's documentation] to find the add-ons folder.
+3. Remove the file named `ui_skybrush_studio.py`.
+4. Also remove the `skybrush` folder within the `vendor` folder.
