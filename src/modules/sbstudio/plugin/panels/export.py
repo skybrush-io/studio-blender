@@ -2,7 +2,7 @@ import bpy
 
 from bpy.types import Panel
 
-from sbstudio.plugin.operators import SkybrushExportOperator
+from sbstudio.plugin.operators import SkybrushExportOperator, SkybrushCSVExportOperator
 
 __all__ = ("ExportPanel",)
 
@@ -31,11 +31,4 @@ class ExportPanel(Panel):
             layout.prop(settings, "show_type")
 
         layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
-
-        try:
-            # Test whether the CSV export operator is registered
-            bpy.ops.export_scene.skybrush_csv.get_rna_type()
-            layout.operator("export_scene.skybrush_csv", text="Export to .csv")
-        except Exception:
-            box = layout.box()
-            box.label(text="CSV export addon disabled", icon="ERROR")
+        layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
