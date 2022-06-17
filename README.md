@@ -16,14 +16,9 @@ with a few clicks.
 Installation
 ------------
 
-[Skybrush Studio for Blender](https://skybrush.io) is distributed either as a
+[Skybrush Studio for Blender](https://skybrush.io) is distributed as a
 ZIP file that can be installed in Blender according to the official
-[Blender add-on guide](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html),
-or as a stand-alone executable that can be placed next to Blender's own
-executable. The latter solution allows one to use Skybrush Studio for Blender
-in a way that does not alter the Blender environment -- the source code of the
-plugin is unpacked and piped into Blender at startup time.
-
+[Blender add-on guide](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html).
 However, this repository does not contain the ZIP version of the plugin or the
 standalone executables but the _source code_ of the plugin. Therefore, in order
 to create the ZIP version and the executables on your own, you either need to
@@ -31,8 +26,6 @@ to create the ZIP version and the executables on your own, you either need to
 yourself](#building-the-plugin). Once you obtained the ZIP version of the
 plugin, follow the installation guide in our [online
 documentation](https://doc.collmot.com/public/skybrush-studio-for-blender/latest/install.html)
-
-To install standalone add-ons, such as the .csv exporter, you can follow the official Blender add-on install guide.
 
 Building the plugin
 -------------------
