@@ -63,7 +63,6 @@ echo "done."
 # Copy our code as well
 echo -n "--> Copying addon code... "
 cp -r src/modules/sbstudio ${BUILD_DIR}/vendor/skybrush
-cp src/addons/io_export_skybrush_csv.py ${BUILD_DIR}
 cp src/addons/ui_skybrush_studio.py ${BUILD_DIR}
 echo "done."
 
