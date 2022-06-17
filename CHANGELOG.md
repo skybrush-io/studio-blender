@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   responsible for the color of the LED of the drone when Blender was used in
   a non-English locale.
 
+- Fixed the placement of the safety check overlay in the upper left corner of
+  the 3D view if the statistics overlay is also turned on.
+
+- The safety check overlay is now hidden when the "Show Overlays" setting is
+  turned off in the 3D view.
+
 ## [2.0.0] - 2022-03-25
 
 This is the release that serves as a basis for changelog entries above. Refer

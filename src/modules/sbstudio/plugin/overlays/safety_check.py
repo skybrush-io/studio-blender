@@ -73,6 +73,11 @@ class SafetyCheckOverlay(ShaderOverlay):
         font_id = 0
 
         context = bpy.context
+        space_data = context.space_data
+        if not hasattr(space_data, "overlay") or not bool(
+            getattr(space_data.overlay, "show_overlays", False)
+        ):
+            return
 
         left_panel_width = context.area.regions[2].width
         total_height = context.area.height
@@ -83,8 +88,14 @@ class SafetyCheckOverlay(ShaderOverlay):
         else:
             left_margin = left_panel_width + 10 * self._ui_scale
 
-        y = total_height - 112 * self._ui_scale
-        line_height = 20 * self._ui_scale
+        y = total_height - 72 * self._ui_scale
+        if hasattr(space_data, "overlay"):
+            if getattr(space_data.overlay, "show_text", False):
+                y -= 36 * self._ui_scale
+            if getattr(space_data.overlay, "show_stats", False):
+                y -= 112 * self._ui_scale
+
+        line_height = 18 * self._ui_scale
 
         blf.size(font_id, int(11 * self._ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
