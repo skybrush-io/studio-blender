@@ -1,5 +1,5 @@
 [version]
-current = "2.0.0"
+current = "2.1.0"
 regex = '''
   (?P<major>\d+)
   \.
@@ -15,3 +15,9 @@ tag_template = "{new_version}"
 [[file]]
 src = "pyproject.toml"
 search = 'version = "{current_version}"'
+
+[[file]]
+src = "src/addons/ui_skybrush_studio.py"
+version_template = "({major}, {minor}, {patch})"
+search = '"version": {current_version}'
+

@@ -2,8 +2,8 @@ bl_info = {
     "name": "Skybrush Studio",
     "author": "CollMot Robotics Ltd.",
     "description": "Extends Blender with UI components for drone show design",
-    "version": (1, 0, 0),
-    "blender": (2, 83, 0),
+    "version": (2, 1, 0),
+    "blender": (2, 93, 0),
     "category": "Interface",
 }
 
