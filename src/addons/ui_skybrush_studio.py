@@ -5,6 +5,8 @@ bl_info = {
     "version": (2, 1, 0),
     "blender": (2, 93, 0),
     "category": "Interface",
+    "doc_url": "https://doc.collmot.com/public/skybrush-studio-for-blender/latest/",
+    "tracker_url": "https://github.com/skybrush-io/studio-blender/issues"
 }
 
 __license__ = "GPLv3"
