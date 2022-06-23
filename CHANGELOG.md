@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - You can now configure the add-on to use a local instance of the Skybrush
   Studio server to run transition calculations and `.skyc` exports locally.
 
+### Fixed
+
+- CSV export button now automatically sets the extension of the output file
+  to `.zip` when the operator is invoked (unless the output filename is already
+  specified).
+
 ## [2.1.0] - 2022-06-17
 
 ### Added

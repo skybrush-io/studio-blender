@@ -352,5 +352,10 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        if not self.filepath:
+            filepath = bpy.data.filepath or "Untitled"
+            filepath, _ = os.path.splitext(filepath)
+            self.filepath = f"{filepath}.zip"
+
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
