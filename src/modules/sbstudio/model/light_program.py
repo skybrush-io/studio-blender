@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Sequence
+from typing import Optional, Sequence
 
 from sbstudio.utils import simplify_path
 
@@ -40,7 +40,7 @@ class LightProgram:
 
     """
 
-    def __init__(self, colors: Sequence[Color4D] = None):
+    def __init__(self, colors: Optional[Sequence[Color4D]] = None):
         self.colors = sorted(colors, key=attrgetter("t")) if colors is not None else []
 
     def append(self, color: Color4D) -> None:

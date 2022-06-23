@@ -4,7 +4,7 @@ light effects.
 """
 
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Iterator, Optional
 
 from .base import Task
 
@@ -22,15 +22,18 @@ __all__ = ("UpdateLightEffectsTask",)
 #: associated memory area
 _base_color_cache = {}
 
-#: Number of the last frame that was evaluated with `update_light_effects()`
-_last_frame = None
+_last_frame: Optional[int] = None
+"""Number of the last frame that was evaluated with `update_light_effects()`"""
 
-#: Suspension counter. Safety checks are suspended if this counter is positive
-_suspension_counter = 0
+_suspension_counter: int = 0
+"""Suspension counter. Dynamic light effect evaluation is suspended if this
+counter is positive.
+"""
 
-#: White color, used as a base color when no info is available for a newly added
-#: drone
 WHITE = (1, 1, 1, 1)
+"""White color, used as a base color when no info is available for a newly added
+drone.
+"""
 
 
 def update_light_effects(scene, depsgraph):
