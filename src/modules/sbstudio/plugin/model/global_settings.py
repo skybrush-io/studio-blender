@@ -18,7 +18,21 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         description="API Key that is used when communicating with the Skybrush Studio server",
     )
 
+    server_url = StringProperty(
+        name="Server URL",
+        description=(
+            "URL of a dedicated Skybrush Studio server if you are using a "
+            "dedicated server. Leave it empty to use the server provided for "
+            "the community for free"
+        ),
+    )
+
     def draw(self, context):
         layout = self.layout
 
         layout.prop(self, "api_key")
+        layout.prop(self, "server_url")
+
+        layout.label(
+            text="Restart Blender if you change the settings above.", icon="ERROR"
+        )

@@ -12,15 +12,12 @@ __all__ = ("get_api",)
 _api = None
 
 #: Fallback API key to use when the user did not enter any API key
-_fallback_api_key = "trial"
-
-#: Set this boolean to `True` if you are using the API with a local server
-_local = False
+_fallback_api_key: str = "trial"
 
 
 def get_api():
     """Returns the singleton instance of the Skybrush Studio API object."""
-    global _api, _fallback_api_key, _local
+    global _api, _fallback_api_key
 
     if _api is None:
         _api = SkybrushStudioAPI()
@@ -31,17 +28,21 @@ def get_api():
         # TODO(ntamas): sort this out!
         _api._skip_ssl_checks()
 
+    api_key: str
+    server_url: str
+
     prefs = bpy.context.preferences
     try:
         prefs = prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
-        api_key = prefs.api_key
+        api_key = str(getattr(prefs, "api_key", "")).strip()
+        server_url = str(getattr(prefs, "server_url", "")).strip()
     except KeyError:
-        api_key = None
+        api_key = ""
+        server_url = ""
 
     _api.api_key = api_key or _fallback_api_key
-
-    if _local:
-        _api.url = "http://localhost:8000"
+    if server_url:
+        _api.url = server_url
 
     return _api
 
@@ -51,4 +52,4 @@ def set_fallback_api_key(value: Optional[str]) -> None:
     add-on preferences.
     """
     global _fallback_api_key
-    _fallback_api_key = str(value) if value is not None else None
+    _fallback_api_key = str(value) if value is not None else ""
