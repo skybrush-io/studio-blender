@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.0] - 2022-06-26
 
 ### Added
 
@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CSV export button now automatically sets the extension of the output file
   to `.zip` when the operator is invoked (unless the output filename is already
   specified).
+
+- Dynamic light effects are now exported correctly in Blender 3.0 and above.
 
 ## [2.1.0] - 2022-06-17
 
