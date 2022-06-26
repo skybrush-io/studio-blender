@@ -85,19 +85,19 @@ def simplify_path(
         eps: the error term; a point is considered redundant with
             respect to two other points if the point is closer to the line
             formed by the two other points than this error term.
-        distance_func: a
-            callable that receives a _list_ of points and two additional
-            points, and returns the distance of _each_ point in the list
-            from the line formed by the two additional points.
+        distance_func: a callable that receives a _list_ of points and two
+            additional points, and returns the distance of _each_ point in the
+            list from the line formed by the two additional points.
 
     Returns:
-        : the simplified sequence of points. This will be of the
-            same class as the input sequence. It is assumed that an instance of
-            the sequence may be constructed from a list of items.
+        the simplified sequence of points. This will be of the same class as the
+        input sequence. It is assumed that an instance of the sequence may be
+        constructed from a list of items.
     """
     if not points:
         result = []
     else:
+        # TODO(ntamas): find constant segments and keep those first
         result = _simplify_line(points, eps=eps, distance_func=distance_func)
 
     return points.__class__(result)
