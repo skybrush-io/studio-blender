@@ -90,6 +90,7 @@ class ValidateTrajectoriesOperator(Operator):
                 fps=4,
                 context=context,
                 by_name=True,
+                simplify=True,
             )
 
         # Calculate the start time of the validated range, in seconds

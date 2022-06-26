@@ -1,9 +1,11 @@
 from operator import attrgetter
-from typing import Sequence
+from typing import List, Sequence, TypeVar
 
 from .point import Point4D
 
 __all__ = ("Trajectory",)
+
+C = TypeVar("C", bound="Trajectory")
 
 
 class Trajectory:
@@ -23,28 +25,83 @@ class Trajectory:
             raise ValueError("New point must come after existing trajectory in time")
         self.points.append(point)
 
-    def as_dict(self, ndigits: int = 3):
+    def as_dict(self, ndigits: int = 3, *, version: int = 1):
         """Create a Skybrush-compatible dictionary representation of self.
 
         Parameters:
             ndigits: round floats to this precision
+            version: version of the representation to generate
 
         Return:
             dictionary of self to be converted to JSON later
 
         """
-        return {
-            "points": [
-                [
-                    round(point.t, ndigits=ndigits),
+        if version == 0:
+            # Special representation to be used when sending a trajectory for
+            # rendering to .skyc into the Skybrush Studio server. This
+            # representation indicates to the Skybrush Studio server that the
+            # points are samples and it is allowed to simplify the trajectory
+            # further by eliminating unneeded points
+            return {
+                "points": [
                     [
+                        round(point.t, ndigits=ndigits),
                         round(point.x, ndigits=ndigits),
                         round(point.y, ndigits=ndigits),
                         round(point.z, ndigits=ndigits),
-                    ],
-                    [],
-                ]
-                for point in self.points
-            ],
-            "version": 1,
-        }
+                    ]
+                    for point in self.points
+                ],
+                "version": 0,
+            }
+        else:
+            # Standard representation
+            return {
+                "points": [
+                    [
+                        round(point.t, ndigits=ndigits),
+                        [
+                            round(point.x, ndigits=ndigits),
+                            round(point.y, ndigits=ndigits),
+                            round(point.z, ndigits=ndigits),
+                        ],
+                        [],
+                    ]
+                    for point in self.points
+                ],
+                "version": 1,
+            }
+
+    def simplify_in_place(self: C) -> C:
+        new_points: List[Point4D] = []
+        if not self.points:
+            return self
+
+        first_point = self.points[0]
+
+        # Make up a fake last point that is different from the first one
+        last_point = Point4D(
+            t=first_point.t - 1,
+            x=first_point.x - 1,
+            y=first_point.y - 1,
+            z=first_point.z - 1,
+        )
+
+        keep_next = False
+        for point in self.points:
+            if keep_next:
+                new_points.append(point)
+                keep_next = False
+            elif (
+                last_point.x == point.x
+                and last_point.y == point.y
+                and last_point.z == point.z
+            ):
+                new_points[-1] = point
+            else:
+                new_points.append(point)
+                keep_next = True
+            last_point = point
+
+        self.points = new_points
+        return self

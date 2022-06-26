@@ -2,7 +2,7 @@ import bpy
 import logging
 import os
 
-from bpy.props import BoolProperty, StringProperty, FloatProperty
+from bpy.props import BoolProperty, StringProperty, IntProperty
 from bpy.types import Context, Operator
 from bpy_extras.io_utils import ExportHelper
 from natsort import natsorted
@@ -16,12 +16,16 @@ from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.materials import (
-    get_shader_node_and_input_for_diffuse_color_of_material,
-)
 from sbstudio.plugin.props import FrameRangeProperty
 from sbstudio.plugin.utils import with_context
-from sbstudio.plugin.utils.sampling import sample_positions_of_objects_in_frame_range
+from sbstudio.plugin.utils.sampling import (
+    frame_range,
+    sample_colors_of_objects,
+    sample_positions_of_objects,
+    sample_positions_and_colors_of_objects,
+)
+from sbstudio.plugin.tasks.light_effects import suspended_light_effects
+from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 
 __all__ = ("SkybrushExportOperator", "get_drones_to_export", "resolve_frame_range")
 
@@ -93,6 +97,8 @@ def resolve_frame_range(
     """Resolves one of the commonly used frame ranges used in multiple places
     throughout the plugin.
     """
+    assert context is not None  # it was injected
+
     if range == "RENDER":
         # Return the entire frame range of the current scene
         return (context.scene.frame_start, context.scene.frame_end)
@@ -127,121 +133,75 @@ def _get_frame_range_from_export_settings(
 
 
 @with_context
-def _get_trajectories(
-    drones, settings, frame_range: Tuple[int, int], *, context: Optional[Context] = None
-) -> Dict[str, Trajectory]:
-    """Get trajectories of all selected/picked objects.
+def _get_trajectories_and_lights(
+    drones, settings, bounds: Tuple[int, int], *, context: Optional[Context] = None
+) -> Tuple[Dict[str, Trajectory], Dict[str, LightProgram]]:
+    """Get trajectories and LED lights of all selected/picked objects.
 
     Parameters:
         context: the main Blender context
         drones: the list of drones to export
         settings: export settings
-        frame_range: the frame range used for exporting
+        bounds: the frame range used for exporting
 
     Returns:
-        dictionary of Trajectory objects indexed by object names
+        dictionary of Trajectory and LightProgram objects indexed by object names
     """
-    # TODO(ntamas): temporarily suspend validation and light effects for
-    # the duration of the sampling
-    return sample_positions_of_objects_in_frame_range(
-        drones, frame_range, fps=settings["output_fps"], context=context, by_name=True
-    )
+    trajectory_fps = settings["output_fps"]
+    light_fps = settings["light_output_fps"]
 
+    trajectories: Dict[str, Trajectory]
+    lights: Dict[str, LightProgram]
 
-@with_context
-def _get_lights(
-    drones, settings, frame_range: Tuple[int, int], *, context: Optional[Context] = None
-) -> Dict[str, LightProgram]:
-    """Get light animation of all selected/picked objects.
-
-    Parameters:
-        context - the main Blender context
-        settings - export settings
-        framerange - the framerange used for exporting
-
-    Return:
-        dictionary of LightProgram objects indexed by object names
-    """
-
-    # get object color animations for each frame
-    fps = context.scene.render.fps
-    num_frames = frame_range[1] - frame_range[0] + 1
-    light_dict = {}
-
-    frames = list(range(frame_range[0], frame_range[1] + 1))
-    ts = [frame / fps for frame in frames]
-
-    for drone in drones:
-        name = drone.name
-        log.debug(f"processing {name}")
-
-        # if there is no material associated with the object, we use const black
-        material = drone.active_material
-        if not material:
-            light_dict[name] = [
-                ts,
-                [0] * num_frames,
-                [0] * num_frames,
-                [0] * num_frames,
-            ]
-            continue
-
-        # if shader nodes are not used, we check plain diffuse color animation
-        if not material.use_nodes:
-            animation = material.animation_data
-            data_path = "diffuse_color"
-            # if there is no plain diffuse color animation, we return static default color
-            if not animation or data_path not in [
-                fc.data_path for fc in animation.action.fcurves
-            ]:
-                light_dict[name] = [ts] + [
-                    [x] * num_frames for x in material.diffuse_color[:3]
-                ]
-                continue
-        # if a shader node is used, sample it on all frames first
-        else:
-            animation = material.node_tree.animation_data
-            node, input = get_shader_node_and_input_for_diffuse_color_of_material(
-                material
+    if trajectory_fps == light_fps:
+        # This is easy, we can iterate over the show once
+        with suspended_safety_checks():
+            result = sample_positions_and_colors_of_objects(
+                drones,
+                frame_range(bounds[0], bounds[1], fps=trajectory_fps, context=context),
+                context=context,
+                by_name=True,
+                simplify=True,
             )
-            index = node.inputs.find(input.name)
-            data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
-            # if shader node is not animated, get its default color for all frames
-            if not animation:
-                light_dict[name] = [ts] + [
-                    [x] * num_frames for x in input.default_value[:3]
-                ]
-                continue
 
-        # if we have any kind of animation, evaluate it for all frames
-        light_dict[name] = [None] * 4
-        light_dict[name][0] = ts
-        for fc in animation.action.fcurves:
-            if fc.data_path != data_path:
-                continue
+        trajectories = {}
+        lights = {}
 
-            # iterate channels (r, g, b) only
-            if fc.array_index not in (0, 1, 2):
-                continue
+        for key, (trajectory, light_program) in result.items():
+            trajectories[key] = trajectory
+            lights[key] = light_program.simplify()
 
-            light_dict[name][fc.array_index + 1] = [
-                fc.evaluate(frame) for frame in frames
-            ]
+    else:
+        # We need to iterate over the show twice, once for the trajectories,
+        # once for the lights
+        with suspended_safety_checks():
+            with suspended_light_effects():
+                trajectories = sample_positions_of_objects(
+                    drones,
+                    frame_range(
+                        bounds[0], bounds[1], fps=trajectory_fps, context=context
+                    ),
+                    context=context,
+                    by_name=True,
+                    simplify=True,
+                )
 
-    # convert to skybrush-compatible format (and simplify)
-    lights = dict(
-        (name, _create_light_program_from_light_data(light))
-        for name, light in light_dict.items()
-    )
+            lights = sample_colors_of_objects(
+                drones,
+                frame_range(bounds[0], bounds[1], fps=light_fps, context=context),
+                context=context,
+                by_name=True,
+                simplify=True,
+            )
 
-    return lights
+    return trajectories, lights
 
 
 def _write_skybrush_file(context, settings, filepath: Path) -> None:
-    """Creates Skybrush-compatible output from blender trajectories and color
+    """Creates Skybrush-compatible output from Blender trajectories and color
     animation.
 
-    This is a helper function for SkybrushExportOperator
+    This is a helper function for SkybrushExportOperator.
 
     Parameters:
         context: the main Blender context
@@ -259,12 +219,10 @@ def _write_skybrush_file(context, settings, filepath: Path) -> None:
     drones = list(get_drones_to_export(settings["export_selected"]))
 
     # get trajectories
-    log.info("Getting object trajectories")
-    trajectories = _get_trajectories(drones, settings, frame_range, context=context)
-
-    # get lights
-    log.info("Getting object color animations")
-    lights = _get_lights(drones, settings, frame_range, context=context)
+    log.info("Getting object trajectories and light programs")
+    trajectories, lights = _get_trajectories_and_lights(
+        drones, settings, frame_range, context=context
+    )
 
     # get automatic show title
     show_title = str(bpy.path.basename(filepath).split(".")[0])
@@ -326,11 +284,18 @@ class SkybrushExportOperator(Operator, ExportHelper):
     # frame range
     frame_range = FrameRangeProperty(default="RENDER")
 
-    # output frame rate
-    output_fps = FloatProperty(
-        name="Frame rate",
+    # output trajectory frame rate
+    output_fps = IntProperty(
+        name="Trajectory FPS",
         default=4,
-        description="Temporal resolution of exported trajectory (frames per second)",
+        description="Number of samples to take from trajectories per second",
+    )
+
+    # output light program frame rate
+    light_output_fps = IntProperty(
+        name="Light FPS",
+        default=4,
+        description="Number of samples to take from light programs per second",
     )
 
     def execute(self, context):
@@ -339,6 +304,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
             "export_selected": self.export_selected,
             "frame_range": self.frame_range,
             "output_fps": self.output_fps,
+            "light_output_fps": self.light_output_fps,
         }
 
         _write_skybrush_file(context, settings, filepath)

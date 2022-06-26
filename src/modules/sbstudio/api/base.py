@@ -282,7 +282,7 @@ class SkybrushStudioAPI:
                                     "name": name,
                                     "lights": lights[name].as_dict(ndigits=ndigits),
                                     "trajectory": trajectories[name].as_dict(
-                                        ndigits=ndigits
+                                        ndigits=ndigits, version=0
                                     ),
                                 },
                             }
@@ -306,7 +306,7 @@ class SkybrushStudioAPI:
         trajectories: Dict[str, Trajectory],
         output: Path,
         validation: SafetyCheckParams,
-        ndigits: float = 3,
+        ndigits: int = 3,
     ) -> None:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
@@ -314,10 +314,7 @@ class SkybrushStudioAPI:
             show_title: arbitrary show title
             trajectories: dictionary of trajectories indexed by drone names
             output: the file path where the output should be saved
-            min_distance: desired minimum distance between drones
-            max_altitude: maximum allowed altitude for each drone
-            max_velocity_xy: maximum allowed horizontal velocity
-            max_velocity_z: maximum allowed vertical velocity
+            validation: safety check settings to use during validation
             ndigits: round floats to this precision
         """
         data = {

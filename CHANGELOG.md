@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - You can now configure the add-on to use a local instance of the Skybrush
   Studio server to run transition calculations and `.skyc` exports locally.
 
+- When exporting to `.skyc`, you can now choose to export lights and trajectories
+  at different FPS. Typically, 4 or 5 fps for trajectories is enough, while
+  lights can go all the way up to 24, 25 or 30 fps, depending on what you use
+  in your project.
+
 ### Fixed
 
 - CSV export button now automatically sets the extension of the output file
