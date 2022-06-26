@@ -63,12 +63,8 @@ class LightProgram:
             "data": [
                 [
                     round(color.t, ndigits=ndigits),
-                    [
-                        round(color.r, ndigits=ndigits),
-                        round(color.g, ndigits=ndigits),
-                        round(color.b, ndigits=ndigits),
-                    ],
-                    color.is_fade,
+                    [int(color.r), int(color.g), int(color.b)],
+                    1 if color.is_fade else 0,
                 ]
                 for color in self.colors
             ],
