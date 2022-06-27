@@ -238,6 +238,9 @@ def _write_skybrush_file(context, settings, filepath: Path) -> None:
         if safety_check
         else 8,
         max_velocity_z=safety_check.velocity_z_warning_threshold if safety_check else 2,
+        max_velocity_z_up=safety_check.velocity_z_warning_threshold_up_or_none
+        if safety_check
+        else None,
         max_altitude=safety_check.max_altitude if safety_check else 150,
         min_distance=safety_check.min_distance if safety_check else 3,
     )

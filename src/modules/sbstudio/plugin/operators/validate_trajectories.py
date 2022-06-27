@@ -55,6 +55,9 @@ class ValidateTrajectoriesOperator(Operator):
             max_velocity_z=safety_check.velocity_z_warning_threshold
             if safety_check
             else 2,
+            max_velocity_z_up=safety_check.velocity_z_warning_threshold_up_or_none
+            if safety_check
+            else None,
             max_altitude=safety_check.altitude_warning_threshold
             if safety_check
             else 150,

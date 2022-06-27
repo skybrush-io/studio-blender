@@ -119,9 +119,10 @@ def run_safety_check(scene, depsgraph):
         max_altitude = None
     if safety_check.velocity_warning_enabled:
         max_velocity_xy = safety_check.velocity_xy_warning_threshold
-        max_velocity_z = safety_check.velocity_z_warning_threshold
+        max_velocity_z_down = safety_check.effective_velocity_z_threshold_down
+        max_velocity_z_up = safety_check.effective_velocity_z_threshold_up
     else:
-        max_velocity_xy, max_velocity_z = None, None
+        max_velocity_xy, max_velocity_z_up, max_velocity_z_down = None, None, None
 
     frame = scene.frame_current
     snapshot = create_position_snapshot_for_drones_in_collection(drones, frame=frame)
@@ -150,7 +151,7 @@ def run_safety_check(scene, depsgraph):
     nearest_neighbors = find_nearest_neighbors(positions)
 
     # Check velocities
-    max_velocity_xy_found, max_velocity_z_found = None, None
+    max_velocity_xy_found = None
     velocity_snapshot = estimate_velocities_of_drones_at_frame(
         snapshot, frame=frame, scene=scene
     )
@@ -168,14 +169,13 @@ def run_safety_check(scene, depsgraph):
     else:
         drones_over_max_velocity_xy = []
 
-    upper = max(vel[2] for vel in velocities) if velocities else 0.0
-    lower = min(vel[2] for vel in velocities) if velocities else 0.0
-    max_velocity_z_found = upper if abs(upper) > abs(lower) else lower
-    if max_velocity_z is not None:
+    upper = max(0.0, max(vel[2] for vel in velocities)) if velocities else 0.0
+    lower = min(0.0, min(vel[2] for vel in velocities)) if velocities else 0.0
+    if max_velocity_z_up is not None and max_velocity_z_down is not None:
         drones_over_max_velocity_z = [
             snapshot.get(name, _ZERO)
             for name, vel in velocity_snapshot.items()
-            if abs(vel[2]) > max_velocity_z
+            if vel[2] > max_velocity_z_up or vel[2] < -max_velocity_z_down
         ]
     else:
         drones_over_max_velocity_z = []
@@ -188,7 +188,8 @@ def run_safety_check(scene, depsgraph):
         drones_over_max_altitude=drones_over_max_altitude,
         max_velocity_xy=max_velocity_xy_found,
         drones_over_max_velocity_xy=drones_over_max_velocity_xy,
-        max_velocity_z=max_velocity_z_found,
+        max_velocity_z_up=upper,
+        max_velocity_z_down=abs(lower),
         drones_over_max_velocity_z=drones_over_max_velocity_z,
     )
 

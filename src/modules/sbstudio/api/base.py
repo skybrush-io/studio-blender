@@ -1,5 +1,4 @@
 import json
-from os import environ
 import re
 
 from contextlib import contextmanager
@@ -378,6 +377,7 @@ class SkybrushStudioAPI:
         max_velocity_xy: float,
         max_velocity_z: float,
         max_acceleration: float,
+        max_velocity_z_up: Optional[float] = None,
         matching_method: str = "optimal",
     ) -> float:
         """Proposes a minimum feasible duration for a transition between the
@@ -391,6 +391,10 @@ class SkybrushStudioAPI:
             target: the list of target points
             max_velocity_xy: maximum allowed velocity in the XY plane
             max_velocity_z: maximum allowed velocity along the Z axis
+            max_velocity_z_up: maximum allowed velocity along the Z axis, upwards,
+                if it is different from the maximum allowed velocity downwards.
+                `None` means that it is the same as the Z velocity constraint
+                downwards
             max_acceleration: maximum allowed acceleration
             matching_method: the algorithm to use when matching source points
                 to target points; see the server documentation fof more details.
@@ -408,6 +412,10 @@ class SkybrushStudioAPI:
             "transition_method": "const_jerk",
             "matching_method": matching_method,
         }
+
+        if max_velocity_z_up is not None:
+            data["max_velocity_z_up"] = max_velocity_z_up
+
         with self._send_request("operations/plan-transition", data) as response:
             result = response.as_json()
 

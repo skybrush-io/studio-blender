@@ -56,9 +56,27 @@ class SafetyCheckPanel(Panel):
         row.enabled = safety_check.altitude_warning_enabled
 
         col.prop(safety_check, "velocity_warning_enabled")
+
         row = col.row()
         row.prop(safety_check, "velocity_xy_warning_threshold", text="XY", slider=True)
-        row.prop(safety_check, "velocity_z_warning_threshold", text="Z", slider=True)
+        row.enabled = safety_check.velocity_warning_enabled
+
+        row = col.row()
+        row.prop(
+            safety_check,
+            "velocity_z_warning_threshold",
+            text="Z down" if safety_check.velocity_z_warning_different_up else "Z",
+            slider=True,
+        )
+        row.prop(safety_check, "velocity_z_warning_different_up", text="")
+        col2 = row.column()
+        col2.prop(
+            safety_check,
+            "velocity_z_warning_threshold_up",
+            text="Z up",
+            slider=True,
+        )
+        col2.enabled = safety_check.velocity_z_warning_different_up
         row.enabled = safety_check.velocity_warning_enabled
 
         layout.separator()

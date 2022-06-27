@@ -122,9 +122,16 @@ class SafetyCheckProperties(PropertyGroup):
         default=0.0,
     )
 
-    max_velocity_z = FloatProperty(
+    max_velocity_z_up = FloatProperty(
         name="Max Z velocity",
-        description="Maximum vertical velocity of all drones in the current frame",
+        description="Maximum vertical velocity of all drones in the current frame upwards",
+        unit="VELOCITY",
+        default=0.0,
+    )
+
+    max_velocity_z_down = FloatProperty(
+        name="Max Z velocity",
+        description="Maximum vertical velocity of all drones in the current frame downwards",
         unit="VELOCITY",
         default=0.0,
     )
@@ -203,9 +210,43 @@ class SafetyCheckProperties(PropertyGroup):
         update=velocity_warning_threshold_updated,
     )
 
+    velocity_z_warning_different_up = BoolProperty(
+        name="Use separate Z velocity threshold upwards",
+        description=(
+            "When checked, the velocity threshold in the Z direction is allowed "
+            "to be higher upwards than downwards"
+        ),
+        update=velocity_warning_enabled_updated,
+        default=False,
+    )
+
+    velocity_z_warning_threshold_up = FloatProperty(
+        name="Maximum Z velocity (up)",
+        description="Maximum velocity allowed upwards in the vertical direction",
+        default=2,
+        min=0,
+        soft_min=0.1,
+        soft_max=5,
+        unit="VELOCITY",
+        update=velocity_warning_threshold_updated,
+    )
+
+    @property
+    def effective_velocity_z_threshold_up(self) -> float:
+        """Returns the effective velocity threshold in the Z direction, upwards."""
+        if self.velocity_z_warning_different_up:
+            return self.velocity_z_warning_threshold_up
+        else:
+            return self.velocity_z_warning_threshold
+
+    @property
+    def effective_velocity_z_threshold_down(self) -> float:
+        """Returns the effective velocity threshold in the Z direction, downwards."""
+        return self.velocity_z_warning_threshold
+
     @property
     def min_distance_is_valid(self) -> bool:
-        """Retuns whether the minimum distance property can be considered valid.
+        """Returns whether the minimum distance property can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
@@ -227,7 +268,11 @@ class SafetyCheckProperties(PropertyGroup):
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
-        return self.max_velocity_xy > 0 or self.max_velocity_z > 0
+        return (
+            self.max_velocity_xy > 0
+            or self.max_velocity_z_up > 0
+            or self.max_velocity_z_down > 0
+        )
 
     @property
     def should_show_altitude_warning(self) -> bool:
@@ -261,7 +306,8 @@ class SafetyCheckProperties(PropertyGroup):
             and self.max_velocities_are_valid
             and (
                 self.max_velocity_xy > self.velocity_xy_warning_threshold
-                or self.max_velocity_z > self.velocity_z_warning_threshold
+                or self.max_velocity_z_up > self.effective_velocity_z_threshold_up
+                or self.max_velocity_z_down > self.effective_velocity_z_threshold_down
             )
         )
 
@@ -284,7 +330,22 @@ class SafetyCheckProperties(PropertyGroup):
         return (
             self.velocity_warning_enabled
             and self.max_velocities_are_valid
-            and abs(self.max_velocity_z) > self.velocity_z_warning_threshold
+            and (
+                self.max_velocity_z_up > self.effective_velocity_z_threshold_up
+                or self.max_velocity_z_down > self.effective_velocity_z_threshold_down
+            )
+        )
+
+    @property
+    def velocity_z_warning_threshold_up_or_none(self) -> Optional[float]:
+        """Returns the velocity warning threshold in the Z direction upwards
+        if there is one, or ``None`` if it is the same as the warning threshold
+        in the Z direction downwards.
+        """
+        return (
+            self.velocity_z_warning_threshold_up
+            if self.velocity_z_warning_different_up
+            else None
         )
 
     def clear_safety_check_result(self) -> None:
@@ -296,7 +357,8 @@ class SafetyCheckProperties(PropertyGroup):
         self.max_altitude = 0
         self.min_distance = 0
         self.max_velocity_xy = 0
-        self.max_velocity_z = 0
+        self.max_velocity_z_down = 0
+        self.max_velocity_z_up = 0
 
         _safety_check_result.clear()
 
@@ -318,7 +380,8 @@ class SafetyCheckProperties(PropertyGroup):
         drones_over_max_altitude: Optional[List[Coordinate3D]] = None,
         max_velocity_xy: Optional[float] = None,
         drones_over_max_velocity_xy: Optional[List[Coordinate3D]] = None,
-        max_velocity_z: Optional[float] = None,
+        max_velocity_z_up: Optional[float] = None,
+        max_velocity_z_down: Optional[float] = None,
         drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
     ) -> None:
         """Clears the result of the last minimum distance calculation."""
@@ -361,8 +424,12 @@ class SafetyCheckProperties(PropertyGroup):
             )
             refresh = True
 
-        if max_velocity_z is not None:
-            self.max_velocity_z = max_velocity_z
+        if max_velocity_z_up is not None:
+            self.max_velocity_z_up = max_velocity_z_up
+            refresh = True
+
+        if max_velocity_z_down is not None:
+            self.max_velocity_z_down = max_velocity_z_down
             refresh = True
 
         if drones_over_max_velocity_z is not None:

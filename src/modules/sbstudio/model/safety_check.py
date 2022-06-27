@@ -17,22 +17,27 @@ class SafetyCheckParams:
     max_velocity_xy: float = 8
     max_velocity_z: float = 3
     min_distance: float = 3
+    max_velocity_z_up: Optional[float] = None
 
     def as_dict(self, ndigits: int = 3):
-        """Return self as a dictionary.
+        """Returns the safety check parameters as a dictionary.
 
         Parameters:
             ndigits: round floats to this precision
 
         Return:
-            dictionary of self rounded to the desired precision
+            dictionary representation of the safety check parameters, rounded to
+            the desired precision
         """
-        return {
-            "max_altitude": round(self.max_altitude, ndigits=ndigits),
-            "max_velocity_xy": round(self.max_velocity_xy, ndigits=ndigits),
-            "max_velocity_z": round(self.max_velocity_z, ndigits=ndigits),
-            "min_distance": round(self.min_distance, ndigits=ndigits),
+        result = {
+            "maxAltitude": round(self.max_altitude, ndigits=ndigits),
+            "maxVelocityXY": round(self.max_velocity_xy, ndigits=ndigits),
+            "maxVelocityZ": round(self.max_velocity_z, ndigits=ndigits),
+            "minDistance": round(self.min_distance, ndigits=ndigits),
         }
+        if self.max_velocity_z_up is not None:
+            result["maxVelocityZUp"] = round(self.max_velocity_z_up, ndigits=ndigits)
+        return result
 
 
 @dataclass
