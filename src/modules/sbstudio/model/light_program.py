@@ -50,14 +50,13 @@ class LightProgram:
         self.colors.append(color)
 
     def as_dict(self, ndigits: int = 3):
-        """Create a Skybrush-compatible dictionary representation of self.
+        """Create a Skybrush-compatible dictionary representation of this instance.
 
         Parameters:
             ndigits: round floats to this precision
 
         Return:
-            dictionary of self to be converted to SJON later
-
+            dictionary to be converted to JSON later
         """
         return {
             "data": [

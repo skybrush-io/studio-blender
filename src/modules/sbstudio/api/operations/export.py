@@ -29,9 +29,7 @@ class SkybrushExporter(SkybrushAPIOperationBase):
             trajectories: dictionary of trajectories indexed by drone names
             lights: dictionary of light programs indexed by drone names
 
-
         Note: drone names must match in trajectories and lights
-
         """
         self._show_title = show_title
         if sorted(trajectories.keys()) != sorted(lights.keys()):
@@ -43,10 +41,10 @@ class SkybrushExporter(SkybrushAPIOperationBase):
 
     def _drone_data_as_dict(self, name: str, ndigits: int = 3) -> dict:
         """Create a Skybrush-compatible dictionary representation of all data
-        related to a single drone stored in self.
+        related to a single drone with the given name.
 
         Parameters:
-            name: the name of the given drone in self database
+            name: the name of the given drone
             ndigits: round floats to this precision
 
         Return:
@@ -63,14 +61,14 @@ class SkybrushExporter(SkybrushAPIOperationBase):
 
     def as_dict(self, format: SkybrushJSONFormat, ndigits: int = 3) -> dict:
         """Create a Skybrush-compatible dictionary representation of the whole
-        drone show stored in self.
+        drone show stored in this instance.
 
         Parameters:
             format: the format of the output
             ndigits: round floats to this precision
 
         Return:
-            dictionary representation of self
+            dictionary representation of this instance
         """
 
         data = {
@@ -97,11 +95,10 @@ class SkybrushExporter(SkybrushAPIOperationBase):
 
     def to_skyc(self, output: Path) -> None:
         """Write a Skybrush Compiled Format (.skyc) representation of the
-        drone show stored in self to the given output file.
+        drone show to the given output file.
 
         Parameters:
             output: the filename where the output content will be written
-
         """
 
         try:

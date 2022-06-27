@@ -19,13 +19,13 @@ class PointCloud:
         self._points.append(Point3D(x=point.x, y=point.y, z=point.z))
 
     def as_list(self, ndigits: int = 3):
-        """Create a Skybrush-compatible list representation of self.
+        """Create a Skybrush-compatible list representation of this instance.
 
         Parameters:
             ndigits: round floats to this precision
 
         Return:
-            list representation of self to be converted to JSON later
+            list representation of this instance, to be converted to JSON later
 
         """
         return [
@@ -39,5 +39,5 @@ class PointCloud:
 
     @property
     def count(self):
-        """Return the number of points in self."""
+        """Return the number of points."""
         return len(self._points)

@@ -26,14 +26,15 @@ class Trajectory:
         self.points.append(point)
 
     def as_dict(self, ndigits: int = 3, *, version: int = 1):
-        """Create a Skybrush-compatible dictionary representation of self.
+        """Create a Skybrush-compatible dictionary representation of this
+        instance.
 
         Parameters:
             ndigits: round floats to this precision
             version: version of the representation to generate
 
         Return:
-            dictionary of self to be converted to JSON later
+            dictionary of this instance, to be converted to JSON later
 
         """
         if version == 0:

@@ -29,26 +29,27 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
 
     @abstractmethod
     def as_dict(self, format: SkybrushJSONFormat, ndigits: int = 3) -> dict:
-        """Create a Skybrush-compatible dictionary representation of self.
+        """Create a Skybrush-compatible dictionary representation of this
+        instance.
 
         Parameters:
             format: the format of the output
             ndigits: round floats to this precision
 
         Return:
-            dictionary representation of self
+            dictionary representation of this instance
         """
         ...
 
     def as_json(self, format: SkybrushJSONFormat, ndigits: int = 3) -> str:
-        """Create a Skybrush-compatible JSON representation of self.
+        """Create a Skybrush-compatible JSON representation of this instance.
 
         Parameters:
             format: the format of the JSON output
             ndigits: number of digits for floats in the JSON output
 
         Return:
-            JSON string representation of self
+            JSON string representation of this instance
         """
         if format == SkybrushJSONFormat.RAW:
             encoder = JSONEncoder(indent=2)
@@ -66,7 +67,7 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
         ndigits: int = 3,
     ) -> None:
         """Write a Skybrush-compatible JSON representation of the drone show
-        stored in self to the given output file.
+        to the given output file.
 
         Parameters:
             output: the file where the JSON content should be written
@@ -103,7 +104,7 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
         ctx.check_hostname = False
         ctx.verify_mode = CERT_NONE
         # create request
-        url = fr"https://studio.skybrush.io/api/v1/operations/{operation}"
+        url = rf"https://studio.skybrush.io/api/v1/operations/{operation}"
         req = Request(url, data=data, headers=headers, method="POST")
         # send it and wait for response
         log.info(

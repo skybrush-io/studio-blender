@@ -36,14 +36,15 @@ class SkybrushMatcher(SkybrushAPIOperationBase):
         self._target = target
 
     def as_dict(self, format: SkybrushJSONFormat, ndigits: int = 3):
-        """Create a Skybrush-compatible dictionary representation of self.
+        """Create a Skybrush-compatible dictionary representation of this
+        instance.
 
         Parameters:
             format: the format of the output
             ndigits: round floats to this precision
 
         Return:
-            dictionary representation of self
+            dictionary representation of this instance
         """
 
         data = {
