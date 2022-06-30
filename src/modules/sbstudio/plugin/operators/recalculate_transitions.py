@@ -138,7 +138,11 @@ class InfluenceCurveDescriptor:
             if end_frame > frame:
                 keyframes.append((end_frame, 1.0))
 
-            keyframes.append((end_frame + 1, 0.0))
+            # Do not wind the constraint down to zero after the end frame; it
+            # makes it harder to remove storyboard entries from the middle of
+            # the storyboard as the end frame of the previous constraint would
+            # have to be adjusted
+            # keyframes.append((end_frame + 1, 0.0))
 
         keyframe_objs = set_keyframes(
             object,
