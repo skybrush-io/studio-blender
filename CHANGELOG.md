@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- When a storyboard entry is removed, the plugin now removes all constraints
+  related to the storyboard entry from the constraint stack of all drones.
+
+- When a formation is removed completely, constraints between drones and
+  storyboard entries referring to the removed formation are also removed.
+
 ## [2.2.0] - 2022-06-26
 
 ### Added

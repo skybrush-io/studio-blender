@@ -1,3 +1,6 @@
+from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.transition import find_transition_constraint_between
+
 from .base import StoryboardOperator
 
 __all__ = ("RemoveStoryboardEntryOperator",)
@@ -18,5 +21,17 @@ class RemoveStoryboardEntryOperator(StoryboardOperator):
         )
 
     def execute_on_storyboard(self, storyboard, context):
+        remove_constraints_for_storyboard_entry(storyboard.active_entry)
         storyboard.remove_active_entry()
         return {"FINISHED"}
+
+
+def remove_constraints_for_storyboard_entry(entry):
+    if not entry:
+        return
+
+    drones = Collections.find_drones(create=False)
+    for drone in drones.objects:
+        constraint = find_transition_constraint_between(drone, entry)
+        if constraint:
+            drone.constraints.remove(constraint)

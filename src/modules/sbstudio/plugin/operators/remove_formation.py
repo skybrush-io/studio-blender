@@ -1,8 +1,10 @@
 import bpy
 
+
 from sbstudio.plugin.objects import remove_objects
 
 from .base import FormationOperator
+from .remove_storyboard_entry import remove_constraints_for_storyboard_entry
 
 __all__ = ("RemoveFormationOperator",)
 
@@ -15,9 +17,12 @@ class RemoveFormationOperator(FormationOperator):
     bl_description = "Remove the selected formation from the show"
 
     def execute_on_formation(self, formation, context):
-        remove_objects(formation)
+        storyboard = context.scene.skybrush.storyboard
 
-        # TODO(ntamas): we also need to remove any constraints that were related
-        # to this formation
+        for entry in storyboard.entries:
+            if entry.formation is formation:
+                remove_constraints_for_storyboard_entry(entry)
+
+        remove_objects(formation)
 
         return {"FINISHED"}
