@@ -75,6 +75,8 @@ class LightEffect(PropertyGroup):
     light effect in the drone show.
     """
 
+    # If you add new properties below, make sure to update update_from()
+
     enabled = BoolProperty(
         name="Enabled",
         description="Whether this light effect is enabled",
@@ -165,6 +167,8 @@ class LightEffect(PropertyGroup):
         ],
         default="ALL",
     )
+
+    # If you add new properties above, make sure to update update_from()
 
     def apply_on_colors(
         self,
@@ -292,6 +296,22 @@ class LightEffect(PropertyGroup):
     def frame_end(self) -> int:
         """Returns the index of the last frame that is covered by the effect."""
         return self.frame_start + self.duration
+
+    def update_from(self, other: "LightEffect") -> None:
+        """Updates the properties of this light effect from another one,
+        _except_ its name.
+        """
+        self.enabled = other.enabled
+        self.frame_start = other.frame_start
+        self.duration = other.duration
+        self.fade_in_duration = other.fade_in_duration
+        self.fade_out_duration = other.fade_out_duration
+        self.output = other.output
+        self.influence = other.influence
+        self.mesh = other.mesh
+        self.target = other.target
+
+        # TODO(ntamas): copy color ramp!
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -428,6 +448,42 @@ class LightEffectCollection(PropertyGroup, ListMixin):
 
         if select:
             self.active_entry_index = len(self.entries) - 1
+
+        return entry
+
+    @with_context
+    def duplicate_selected_entry(
+        self,
+        *,
+        select: bool = False,
+        context: Optional[Context] = None,
+    ) -> LightEffect:
+        """Duplicates the selected entry in the light effect list.
+
+        Parameters:
+            name: the name of the new entry
+            frame_start: the start frame of the new entry; `None` chooses a
+                sensible default
+            duration: the duration of the new entry; `None` chooses a sensible
+                default
+            select: whether to select the newly added entry after it was created
+
+        Returns:
+            the duplicate of the selected entry
+        """
+        active_entry = self.active_entry
+        if not active_entry:
+            raise RuntimeError("no selected entry in light effect list")
+
+        index = self.active_entry_index
+        assert index is not None
+
+        entry = self.append_new_entry(name=f"Copy of {active_entry.name}")
+        entry.update_from(active_entry)
+        self.entries.move(len(self.entries) - 1, index + 1)
+
+        if select:
+            self.active_entry_index = index + 1
 
         return entry
 

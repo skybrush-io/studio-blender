@@ -2,6 +2,7 @@ from bpy.types import Panel
 
 from sbstudio.plugin.operators import (
     CreateLightEffectOperator,
+    DuplicateLightEffectOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     RemoveLightEffectOperator,
@@ -52,6 +53,8 @@ class LightEffectsPanel(Panel):
         col = row.column(align=True)
         col.operator(CreateLightEffectOperator.bl_idname, icon="ADD", text="")
         col.operator(RemoveLightEffectOperator.bl_idname, icon="REMOVE", text="")
+        col.separator()
+        col.operator(DuplicateLightEffectOperator.bl_idname, icon="DUPLICATE", text="")
         col.separator()
         col.operator(MoveLightEffectUpOperator.bl_idname, icon="TRIA_UP", text="")
         col.operator(MoveLightEffectDownOperator.bl_idname, icon="TRIA_DOWN", text="")

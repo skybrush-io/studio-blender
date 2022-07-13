@@ -7,6 +7,7 @@ from .create_light_effect import CreateLightEffectOperator
 from .create_new_storyboard_entry import CreateNewStoryboardEntryOperator
 from .create_takeoff_grid import CreateTakeoffGridOperator
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
+from .duplicate_light_effect import DuplicateLightEffectOperator
 from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_skyc import SkybrushExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
@@ -46,6 +47,7 @@ __all__ = (
     "CreateTakeoffGridOperator",
     "DeselectFormationOperator",
     "DetachMaterialsFromDroneTemplateOperator",
+    "DuplicateLightEffectOperator",
     "FixConstraintOrderingOperator",
     "GetFormationStatisticsOperator",
     "LandOperator",
