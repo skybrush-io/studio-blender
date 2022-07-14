@@ -20,6 +20,7 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.model.types import Coordinate3D, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
+from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.utils import alpha_over_in_place, distance_sq_of
 
@@ -311,7 +312,7 @@ class LightEffect(PropertyGroup):
         self.mesh = other.mesh
         self.target = other.target
 
-        # TODO(ntamas): copy color ramp!
+        update_color_ramp_from(self.color_ramp, other.color_ramp)
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]

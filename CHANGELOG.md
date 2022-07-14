@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Light effects can now be duplicated in the Light effects panel of the LEDs
+  tab with a dedicated button.
+
 ### Fixed
 
 - When a storyboard entry is removed, the plugin now removes all constraints
