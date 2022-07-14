@@ -65,7 +65,7 @@ class SafetyCheckPanel(Panel):
         row.prop(
             safety_check,
             "velocity_z_warning_threshold",
-            text="Z down" if safety_check.velocity_z_warning_different_up else "Z",
+            text="Down" if safety_check.velocity_z_warning_different_up else "Z",
             slider=True,
         )
         row.prop(safety_check, "velocity_z_warning_different_up", text="")
@@ -73,7 +73,7 @@ class SafetyCheckPanel(Panel):
         col2.prop(
             safety_check,
             "velocity_z_warning_threshold_up",
-            text="Z up",
+            text="Up" if safety_check.velocity_z_warning_different_up else "Z",
             slider=True,
         )
         col2.enabled = safety_check.velocity_z_warning_different_up
