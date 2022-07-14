@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Light effects can now be duplicated in the Light effects panel of the LEDs
   tab with a dedicated button.
 
+- Velocity limits can now be different for descents and ascents.
+
 ### Fixed
 
 - When a storyboard entry is removed, the plugin now removes all constraints
