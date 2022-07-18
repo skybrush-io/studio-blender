@@ -90,18 +90,16 @@ class Trajectory:
 
         keep_next = False
         for point in self.points:
-            if keep_next:
-                new_points.append(point)
-                keep_next = False
-            elif (
+            prev_is_same = (
                 last_point.x == point.x
                 and last_point.y == point.y
                 and last_point.z == point.z
-            ):
-                new_points[-1] = point
-            else:
+            )
+            if keep_next or not prev_is_same:
                 new_points.append(point)
-                keep_next = True
+            else:
+                new_points[-1] = point
+            keep_next = not prev_is_same
             last_point = point
 
         self.points = new_points

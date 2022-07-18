@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2022-07-18
+
+### Fixed
+
+- Fixed a bug in the .skyc trajectory export that sometimes resulted in
+  overshoots during long segments when a drone was supposed to hover in place.
+
 ## [2.3.0] - 2022-07-14
 
 ### Added
