@@ -20,7 +20,10 @@ Light effects may be (and usually are) limited in space and time. Time-wise, the
 
 You may have noticed that the upper part of the light effects panel is occupied by a list. This list contains the effects themselves. In each frame all the effects are processed in a top-down manner, and for each effect, Blender decides whether the effect is going to affect the current frame or not, depending on its temporal and spatial properties. In any given frame, _multiple_ effects may be active, and in this case the original color of each drone (defined by the keyframes of its material) is modified by each active effect in the order defined by the list of effects. This becomes important when the colors of the effects have alpha channels as the output may be a mixture of the original color of the drone as well as one or more active effects.
 
-Use the btn:[+] button next to the light effect list to add a new light effect to the end of the list. You can remove effects from the list by pressing the btn:[-] button, and you can also rearrange them freely with the btn:[▲] and btn:[▼] buttons. Individual light effects can be enabled or disabled by clicking on the check box in front of the light effect. You can also give a descriptive name to each light effect by double-clicking on its slot to edit the name.
+Use the btn:[+] button next to the light effect list to add a new light effect to the end of the list. You can remove effects from the list by pressing the btn:[-] button. You can duplicate previously created light effects with the btn:[Duplicate Light Effect] button.
+To rearrange light effects, use the btn:[▲] and btn:[▼] buttons.
+
+Individual light effects can be enabled or disabled by clicking on the check box in front of the light effect. You can also give a descriptive name to each light effect by double-clicking on its slot to edit the name.
 
 == The color ramp
 

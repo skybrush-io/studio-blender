@@ -34,9 +34,9 @@ To enable or disable altitude warnings, use the btn:[Show altitude warnings] che
 
 == Velocity warnings
 
-This option lets you define a maximum horizontal and vertical speed for your drone show. If there are drones above these velocity limits, you get real-time velocity warnings.
+This option lets you define a maximum horizontal and vertical speed for your drone show (vertical speed can be further differentiated into maximum up and down speed). If there are drones above these velocity limits, you get real-time velocity warnings.
 
-The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal and vertical velocity of drones on the current frame. Drones above the velocity thresholds at a given frame are highlighted in red.
+The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal (XY), upwards (U) and downwards (D) velocity of drones on the current frame. Drones above the velocity thresholds at a given frame are highlighted in red.
 
 To enable or disable velocity warnings, use the btn:[Show velocity warnings] checkbox.
 

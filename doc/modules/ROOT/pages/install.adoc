@@ -25,10 +25,21 @@ There are many Blender versions out there, we aim for compatibility with the htt
 image::install_blender_addons.jpg[Install Blender Add-ons]
 
 1. Open Blender and go to Edit -> Preferences -> Add-ons.
+
 2. (optional) Activate the "User" filter for the add-ons.
+
 3. Press the btn:[Install...] button on the top right.
+
 4. In the popup window select the *Skybrush Studio for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
+
 5. Activate the "Interface: Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list.
+
+6. Setup add-on preferences if you are using a version of *Skybrush Studio for Blender* other than the free community edition:
+
+    API Key:: Enter the API key received that is used when communicating with the Skybrush Studio server.
+
+    Server URL:: Enter the URL of a dedicated Skybrush Studio server if you are using a dedicated server.
+
 
 == Installing updates
 
