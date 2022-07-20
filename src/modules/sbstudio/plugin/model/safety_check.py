@@ -214,7 +214,7 @@ class SafetyCheckProperties(PropertyGroup):
         name="Use separate Z velocity threshold upwards",
         description=(
             "When checked, the velocity threshold in the Z direction is allowed "
-            "to be higher upwards than downwards"
+            "to be different upwards and downwards"
         ),
         update=velocity_warning_enabled_updated,
         default=False,
