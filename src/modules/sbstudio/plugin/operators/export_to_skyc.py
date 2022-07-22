@@ -16,7 +16,7 @@ from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.props import FrameRangeProperty
+from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.sampling import (
     frame_range,
@@ -27,7 +27,7 @@ from sbstudio.plugin.utils.sampling import (
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 
-__all__ = ("SkybrushExportOperator", "get_drones_to_export", "resolve_frame_range")
+__all__ = ("SkybrushExportOperator", "get_drones_to_export")
 
 log = logging.getLogger(__name__)
 
@@ -91,34 +91,9 @@ def get_drones_to_export(selected_only: bool = False):
 
 
 @with_context
-def resolve_frame_range(
-    range: str, *, context: Optional[Context] = None
-) -> Tuple[int, int]:
-    """Resolves one of the commonly used frame ranges used in multiple places
-    throughout the plugin.
-    """
-    assert context is not None  # it was injected
-
-    if range == "RENDER":
-        # Return the entire frame range of the current scene
-        return (context.scene.frame_start, context.scene.frame_end)
-    elif range == "PREVIEW":
-        # Return the selected preview range of the current scene
-        return (context.scene.frame_preview_start, context.scene.frame_preview_end)
-    elif range == "STORYBOARD":
-        # Return the frame range covered by the storyboard
-        return (
-            context.scene.skybrush.storyboard.frame_start,
-            context.scene.skybrush.storyboard.frame_end,
-        )
-    else:
-        raise RuntimeError(f"Unknown frame range: {range!r}")
-
-
-@with_context
 def _get_frame_range_from_export_settings(
     settings, *, context: Optional[Context] = None
-) -> Tuple[int, int]:
+) -> Optional[Tuple[int, int]]:
     """Returns the range of frames to export, based on the chosen export settings
     of the user.
 
@@ -214,6 +189,8 @@ def _write_skybrush_file(context, settings, filepath: Path) -> None:
     # get framerange
     log.info("Getting frame range from {}".format(settings["frame_range"]))
     frame_range = _get_frame_range_from_export_settings(settings, context=context)
+    if frame_range is None:
+        raise RuntimeError("Selected frame range is empty")
 
     # determine list of drones to export
     drones = list(get_drones_to_export(settings["export_selected"]))

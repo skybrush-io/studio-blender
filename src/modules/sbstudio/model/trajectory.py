@@ -73,6 +73,19 @@ class Trajectory:
                 "version": 1,
             }
 
+    def shift_time_in_place(self: C, delta: float) -> C:
+        """Shifts all timestamp of the trajectory in-place.
+
+        Parameters:
+            delta: the time delta to add to the timestamp of each point in the
+                trajectory.
+        """
+        self.points = [
+            Point4D(t=point.t + delta, x=point.x, y=point.y, z=point.z)
+            for point in self.points
+        ]
+        return self
+
     def simplify_in_place(self: C) -> C:
         new_points: List[Point4D] = []
         if not self.points:

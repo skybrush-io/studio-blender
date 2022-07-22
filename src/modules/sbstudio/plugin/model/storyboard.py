@@ -11,7 +11,7 @@ from bpy.props import (
 from bpy.types import Collection, Context, PropertyGroup
 from operator import attrgetter
 from uuid import uuid4
-from typing import Optional
+from typing import Optional, Tuple
 
 from sbstudio.plugin.constants import (
     Collections,
@@ -396,6 +396,29 @@ class Storyboard(PropertyGroup, ListMixin):
             return "-> {}".format(self.entries[index].name)
 
         return "{} -> {}".format(self.entries[index - 1].name, self.entries[index].name)
+
+    def get_frame_range_of_formation_or_transition_at_frame(
+        self, frame: int
+    ) -> Optional[Tuple[int, int]]:
+        """Returns the start and end frame of the current formation or transition
+        that contains the given frame.
+
+        Returns:
+            when the current frame is part of a formation, returns the start and
+            end frame of that formation. When the current frame is part of a
+            transition, returns the start and end frame of the transition.
+            Returns ``None`` otherwise.
+        """
+        index = self.get_index_of_entry_containing_frame(frame)
+        if index >= 0:
+            entry: StoryboardEntry = self.entries[index]
+            return entry.frame_start, entry.frame_end
+
+        index = self.get_index_of_entry_after_frame(frame)
+        if index > 0:
+            return self.entries[index - 1].frame_end, self.entries[index].frame_start
+        else:
+            return None
 
     @property
     def last_entry(self) -> Optional[StoryboardEntry]:

@@ -7,7 +7,7 @@ from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
-from sbstudio.plugin.props import FrameRangeProperty
+from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.utils.sampling import sample_positions_of_objects_in_frame_range
 from sbstudio.viewer_bridge import (
     SkybrushViewerBridge,
@@ -15,7 +15,7 @@ from sbstudio.viewer_bridge import (
     SkybrushViewerNotFoundError,
 )
 
-from .export_to_skyc import get_drones_to_export, resolve_frame_range
+from .export_to_skyc import get_drones_to_export
 
 __all__ = ("ValidateTrajectoriesOperator",)
 
@@ -46,6 +46,9 @@ class ValidateTrajectoriesOperator(Operator):
     def execute(self, context):
         drones = get_drones_to_export(selected_only=self.selected_only)
         frame_range = resolve_frame_range(self.frame_range)
+        if frame_range is None:
+            self.report({"ERROR"}, "Selected frame range is empty")
+            return {"CANCELLED"}
 
         safety_check = getattr(context.scene.skybrush, "safety_check", None)
         validation = SafetyCheckParams(
@@ -100,6 +103,11 @@ class ValidateTrajectoriesOperator(Operator):
         fps = context.scene.render.fps
         start_of_scene = context.scene.frame_start
         timestamp_offset = (frame_range[0] - start_of_scene) / fps
+
+        if timestamp_offset:
+            for trajectory in trajectories.values():
+                trajectory.shift_time_in_place(-timestamp_offset)
+
         filename = bpy.data.filepath or None
         try:
             show_data = get_api().export_to_skyc(

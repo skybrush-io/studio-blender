@@ -27,9 +27,9 @@ from bpy.props import BoolProperty, StringProperty, FloatProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
-from sbstudio.plugin.props.frame_range import FrameRangeProperty
+from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 
-from .export_to_skyc import _to_int_255, get_drones_to_export, resolve_frame_range
+from .export_to_skyc import _to_int_255, get_drones_to_export
 
 __all__ = ("SkybrushCSVExportOperator",)
 
