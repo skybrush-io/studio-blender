@@ -24,7 +24,6 @@ standalone = ["skybrush-studio"]
 
 [tool.poetry.dev-dependencies]
 pyclean = "^2.0.0"
-pyminifier = { version = "^3.0.2", source = "collmot" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
