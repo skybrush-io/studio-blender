@@ -155,7 +155,7 @@ def _find_shader_node_by_name_and_type(material, name: str, type: str):
         type: the expected type of the shader node
 
     Raises:
-        ValueError: if there is no such shader node in the material
+        KeyError: if there is no such shader node in the material
     """
     nodes = material.node_tree.nodes
 
