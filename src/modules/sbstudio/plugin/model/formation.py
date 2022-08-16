@@ -8,7 +8,10 @@ from numpy import array, c_, dot, ones, zeros
 from typing import Iterable, List, Optional, Tuple, Union
 
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.objects import get_vertices_of_object_in_vertex_group_by_name
+from sbstudio.plugin.objects import (
+    get_derived_object_after_applying_modifiers,
+    get_vertices_of_object_in_vertex_group_by_name,
+)
 from sbstudio.plugin.utils import create_object_in_collection
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
@@ -148,15 +151,16 @@ def count_markers_in_formation(formation: Collection) -> int:
     Each mesh in the formation counts as one marker, _except_ if the mesh has
     a vertex group whose name matches the corresponding property of the
     object; in that case, all the vertices in the mesh are treated as markers.
+
+    The mesh is evaluated before applying mesh modifiers.
     """
     result = 0
 
     for obj in formation.objects:
-        if obj.skybrush.formation_vertex_group:
+        vertex_group_name = obj.skybrush.formation_vertex_group
+        if vertex_group_name:
             result += len(
-                get_vertices_of_object_in_vertex_group_by_name(
-                    obj, obj.skybrush.formation_vertex_group
-                )
+                get_vertices_of_object_in_vertex_group_by_name(obj, vertex_group_name)
             )
         else:
             result += 1
@@ -177,15 +181,20 @@ def get_markers_and_related_objects_from_formation(
     The order in which the markers are returned from this function are
     consistent with the order in which their positions are returned from
     `get_world_coordinates_of_markers_from_formation()`.
+
+    It is guaranteed that the returned mesh vertices are not _derived_ vertices
+    (obtained after applying the modifiers) but the _original_ vertices that are
+    actually part of the base mesh.
     """
     result = []
 
     for obj in formation.objects:
-        if obj.skybrush.formation_vertex_group:
+        vertex_group_name = obj.skybrush.formation_vertex_group
+        if vertex_group_name:
             result.extend(
                 (vertex, obj)
                 for vertex in get_vertices_of_object_in_vertex_group_by_name(
-                    obj, obj.skybrush.formation_vertex_group
+                    obj, vertex_group_name
                 )
             )
         else:
@@ -208,15 +217,18 @@ def get_markers_from_formation(
     `get_world_coordinates_of_markers_from_formation()`. The order is also
     consistent with the order of objects within the formation collection
     according to Blender.
+
+    It is guaranteed that the returned mesh vertices are not _derived_ vertices
+    (obtained after applying the modifiers) but the _original_ vertices that are
+    actually part of the base mesh.
     """
     result = []
 
     for obj in formation.objects:
-        if obj.skybrush.formation_vertex_group:
+        vertex_group_name = obj.skybrush.formation_vertex_group
+        if vertex_group_name:
             result.extend(
-                get_vertices_of_object_in_vertex_group_by_name(
-                    obj, obj.skybrush.formation_vertex_group
-                )
+                get_vertices_of_object_in_vertex_group_by_name(obj, vertex_group_name)
             )
         else:
             result.append(obj)
@@ -225,7 +237,7 @@ def get_markers_from_formation(
 
 
 def get_world_coordinates_of_markers_from_formation(
-    formation: Collection, *, frame: Optional[int] = None
+    formation: Collection, *, frame: Optional[int] = None, apply_modifiers: bool = True
 ):
     """Returns a list containing the world coordinates of the markers in the
     formation, as a NumPy array, one marker per row.
@@ -235,11 +247,19 @@ def get_world_coordinates_of_markers_from_formation(
     `get_markers_from_formation()`. The order is also consistent with the
     order of objects within the formation collection according to Blender.
 
+    The coordinates are evaluated _after_ applying the mesh modifiers by
+    default, unless ``apply_modifiers`` is set to ``False``, in which case they
+    are evaluated _before_ applying the mesh modifiers.
+
     Parameters:
         formation: the formation to evaluate
         frame: when not `None`, the index of the frame to evaluate the
             coordinates in
     """
+    # TODO(ntamas): check whether there are any modifiers in the modifier stack
+    # that might indicate that the mesh is mutated, in which case we cannot use
+    # vertex groups!
+
     if frame is not None:
         scene = bpy.context.scene
         current_frame = scene.frame_current
@@ -255,9 +275,17 @@ def get_world_coordinates_of_markers_from_formation(
     num_rows = 0
 
     for obj in formation.objects:
-        if obj.skybrush.formation_vertex_group:
+        vertex_group_name = obj.skybrush.formation_vertex_group
+        if vertex_group_name:
+            # We need to be careful here. If the mesh has modifiers, we might
+            # have to evaluate the vertex group on the _modified_ mesh, not on
+            # the base mesh.
+            if apply_modifiers:
+                derived_object = get_derived_object_after_applying_modifiers(obj)
+            else:
+                derived_object = obj
             vertices = get_vertices_of_object_in_vertex_group_by_name(
-                obj, obj.skybrush.formation_vertex_group
+                derived_object, vertex_group_name
             )
             vertices_by_obj[obj] = vertices
             num_rows += len(vertices)

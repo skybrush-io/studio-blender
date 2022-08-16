@@ -1,13 +1,14 @@
 import bpy
 
-from bpy.types import Collection, Context, MeshVertex, Object, Scene, VertexGroup
+from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
 from typing import Any, Iterable, List, Optional, Union
 
-from .utils import with_scene
+from .utils import with_context, with_scene
 
 __all__ = (
     "create_object",
     "duplicate_object",
+    "get_derived_object_after_applying_modifiers",
     "get_vertices_of_object",
     "get_vertices_of_object_in_vertex_group",
     "get_vertices_of_object_in_vertex_group_by_name",
@@ -179,3 +180,24 @@ def remove_objects(objects: Union[Iterable[Object], Collection]) -> None:
     if result != {"FINISHED"}:
         raise RuntimeError(f"Blender operator returned {result!r}, expected FINISHED")
     """
+
+
+@with_context
+def get_derived_object_after_applying_modifiers(
+    obj: Object, *, context: Optional[Context] = None
+) -> Object:
+    """Returns the object derived from the given base object after applying all
+    the mesh modifiers that were set up on it.
+
+    When there is at least one modifier on the base object, returns a temporary
+    object that is evaluated from the current dependency graph. When there are
+    no modifiers, the function returns the base object itself. Callers should
+    assume that they _may_ get a temporary object and are obliged to make a copy
+    of any mesh data of the object that they want to hold on to.
+    """
+    if obj.modifiers:
+        assert context is not None
+        dependency_graph = context.evaluated_depsgraph_get()
+        return obj.evaluated_get(dependency_graph)
+    else:
+        return obj
