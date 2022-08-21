@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2022-08-21
+
+### Added
+
+- Added "Current formation or transition" as a possible option for the frame
+  range when exporting.
+
+### Fixed
+
+- Vertex group based formations now work correctly even if the underlying mesh
+  has modifiers. Before this patch, the modifiers were not taken into account
+  when the positions of the vertices in the vertex group were sampled for a
+  transition calculation.
+
 ## [2.3.1] - 2022-07-18
 
 ### Fixed
