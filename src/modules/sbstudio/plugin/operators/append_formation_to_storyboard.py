@@ -85,9 +85,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
             )
             target = [tuple(coord) for coord in target]
         try:
-            transition_duration = get_api().plan_transition(
-                source, target, **safety_kwds
-            )
+            plan = get_api().plan_transition(source, target, **safety_kwds)
         except Exception:
             raise
             self.report(
@@ -100,7 +98,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         # transition up to the next whole second. We need to take into account
         # whether the scene starts from frame 1 or 0 or anything else
         # stored in storyboard.frame_start, though.
-        new_start = ceil(last_frame + transition_duration * fps)
+        new_start = ceil(last_frame + plan.total_duration * fps)
         diff = ceil((new_start - storyboard.frame_start) / fps) * fps
         entry.frame_start = storyboard.frame_start + diff
 

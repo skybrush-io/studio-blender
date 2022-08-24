@@ -8,6 +8,7 @@ import bpy
 from bpy.props import EnumProperty
 
 from sbstudio.api.errors import SkybrushStudioAPIError
+from sbstudio.api.types import Mapping
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
@@ -33,12 +34,6 @@ from sbstudio.utils import constant
 from .base import StoryboardOperator
 
 __all__ = ("RecalculateTransitionsOperator",)
-
-
-Mapping = List[Optional[int]]
-"""Type alias for mappings from drone indices to the corresponding target
-marker indices.
-"""
 
 
 class InfluenceCurveTransitionType(Enum):
@@ -246,7 +241,7 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         # Auto mapping with our API
         target = get_coordinates_of_formation(formation, frame=entry.frame_start)
         try:
-            match = get_api().match_points(source, target)
+            match, clearance = get_api().match_points(source, target, radius=0)
         except Exception as ex:
             if not isinstance(ex, SkybrushStudioAPIError):
                 raise SkybrushStudioAPIError from ex

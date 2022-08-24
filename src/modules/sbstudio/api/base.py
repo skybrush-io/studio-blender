@@ -9,7 +9,7 @@ from natsort import natsorted
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import create_default_context, CERT_NONE
-from typing import Any, ContextManager, Dict, List, Optional, Sequence
+from typing import Any, ContextManager, Dict, Optional, Sequence, Tuple
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
@@ -20,6 +20,7 @@ from sbstudio.model.types import Coordinate3D
 from sbstudio.utils import create_path_and_open
 
 from .errors import SkybrushStudioAPIError
+from .types import Mapping, TransitionPlan
 
 __all__ = ("SkybrushStudioAPI",)
 
@@ -353,21 +354,33 @@ class SkybrushStudioAPI:
             response.save_to_file(output)
 
     def match_points(
-        self, source: Sequence[Coordinate3D], target: Sequence[Coordinate3D]
-    ) -> List[Optional[int]]:
+        self,
+        source: Sequence[Coordinate3D],
+        target: Sequence[Coordinate3D],
+        *,
+        radius: Optional[float] = None,
+    ) -> Tuple[Mapping, Optional[float]]:
         """Matches the points of a source point set to the points of a
         target point set in a way that ensures collision-free straight-line
         trajectories between the matched points when neither the source nor the
         target points are too close to each other.
+
+        Returns:
+            the mapping and the minimum clearance between points during the
+            transition; ``None`` if not known or not calculated due to
+            efficiency reasons
         """
         data = {"version": 1, "source": source, "target": target}
+        if radius is not None:
+            data["radius"] = radius
+
         with self._send_request("operations/match-points", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
             raise SkybrushStudioAPIError("invalid response version")
 
-        return result.get("mapping")
+        return result.get("mapping"), result.get("clearance")
 
     def plan_transition(
         self,
@@ -379,7 +392,7 @@ class SkybrushStudioAPI:
         max_acceleration: float,
         max_velocity_z_up: Optional[float] = None,
         matching_method: str = "optimal",
-    ) -> float:
+    ) -> TransitionPlan:
         """Proposes a minimum feasible duration for a transition between the
         given source and target points, assuming that the drones move in a
         straight line, they are stationary in the beginning and in the end,
@@ -400,7 +413,7 @@ class SkybrushStudioAPI:
                 to target points; see the server documentation fof more details.
         """
         if not source or not target:
-            return 0.0
+            return TransitionPlan.empty()
 
         data = {
             "version": 1,
@@ -424,10 +437,15 @@ class SkybrushStudioAPI:
 
         start_times = result.get("start_times")
         durations = result.get("durations")
-        if start_times is not None and durations is not None:
-            return max(
-                start_time + duration
-                for start_time, duration in zip(start_times, durations)
-            )
-        else:
+        if start_times is None or durations is None:
             raise SkybrushStudioAPIError("invalid response format")
+
+        mapping = result.get("mapping")
+        clearance = result.get("clearance")
+
+        return TransitionPlan(
+            start_times=list(start_times),
+            durations=list(durations),
+            mapping=list(mapping) if mapping is not None else None,
+            clearance=float(clearance) if clearance is not None else None,
+        )
