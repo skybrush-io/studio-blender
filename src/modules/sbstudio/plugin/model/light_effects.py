@@ -238,9 +238,6 @@ class LightEffect(PropertyGroup):
                 outputs = [index / np_m1 for index in range(num_positions)]
             else:
                 common_output = 1.0
-        elif output_type == "DISTANCE":
-            # TODO(ntamas)
-            common_output = 1.0
         elif output_type == "CUSTOM_EXPRESSION":
             # TODO(ntamas)
             common_output = 1.0
