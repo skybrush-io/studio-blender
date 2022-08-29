@@ -1,21 +1,26 @@
 import bpy
 
-from typing import Optional
+from contextlib import contextmanager
+from typing import Iterator, Optional, TypeVar
 
 from sbstudio.api import SkybrushStudioAPI
+from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
 
 __all__ = ("get_api",)
 
-#: One singleton API object that the entire Blender plugin uses to talk to
-#: Skybrush Studio. Constructed lazily so we can defer importing the API.
-_api = None
+"""One singleton API object that the entire Blender plugin uses to talk to
+Skybrush Studio. Constructed lazily so we can defer importing the API.
+"""
+_api: Optional[SkybrushStudioAPI] = None
 
-#: Fallback API key to use when the user did not enter any API key
 _fallback_api_key: str = "trial"
+"""Fallback API key to use when the user did not enter any API key"""
+
+T = TypeVar("T")
 
 
-def get_api():
+def get_api() -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object."""
     global _api, _fallback_api_key
 
@@ -45,6 +50,30 @@ def get_api():
         _api.url = server_url
 
     return _api
+
+
+@contextmanager
+def call_api_from_blender_operator(
+    operator, what: str = "operation"
+) -> Iterator[SkybrushStudioAPI]:
+    """Context manager that yields immediately back to the caller from a
+    try-except block, catches all exceptions, and calls the ``report()`` method
+    of the given Blender operator with an approriate error message if there
+    was an error. All exceptions are then re-raised; the caller is expected to
+    return ``{"CANCELLED"}`` from the operator immediately in response to an
+    exception.
+    """
+    default_message = (
+        f"Error while invoking {what} on the Skybrush Studio online service"
+    )
+    try:
+        yield get_api()
+    except SkybrushStudioAPIError as ex:
+        operator.report({"ERROR"}, str(ex) or default_message)
+        raise
+    except Exception:
+        operator.report({"ERROR"}, default_message)
+        raise
 
 
 def set_fallback_api_key(value: Optional[str]) -> None:

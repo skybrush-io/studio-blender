@@ -8,13 +8,12 @@ from bpy_extras.io_utils import ExportHelper
 from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
-from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.utils import with_context
@@ -39,32 +38,6 @@ log = logging.getLogger(__name__)
 def _to_int_255(value: float) -> int:
     """Convert [0, 1] float to clamped [0, 255] int."""
     return max(0, min(255, round(value * 255)))
-
-
-def _create_light_program_from_light_data(
-    light_samples: Tuple[List[int], List[float], List[float], List[float]]
-) -> LightProgram:
-    """Creates a LightProgram object from light data.
-
-    Parameters:
-        light: tuple or list of four lists; the first list is the list of frames,
-            the remaining three are the R-G-B samples. Values are expected to be
-            between [0-1].
-
-    Returns:
-        LightProgram object that can be processed by the local Skybrush converter
-    """
-    samples = [
-        Color4D(
-            sample[0],
-            _to_int_255(sample[1]),
-            _to_int_255(sample[2]),
-            _to_int_255(sample[3]),
-            is_fade=True,
-        )
-        for sample in zip(*light_samples)
-    ]
-    return LightProgram(samples).simplify()
 
 
 def get_drones_to_export(selected_only: bool = False):
@@ -172,13 +145,14 @@ def _get_trajectories_and_lights(
     return trajectories, lights
 
 
-def _write_skybrush_file(context, settings, filepath: Path) -> None:
+def _write_skybrush_file(api, context, settings, filepath: Path) -> None:
     """Creates Skybrush-compatible output from Blender trajectories and color
     animation.
 
     This is a helper function for SkybrushExportOperator.
 
     Parameters:
+        api: the Skybrush Studio API object
         context: the main Blender context
         settings: export settings
         filepath: the output path where the export should write
@@ -224,7 +198,7 @@ def _write_skybrush_file(context, settings, filepath: Path) -> None:
 
     # create Skybrush converter object
     log.info("Exporting to .skyc")
-    get_api().export_to_skyc(
+    api.export_to_skyc(
         show_title=show_title,
         show_type=show_type,
         validation=validation,
@@ -287,7 +261,11 @@ class SkybrushExportOperator(Operator, ExportHelper):
             "light_output_fps": self.light_output_fps,
         }
 
-        _write_skybrush_file(context, settings, filepath)
+        try:
+            with call_api_from_blender_operator(self, ".skyc exporter") as api:
+                _write_skybrush_file(api, context, settings, filepath)
+        except Exception:
+            return {"CANCELLED"}
 
         return {"FINISHED"}
 
