@@ -9,7 +9,8 @@ from natsort import natsorted
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import create_default_context, CERT_NONE
-from typing import Any, ContextManager, Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterator, Optional, Sequence, Tuple
+from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
@@ -77,6 +78,7 @@ class Response:
         """Reads the whole response body and return it as a string."""
         if self.content_type not in ["application/octet-stream", "application/json"]:
             raise SkybrushStudioAPIError("Invalid response type")
+
         data = self._response.read()
         if self.content_type == "application/octet-stream":
             data = data.decode("utf-8")
@@ -102,6 +104,9 @@ class SkybrushStudioAPI:
     """Class that represents a connection to the API of a Skybrush Studio
     server.
     """
+
+    _root: str
+    """The root URL of the API, with a trailing slash"""
 
     @staticmethod
     def validate_api_key(key: str) -> str:
@@ -130,7 +135,7 @@ class SkybrushStudioAPI:
             api_key: the API key used to authenticate with the server
         """
         self._api_key = None
-        self._root = None
+        self._root = None  # type: ignore
         self._request_context = create_default_context()
 
         self.api_key = api_key
@@ -157,7 +162,7 @@ class SkybrushStudioAPI:
         self._root = value
 
     @contextmanager
-    def _send_request(self, url: str, data: Any = None) -> ContextManager[Response]:
+    def _send_request(self, url: str, data: Any = None) -> Iterator[Response]:
         """Sends a request to the given URL, relative to the API root, and
         returns the corresponding HTTP response object.
 
@@ -179,6 +184,7 @@ class SkybrushStudioAPI:
             SkybrushStudioAPIError: when the request returned a non-successful
                 HTTP error code or an invalid content type
         """
+        content_type = None
         content_encoding = None
 
         if data is None:
@@ -195,7 +201,9 @@ class SkybrushStudioAPI:
         if content_encoding == "gzip":
             data = compress(data)
 
-        headers = {"Content-Type": content_type}
+        headers = {}
+        if content_type is not None:
+            headers["Content-Type"] = content_type
         if content_encoding is not None:
             headers["Content-Encoding"] = content_encoding
         if self._api_key is not None:
@@ -203,10 +211,31 @@ class SkybrushStudioAPI:
 
         url = urljoin(self._root, url.lstrip("/"))
         req = Request(url, data=data, headers=headers, method=method)
-        with urlopen(req, context=self._request_context) as raw_response:
-            response = Response(raw_response)
-            response._run_sanity_checks()
-            yield response
+
+        try:
+            with urlopen(req, context=self._request_context) as raw_response:
+                response = Response(raw_response)
+                response._run_sanity_checks()
+                yield response
+        except HTTPError as ex:
+            # If the status code is 400, we may have more details about the
+            # error in the response itself
+            if ex.status == 400:
+                try:
+                    body = ex.read().decode("utf-8")
+                except Exception:
+                    # decoding failed, let's pretend that we don't have a
+                    # response body
+                    body = "{}"
+                try:
+                    decoded_body = json.loads(body)
+                except Exception:
+                    # response body is not valid JSON, let's pretend that we
+                    # got an empty object
+                    decoded_body = {}
+                if isinstance(decoded_body, dict) and decoded_body.get("detail"):
+                    raise SkybrushStudioAPIError(str(decoded_body.get("detail")))
+            raise
 
     def _skip_ssl_checks(self) -> None:
         """Configures the API object to skip SSL checks when making requests.
