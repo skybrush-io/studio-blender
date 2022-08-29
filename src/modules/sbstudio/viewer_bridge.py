@@ -4,7 +4,7 @@ current machine and for posting data to it.
 
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from errno import ECONNREFUSED
+from errno import ECONNREFUSED, ENETUNREACH
 from json import load
 from socket import (
     socket,
@@ -215,7 +215,13 @@ class SSDPAppDiscovery:
 
         # Apparently, sending a datagram to 127.0.0.1 does not work even if we
         # are only interested in Viewer instances running on the same machine
-        self._sock.sendto(message, ("239.255.255.250", 1900))
+        try:
+            self._sock.sendto(message, ("239.255.255.250", 1900))
+        except OSError as ex:
+            if ex.errno == ENETUNREACH:
+                # This may happen if the user is not connected to any network
+                # at all; in this case we retry with 127.0.0.1
+                self._sock.sendto(message, ("127.0.0.1", 1900))
 
         # There may be pending SSDP responses in the queue so we read at most
         # 10 times, looking for messages where the date is not too old
