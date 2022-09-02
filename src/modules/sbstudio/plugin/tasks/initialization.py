@@ -4,7 +4,9 @@ turns on the bloom effect on the scene if needed.
 
 import bpy
 
-from sbstudio.plugin.constants import Collections
+from random import randint
+
+from sbstudio.plugin.constants import Collections, RANDOM_SEED_MAX
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 
 from .base import Task
@@ -45,19 +47,29 @@ def remove_legacy_formation_constraints(*args):
                 drone.constraints.remove(constraint)
 
 
+def setup_random_seed(*args):
+    """Sets up a unique random seed for the file if it does not have one."""
+
+    # Legacy files that were created before the random seed property was added
+    # will be loaded with a seed of zero (this is the default value of the
+    # property), and we use that to detect that a seed has not been set up yet.
+    scene = bpy.context.scene
+    if scene and scene.skybrush.settings.random_seed == 0:
+        scene.skybrush.settings.random_seed = randint(1, RANDOM_SEED_MAX)
+
+
 def update_bloom_effect(*args):
     enable_bloom_effect_if_needed()
 
 
 class InitializationTask(Task):
-    """Background task that is called every time a new file is loaded, and that
-    turns on the bloom effect on the scene if needed.
-    """
+    """Background task that is called every time a new file is loaded."""
 
     functions = {
         "load_post": [
             update_bloom_effect,
             setup_drone_collection,
             remove_legacy_formation_constraints,
+            setup_random_seed,
         ]
     }
