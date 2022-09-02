@@ -3,7 +3,7 @@ import bmesh
 
 from functools import partial
 from operator import itemgetter
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, List, Optional, Sequence
 
 from bpy.props import (
     BoolProperty,
@@ -17,6 +17,7 @@ from bpy.types import ColorRamp, Context, PropertyGroup, Mesh, Object, Texture
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+from sbstudio.math.rng import RandomSequence
 from sbstudio.model.types import Coordinate3D, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
@@ -36,10 +37,9 @@ def object_has_mesh_data(self, obj) -> bool:
     return obj.data and isinstance(obj.data, Mesh)
 
 
-#: Pre-constructed vectors for a quick containment test using raycasting and BVH-trees
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+"""Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
-#: Axis mapping for the gradient-based output types
 OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     "GRADIENT_XYZ": (0, 1, 2),
     "GRADIENT_XZY": (0, 2, 1),
@@ -49,6 +49,8 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     "GRADIENT_ZYX": (2, 1, 0),
     "default": (0, 0, 0),
 }
+"""Axis mapping for the gradient-based output types"""
+
 OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY.items()
 }
@@ -169,14 +171,28 @@ class LightEffect(PropertyGroup):
         default="ALL",
     )
 
+    randomness = FloatProperty(
+        name="Randomness",
+        description=(
+            "Offsets the output value of each drone randomly on the color ramp; this property defines the maximum value of the offset"
+        ),
+        default=0,
+        min=0,
+        soft_min=0,
+        soft_max=1,
+        precision=2,
+        options=set(),
+    )
+
     # If you add new properties above, make sure to update update_from()
 
     def apply_on_colors(
         self,
-        colors: Iterable[RGBAColor],
-        positions: Iterable[Coordinate3D],
+        colors: Sequence[RGBAColor],
+        positions: Sequence[Coordinate3D],
         *,
         frame: int,
+        random_seq: RandomSequence,
     ) -> None:
         """Applies this effect to a given list of colors, each belonging to a
         given spatial position in the given frame.
@@ -186,6 +202,8 @@ class LightEffect(PropertyGroup):
             positions: the spatial positions of the drones having the given
                 colors in 3D space
             frame: the frame index
+            random_seq: a random sequence that is used to spread out the items
+                on the color ramp if randomization is turned on
         """
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
@@ -193,13 +211,13 @@ class LightEffect(PropertyGroup):
 
         num_positions = len(positions)
 
-        output_type = self.output
+        output_type: str = self.output
         color_ramp = self.color_ramp
         new_color = [0.0] * 4
-        order = None
+        order: Optional[List[int]] = None
 
-        outputs = None
-        common_output = None
+        outputs: Optional[List[float]] = None
+        common_output: Optional[float] = None
 
         if output_type == "FIRST_COLOR":
             common_output = 0.0
@@ -258,7 +276,13 @@ class LightEffect(PropertyGroup):
             if common_output is not None:
                 output = common_output
             else:
+                assert outputs is not None
                 output = outputs[index]
+
+            # Randomize the output value if needed
+            if self.randomness != 0:
+                offset = random_seq.get_float(index) * self.randomness
+                output = (offset + output) % 1.0
 
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
@@ -274,7 +298,7 @@ class LightEffect(PropertyGroup):
                 new_color[:] = (1.0, 1.0, 1.0, alpha)
 
             # Apply the new color with alpha blending
-            alpha_over_in_place(new_color, color)
+            alpha_over_in_place(new_color, color)  # type: ignore
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -308,6 +332,7 @@ class LightEffect(PropertyGroup):
         self.influence = other.influence
         self.mesh = other.mesh
         self.target = other.target
+        self.randomness = other.randomness
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
 

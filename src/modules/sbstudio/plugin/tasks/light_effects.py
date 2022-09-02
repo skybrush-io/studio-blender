@@ -51,6 +51,8 @@ def update_light_effects(scene, depsgraph):
     if not light_effects:
         return
 
+    random_seq = scene.skybrush.settings.random_sequence_root
+
     frame = scene.frame_current
     drones = None
 
@@ -81,7 +83,9 @@ def update_light_effects(scene, depsgraph):
                 ]
             changed = True
 
-        effect.apply_on_colors(colors, positions=positions, frame=frame)
+        effect.apply_on_colors(
+            colors, positions=positions, frame=frame, random_seq=random_seq
+        )
 
     # If we haven't changed anything, _but_ this is because we have recently
     # disabled or removed the last effect (which we know from the fact that
