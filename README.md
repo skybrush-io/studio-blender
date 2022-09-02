@@ -1,17 +1,3 @@
-Skybrush Studio for Blender
-===========================
-
-![Skybrush Studio for Blender screenshot](/doc/screenshot_small.jpg)
-
-This repo contains [Skybrush Studio for Blender](https://skybrush.io),
-a professional drone show designer framework integrated into
-[Blender](https://blender.org).
-
-The output of Skybrush Studio for Blender is a single `.skyc` file, which
-contains the trajectories and light programs for all the drones in the show.
-Using `.skyc` files together with the [Skybrush suite](https://skybrush.io)
-allows you to preview, validate, verify, analyze, plot and execute drone shows
-with a few clicks.
 
 Installation
 ------------
