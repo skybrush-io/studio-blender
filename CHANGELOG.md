@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a randomness slider to the Light effects panel, which can be used to
+  spread out the drones on the color ramp of a light effect in a uniform manner.
+  This is useful for creating sparks and other effects that depend on randomness.
+
 ### Fixed
 
 - Running instances of Skybrush Viewer are now detected correctly on macOS even
