@@ -281,7 +281,7 @@ class LightEffect(PropertyGroup):
 
             # Randomize the output value if needed
             if self.randomness != 0:
-                offset = random_seq.get_float(index) * self.randomness
+                offset = (random_seq.get_float(index) - 0.5) * self.randomness
                 output = (offset + output) % 1.0
 
             # Calculate the influence of the effect, depending on the fade-in
