@@ -8,7 +8,7 @@ class DuplicateLightEffectOperator(LightEffectOperator):
 
     bl_idname = "skybrush.duplicate_light_effect"
     bl_label = "Duplicate Light Effect"
-    bl_description = "Duplicates the selected light effect in the effect list."
+    bl_description = "Duplicates the selected light effect in the effect list"
 
     @classmethod
     def poll(cls, context):
