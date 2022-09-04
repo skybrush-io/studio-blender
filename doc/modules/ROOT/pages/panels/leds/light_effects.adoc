@@ -59,9 +59,21 @@ turn both of these off by setting their duration to zero.
 
 Light effects may also be limited in space such that it affects only a subset of
 the drones. This is achieved by selecting a mesh in the *Mesh* picker widget and
-then setting the *Target* dropdown to "Inside the mesh". This is a relatively
-expensive operation as Blender needs to decide in each frame which drones are
-inside the mesh.
+then setting the *Target* dropdown to one of the following options:
+
+Inside the mesh:: Blender will test in each frame which drones are inside the
+selected mesh, and the effect will be applied only to those that are inisde.
+Note that containment checks are a relatively expensive operation, especially
+for complex meshes.
+
+Front side of plane:: This setting is suitable if your mesh is a plane. Imagine
+that the plane is infinite and it separates the space into a "front" and a "back"
+half. Blender will select those drones that are in the "front" half of the 3D
+space. If your mesh is _not_ a plane, Blender will pick the _first_ face of the
+mesh and extend that into infinity. This test is computationally less expensive
+than a full containment test, so for simple cases you should use this instead of
+the more expensive containment test that you can achieve with the *Inside the mesh*
+option.
 
 == Output mode and influence
 

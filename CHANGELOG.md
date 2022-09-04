@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   spread out the drones on the color ramp of a light effect in a uniform manner.
   This is useful for creating sparks and other effects that depend on randomness.
 
+- Added an option to limit a light effect in the Light effects panel to one
+  side of an infinite plane. This is computationally less expensive than a full
+  containment test.
+
 ### Fixed
 
 - Running instances of Skybrush Viewer are now detected correctly on macOS even
