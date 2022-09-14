@@ -203,7 +203,6 @@ class LightEffect(PropertyGroup):
         soft_min=0,
         soft_max=1,
         precision=2,
-        options=set(),
     )
 
     # If you add new properties above, make sure to update update_from()
