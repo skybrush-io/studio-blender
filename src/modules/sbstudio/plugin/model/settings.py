@@ -4,6 +4,7 @@ from bpy.props import (
     FloatProperty,
     IntProperty,
     PointerProperty,
+    StringProperty,
 )
 from bpy.types import Collection, PropertyGroup
 
@@ -74,6 +75,17 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         description="Specifies whether the bloom effect should automatically be enabled on the 3D View when the show is loaded",
         default=True,
         update=use_bloom_effect_updated,
+    )
+
+    time_markers = StringProperty(
+        name="Time markers",
+        description=(
+            "Names of the timeline markers that were created by the plugin and "
+            "that may be removed when the 'Update Time Markers' operation "
+            "is triggered"
+        ),
+        default="",
+        options={"HIDDEN"},
     )
 
     @property

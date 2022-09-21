@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Randomness property of light effects is now animatable.
 
+### Fixed
+
+- "Update Time Markers" operator will not remove markers created manually by the
+  user any more. (You need to execute the operator at least once first to
+  trigger this new behaviour).
+
 ## [2.5.0] - 2022-09-04
 
 ### Added
