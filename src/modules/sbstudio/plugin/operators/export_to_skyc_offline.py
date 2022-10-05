@@ -3,7 +3,11 @@ import logging
 import os
 import zipfile
 import json
+import numpy as np
+import sys
 
+from base64 import b64decode, b64encode
+from pickle import APPEND
 from bpy.props import BoolProperty, StringProperty, IntProperty
 from bpy.types import Context, Operator
 from bpy_extras.io_utils import ExportHelper
@@ -29,7 +33,7 @@ from sbstudio.plugin.utils.sampling import (
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 
-__all__ = ("SkybrushExportOperator",
+__all__ = ("SkybrushOfflineExportOperator",
            "get_drones_to_export", "resolve_frame_range")
 
 log = logging.getLogger(__name__)
@@ -37,7 +41,25 @@ log = logging.getLogger(__name__)
 #############################################################################
 # Helper functions for the exporter
 #############################################################################
+if sys.version > '3':
+    def _byte(b):
+        return bytes((b, ))
+else:
+    def _byte(b):
+        return chr(b)
 
+def encode(number):
+    """Pack `number` into varint bytes"""
+    buf = b''
+    while True:
+        towrite = number & 0x7f
+        number >>= 7
+        if number:
+            buf += _byte(towrite | 0x80)
+        else:
+            buf += _byte(towrite)
+            break
+    return buf
 
 def _to_int_255(value: float) -> int:
     """Convert [0, 1] float to clamped [0, 255] int."""
@@ -201,7 +223,77 @@ def _get_trajectories_and_lights(
 
     return trajectories, lights
 
-
+def _light_skybrush_code(data) -> Dict:    
+    output = bytearray()
+    last_time = 0
+    last_color = np.array([-1, -1, -1])
+    white_color = np.array([255, 255, 255])
+    black_color = np.array([0, 0, 0])
+    add_duration_flag = 0
+    delay_flag = 1
+    first_time_flag = 1
+    have_half = 0
+    for item in data.get('data'):
+        duration = round((item[0] - last_time) * 50)
+        if (duration == 12):
+            if have_half > 2:
+                duration += 1
+                have_half -= 2
+        if (((item[0] - last_time) * 50) - duration == 0.5):
+            have_half += 1
+        if (add_duration_flag):
+            if(first_time_flag):
+                duration = duration + 2
+                first_time_flag = 0
+            output.extend(encode(duration))
+            add_duration_flag = 0
+        if(np.array_equal(last_color, [-1, -1, -1])):
+            if (np.array_equal(item[1], white_color)):
+                output.append(7)
+            elif(np.array_equal(item[1], black_color)):
+                output.append(6)
+            else:
+                output.append(4)
+                output.append(item[1][0])
+                output.append(item[1][1])
+                output.append(item[1][2])
+            add_duration_flag = 1
+            delay_flag = 0
+        elif(np.array_equal(item[1], last_color)):
+            if (delay_flag):
+                output.append(2)
+                output.extend(encode(duration))
+            else:
+                delay_flag = 1
+        elif (np.array_equal(item[1], white_color)):
+            output.extend(b'\x0b')
+            output.extend(encode(duration))
+            delay_flag = 1
+        elif (np.array_equal(item[1], black_color)):
+            output.append(10)
+            output.extend(encode(duration))
+            delay_flag = 1
+        elif(item[1][0] == item[1][1] == item[1][2]):
+            output.extend(b'\t')
+            output.append(item[1][0])
+            add_duration_flag = 0
+            output.extend(encode(duration))
+            delay_flag = 1
+        else:
+            output.append(8)
+            output.append(item[1][0])
+            output.append(item[1][1])
+            output.append(item[1][2])
+            output.extend(encode(duration))
+            add_duration_flag = 0
+            delay_flag = 1
+        last_time = item[0]
+        last_color = item[1].copy()
+    output.append(0)
+    return {
+        "data": b64encode(output).decode("utf-8"),
+        "version": 1
+    }
 def _write_skybrush_file(context, settings, filepath: Path) -> None:
     """Creates Skybrush-compatible output from Blender trajectories and color
     animation.
@@ -253,26 +345,65 @@ def _write_skybrush_file(context, settings, filepath: Path) -> None:
 
     # create Skybrush converter object
     log.info("Exporting to .skyc")
-    get_api().export_to_skyc(
-        show_title=show_title,
-        show_type=show_type,
-        validation=validation,
-        trajectories=trajectories,
-        lights=lights,
-        output=filepath,
-    )
-    log.info("Online Export finished")
-
+    show = {'version': 1,
+            'settings': {
+                'cues': {
+                    "$ref": "./cues.json"
+                },
+                'validation': validation.as_dict(ndigits=3)
+            },
+            'swarm': {
+                "drones": [
+                    {
+                        "type": "generic",
+                        "settings": {
+                            "trajectory": {
+                                "$ref": "./drones/" + name + "/trajectory.json#"
+                            },
+                            "lights": {
+                                "$ref": "./drones/" + name + "/lights.json#"
+                            },
+                            "home": trajectories[name].as_dict(ndigits=3, version=1).get('points')[0][1],
+                            "landAt": trajectories[name].as_dict(ndigits=3, version=1).get('points')[-1][1],
+                            "name": name
+                        }
+                    }
+                    for name in natsorted(trajectories.keys())
+                ]
+            },
+            'environment': {
+                'type': "outdoor"
+            },
+            "meta": {
+                'title': "testing1"
+            },
+            "media": {}
+            }
+    cues = {
+        "version": 1,
+        "items": []
+    }
+    with zipfile.ZipFile(filepath, mode="w") as archive:
+        archive.writestr('cues.json', json.dumps(cues, indent=4))
+        archive.writestr('show.json', json.dumps(show, indent=4))
+        for name in natsorted(trajectories.keys()):
+            archive.writestr('drones/' + name + '/trajectory.json',
+                                json.dumps(trajectories[name].as_dict(
+                                    ndigits=3, version=1
+                                ), indent=4))
+            archive.writestr('drones/' + name + '/lights.json',
+                                json.dumps(_light_skybrush_code(lights[name].as_dict(ndigits=2)), indent=4))
+    log.info("Offline Export finished")
 #############################################################################
 # Operator that allows the user to invoke the export operation
 #############################################################################
 
 
-class SkybrushExportOperator(Operator, ExportHelper):
+class SkybrushOfflineExportOperator(Operator, ExportHelper):
     """Export object trajectories and curves into Skybrush-compatible format."""
 
-    bl_idname = "export_scene.skybrush"
-    bl_label = "Export Skybrush SKYC"
+    bl_idname = "offline_export_scene.skybrush"
+    bl_label = "Offline Export Skybrush SKYC"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush files

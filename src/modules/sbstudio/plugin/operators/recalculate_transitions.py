@@ -2,13 +2,15 @@ from dataclasses import dataclass
 from enum import Enum
 from math import inf
 from typing import Iterable, List, Optional, Sequence, Tuple
-
 import bpy
-
+import math
 from bpy.props import EnumProperty
+import numpy as np
+import sys
+sys.path.insert(0,"/home/sahar/.local/lib/python3.10/site-packages")
+from scipy.optimize import linear_sum_assignment as lsa
 
 from sbstudio.api.errors import SkybrushStudioAPIError
-from sbstudio.api.types import Mapping
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
@@ -34,6 +36,12 @@ from sbstudio.utils import constant
 from .base import StoryboardOperator
 
 __all__ = ("RecalculateTransitionsOperator",)
+
+
+Mapping = List[Optional[int]]
+"""Type alias for mappings from drone indices to the corresponding target
+marker indices.
+"""
 
 
 class InfluenceCurveTransitionType(Enum):
@@ -197,6 +205,87 @@ def get_coordinates_of_formation(formation, *, frame: int) -> List[Tuple[float, 
         )
     ]
 
+class cost_block:
+    x = 0
+    y = 0
+    cost = 0
+
+def getCost(self):
+        return self.cost
+
+def hall_condition_check(cost_mat, threshold):
+    row_ind, col_ind = lsa(cost_mat)
+    min_cost = cost_mat[row_ind, col_ind].sum()
+    if min_cost < threshold:
+        return True
+    else:
+        return False
+#cost function that should be used to create cost matrix
+def square_euclidean_cost(coord1, coord2):
+    return (coord1[0]-coord2[0])**2 + (coord1[1]-coord2[1])**2 + (coord1[2]-coord2[2])**2
+
+def euclidean_cost(coord1, coord2):
+    return ((coord1[0]-coord2[0])**2 + (coord1[1]-coord2[1])**2 + (coord1[2]-coord2[2])**2)**0.5
+
+def exponential_cost(coord1, coord2):
+    return 2**((coord1[0]-coord2[0])**2 + (coord1[1]-coord2[1])**2 + (coord1[2]-coord2[2])**2)
+
+#function that calculates cost matrix
+def cost_matrix_calc(formation1, formation2, costFunction):
+    n = formation1.shape[0]
+    cost_matrix = np.zeros((n,n))
+    for coordIndex1, coord1 in enumerate(formation1):
+        for coordIndex2, coord2 in enumerate(formation2):
+            cost_matrix[coordIndex1][coordIndex2] = costFunction(coord1, coord2)
+    return cost_matrix  
+
+#function that provides optimum mapping with respect to cost function
+def smart_transition_mapper(formation1, formation2, costFunction):
+    cost_matrix = cost_matrix_calc(formation1, formation2, costFunction)
+    original_cost_matrix = cost_matrix_calc(formation1, formation2, euclidean_cost)
+    row_ind, col_ind = lsa(cost_matrix)
+    mapping_order = col_ind
+    min_cost = cost_matrix[row_ind, col_ind].sum()
+    min_cost = np.amax(original_cost_matrix[row_ind, col_ind])
+    return mapping_order, min_cost
+#function that provides optimum mapping with respect to cost function with fair-hungarian algorithm
+def optimal_transition_mapper(formation1, formation2):
+    cost_matrix = cost_matrix_calc(formation1, formation2, euclidean_cost)
+    distances = []
+    for idx, itemx in enumerate(cost_matrix):
+        for idy, itemy in enumerate(itemx):
+            block = cost_block()
+            block.x = idx
+            block.y = idy
+            block.cost = itemy
+            distances.append(block)
+    distances.sort(key=getCost)
+    l = 1
+    r = len(distances)
+    while l!=r:
+        m = math.ceil((l + r)/2)
+        E0 = []
+        for item in distances:
+            if item.cost > distances[m - 1].cost:
+                E0.append(item)
+        m_copy = cost_matrix.copy()
+        for item in E0:
+            m_copy[item.x][item.y] = 10**5
+        if hall_condition_check(m_copy, 10**4) == True:
+            r = m - 1
+        else:
+            l = m
+        E0 = []
+    for item in distances:
+            if item.cost > distances[l].cost:
+                E0.append(item)
+    m_copy = cost_matrix.copy()
+    for item in E0:
+        m_copy[item.x][item.y] = 10**6
+    row_ind, col_ind = lsa(m_copy)
+    cost = np.amax(cost_matrix[row_ind, col_ind])
+    order = col_ind
+    return order, cost
 
 def calculate_mapping_for_transition_into_storyboard_entry(
     entry: StoryboardEntry, source, *, num_targets: int
@@ -241,7 +330,7 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         # Auto mapping with our API
         target = get_coordinates_of_formation(formation, frame=entry.frame_start)
         try:
-            match, clearance = get_api().match_points(source, target, radius=0)
+            match = get_api().match_points(source, target)
         except Exception as ex:
             if not isinstance(ex, SkybrushStudioAPIError):
                 raise SkybrushStudioAPIError from ex
@@ -255,7 +344,23 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         for target_index, drone_index in enumerate(match):
             if drone_index is not None:
                 result[drone_index] = target_index
-
+                print(result)
+    elif entry.transition_type == "HUNGARY":
+        target = get_coordinates_of_formation(formation, frame=entry.frame_start)
+        length = min(num_drones, num_targets)
+        source_array = np.array(source)
+        target_array = np.array(target)
+        order, cost = smart_transition_mapper(source_array, target_array, square_euclidean_cost)
+        print(order)
+        result[:length] = order
+    elif entry.transition_type == "FAIR-HUNGARY":
+        target = get_coordinates_of_formation(formation, frame=entry.frame_start)
+        length = min(num_drones, num_targets)
+        source_array = np.array(source)
+        target_array = np.array(target)
+        order, cost = optimal_transition_mapper(source_array, target_array)
+        print(order)
+        result[:length] = order
     else:
         # Manual mapping
         length = min(num_drones, num_targets)
