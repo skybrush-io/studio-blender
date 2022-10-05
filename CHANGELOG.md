@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2022-10-04
+
+### Added
+
+- Randomness property of light effects is now animatable.
+
+### Fixed
+
+- "Update Time Markers" operator will not remove markers created manually by the
+  user any more. (You need to execute the operator at least once first to
+  trigger this new behaviour).
+
+## [2.5.0] - 2022-09-04
+
+### Added
+
+- Added a randomness slider to the Light effects panel, which can be used to
+  spread out the drones on the color ramp of a light effect in a uniform manner.
+  This is useful for creating sparks and other effects that depend on randomness.
+
+- Added an option to limit a light effect in the Light effects panel to one
+  side of an infinite plane. This is computationally less expensive than a full
+  containment test.
+
+### Fixed
+
+- Running instances of Skybrush Viewer are now detected correctly on macOS even
+  if the user is not connected to any network at all. (The issue may have
+  affected Windows and/or Linux as well, but we encountered it on macOS).
+
 ## [2.4.0] - 2022-08-21
 
 ### Added

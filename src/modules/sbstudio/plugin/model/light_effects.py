@@ -3,7 +3,7 @@ import bmesh
 
 from functools import partial
 from operator import itemgetter
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, List, Optional, Sequence
 
 from bpy.props import (
     BoolProperty,
@@ -17,6 +17,8 @@ from bpy.types import ColorRamp, Context, PropertyGroup, Mesh, Object, Texture
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+from sbstudio.math.rng import RandomSequence
+from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
@@ -36,10 +38,9 @@ def object_has_mesh_data(self, obj) -> bool:
     return obj.data and isinstance(obj.data, Mesh)
 
 
-#: Pre-constructed vectors for a quick containment test using raycasting and BVH-trees
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+"""Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
-#: Axis mapping for the gradient-based output types
 OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     "GRADIENT_XYZ": (0, 1, 2),
     "GRADIENT_XZY": (0, 2, 1),
@@ -49,19 +50,26 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     "GRADIENT_ZYX": (2, 1, 0),
     "default": (0, 0, 0),
 }
+"""Axis mapping for the gradient-based output types"""
+
 OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY.items()
 }
 
 
-def test_containment(bvh_tree: BVHTree, point: Coordinate3D) -> bool:
+def test_containment(bvh_tree: Optional[BVHTree], point: Coordinate3D) -> bool:
     """Given a point and a BVH-tree, tests whether the point is _probably_
     within the mesh represented by the BVH-tree.
 
     This is done by casting three rays in the X, Y and Z directions. The point
     is assumed to be within the mesh if all three rays hit the mesh.
+
+    Returns True if the BVH-tree is missing.
     """
     global CONTAINMENT_TEST_AXES
+
+    if not bvh_tree:
+        return True
 
     for axis in CONTAINMENT_TEST_AXES:
         _, _, _, dist = bvh_tree.ray_cast(point, axis)
@@ -69,6 +77,20 @@ def test_containment(bvh_tree: BVHTree, point: Coordinate3D) -> bool:
             return False
 
     return True
+
+
+def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
+    """Given a point and a plane, tests whether the point is on the front side
+    of the plane.
+
+    Returns:
+        True if the point is on the front side of the plane or if the plane is
+        ``None``
+    """
+    if plane:
+        return plane.is_front(point)
+    else:
+        return True
 
 
 class LightEffect(PropertyGroup):
@@ -151,7 +173,8 @@ class LightEffect(PropertyGroup):
         name="Mesh",
         description=(
             'Mesh related to the light effect; used when the output is set to "Distance" or to limit the '
-            'light effect to the inside of this mesh when "Only inside" is checked'
+            'light effect to the inside or one side of this mesh when "Inside the mesh" or '
+            '"Front side of plane" is checked'
         ),
         poll=object_has_mesh_data,
     )
@@ -165,18 +188,32 @@ class LightEffect(PropertyGroup):
         items=[
             ("ALL", "All drones", "", 1),
             ("INSIDE_MESH", "Inside the mesh", "", 2),
+            ("FRONT_SIDE", "Front side of plane", "", 3),
         ],
         default="ALL",
+    )
+
+    randomness = FloatProperty(
+        name="Randomness",
+        description=(
+            "Offsets the output value of each drone randomly on the color ramp; this property defines the maximum value of the offset"
+        ),
+        default=0,
+        min=0,
+        soft_min=0,
+        soft_max=1,
+        precision=2,
     )
 
     # If you add new properties above, make sure to update update_from()
 
     def apply_on_colors(
         self,
-        colors: Iterable[RGBAColor],
-        positions: Iterable[Coordinate3D],
+        colors: Sequence[RGBAColor],
+        positions: Sequence[Coordinate3D],
         *,
         frame: int,
+        random_seq: RandomSequence,
     ) -> None:
         """Applies this effect to a given list of colors, each belonging to a
         given spatial position in the given frame.
@@ -186,6 +223,8 @@ class LightEffect(PropertyGroup):
             positions: the spatial positions of the drones having the given
                 colors in 3D space
             frame: the frame index
+            random_seq: a random sequence that is used to spread out the items
+                on the color ramp if randomization is turned on
         """
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
@@ -193,13 +232,13 @@ class LightEffect(PropertyGroup):
 
         num_positions = len(positions)
 
-        output_type = self.output
+        output_type: str = self.output
         color_ramp = self.color_ramp
         new_color = [0.0] * 4
-        order = None
+        order: Optional[List[int]] = None
 
-        outputs = None
-        common_output = None
+        outputs: Optional[List[float]] = None
+        common_output: Optional[float] = None
 
         if output_type == "FIRST_COLOR":
             common_output = 0.0
@@ -258,7 +297,13 @@ class LightEffect(PropertyGroup):
             if common_output is not None:
                 output = common_output
             else:
+                assert outputs is not None
                 output = outputs[index]
+
+            # Randomize the output value if needed
+            if self.randomness != 0:
+                offset = (random_seq.get_float(index) - 0.5) * self.randomness
+                output = (offset + output) % 1.0
 
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
@@ -274,7 +319,7 @@ class LightEffect(PropertyGroup):
                 new_color[:] = (1.0, 1.0, 1.0, alpha)
 
             # Apply the new color with alpha blending
-            alpha_over_in_place(new_color, color)
+            alpha_over_in_place(new_color, color)  # type: ignore
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -308,6 +353,7 @@ class LightEffect(PropertyGroup):
         self.influence = other.influence
         self.mesh = other.mesh
         self.target = other.target
+        self.randomness = other.randomness
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
 
@@ -355,13 +401,31 @@ class LightEffect(PropertyGroup):
             tree = BVHTree.FromBMesh(b_mesh)
             b_mesh.free()
             return tree
-        else:
-            return None
+
+    def _get_plane_from_mesh(self) -> Optional[Plane]:
+        """Returns a plane that is an infinite expansion of the first face of the
+        mesh associated to this light effect, or `None` if the light effect has
+        no associated mesh or it has no faces.
+        """
+        if self.mesh:
+            mesh = self.mesh.data
+            local_to_world = self.mesh.matrix_world
+            for polygon in mesh.polygons:
+                normal = local_to_world.to_3x3() @ polygon.normal
+                center = local_to_world @ polygon.center
+                try:
+                    return Plane.from_normal_and_point(normal, center)
+                except Exception:
+                    # probably all-zero normal vector
+                    pass
 
     def _get_spatial_effect_predicate(self) -> Optional[Callable[[Coordinate3D], bool]]:
         if self.target == "INSIDE_MESH":
             bvh_tree = self._get_bvh_tree_from_mesh()
             return partial(test_containment, bvh_tree)
+        elif self.target == "FRONT_SIDE":
+            plane = self._get_plane_from_mesh()
+            return partial(test_is_in_front_of, plane)
 
 
 class LightEffectCollection(PropertyGroup, ListMixin):

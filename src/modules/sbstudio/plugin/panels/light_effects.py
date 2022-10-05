@@ -79,3 +79,4 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "output")
             col.prop(entry, "target")
             col.prop(entry, "influence", slider=True)
+            col.prop(entry, "randomness", slider=True)

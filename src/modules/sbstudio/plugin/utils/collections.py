@@ -12,6 +12,7 @@ from .identifiers import create_internal_id
 
 __all__ = (
     "create_object_in_collection",
+    "filter_collection",
     "find_empty_slot_in",
     "get_object_in_collection",
     "sort_collection",
@@ -282,3 +283,17 @@ def sort_collection(collection: Collection, key: Callable[[Any], int]) -> None:
             collection.link(item)
     else:
         raise TypeError("collection needs move(), link() or unlink() methods")
+
+
+def filter_collection(collection: Collection, filter: Callable[[Any], bool]) -> None:
+    """Filters the given Blender collection in place, keeping only those items
+    that match the given filter.
+    """
+    to_remove: List[Any] = []
+    for item in collection:
+        if not filter(item):
+            to_remove.append(item)
+
+    to_remove.reverse()
+    for item in to_remove:
+        collection.remove(item)

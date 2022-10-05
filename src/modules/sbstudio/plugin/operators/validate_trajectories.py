@@ -4,7 +4,7 @@ from bpy.props import BoolProperty
 from bpy.types import Operator
 
 from sbstudio.model.safety_check import SafetyCheckParams
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
@@ -110,18 +110,18 @@ class ValidateTrajectoriesOperator(Operator):
 
         filename = bpy.data.filepath or None
         try:
-            show_data = get_api().export_to_skyc(
-                trajectories=trajectories,
-                validation=validation,
-                timestamp_offset=timestamp_offset if timestamp_offset != 0 else None,
-            )
-            assert show_data is not None
+            with call_api_from_blender_operator(self) as api:
+                show_data = api.export_to_skyc(
+                    trajectories=trajectories,
+                    validation=validation,
+                    timestamp_offset=timestamp_offset
+                    if timestamp_offset != 0
+                    else None,
+                )
         except Exception:
-            self.report(
-                {"ERROR"},
-                "Error while invoking function on the Skybrush Studio online service",
-            )
             return {"CANCELLED"}
+
+        assert show_data is not None
 
         try:
             skybrush_viewer.load_show_for_validation(show_data, filename=filename)

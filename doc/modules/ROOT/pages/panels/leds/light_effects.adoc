@@ -59,9 +59,21 @@ turn both of these off by setting their duration to zero.
 
 Light effects may also be limited in space such that it affects only a subset of
 the drones. This is achieved by selecting a mesh in the *Mesh* picker widget and
-then setting the *Target* dropdown to "Inside the mesh". This is a relatively
-expensive operation as Blender needs to decide in each frame which drones are
-inside the mesh.
+then setting the *Target* dropdown to one of the following options:
+
+Inside the mesh:: Blender will test in each frame which drones are inside the
+selected mesh, and the effect will be applied only to those that are inisde.
+Note that containment checks are a relatively expensive operation, especially
+for complex meshes.
+
+Front side of plane:: This setting is suitable if your mesh is a plane. Imagine
+that the plane is infinite and it separates the space into a "front" and a "back"
+half. Blender will select those drones that are in the "front" half of the 3D
+space. If your mesh is _not_ a plane, Blender will pick the _first_ face of the
+mesh and extend that into infinity. This test is computationally less expensive
+than a full containment test, so for simple cases you should use this instead of
+the more expensive containment test that you can achieve with the *Inside the mesh*
+option.
 
 == Output mode and influence
 
@@ -73,9 +85,9 @@ ramp to calculate the final color that the effect will apply on the drone. The
 
 image::panels/light_effects/output.jpg[Output]
 
-First color of color ramp:: The first color of the color ramp will be used by all drones during the whole light effect.
+First color of color ramp:: The first color of the color ramp will be used by all drones during the whole light effect; in other words, each drone picks 0, which represents the start of the color ramp.
 
-Last color of color ramp:: The last color of the color ramp will be used by all drones during the whole light effect.
+Last color of color ramp:: The last color of the color ramp will be used by all drones during the whole light effect; in other words, each drone picks 1, which represents the end of the color ramp.
 
 Gradient:: All the drones are sorted according to the order they appear in the `Drones` collection, and they are then distributed evenly along the color ramp. For instance, if you have five drones, the first drone gets 0 (the left edge of the ramp), the second drone gets 0.25 (25% between the left and the right edge of the ramp), the third drone gets 0.5 (50% between the left and the right edge) and so on.
 
@@ -83,7 +95,9 @@ Gradient (XYZ):: Drones are sorted according to their coordinates along the X, Y
 
 Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected mesh (see the *Mesh* widget) to the color ramp (i.e. the closest drone to the mesh will pick the leftmost color in the ramp, the farthest will pick the rightmost color, all the rest will get a value in between, distributed evenly along the color ramp.
 
-Temporal:: All drones will go through all colors of the color ramp simultaneously throughout the total duration of the light effect.
+Temporal:: All drones will cycle through the color ramp simultaneously throughout the total duration of the light effect, starting from the left and ending at the right edge.
+
+The *Randomness* parameter can be used to add a bit of randomness to the numbers picked by the drones according to the *Output* dropdown. Each drone is associated with a unique random number between -0.5 and 0.5, this number is multiplied by the randomness parameter, wrapping around the edges of the color ramp as needed, and the result is _added_ to the number that was calculated based on the setting of the *Output* dropdown. This final number is then used to pick the color of the drone from the color ramp. Note that the default value of the randomness parameter is zero, which means that the value derived from the *Output* setting is used as is.
 
 Finally, the *Influence* parameter sets the overall transparency of the light effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
 

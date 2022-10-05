@@ -13,29 +13,33 @@ from .utils import (
 __all__ = ("Collections", "Templates")
 
 
-#: Default duration of newly created storyboard entries, in seconds
 DEFAULT_STORYBOARD_ENTRY_DURATION = 20
+"""Default duration of newly created storyboard entries, in seconds"""
 
-#: Default duration of transitions to leave between storyboard entries,
-#: in seconds
 DEFAULT_STORYBOARD_TRANSITION_DURATION = 20
+"""Default duration of transitions to leave between storyboard entries, in seconds"""
 
-#: Default duration of newly created light effects, in seconds
 DEFAULT_LIGHT_EFFECT_DURATION = 10
+"""Default duration of newly created light effects, in seconds"""
 
-#: Drone radius
 DRONE_RADIUS = 0.5
+"""Drone radius"""
+
+RANDOM_SEED_MAX = 0x7FFFFFFF
+"""Maximum allowed value of the random seed. Note that Blender does not support
+integer properties larger than a 32-bit signed int, hence the limit.
+"""
 
 
 class Collections:
-    #: Name of the collection that holds the drones
     DRONES: ClassVar[str] = "Drones"
+    """Name of the collection that holds the drones"""
 
-    #: Name of the collection that holds the formations
     FORMATIONS: ClassVar[str] = "Formations"
+    """Name of the collection that holds the formations"""
 
-    #: Name of the collection that holds the object templates
     TEMPLATES: ClassVar[str] = "Templates"
+    """Name of the collection that holds the object templates"""
 
     @classmethod
     def find_drones(cls, *, create: bool = True):
@@ -100,8 +104,8 @@ class Collections:
 
 
 class Formations:
-    #: Name of the takeoff grid formation
     TAKEOFF_GRID: ClassVar[str] = "Takeoff grid"
+    """Name of the takeoff grid formation"""
 
     @classmethod
     def find_takeoff_grid(cls, *, create: bool = True) -> Optional[Collection]:
@@ -118,8 +122,8 @@ class Formations:
 
 
 class Templates:
-    #: Name of the drone template object
     DRONE: ClassVar[str] = "Drone template"
+    """Name of the drone template object"""
 
     @classmethod
     def find_drone(cls, *, create: bool = True):
