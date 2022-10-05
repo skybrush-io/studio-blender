@@ -2,7 +2,7 @@ import bpy
 
 from bpy.types import Panel
 
-from sbstudio.plugin.operators import SkybrushExportOperator, SkybrushCSVExportOperator
+from sbstudio.plugin.operators import SkybrushExportOperator, SkybrushCSVExportOperator,SkybrushOfflineExportOperator, SkybrushCSVExportOperator,LightExportOperator
 
 __all__ = ("ExportPanel",)
 
@@ -30,5 +30,8 @@ class ExportPanel(Panel):
         if settings:
             layout.prop(settings, "show_type")
 
+
         layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
+        layout.operator(SkybrushOfflineExportOperator.bl_idname, text="Export to .skyc(offline)")
         layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
+        layout.operator(LightExportOperator.bl_idname, text = "light Export")
