@@ -1,3 +1,4 @@
+from cmath import cos
 from dataclasses import dataclass
 from enum import Enum
 from math import inf
@@ -422,6 +423,13 @@ def optimal_transition_mapper(formation1, formation2):
     order = col_ind
     return order, cost
 
+# calculates the maximum distance after mapping
+def max_distance_calculator(foramtion1, formation2, order):
+    distances = np.zeros(len(foramtion1))
+    for i in range(len(foramtion1)):
+        distances[i] = euclidean_cost(foramtion1[i], formation2[order[i]])
+    return distances.max()
+
 def calculate_mapping_for_transition_into_storyboard_entry(
     entry: StoryboardEntry, source, *, num_targets: int
 ) -> Mapping:
@@ -476,17 +484,20 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         # index of the drone that the i-th target point was matched to, or
         # ``None`` if the target point was left unmatched. We need to invert
         # the mapping
-        for target_index, drone_index in enumerate(match):
+        for target_index, drone_index in enumerate(match[0]):
             if drone_index is not None:
-                result[drone_index] = target_index
-                print(result)
+                result[drone_index] = target_index   
+        Skyc_cost = max_distance_calculator(np.array(source), np.array(target), result)
+        print("Skyc Max Distance:", Skyc_cost)
+        print("Skyc Order:", result)
     elif entry.transition_type == "HUNGARY":
         target = get_coordinates_of_formation(formation, frame=entry.frame_start)
         length = min(num_drones, num_targets)
         source_array = np.array(source)
         target_array = np.array(target)
         order, cost = smart_transition_mapper(source_array, target_array, square_euclidean_cost)
-        print(order)
+        print("Hungarian Max Distance:", cost)
+        print("Hungarian Order:", order)
         result[:length] = order
     elif entry.transition_type == "FAIR-HUNGARY":
         target = get_coordinates_of_formation(formation, frame=entry.frame_start)
@@ -494,7 +505,8 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         source_array = np.array(source)
         target_array = np.array(target)
         order, cost = optimal_transition_mapper(source_array, target_array)
-        print(order)
+        print("Fair Hungarian Max Distance:", cost)
+        print("Fair Hungarian Order:", order)
         result[:length] = order
     else:
         # Manual mapping
