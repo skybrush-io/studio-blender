@@ -1,9 +1,11 @@
+from turtle import distance
 import numpy as np
 # import sys
 # sys.path.insert(0,"/home/sahar/.local/lib/python3.10/site-packages")
 # from scipy.optimize import linear_sum_assignment as lsa
 #from scipy.optimize import linear_sum_assignment as lsa
 import math
+from ServerRequest import ask_skyc_server
 def min_zero_row(zero_mat, mark_zero):
     '''
     The function can be splitted into two steps:
@@ -242,21 +244,18 @@ def max_distance_calculator(foramtion1, formation2, order):
     for i in range(len(foramtion1)):
         distances[i] = euclidean_cost(foramtion1[i], formation2[order[i]])
     return distances.max()
-
-"""an example formation to test"""
-# ground_formation = create_grid_formation(4, 4, 0, 3)
-# stage1 = create_grid_formation(2, 2, 1, 3)
-# stage2 = create_grid_formation(2, 2, 2, 3)
-# stage3 = create_grid_formation(2, 2, 3, 3)
-# stage4 = create_grid_formation(2, 2, 4, 3)
-
-# air_formation = np.append(stage1, stage2, axis=0)
-# air_formation = np.append(air_formation ,stage3, axis=0)
-# air_formation = np.append(air_formation ,stage4, axis=0)
-
+# calculates maximum duration for each mapping 
+def max_duration_calculator(foramtion1, formation2, order, max_accel, max_speed):
+    distance = max_distance_calculator(foramtion1, formation2, order)
+    t = math.sqrt(distance/max_accel)
+    t_reach_max = max_accel/max_speed
+    if t < t_reach_max:
+        return 2*t
+    else:
+        return 2*t_reach_max + (distance - max_accel*(t_reach_max**2))/max_speed
 """an example random formation to test"""
-ground_formation = np.random.randint(0,100,size=(50,3))
-air_formation = np.random.randint(0,100,size=(50,3))
+ground_formation = np.random.randint(0,100,size=(25,3))
+air_formation = np.random.randint(0,100,size=(25,3))
 
 order, cost = smart_transition_mapper(ground_formation, air_formation, square_euclidean_cost)
 order2, cost2 = smart_transition_mapper(ground_formation, air_formation, euclidean_cost)
@@ -264,3 +263,9 @@ order3, cost3 = optimal_transition_mapper(ground_formation, air_formation)
 print(cost)
 print(cost2)
 print(cost3)
+
+Skyc_order, Skyc_duration = ask_skyc_server(ground_formation, air_formation)
+Skyc_cost = max_distance_calculator(ground_formation, air_formation, order)
+print(Skyc_cost)
+print("Skyc duration:", np.array(Skyc_duration).max())
+print("Our duration:", max_duration_calculator(ground_formation,air_formation, order, 3, 5))

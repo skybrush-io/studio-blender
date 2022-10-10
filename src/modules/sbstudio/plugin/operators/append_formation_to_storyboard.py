@@ -1,5 +1,5 @@
 from math import ceil
-
+import numpy as np
 from .base import FormationOperator
 
 from sbstudio.plugin.api import get_api
@@ -8,7 +8,7 @@ from sbstudio.plugin.model.formation import (
     get_world_coordinates_of_markers_from_formation,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
-
+from doc.scripts.formation_mapping import smart_transition_mapper, max_duration_calculator
 __all__ = ("AppendFormationToStoryboardOperator",)
 
 
@@ -98,6 +98,8 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         # transition up to the next whole second. We need to take into account
         # whether the scene starts from frame 1 or 0 or anything else
         # stored in storyboard.frame_start, though.
+        print(plan.total_duration)
+        # print(max_duration_calculator(np.array(source) ,np.array(target), plan.mapping))
         new_start = ceil(last_frame + plan.total_duration * fps)
         diff = ceil((new_start - storyboard.frame_start) / fps) * fps
         entry.frame_start = storyboard.frame_start + diff
