@@ -8,8 +8,7 @@ import math
 from bpy.props import EnumProperty
 import numpy as np
 import sys
-from doc.scripts.formation_mapping import smart_transition_mapper,optimal_transition_mapper, max_distance_calculator
-
+from sbstudio.math.formation_mapping import smart_transition_mapper,optimal_transition_mapper, max_distance_calculator
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
@@ -192,6 +191,17 @@ class _LazyFormationObjectList:
 
     def _validate_items(self) -> list:
         return list(self._formation.objects) if self._formation else []
+        
+def get_coordinates_of_formation(formation, *, frame: int) -> List[Tuple[float, ...]]:
+    """Returns the coordinates of all the markers in the given formation at the
+    given frame as a list of triplets.
+    """
+    return [
+        tuple(pos)
+        for pos in get_world_coordinates_of_markers_from_formation(
+            formation, frame=frame
+        )
+    ]
 
 def calculate_mapping_for_transition_into_storyboard_entry(
     entry: StoryboardEntry, source, *, num_targets: int

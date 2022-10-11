@@ -8,7 +8,7 @@ from sbstudio.plugin.model.formation import (
     get_world_coordinates_of_markers_from_formation,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
-from doc.scripts.formation_mapping import smart_transition_mapper, max_duration_calculator
+# from doc.scripts.formation_mapping import smart_transition_mapper, max_duration_calculator
 __all__ = ("AppendFormationToStoryboardOperator",)
 
 
