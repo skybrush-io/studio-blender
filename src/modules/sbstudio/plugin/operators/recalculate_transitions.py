@@ -7,6 +7,7 @@ import bpy
 import math
 from bpy.props import EnumProperty
 import numpy as np
+import time
 import sys
 from sbstudio.math.formation_mapping import smart_transition_mapper,optimal_transition_mapper, max_distance_calculator, square_euclidean_cost
 from sbstudio.api.errors import SkybrushStudioAPIError
@@ -268,18 +269,22 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         length = min(num_drones, num_targets)
         source_array = np.array(source)
         target_array = np.array(target)
+        t0= time.time()
         order, cost = smart_transition_mapper(source_array, target_array, square_euclidean_cost)
         print("Hungarian Max Distance:", cost)
         print("Hungarian Order:", order)
+        print("taken time", (time.time() - t0)) # t is wall seconds elapsed (floating point)
         result[:length] = order
     elif entry.transition_type == "FAIR-HUNGARY":
         target = get_coordinates_of_formation(formation, frame=entry.frame_start)
         length = min(num_drones, num_targets)
         source_array = np.array(source)
         target_array = np.array(target)
+        t0= time.time()
         order, cost = optimal_transition_mapper(source_array, target_array)
         print("Fair Hungarian Max Distance:", cost)
         print("Fair Hungarian Order:", order)
+        print("taken time", (time.time() - t0))
         result[:length] = order
     else:
         # Manual mapping
