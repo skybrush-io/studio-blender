@@ -1,9 +1,12 @@
 import numpy as np
-# import sys
+import sys
+import site
 # sys.path.insert(0,"/home/sahar/.local/lib/python3.10/site-packages")
-# from scipy.optimize import linear_sum_assignment as lsa
-#from scipy.optimize import linear_sum_assignment as lsa
+sys.path.insert(0,site.USER_SITE)
+from scipy.optimize import linear_sum_assignment as lsa
+# from sbstudio.math.scipy.optimize import linear_sum_assignment as lsa
 import math
+# from sbstudio.math.scipy.optimize import linear_sum_assignment as lsa
 def min_zero_row(zero_mat, mark_zero):
     '''
     The function can be splitted into two steps:
@@ -131,14 +134,14 @@ def ans_calculation(mat, pos):
         ans_mat[pos[i][0], pos[i][1]] = mat[pos[i][0], pos[i][1]]
     return total, ans_mat
 
-def lsa(mat):
-    ans_pos = hungarian_algorithm(mat.copy())
-    row_ind = []
-    col_ind = []
-    for i in ans_pos:
-        row_ind.append(i[0])
-        col_ind.append(i[1])
-    return np.transpose(row_ind), np.transpose(col_ind)
+# def lsa(mat):
+#     ans_pos = hungarian_algorithm(mat.copy())
+#     row_ind = []
+#     col_ind = []
+#     for i in ans_pos:
+#         row_ind.append(i[0])
+#         col_ind.append(i[1])
+#     return np.transpose(row_ind), np.transpose(col_ind)
 
 class cost_block:
     x = 0

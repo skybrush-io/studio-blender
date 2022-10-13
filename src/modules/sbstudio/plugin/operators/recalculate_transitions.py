@@ -8,7 +8,7 @@ import math
 from bpy.props import EnumProperty
 import numpy as np
 import sys
-from sbstudio.math.formation_mapping import smart_transition_mapper,optimal_transition_mapper, max_distance_calculator
+from sbstudio.math.formation_mapping import smart_transition_mapper,optimal_transition_mapper, max_distance_calculator, square_euclidean_cost
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
