@@ -183,7 +183,8 @@ class LightEffect(PropertyGroup):
         name="Target",
         description=(
             "Specifies whether to apply this light effect to all drones or only"
-            " to those drones that are inside the given mesh"
+            " to those drones that are inside the given mesh or are in front of"
+            " the plane of the first face of the mesh"
         ),
         items=[
             ("ALL", "All drones", "", 1),
