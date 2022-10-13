@@ -197,7 +197,9 @@ class LightEffect(PropertyGroup):
     randomness = FloatProperty(
         name="Randomness",
         description=(
-            "Offsets the output value of each drone randomly on the color ramp; this property defines the maximum value of the offset"
+            "Offsets the output value of each drone randomly, wrapped around"
+            "the edges of the color ramp; this property defines the maximum"
+            "range of the offset"
         ),
         default=0,
         min=0,
