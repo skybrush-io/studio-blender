@@ -1,12 +1,10 @@
 import numpy as np
 import sys
 import site
-# sys.path.insert(0,"/home/sahar/.local/lib/python3.10/site-packages")
 sys.path.insert(0,site.USER_SITE)
 from scipy.optimize import linear_sum_assignment as lsa
-# from sbstudio.math.scipy.optimize import linear_sum_assignment as lsa
 import math
-# from sbstudio.math.scipy.optimize import linear_sum_assignment as lsa
+
 def min_zero_row(zero_mat, mark_zero):
     '''
     The function can be splitted into two steps:
