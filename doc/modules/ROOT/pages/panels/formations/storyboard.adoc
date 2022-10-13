@@ -57,4 +57,4 @@ The popup menu that appears when clicking on the button offers various options t
 
 == Updating Time Markers from the Storyboard
 
-The main cues of the Storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers and update them based on the actual storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel.
+The main cues of the Storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers related to *Skybrush Studio* and update them based on the actual storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel (markers added manually will remain untouched).
