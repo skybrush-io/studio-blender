@@ -59,7 +59,8 @@ turn both of these off by setting their duration to zero.
 
 Light effects may also be limited in space such that it affects only a subset of
 the drones. This is achieved by selecting a mesh in the *Mesh* picker widget and
-then setting the *Target* dropdown to one of the following options:
+then setting the *Target* dropdown to one of the following options
+(instead of "All drones", which does not create a spatial constraint):
 
 Inside the mesh:: Blender will test in each frame which drones are inside the
 selected mesh, and the effect will be applied only to those that are inisde.
@@ -75,7 +76,7 @@ than a full containment test, so for simple cases you should use this instead of
 the more expensive containment test that you can achieve with the *Inside the mesh*
 option.
 
-== Output mode and influence
+== Output mode
 
 The *Output* dropdown determines how the color of a drone is picked
 from the color ramp. Recall that each light effect essentially produces a number
@@ -97,8 +98,12 @@ Distance from mesh:: The single static color picked for each drone will be calcu
 
 Temporal:: All drones will cycle through the color ramp simultaneously throughout the total duration of the light effect, starting from the left and ending at the right edge.
 
-The *Randomness* parameter can be used to add a bit of randomness to the numbers picked by the drones according to the *Output* dropdown. Each drone is associated with a unique random number between -0.5 and 0.5, this number is multiplied by the randomness parameter, wrapping around the edges of the color ramp as needed, and the result is _added_ to the number that was calculated based on the setting of the *Output* dropdown. This final number is then used to pick the color of the drone from the color ramp. Note that the default value of the randomness parameter is zero, which means that the value derived from the *Output* setting is used as is.
+== Influence
 
-Finally, the *Influence* parameter sets the overall transparency of the light effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
+The *Influence* parameter sets the overall transparency of the light effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
 
 TIP: The influence parameter can be animated with keyframes, which is a simple way to create flashes, for example.
+
+== Randomness
+
+The *Randomness* parameter can be used to add a bit of randomness to the numbers picked by the drones according to the *Output* dropdown. Each drone is associated with a unique random number between -0.5 and 0.5, this number is multiplied by the randomness parameter, wrapping around the edges of the color ramp as needed, and the result is _added_ to the number that was calculated based on the setting of the *Output* dropdown. This final number is then used to pick the color of the drone from the color ramp. Note that the default value of the randomness parameter is zero, which means that the value derived from the *Output* setting is used as is.
