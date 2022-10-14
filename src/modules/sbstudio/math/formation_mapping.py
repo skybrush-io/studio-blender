@@ -1,8 +1,9 @@
 import numpy as np
-import sys
-import site
-sys.path.insert(0,site.USER_SITE)
+# import sys
+# import site
+# sys.path.insert(0,site.USER_SITE)
 from scipy.optimize import linear_sum_assignment as lsa
+# import scipy.optimize
 import math
 
 def min_zero_row(zero_mat, mark_zero):
