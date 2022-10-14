@@ -17,9 +17,9 @@ The Skybrush compiled show format is a single-file descriptor of your complete d
 If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
-Frame range:: Define the frame range of the output (Render / Preview / Storyboard)
+Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
 Trajectory FPS:: Set output frame rate for drone trajectories (make sure it is a submultiple of your render FPS)
-Lights FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)
+Light FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)
 
 == Export to .csv
 
@@ -30,7 +30,7 @@ TIP: We recommend using Skybrush Live for drone show control, together with the 
 If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
-Frame range:: Define the frame range of the output (Render / Preview / Storyboard)
+Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
 Frame rate:: Set output frame rate of drone trajectories and light programs (make sure it is a submultiple of your render FPS)
 
 NOTE: Special characters in drone names are converted to standard characters in the exported filenames.
