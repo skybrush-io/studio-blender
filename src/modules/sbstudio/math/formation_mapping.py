@@ -2,7 +2,7 @@ import numpy as np
 # import sys
 # import site
 # sys.path.insert(0,site.USER_SITE)
-from scipy.optimize import linear_sum_assignment as lsa
+from optimize import linear_sum_assignment as lsa
 # import scipy.optimize
 import math
 
