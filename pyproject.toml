@@ -14,10 +14,15 @@ name = "collmot"
 url = "https://pypi.collmot.com/simple/"
 secondary = true
 
+[[tool.poetry.source]]
+name = "fury"
+url = "https://pypi.fury.io/skybrush/"
+secondary = true
+
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 natsort = "^8.0.0"
-skybrush-studio = { version = "^2.1.0", optional = true, source = "collmot" }
+skybrush-studio = { version = "^3.5.0", optional = true, source = "collmot" }
 
 [tool.poetry.extras]
 standalone = ["skybrush-studio"]
