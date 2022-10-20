@@ -1,9 +1,9 @@
 from bpy.types import UIList
 
-__all__ = ("SKYBRUSH_UL_LightEffectsList",)
+__all__ = ("SKYBRUSH_UL_lightfxlist",)
 
 
-class SKYBRUSH_UL_LightEffectsList(UIList):
+class SKYBRUSH_UL_lightfxlist(UIList):
     """Customized Blender UI list for light effects."""
 
     def draw_item(

@@ -41,7 +41,7 @@ for candidate in candidates:
 #############################################################################
 # imports needed by the addon
 
-from sbstudio.plugin.lists import SKYBRUSH_UL_LightEffectsList
+from sbstudio.plugin.lists import SKYBRUSH_UL_lightfxlist
 from sbstudio.plugin.model import (
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
@@ -181,7 +181,7 @@ operators = (
 )
 
 #: List widgets in this addon.
-lists = (SKYBRUSH_UL_LightEffectsList,)
+lists = (SKYBRUSH_UL_lightfxlist,)
 
 #: Panels in this addon. The order also implicitly defines the order in which
 #: our tabs appear in the sidebar of the 3D view.

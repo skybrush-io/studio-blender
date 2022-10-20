@@ -42,7 +42,7 @@ class LightEffectsPanel(Panel):
 
         col = row.column()
         col.template_list(
-            "SKYBRUSH_UL_LightEffectsList",
+            "SKYBRUSH_UL_lightfxlist",
             "OBJECT_PT_skybrush_light_effects_panel",
             light_effects,
             "entries",
