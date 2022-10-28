@@ -1,5 +1,8 @@
 from bpy.types import Panel
 
+from sbstudio.plugin.model.light_effects import (
+    output_type_supports_mapping_mode,
+)
 from sbstudio.plugin.operators import (
     CreateLightEffectOperator,
     DuplicateLightEffectOperator,
@@ -77,6 +80,8 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "mesh")
             col.separator()
             col.prop(entry, "output")
+            if output_type_supports_mapping_mode(entry.output):
+                col.prop(entry, "output_mapping_mode")
             col.prop(entry, "target")
             col.prop(entry, "influence", slider=True)
             col.prop(entry, "randomness", slider=True)

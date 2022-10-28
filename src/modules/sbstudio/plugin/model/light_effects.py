@@ -57,6 +57,14 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
 }
 
 
+def output_type_supports_mapping_mode(type: str) -> bool:
+    """Returns whether the light effect output type given in the argument may
+    have a mapping mode that defines how the output values are mapped to the
+    [0; 1] range of the color ramp.
+    """
+    return type == "DISTANCE" or type.startswith("GRADIENT_")
+
+
 def test_containment(bvh_tree: Optional[BVHTree], point: Coordinate3D) -> bool:
     """Given a point and a BVH-tree, tests whether the point is _probably_
     within the mesh represented by the BVH-tree.
@@ -150,6 +158,12 @@ class LightEffect(PropertyGroup):
             ("CUSTOM", "Custom expression", "", 12),
         ],
         default="LAST_COLOR",
+    )
+
+    output_mapping_mode = EnumProperty(
+        name="Mapping",
+        description="Specifies how the output value should be mapped to the [0; 1] range of the color ramp",
+        items=[("ORDERED", "Ordered", "", 1), ("PROPORTIONAL", "Proportional", "", 2)],
     )
 
     influence = FloatProperty(
@@ -249,7 +263,18 @@ class LightEffect(PropertyGroup):
             common_output = 1.0
         elif output_type == "TEMPORAL":
             common_output = (frame - self.frame_start) / self.duration
-        elif output_type.startswith("GRADIENT_") or output_type == "DISTANCE":
+        elif output_type_supports_mapping_mode(output_type):
+            # There are two options here:
+            # 1. Legacy, non-proportional mode. We sort the drones based on the
+            #    sort key derived above and then space them out equally on the
+            #    color ramp.
+            # 2. Proportional mode. Same as above, but we assign drones to
+            #    positions on the color ramp in a way that their distances on
+            #    the color ramp are proportional to the differences in their
+            #    sort keys. Note that this needs a _scalar_ sorting key so we
+            #    ignore all but the principal axis for gradient output types.
+            proportional = self.output_mapping_mode == "PROPORTIONAL"
+
             if output_type == "DISTANCE":
                 if self.mesh:
                     position_of_mesh = get_position_of_object(self.mesh)
@@ -258,21 +283,46 @@ class LightEffect(PropertyGroup):
                     )
                 else:
                     sort_key = None
+
+                # sort_key is guaranteed to return a scalar here
             else:
                 query_axes = (
                     OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
                     or OUTPUT_TYPE_TO_AXIS_SORT_KEY["default"]
                 )
-                sort_key = lambda index: query_axes(positions[index])
-
-            order = list(range(num_positions))
-            if sort_key is not None:
-                order.sort(key=sort_key)
+                if proportional:
+                    # In proportional mode, we are using the primary axis only
+                    # because we need a scalar
+                    sort_key = lambda index: query_axes(positions[index])[0]
+                else:
+                    # In non-proportional mode, we are sorting along multiple
+                    # axes
+                    sort_key = lambda index: query_axes(positions[index])
 
             outputs = [1.0] * num_positions
+            order = list(range(num_positions))
             if num_positions > 1:
-                for u, v in enumerate(order):
-                    outputs[v] = u / (num_positions - 1)
+                if proportional and sort_key is not None:
+                    # Proportional mode -- calculate the sort key for each item,
+                    # and distribute them along the color axis proportionally
+                    # to the differences between the numeric values of the sort
+                    # keys
+                    evaluated_sort_keys = [sort_key(i) for i in order]
+                    min_value, max_value = min(evaluated_sort_keys), max(
+                        evaluated_sort_keys
+                    )
+                    diff = max_value - min_value
+                    if diff > 0:
+                        outputs = [
+                            (value - min_value) / diff for value in evaluated_sort_keys
+                        ]
+                else:
+                    if sort_key is not None:
+                        order.sort(key=sort_key)
+
+                    for u, v in enumerate(order):
+                        outputs[v] = u / (num_positions - 1)
+
         elif output_type == "INDEXED":
             # Gradient based on index
             if num_positions > 1:
@@ -357,6 +407,7 @@ class LightEffect(PropertyGroup):
         self.mesh = other.mesh
         self.target = other.target
         self.randomness = other.randomness
+        self.proportional = other.proportional
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
 

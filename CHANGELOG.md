@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Gradient and distance-based light effects can now operate in "ordered" and
+  "proportional" mode. In the legacy "ordered" mode, drones are sorted first
+  based on their coordinates or distances, and then they are distributed evenly
+  along the color ramp. In the new "proportional" mode, the drones are
+  distributed along the color ramp in a way that their distances on the color
+  ramp are proportional to their distances or coordinates in the scene itself.
+
 ### Fixed
 
 - Fixed resizing handle of the main list in the Light Effects panel.
