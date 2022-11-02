@@ -407,7 +407,7 @@ class LightEffect(PropertyGroup):
         self.mesh = other.mesh
         self.target = other.target
         self.randomness = other.randomness
-        self.proportional = other.proportional
+        self.output_mapping_mode = other.output_mapping_mode
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
 
