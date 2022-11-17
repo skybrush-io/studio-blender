@@ -1,13 +1,17 @@
 import bpy
 
 from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
-from typing import Any, Iterable, List, Optional, Union
+from mathutils import Vector
+from typing import Any, Iterable, List, Optional, Union, Tuple
+
+from sbstudio.model.types import Coordinate3D
 
 from .utils import with_context, with_scene
 
 __all__ = (
     "create_object",
     "duplicate_object",
+    "get_axis_aligned_bounding_box_of_object",
     "get_derived_object_after_applying_modifiers",
     "get_vertices_of_object",
     "get_vertices_of_object_in_vertex_group",
@@ -201,3 +205,32 @@ def get_derived_object_after_applying_modifiers(
         return obj.evaluated_get(dependency_graph)
     else:
         return obj
+
+
+@with_context
+def get_axis_aligned_bounding_box_of_object(
+    obj: Object, *, apply_modifiers: bool = True, context: Optional[Context] = None
+) -> Tuple[Coordinate3D, Coordinate3D]:
+    """Returns the axis-aligned bounding box of the object, in world coordinates.
+
+    Parameters:
+        obj: the objet to evaluate
+        apply_modifiers: whether the modifiers of the base object should be
+            considered when calculating the bounding box
+    """
+    if apply_modifiers:
+        obj = get_derived_object_after_applying_modifiers(obj, context=context)
+
+    mat = obj.matrix_world
+    world_coords = [mat @ Vector(coord) for coord in obj.bound_box]
+
+    mins, maxs = list(world_coords[0]), list(world_coords[0])
+    for coord in world_coords:
+        mins[0] = min(mins[0], coord.x)
+        mins[1] = min(mins[1], coord.y)
+        mins[2] = min(mins[2], coord.z)
+        maxs[0] = max(maxs[0], coord.x)
+        maxs[1] = max(maxs[1], coord.y)
+        maxs[2] = max(maxs[2], coord.z)
+
+    return tuple(mins), tuple(maxs)
