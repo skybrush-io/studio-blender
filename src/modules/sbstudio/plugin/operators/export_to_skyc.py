@@ -1,221 +1,26 @@
 import bpy
-import logging
 import os
 
 from bpy.props import BoolProperty, StringProperty, IntProperty
-from bpy.types import Context, Operator
+from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
-from natsort import natsorted
-from operator import attrgetter
-from pathlib import Path
-from typing import Dict, Optional, Tuple
 
-from sbstudio.model.light_program import LightProgram
-from sbstudio.model.safety_check import SafetyCheckParams
-from sbstudio.model.trajectory import Trajectory
+
 from sbstudio.plugin.api import call_api_from_blender_operator
-from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
-from sbstudio.plugin.utils import with_context
-from sbstudio.plugin.utils.sampling import (
-    frame_range,
-    sample_colors_of_objects,
-    sample_positions_of_objects,
-    sample_positions_and_colors_of_objects,
-)
-from sbstudio.plugin.tasks.light_effects import suspended_light_effects
-from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
+from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
-__all__ = ("SkybrushExportOperator", "get_drones_to_export")
+from .utils import export_show_to_file_using_api
 
-log = logging.getLogger(__name__)
-
-#############################################################################
-# Helper functions for the exporter
-#############################################################################
-
-
-def _to_int_255(value: float) -> int:
-    """Convert [0, 1] float to clamped [0, 255] int."""
-    return max(0, min(255, round(value * 255)))
-
-
-def get_drones_to_export(selected_only: bool = False):
-    """Returns the drone objects to export.
-
-    Parameters:
-        selected_only: whether to export the selected drones only (`True`) or
-            all the drones in the appropriate collection (`False`)
-
-    Yields:
-        drone objects passing all specified filters natural-sorted by their name
-    """
-    drone_collection = Collections.find_drones(create=False)
-    if not drone_collection:
-        return []
-
-    to_export = [
-        drone
-        for drone in drone_collection.objects
-        if not selected_only or drone.select_get()
-    ]
-
-    return natsorted(to_export, key=attrgetter("name"))
-
-
-@with_context
-def _get_frame_range_from_export_settings(
-    settings, *, context: Optional[Context] = None
-) -> Optional[Tuple[int, int]]:
-    """Returns the range of frames to export, based on the chosen export settings
-    of the user.
-
-    Parameters:
-        settings: the export settings chosen by the user
-        context: the main Blender context
-
-    Returns:
-        frame range to be used during the export (both ends inclusive)
-    """
-    return resolve_frame_range(settings["frame_range"], context=context)
-
-
-@with_context
-def _get_trajectories_and_lights(
-    drones, settings, bounds: Tuple[int, int], *, context: Optional[Context] = None
-) -> Tuple[Dict[str, Trajectory], Dict[str, LightProgram]]:
-    """Get trajectories and LED lights of all selected/picked objects.
-
-    Parameters:
-        context: the main Blender context
-        drones: the list of drones to export
-        settings: export settings
-        bounds: the frame range used for exporting
-
-    Returns:
-        dictionary of Trajectory and LightProgram objects indexed by object names
-    """
-    trajectory_fps = settings["output_fps"]
-    light_fps = settings["light_output_fps"]
-
-    trajectories: Dict[str, Trajectory]
-    lights: Dict[str, LightProgram]
-
-    if trajectory_fps == light_fps:
-        # This is easy, we can iterate over the show once
-        with suspended_safety_checks():
-            result = sample_positions_and_colors_of_objects(
-                drones,
-                frame_range(bounds[0], bounds[1], fps=trajectory_fps, context=context),
-                context=context,
-                by_name=True,
-                simplify=True,
-            )
-
-        trajectories = {}
-        lights = {}
-
-        for key, (trajectory, light_program) in result.items():
-            trajectories[key] = trajectory
-            lights[key] = light_program.simplify()
-
-    else:
-        # We need to iterate over the show twice, once for the trajectories,
-        # once for the lights
-        with suspended_safety_checks():
-            with suspended_light_effects():
-                trajectories = sample_positions_of_objects(
-                    drones,
-                    frame_range(
-                        bounds[0], bounds[1], fps=trajectory_fps, context=context
-                    ),
-                    context=context,
-                    by_name=True,
-                    simplify=True,
-                )
-
-            lights = sample_colors_of_objects(
-                drones,
-                frame_range(bounds[0], bounds[1], fps=light_fps, context=context),
-                context=context,
-                by_name=True,
-                simplify=True,
-            )
-
-    return trajectories, lights
-
-
-def _write_skybrush_file(api, context, settings, filepath: Path) -> None:
-    """Creates Skybrush-compatible output from Blender trajectories and color
-    animation.
-
-    This is a helper function for SkybrushExportOperator.
-
-    Parameters:
-        api: the Skybrush Studio API object
-        context: the main Blender context
-        settings: export settings
-        filepath: the output path where the export should write
-    """
-
-    log.info(f"Exporting show content to {filepath}")
-
-    # get framerange
-    log.info("Getting frame range from {}".format(settings["frame_range"]))
-    frame_range = _get_frame_range_from_export_settings(settings, context=context)
-    if frame_range is None:
-        raise RuntimeError("Selected frame range is empty")
-
-    # determine list of drones to export
-    drones = list(get_drones_to_export(settings["export_selected"]))
-
-    # get trajectories
-    log.info("Getting object trajectories and light programs")
-    trajectories, lights = _get_trajectories_and_lights(
-        drones, settings, frame_range, context=context
-    )
-
-    # get automatic show title
-    show_title = str(bpy.path.basename(filepath).split(".")[0])
-
-    # get show type
-    settings = getattr(context.scene.skybrush, "settings", None)
-    show_type = (settings.show_type if settings else "OUTDOOR").lower()
-
-    # get validation parameters
-    safety_check = getattr(context.scene.skybrush, "safety_check", None)
-    validation = SafetyCheckParams(
-        max_velocity_xy=safety_check.velocity_xy_warning_threshold
-        if safety_check
-        else 8,
-        max_velocity_z=safety_check.velocity_z_warning_threshold if safety_check else 2,
-        max_velocity_z_up=safety_check.velocity_z_warning_threshold_up_or_none
-        if safety_check
-        else None,
-        max_altitude=safety_check.altitude_warning_threshold if safety_check else 150,
-        min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
-    )
-
-    # create Skybrush converter object
-    log.info("Exporting to .skyc")
-    api.export_to_skyc(
-        show_title=show_title,
-        show_type=show_type,
-        validation=validation,
-        trajectories=trajectories,
-        lights=lights,
-        output=filepath,
-    )
-    log.info("Export finished")
+__all__ = ("SkybrushExportOperator",)
 
 
 #############################################################################
-# Operator that allows the user to invoke the export operation
+# Operator that allows the user to invoke the .skyc export operation
 #############################################################################
 
 
 class SkybrushExportOperator(Operator, ExportHelper):
-    """Export object trajectories and curves into Skybrush-compatible format."""
+    """Export object trajectories and curves into the Skybrush compiled format (.skyc)."""
 
     bl_idname = "export_scene.skybrush"
     bl_label = "Export Skybrush SKYC"
@@ -263,7 +68,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
 
         try:
             with call_api_from_blender_operator(self, ".skyc exporter") as api:
-                _write_skybrush_file(api, context, settings, filepath)
+                export_show_to_file_using_api(api, context, settings, filepath, "skyc")
         except Exception:
             return {"CANCELLED"}
 

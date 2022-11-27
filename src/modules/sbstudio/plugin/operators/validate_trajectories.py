@@ -15,7 +15,7 @@ from sbstudio.viewer_bridge import (
     SkybrushViewerNotFoundError,
 )
 
-from .export_to_skyc import get_drones_to_export
+from .utils import get_drones_to_export
 
 __all__ = ("ValidateTrajectoriesOperator",)
 

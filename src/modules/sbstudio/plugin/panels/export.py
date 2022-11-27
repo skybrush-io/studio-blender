@@ -2,7 +2,11 @@ import bpy
 
 from bpy.types import Panel
 
-from sbstudio.plugin.operators import SkybrushExportOperator, SkybrushCSVExportOperator
+from sbstudio.plugin.operators import (
+    SkybrushExportOperator,
+    SkybrushCSVExportOperator,
+    SkybrushPDFExportOperator,
+)
 
 __all__ = ("ExportPanel",)
 
@@ -32,3 +36,6 @@ class ExportPanel(Panel):
 
         layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
         layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
+        layout.operator(
+            SkybrushPDFExportOperator.bl_idname, text="Export to validation .pdf"
+        )

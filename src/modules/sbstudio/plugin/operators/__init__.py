@@ -10,6 +10,7 @@ from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOper
 from .duplicate_light_effect import DuplicateLightEffectOperator
 from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_skyc import SkybrushExportOperator
+from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
 from .land import LandOperator
@@ -66,6 +67,7 @@ __all__ = (
     "SelectStoryboardEntryForCurrentFrameOperator",
     "SkybrushExportOperator",
     "SkybrushCSVExportOperator",
+    "SkybrushPDFExportOperator",
     "SwapColorsInLEDControlPanelOperator",
     "UpdateFormationOperator",
     "UpdateFrameRangeFromStoryboardOperator",

@@ -28,8 +28,9 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
 from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
+from sbstudio.plugin.utils.sampling import _to_int_255
 
-from .export_to_skyc import _to_int_255, get_drones_to_export
+from .utils import get_drones_to_export
 
 __all__ = ("SkybrushCSVExportOperator",)
 

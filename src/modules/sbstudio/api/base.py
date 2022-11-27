@@ -9,7 +9,7 @@ from natsort import natsorted
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import create_default_context, CERT_NONE
-from typing import Any, Dict, Iterator, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
@@ -295,6 +295,8 @@ class SkybrushStudioAPI:
         environment = {"type": show_type}
 
         # TODO(ntamas): add cameras to environment in the "environment" key
+        # TODO: add cues to the "settings" key
+        # TODO: add music to the "media" key
 
         data = {
             "input": {
@@ -335,17 +337,23 @@ class SkybrushStudioAPI:
         trajectories: Dict[str, Trajectory],
         output: Path,
         validation: SafetyCheckParams,
+        plots: List[str] = ["pos", "vel", "nn"],
+        fps: float = 4,
         ndigits: int = 3,
     ) -> None:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
         Parameters:
-            show_title: arbitrary show title
             trajectories: dictionary of trajectories indexed by drone names
             output: the file path where the output should be saved
             validation: safety check settings to use during validation
+            plots: the type of plots to render
+            fps: number of frames per second in the plots [1/s]
             ndigits: round floats to this precision
         """
+
+        # TODO: add cues to the "settings" key
+
         data = {
             "input": {
                 "format": "json",
@@ -372,8 +380,8 @@ class SkybrushStudioAPI:
             "output": {
                 "format": "plot",
                 "parameters": {
-                    "plots": "nn,pos,vel",
-                    "fps": 5,
+                    "plots": ",".join(plots),
+                    "fps": fps,
                     "single_file": True,
                 },
             },
