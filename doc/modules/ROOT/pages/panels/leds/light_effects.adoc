@@ -98,6 +98,14 @@ Distance from mesh:: The single static color picked for each drone will be calcu
 
 Temporal:: All drones will cycle through the color ramp simultaneously throughout the total duration of the light effect, starting from the left and ending at the right edge.
 
+== Mapping
+
+Some output mode types (such as *Distance from mesh* and *Gradient-based* types) support two mapping modes between the drones and the color ramp:
+
+Ordered:: In ordered mode, drones are sorted first based on their coordinates or distances, and then they are distributed evenly along the color ramp.
+
+Proportional:: In proportional mode, the drones are distributed along the color ramp in a way that their distances on the color ramp are proportional to their distances or coordinates in the scene itself.
+
 == Influence
 
 The *Influence* parameter sets the overall transparency of the light effect. 1 means that the light effect completely overwrites the base color animation, 0 means no effect at all.
