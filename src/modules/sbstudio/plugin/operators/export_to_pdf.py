@@ -108,7 +108,7 @@ class SkybrushPDFExportOperator(Operator, ExportHelper):
             "nnall": self.plot_nnall,
             "indiv": self.plot_indiv,
         }
-        plots = [key for key, value in plots.items() if value]
+        plots = ["stats"] + [key for key, value in plots.items() if value]
         settings = {
             "export_selected": self.export_selected,
             "frame_range": self.frame_range,
