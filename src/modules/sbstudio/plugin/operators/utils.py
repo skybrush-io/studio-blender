@@ -13,6 +13,7 @@ from typing import Dict, Optional, Tuple
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
+from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.props.frame_range import resolve_frame_range
@@ -25,6 +26,7 @@ from sbstudio.plugin.utils.sampling import (
     sample_positions_of_objects,
     sample_positions_and_colors_of_objects,
 )
+from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
 
 
 __all__ = ("get_drones_to_export", "export_show_to_file_using_api")
@@ -191,6 +193,9 @@ def export_show_to_file_using_api(
     scene_settings = getattr(context.scene.skybrush, "settings", None)
     show_type = (scene_settings.show_type if scene_settings else "OUTDOOR").lower()
 
+    # get time markers (cues)
+    time_markers = get_time_markers_from_context(context)
+
     # get validation parameters
     safety_check = getattr(context.scene.skybrush, "safety_check", None)
     validation = SafetyCheckParams(
@@ -215,6 +220,7 @@ def export_show_to_file_using_api(
             trajectories=trajectories,
             lights=lights,
             output=filepath,
+            time_markers=time_markers,
         )
     elif renderer == "plot":
         log.info("Exporting validation plots to .pdf")
@@ -226,6 +232,7 @@ def export_show_to_file_using_api(
             validation=validation,
             plots=plots,
             fps=fps,
+            time_markers=time_markers,
         )
     else:
         raise RuntimeError(f"Unhandled renderer: {renderer!r}")

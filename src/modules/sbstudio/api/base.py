@@ -16,6 +16,7 @@ from urllib.request import Request, urlopen
 
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
+from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.utils import create_path_and_open
@@ -259,6 +260,7 @@ class SkybrushStudioAPI:
         show_type: str = "outdoor",
         ndigits: int = 3,
         timestamp_offset: Optional[float] = None,
+        time_markers: Optional[TimeMarkers] = None,
     ) -> Optional[bytes]:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
@@ -274,6 +276,8 @@ class SkybrushStudioAPI:
             timestamp_offset: when specified, adds this timestamp offset to the
                 metadata of the .skyc file, which is then used later for display
                 purposes in Skybrush Viewer
+            time_markers: when specified, time markers will be exported to the
+                .skyc file as temporal cues
 
         Note: drone names must match in trajectories and lights
 
@@ -294,8 +298,10 @@ class SkybrushStudioAPI:
 
         environment = {"type": show_type}
 
+        if time_markers is None:
+            time_markers = TimeMarkers()
+
         # TODO(ntamas): add cameras to environment in the "environment" key
-        # TODO: add cues to the "settings" key
         # TODO: add music to the "media" key
 
         data = {
@@ -304,7 +310,10 @@ class SkybrushStudioAPI:
                 "data": {
                     "version": 1,
                     "environment": environment,
-                    "settings": {"validation": validation.as_dict(ndigits=ndigits)},
+                    "settings": {
+                        "cues": time_markers.as_dict(ndigits=ndigits),
+                        "validation": validation.as_dict(ndigits=ndigits),
+                    },
                     "swarm": {
                         "drones": [
                             {
@@ -340,6 +349,7 @@ class SkybrushStudioAPI:
         plots: List[str] = ["pos", "vel", "nn"],
         fps: float = 4,
         ndigits: int = 3,
+        time_markers: Optional[TimeMarkers] = None,
     ) -> None:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
@@ -350,16 +360,21 @@ class SkybrushStudioAPI:
             plots: the type of plots to render
             fps: number of frames per second in the plots [1/s]
             ndigits: round floats to this precision
+            time_markers: temporal cues to use in the plots
         """
 
-        # TODO: add cues to the "settings" key
+        if time_markers is None:
+            time_markers = TimeMarkers()
 
         data = {
             "input": {
                 "format": "json",
                 "data": {
                     "version": 1,
-                    "settings": {"validation": validation.as_dict(ndigits=ndigits)},
+                    "settings": {
+                        "cues": time_markers.as_dict(ndigits=ndigits),
+                        "validation": validation.as_dict(ndigits=ndigits),
+                    },
                     "swarm": {
                         "drones": [
                             {
