@@ -20,7 +20,7 @@ __all__ = ("SkybrushPDFExportOperator",)
 
 
 class SkybrushPDFExportOperator(Operator, ExportHelper):
-    """Export object trajectories and curves into validation plots stored in
+    """Export object trajectories into validation plots stored in
     a .pdf file."""
 
     bl_idname = "export_scene.skybrush_pdf"
