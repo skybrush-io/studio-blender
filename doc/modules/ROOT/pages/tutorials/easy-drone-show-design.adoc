@@ -156,6 +156,8 @@ The Skybrush compiled show format is compatible with other components of the *Sk
 
 The btn:[Export to .csv] button of the Export panel allows you to sample the drone trajectories and the corresponding RGB colors at regular intervals and save them to a CSV file that you can load in external tools for further post-processing.
 
+The btn:[Export to validation .pdf] button creates a unique safety report of your show in .pdf format for self-checking, validated reporting or as a supplement for flight permissions.
+
 == 10. Enjoy
 
 We are done. Check out your show in *Skybrush Viewer* or execute it with *Skybrush Live*. Enjoy, mailto:support@collmot.com[send us feedback or ask us] if you have any questions!

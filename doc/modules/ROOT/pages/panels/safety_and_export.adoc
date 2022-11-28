@@ -2,11 +2,11 @@
 :imagesdir: ../../assets/images
 :experimental:
 
-The Safety & Export tab in the sidebar of the Viewport editor lets you perform real-time verification of your drone animation and enables you to export your show into Skybrush compiled (`.skyc`) format. If the Skybrush CSV export addon is enabled in Blender, it also allows you to export the sampled trajectories and lights in a set of zipped CSV files to allow further post-processing in external tools.
+The Safety & Export tab in the sidebar of the Viewport editor lets you perform real-time and interactive verification of your drone animation in Blender and in Skybrush Viewer and enables you to export your show into several useful formats, including the Skybrush compiled (`.skyc`) format used by Skybrush Live.
 
 image::panels/safety_and_export.jpg[Safety & Export tab]
 
-The Safety and Export tab contains two panels:
+The Safety and Export tab contains two panels; detailed description of each of them follows on the links below:
 
 *** xref:panels/safety_and_export/safety_check.adoc[Safety Check panel]
 *** xref:panels/safety_and_export/export.adoc[Export panel]
