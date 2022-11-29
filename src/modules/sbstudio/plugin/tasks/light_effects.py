@@ -106,8 +106,8 @@ def update_light_effects(scene, depsgraph):
 
 @contextmanager
 def suspended_light_effects() -> Iterator[None]:
-    """Context manager that suspends safety checks when the context is entered
-    and re-enables them when the context is exited.
+    """Context manager that suspends the calculation of light effects when the
+    context is entered and re-enables them when the context is exited.
     """
     global _suspension_counter
     _suspension_counter += 1
