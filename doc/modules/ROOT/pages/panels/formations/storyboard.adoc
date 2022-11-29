@@ -43,7 +43,7 @@ Press the upward pointing thin arrow button next to the formation list in the St
 
 == Changing the order of formations
 
-Press the btn:[▲] button next to the formation list in the Storyboard to move the selected entry up by one slot in the storyboard. Similarly, the btn:[▼] button next to the formation list moves the selected entry down by one slot in the storyboard. *Skybrush Studio* will automatically adjust the start times of the entries to ensure that they are in ascending order.
+Press the btn:[▲] button next to the formation list in the storyboard to move the selected entry up by one slot in the storyboard. Similarly, the btn:[▼] button next to the formation list moves the selected entry down by one slot in the storyboard. *Skybrush Studio* will automatically adjust the start times of the entries to ensure that they are in ascending order.
 
 NOTE: It is possible to mess up the order of entries in the storyboard by changing the start times explicitly in a way that they are not in ascending order any more. *Skybrush Studio* will fix the ordering of the entries the next time the transitions are recalculated, or before any operation for which the add-on needs the exact ordering of entries.
 
@@ -55,6 +55,6 @@ image::panels/storyboard/recalculate_transitions.jpg[Recalculate Transitions]
 
 The popup menu that appears when clicking on the button offers various options to recalculate all transitions or only a subset of them. The recalculation process also creates or updates the constraints on your drones in your Drones collection to follow the given formations during their associated time interval.
 
-== Updating Time Markers from the Storyboard
+== Updating time markers from the storyboard
 
-The main cues of the Storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers related to *Skybrush Studio* and update them based on the actual storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel (markers added manually will remain untouched).
+The main cues of the storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers related to *Skybrush Studio* and update them based on the current storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel (markers added manually will remain untouched).
