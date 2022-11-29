@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- An "Export to validation .pdf" button is now available on the Export tab on
+  the Safety & Export panel to be able to create detailed safety reports of the
+  show missions in printable document format.
+
+- Timeline markers are now exported to the .skyc files and to the .pdf
+  validation report also.
+
 ## [2.7.0] - 2022-11-02
 
 ### Added
