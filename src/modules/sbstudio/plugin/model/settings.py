@@ -9,8 +9,11 @@ from bpy.props import (
 from bpy.types import Collection, PropertyGroup
 
 from sbstudio.math.rng import RandomSequence
-from sbstudio.plugin.constants import RANDOM_SEED_MAX
-from sbstudio.plugin.utils.bloom import set_bloom_effect_enabled
+from sbstudio.plugin.constants import DEFAULT_EMISSION_STRENGTH, RANDOM_SEED_MAX
+from sbstudio.plugin.utils.bloom import (
+    set_bloom_effect_enabled,
+    update_emission_strength,
+)
 
 
 __all__ = ("DroneShowAddonFileSpecificSettings",)
@@ -18,6 +21,10 @@ __all__ = ("DroneShowAddonFileSpecificSettings",)
 
 def use_bloom_effect_updated(self, context):
     set_bloom_effect_enabled(self.use_bloom_effect)
+
+
+def emission_strength_updated(self, context):
+    update_emission_strength(self.emission_strength)
 
 
 class DroneShowAddonFileSpecificSettings(PropertyGroup):
@@ -86,6 +93,17 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         ),
         default="",
         options={"HIDDEN"},
+    )
+
+    emission_strength = FloatProperty(
+        name="Emission",
+        description="Specifies the light emission strength of the drone meshes",
+        default=float(DEFAULT_EMISSION_STRENGTH),
+        update=emission_strength_updated,
+        min=0,
+        soft_min=0,
+        soft_max=5,
+        precision=2,
     )
 
     @property

@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Timeline markers are now exported to the .skyc files and to the .pdf
   validation report also.
 
+- The LED panel now contains a slider to adjust the emission strength of the
+  materials of all the drones. This can be used to make the drones brighter for
+  pre-visualisation purposes.
+
 ## [2.7.0] - 2022-11-02
 
 ### Added

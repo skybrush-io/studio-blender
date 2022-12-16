@@ -159,6 +159,20 @@ def set_diffuse_color_of_material(material, color: RGBAColor):
     material.diffuse_color = color
 
 
+def set_emission_strength_of_material(material, value: float) -> None:
+    """Updates the strength of the emission node of the material if it has one."""
+    if not material.use_nodes:
+        return
+
+    try:
+        node = _find_shader_node_by_name_and_type(material, "Emission", "EMISSION")
+        input = node.inputs["Strength"]
+    except KeyError:
+        return
+
+    input.default_value = value
+
+
 def create_keyframe_for_diffuse_color_of_material(
     material, color: RGBAColor, *, frame: Optional[int] = None, step: bool = False
 ):

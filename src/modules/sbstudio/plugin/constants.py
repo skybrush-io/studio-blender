@@ -13,6 +13,9 @@ from .utils import (
 __all__ = ("Collections", "Templates")
 
 
+DEFAULT_EMISSION_STRENGTH = 1
+"""Default strength of the emission node of the LED material"""
+
 DEFAULT_STORYBOARD_ENTRY_DURATION = 20
 """Default duration of newly created storyboard entries, in seconds"""
 
@@ -154,7 +157,9 @@ class Templates:
         object.hide_render = True
 
         # Add a shiny light emission to the object
-        material = create_glowing_material("Drone template material")
+        material = create_glowing_material(
+            "Drone template material", strength=DEFAULT_EMISSION_STRENGTH
+        )
         object.active_material = material
 
         # Make sure that the object is not selected

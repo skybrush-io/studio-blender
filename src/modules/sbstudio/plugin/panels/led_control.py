@@ -59,4 +59,6 @@ class LEDControlPanel(Panel):
 
         layout.separator()
 
-        layout.prop(scene.skybrush.settings, "use_bloom_effect")
+        row = layout.row()
+        row.prop(scene.skybrush.settings, "use_bloom_effect")
+        row.prop(scene.skybrush.settings, "emission_strength")

@@ -2,10 +2,19 @@
 
 import bpy
 
-from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.materials import (
+    get_material_for_led_light_color,
+    set_emission_strength_of_material,
+)
 from sbstudio.plugin.views import find_all_3d_views
 
-__all__ = ("disable_bloom_effect", "enable_bloom_effect", "set_bloom_effect_enabled")
+__all__ = (
+    "disable_bloom_effect",
+    "enable_bloom_effect",
+    "set_bloom_effect_enabled",
+    "update_emission_strength",
+)
 
 
 def enable_bloom_effect() -> None:
@@ -40,3 +49,18 @@ def set_bloom_effect_enabled(value: bool) -> None:
 
     else:
         bpy.context.scene.eevee.use_bloom = False
+
+
+def update_emission_strength(value: float) -> None:
+    """Updates the strength of the emission shader node on the materials of
+    all the drones.
+    """
+    drones = Collections.find_drones().objects
+    for drone in drones:
+        material = get_material_for_led_light_color(drone)
+        set_emission_strength_of_material(material, value)
+
+    template = Templates.find_drone()
+    if template:
+        material = get_material_for_led_light_color(template)
+        set_emission_strength_of_material(material, value)
