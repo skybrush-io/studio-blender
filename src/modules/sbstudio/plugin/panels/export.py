@@ -37,5 +37,5 @@ class ExportPanel(Panel):
         layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
         layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
         layout.operator(
-            SkybrushPDFExportOperator.bl_idname, text="Export to validation .pdf"
+            SkybrushPDFExportOperator.bl_idname, text="Export validation report"
         )

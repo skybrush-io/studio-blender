@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- An "Export to validation .pdf" button is now available on the Export tab on
-  the Safety & Export panel to be able to create detailed safety reports of the
-  show missions in printable document format.
+- An "Export validation report" button is now available on the Export tab on
+  the Safety & Export panel to be able to create a detailed safety report of the
+  show in PDF format. This feature is available for Pro users only.
 
 - Timeline markers are now exported to the .skyc files and to the .pdf
   validation report also.
