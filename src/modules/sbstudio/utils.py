@@ -7,7 +7,6 @@ from sbstudio.model.types import Coordinate3D, RGBAColor
 
 
 __all__ = (
-    "alpha_over_in_place",
     "constant",
     "create_path_and_open",
     "distance_sq_of",
@@ -15,34 +14,6 @@ __all__ = (
 )
 
 T = TypeVar("T")
-
-
-def alpha_over_in_place(source: RGBAColor, background: RGBAColor) -> None:
-    """Mixes two colors according to the standard rules of the "alpha over"
-    composition operator, updating the second color in-place.
-    """
-    alpha_source = source[3]
-
-    if alpha_source >= 1:
-        background[:] = source
-    elif alpha_source <= 0:
-        return
-    else:
-        alpha_background = background[3]
-
-        if alpha_background >= 1:
-            alpha_overlay = 1
-            a = alpha_source
-        else:
-            alpha_overlay = 1 - (1 - alpha_source) * (1 - alpha_background)
-            a = alpha_source / alpha_overlay
-
-        b = 1 - a
-
-        background[0] = a * source[0] + b * background[0]
-        background[1] = a * source[1] + b * background[1]
-        background[2] = a * source[2] + b * background[2]
-        background[3] = alpha_overlay
 
 
 def constant(value: Any) -> Callable[..., Any]:

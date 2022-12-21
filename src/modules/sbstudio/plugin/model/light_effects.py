@@ -17,6 +17,7 @@ from bpy.types import ColorRamp, Context, PropertyGroup, Mesh, Object, Texture
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+from sbstudio.math.colors import blend_in_place, BlendMode
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, RGBAColor
@@ -24,7 +25,7 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
-from sbstudio.utils import alpha_over_in_place, distance_sq_of
+from sbstudio.utils import distance_sq_of
 
 from .mixins import ListMixin
 
@@ -222,6 +223,15 @@ class LightEffect(PropertyGroup):
         precision=2,
     )
 
+    blend_mode = EnumProperty(
+        name="Blend mode",
+        description=("Specifies the blending mode of this light effect"),
+        items=[
+            (member.name, member.description, "", member.value) for member in BlendMode
+        ],
+        default=BlendMode.NORMAL.name,
+    )
+
     # If you add new properties above, make sure to update update_from()
 
     def apply_on_colors(
@@ -372,7 +382,7 @@ class LightEffect(PropertyGroup):
                 new_color[:] = (1.0, 1.0, 1.0, alpha)
 
             # Apply the new color with alpha blending
-            alpha_over_in_place(new_color, color)  # type: ignore
+            blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -408,6 +418,7 @@ class LightEffect(PropertyGroup):
         self.target = other.target
         self.randomness = other.randomness
         self.output_mapping_mode = other.output_mapping_mode
+        self.blend_mode = other.blend_mode
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
 

@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   materials of all the drones. This can be used to make the drones brighter for
   pre-visualisation purposes.
 
+- Light effects can now be blended using several commonly used blend modes
+  (normal, multiply, overlay, screen, soft light, hard light and so on).
+
 ## [2.7.0] - 2022-11-02
 
 ### Added
