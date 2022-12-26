@@ -69,7 +69,7 @@ class TimePosColor:
 
 
 def _get_location(obj):
-    """Return global location of an object at the actual frame.
+    """Return global location of an object at the current frame.
 
     Parameters:
         obj: a Blender object
@@ -147,7 +147,7 @@ def _get_shader_node_and_input_for_diffuse_color_of_material(material):
 
 
 def _get_color(obj, frame):
-    """Return diffuse_color of an object at the actual frame.
+    """Return diffuse_color of an object at the current frame.
 
     Parameters:
         obj: a Blender object
