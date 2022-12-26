@@ -425,7 +425,7 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     # output all objects or only selected ones
     export_selected = BoolProperty(
         name="Export selected objects only",
-        default=True,
+        default=False,
         description=(
             "Export only the selected objects from the scene. Uncheck to export "
             "all objects, irrespectively of the selection."
