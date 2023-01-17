@@ -22,6 +22,8 @@ There are many Blender versions out there, we aim for compatibility with the htt
 
 *Skybrush Studio for Blender* can be downloaded from https://skybrush.io as a single `.zip` file. Please download it to your computer first, then follow the instructions below.
 
+WARNING: Safari on macOS automatically unzips all `.zip` files by default, which will prevent you from selecting the `.zip` file itself when installing the plugin. If you are using Safari on macOS, hold down the kbd:[Option] key when clicking on the download link to prevent this from happening, or turn off the unzipping of "safe" files permanently in menu:Safari[Preferences > General].
+
 image::install_blender_addons.jpg[Install Blender Add-ons]
 
 1. Open Blender and go to Edit -> Preferences -> Add-ons.
