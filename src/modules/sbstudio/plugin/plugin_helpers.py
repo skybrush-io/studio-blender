@@ -63,6 +63,12 @@ def register_list(cls):
     bpy.utils.register_class(cls)
 
 
+def register_menu(cls):
+    """Registers the given Blender menu type."""
+    _make_annotations(cls)
+    bpy.utils.register_class(cls)
+
+
 def register_operator(cls):
     """Registers the given Blender operator."""
     _make_annotations(cls)
@@ -92,6 +98,11 @@ def unregister_header(cls):
 
 def unregister_list(cls):
     """Unregisters the given Blender list widget type."""
+    bpy.utils.unregister_class(cls)
+
+
+def unregister_menu(cls):
+    """Unregisters the given Blender menu."""
     bpy.utils.unregister_class(cls)
 
 
