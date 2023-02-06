@@ -236,6 +236,7 @@ def _get_color(obj, frame):
     # if a shader node is used, sample it on the given frame
     node, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
     animation = material.node_tree.animation_data
+
     # if it is not animated, get the default value
     if not animation:
         rgb = input.default_value[:3]
