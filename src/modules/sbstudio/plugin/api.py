@@ -5,6 +5,7 @@ from typing import Iterator, Optional, TypeVar
 
 from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.errors import SkybrushStudioAPIError
+from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
 
 __all__ = ("get_api",)
@@ -68,6 +69,9 @@ def call_api_from_blender_operator(
     )
     try:
         yield get_api()
+    except SkybrushStudioExportWarning as ex:
+        operator.report({"WARNING"}, str(ex))
+        raise
     except SkybrushStudioAPIError as ex:
         operator.report({"ERROR"}, str(ex) or default_message)
         raise
