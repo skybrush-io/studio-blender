@@ -2,12 +2,12 @@ import bpy
 
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Operator
+
 from numpy import mgrid, zeros
 from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Formations, Templates
-from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.materials import (
     get_material_for_led_light_color,
     create_keyframe_for_diffuse_color_of_material,
