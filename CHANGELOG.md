@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.8.0] - 2023-02-16
 
 ### Added
 
 - An "Export validation report" button is now available on the Export tab on
   the Safety & Export panel to be able to create a detailed safety report of the
-  show in PDF format. This feature is available for Pro users only.
+  show in PDF format. *This feature is available for Pro users only.*
 
 - Timeline markers are now exported to the .skyc files and to the .pdf
   validation report also.
@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Light effects can now be blended using several commonly used blend modes
   (normal, multiply, overlay, screen, soft light, hard light and so on).
+
+### Changed
+
+- CSV export was moved to the server side to allow us to fix issues with the
+  CSV exporter more easily.
+
+### Fixed
+
+- CSV export now supports shows with dynamic light effects; earlier versions
+  exported only the base color of each drone with the keyframed animations,
+  but not the dynamic light effects.
 
 ## [2.7.0] - 2022-11-02
 
