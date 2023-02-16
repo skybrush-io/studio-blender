@@ -239,6 +239,19 @@ def export_show_to_file_using_api(
             time_markers=time_markers,
             renderer="skyc",
         )
+    elif renderer == "csv":
+        log.info("Exporting show to CSV")
+        api.export(
+            show_title=show_title,
+            show_type=show_type,
+            validation=validation,
+            trajectories=trajectories,
+            lights=lights,
+            output=filepath,
+            time_markers=time_markers,
+            renderer="csv",
+            renderer_params={"fps": settings["output_fps"]},
+        )
     elif renderer == "plot":
         log.info("Exporting validation plots to .pdf")
         plots = settings.get("plots", ["pos", "vel", "nn"])
