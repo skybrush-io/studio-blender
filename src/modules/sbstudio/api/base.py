@@ -54,14 +54,18 @@ class Response:
                 f"Request returned HTTP error code {status_code}"
             )
 
-        if self.content_type not in ("application/octet-stream", "application/json"):
+        if self.content_type not in (
+            "application/octet-stream",
+            "application/json",
+            "application/zip",
+        ):
             raise SkybrushStudioAPIError(
                 f"Unexpected content type {self.content_type!r} in response"
             )
 
     def as_bytes(self) -> bytes:
         """Reads the whole response body and returns it as a bytes object."""
-        if self.content_type != "application/octet-stream":
+        if self.content_type not in ("application/octet-stream", "application/zip"):
             raise SkybrushStudioAPIError("Response type is not an octet stream")
         return self._response.read()
 
@@ -77,18 +81,22 @@ class Response:
 
     def as_str(self) -> str:
         """Reads the whole response body and return it as a string."""
-        if self.content_type not in ["application/octet-stream", "application/json"]:
+        if self.content_type not in (
+            "application/octet-stream",
+            "application/json",
+            "application/zip",
+        ):
             raise SkybrushStudioAPIError("Invalid response type")
 
         data = self._response.read()
-        if self.content_type == "application/octet-stream":
+        if self.content_type in ("application/octet-stream", "application/zip"):
             data = data.decode("utf-8")
 
         return data
 
     def save_to_file(self, filename: Path) -> None:
         """Writes response to a given file."""
-        if self.content_type == "application/octet-stream":
+        if self.content_type in ("application/octet-stream", "application/zip"):
             mode = "wb"
         elif self.content_type == "application/json":
             mode = "w"
@@ -250,7 +258,7 @@ class SkybrushStudioAPI:
         ctx.verify_mode = CERT_NONE
         self._request_context = ctx
 
-    def export_to_skyc(
+    def export(
         self,
         validation: SafetyCheckParams,
         trajectories: Dict[str, Trajectory],
@@ -261,6 +269,8 @@ class SkybrushStudioAPI:
         ndigits: int = 3,
         timestamp_offset: Optional[float] = None,
         time_markers: Optional[TimeMarkers] = None,
+        renderer: str = "skyc",
+        renderer_params: Optional[Dict[str, Any]] = None,
     ) -> Optional[bytes]:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
@@ -332,8 +342,11 @@ class SkybrushStudioAPI:
                     "meta": meta,
                 },
             },
-            "output": {"format": "skyc"},
+            "output": {"format": renderer},
         }
+
+        if renderer_params is not None:
+            data["output"]["parameters"] = renderer_params
 
         with self._send_request("operations/render", data) as response:
             if output:

@@ -229,7 +229,7 @@ def export_show_to_file_using_api(
     # create Skybrush converter object
     if renderer == "skyc":
         log.info("Exporting show to .skyc")
-        api.export_to_skyc(
+        api.export(
             show_title=show_title,
             show_type=show_type,
             validation=validation,
@@ -237,6 +237,7 @@ def export_show_to_file_using_api(
             lights=lights,
             output=filepath,
             time_markers=time_markers,
+            renderer="skyc",
         )
     elif renderer == "plot":
         log.info("Exporting validation plots to .pdf")

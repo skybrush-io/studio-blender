@@ -111,12 +111,13 @@ class ValidateTrajectoriesOperator(Operator):
         filename = bpy.data.filepath or None
         try:
             with call_api_from_blender_operator(self) as api:
-                show_data = api.export_to_skyc(
+                show_data = api.export(
                     trajectories=trajectories,
                     validation=validation,
                     timestamp_offset=timestamp_offset
                     if timestamp_offset != 0
                     else None,
+                    renderer="skyc",
                 )
         except Exception:
             return {"CANCELLED"}
