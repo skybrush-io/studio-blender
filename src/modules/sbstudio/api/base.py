@@ -244,7 +244,10 @@ class SkybrushStudioAPI:
                     decoded_body = {}
                 if isinstance(decoded_body, dict) and decoded_body.get("detail"):
                     raise SkybrushStudioAPIError(str(decoded_body.get("detail")))
-            raise
+            else:
+                raise SkybrushStudioAPIError(
+                    f"HTTP error {ex.status}. This is most likely a server-side issue; please contact us and let us know."
+                ) from ex
 
     def _skip_ssl_checks(self) -> None:
         """Configures the API object to skip SSL checks when making requests.
