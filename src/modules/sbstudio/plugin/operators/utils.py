@@ -13,9 +13,9 @@ from typing import Dict, Optional, Tuple
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
-from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
@@ -165,8 +165,14 @@ def export_show_to_file_using_api(
         context: the main Blender context
         settings: export settings dictionary
         filepath: the output path where the export should write
-        renderer: the type of renderer the api should use
+        renderer: the type of renderer the API should use
 
+    Raises:
+        SkybrushStudioExportWarning: when a local check failed and the export
+            operation did not start. These are converted into warnings on the
+            Blender UI.
+        SkybrushStudioAPIError: for server-side export errors. These are
+            converted into errors on the Blender UI.
     """
 
     log.info(f"Exporting show content to {filepath}")
@@ -175,10 +181,20 @@ def export_show_to_file_using_api(
     log.info("Getting frame range from {}".format(settings.get("frame_range")))
     frame_range = _get_frame_range_from_export_settings(settings, context=context)
     if frame_range is None:
-        raise RuntimeError("Selected frame range is empty")
+        raise SkybrushStudioExportWarning("Selected frame range is empty")
 
     # determine list of drones to export
-    drones = list(get_drones_to_export(settings.get("export_selected", False)))
+    export_selected_only = settings.get("export_selected", False)
+    drones = list(get_drones_to_export(selected_only=export_selected_only))
+    if not drones:
+        if export_selected_only:
+            raise SkybrushStudioExportWarning(
+                "No objects were selected; export cancelled"
+            )
+        else:
+            raise SkybrushStudioExportWarning(
+                "There are no objects to export; export cancelled"
+            )
 
     # get trajectories
     log.info("Getting object trajectories and light programs")
@@ -236,4 +252,5 @@ def export_show_to_file_using_api(
         )
     else:
         raise RuntimeError(f"Unhandled renderer: {renderer!r}")
+
     log.info("Export finished")
