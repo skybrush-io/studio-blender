@@ -19,7 +19,7 @@ __all__ = ("SkybrushExportOperator",)
 
 
 class SkybrushExportOperator(Operator, ExportHelper):
-    """Export object trajectories and light animation into the Skybrush compiled format (.skyc)."""
+    """Export object trajectories and light animation into the Skybrush compiled format (.skyc)"""
 
     bl_idname = "export_scene.skybrush"
     bl_label = "Export Skybrush SKYC"
@@ -75,6 +75,7 @@ class SkybrushExportOperator(Operator, ExportHelper):
         except Exception:
             return {"CANCELLED"}
 
+        self.report({"INFO"}, "Export successful")
         return {"FINISHED"}
 
     def invoke(self, context, event):

@@ -19,8 +19,7 @@ __all__ = ("SkybrushPDFExportOperator",)
 
 
 class SkybrushPDFExportOperator(Operator, ExportHelper):
-    """Export object trajectories into validation plots stored in
-    a .pdf file."""
+    """Export object trajectories into validation plots stored in a .pdf file"""
 
     bl_idname = "export_scene.skybrush_pdf"
     bl_label = "Export Skybrush PDF"
@@ -128,6 +127,7 @@ class SkybrushPDFExportOperator(Operator, ExportHelper):
         except Exception:
             return {"CANCELLED"}
 
+        self.report({"INFO"}, "Export successful")
         return {"FINISHED"}
 
     def invoke(self, context, event):
