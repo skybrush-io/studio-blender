@@ -5,7 +5,6 @@ from bpy.props import BoolProperty, StringProperty, IntProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
-
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
@@ -116,6 +115,10 @@ class SkybrushPDFExportOperator(Operator, ExportHelper):
             "light_output_fps": self.light_output_fps,
             "plots": plots,
         }
+
+        if os.path.basename(filepath).lower() == self.filename_ext.lower():
+            self.report({"ERROR_INVALID_INPUT"}, "Filename must not be empty")
+            return {"CANCELLED"}
 
         try:
             with call_api_from_blender_operator(
