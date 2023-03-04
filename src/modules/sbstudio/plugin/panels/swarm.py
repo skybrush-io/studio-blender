@@ -37,6 +37,8 @@ class SwarmPanel(Panel):
 
         layout.prop(settings, "max_acceleration", slider=True)
 
+        layout.prop(settings, "use_tethered_drones")
+
         layout.separator()
 
         layout.operator(CreateTakeoffGridOperator.bl_idname, icon="ADD")

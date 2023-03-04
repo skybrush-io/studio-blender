@@ -15,12 +15,15 @@ from sbstudio.plugin.utils.bloom import (
     update_emission_strength,
 )
 
-
 __all__ = ("DroneShowAddonFileSpecificSettings",)
 
 
 def use_bloom_effect_updated(self, context):
     set_bloom_effect_enabled(self.use_bloom_effect)
+
+
+def use_tethered_drones_updated(self, context):
+    context.scene.skybrush.tethers.enabled = self.use_tethered_drones
 
 
 def emission_strength_updated(self, context):
@@ -46,6 +49,13 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         min=0.1,
         soft_min=0.1,
         soft_max=20,
+    )
+
+    use_tethered_drones = BoolProperty(
+        name="Tethered drones",
+        description="Specifies whether drones are tethered, i.e., they are connected with the ground with a tether",
+        default=False,
+        update=use_tethered_drones_updated,
     )
 
     random_seed = IntProperty(

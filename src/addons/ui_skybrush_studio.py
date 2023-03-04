@@ -54,6 +54,7 @@ from sbstudio.plugin.model import (
     SafetyCheckProperties,
     StoryboardEntry,
     Storyboard,
+    TetherProperties,
 )
 from sbstudio.plugin.operators import (
     AppendFormationToStoryboardOperator,
@@ -123,6 +124,7 @@ from sbstudio.plugin.state import (
 from sbstudio.plugin.tasks import (
     InitializationTask,
     SafetyCheckTask,
+    TetherTask,
     UpdateLightEffectsTask,
 )
 
@@ -136,6 +138,7 @@ types = (
     Storyboard,
     LEDControlPanelProperties,
     SafetyCheckProperties,
+    TetherProperties,
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
     DroneShowAddonProperties,
@@ -204,7 +207,12 @@ panels = (
 headers = ()
 
 #: Background tasks in this addon
-tasks = (InitializationTask(), SafetyCheckTask(), UpdateLightEffectsTask())
+tasks = (
+    InitializationTask(),
+    SafetyCheckTask(),
+    TetherTask(),
+    UpdateLightEffectsTask(),
+)
 
 
 def register():

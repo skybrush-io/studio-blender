@@ -7,6 +7,7 @@ from .light_effects import LightEffectCollection
 from .safety_check import SafetyCheckProperties
 from .settings import DroneShowAddonFileSpecificSettings
 from .storyboard import Storyboard
+from .tethers import TetherProperties
 
 __all__ = ("DroneShowAddonProperties",)
 
@@ -25,3 +26,4 @@ class DroneShowAddonProperties(PropertyGroup):
     safety_check = PointerProperty(type=SafetyCheckProperties)
     settings = PointerProperty(type=DroneShowAddonFileSpecificSettings)
     storyboard = PointerProperty(type=Storyboard)
+    tethers = PointerProperty(type=TetherProperties)

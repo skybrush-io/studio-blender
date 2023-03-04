@@ -35,8 +35,9 @@ class SafetyCheckPanel(Panel):
         scene = context.scene
         safety_check = scene.skybrush.safety_check
         settings = scene.skybrush.settings
+        tethers = scene.skybrush.tethers
 
-        if not safety_check or not settings:
+        if not safety_check or not settings or not tethers:
             return
 
         layout = self.layout
@@ -78,6 +79,13 @@ class SafetyCheckPanel(Panel):
         )
         col2.enabled = safety_check.velocity_z_warning_different_up
         row.enabled = safety_check.velocity_warning_enabled
+
+        if settings.use_tethered_drones:
+            col.separator()
+            col.prop(tethers, "length_warning_enabled")
+            row = col.row()
+            row.prop(tethers, "length_warning_threshold", text="", slider=True)
+            row.enabled = tethers.length_warning_enabled
 
         layout.separator()
 

@@ -7,6 +7,7 @@ from .safety_check import SafetyCheckProperties
 from .settings import DroneShowAddonFileSpecificSettings
 from .show import DroneShowAddonProperties
 from .storyboard import StoryboardEntry, Storyboard
+from .tethers import TetherProperties
 
 __all__ = (
     "DroneShowAddonFileSpecificSettings",
@@ -20,4 +21,5 @@ __all__ = (
     "SafetyCheckProperties",
     "StoryboardEntry",
     "Storyboard",
+    "TetherProperties",
 )
