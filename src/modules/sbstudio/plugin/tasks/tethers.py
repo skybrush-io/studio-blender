@@ -6,6 +6,7 @@ import bpy
 
 from typing import List
 
+from sbstudio.math.line_segments import find_closest_points_on_line_segments
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
 
@@ -54,6 +55,7 @@ def run_tethers(scene, depsgraph):
     min_distance = 0
     max_length = 0
     tethers_over_max_length = []
+    closest_points = []
     if safety_check.enabled:
         # perform tether length safety checks
         if tethers.length_warning_enabled:
@@ -69,11 +71,15 @@ def run_tethers(scene, depsgraph):
             ]
 
         # perform tether distance safety check
-        # TODO
+        if tethers.proximity_warning_enabled:
+            closest_points, min_distance = find_closest_points_on_line_segments(
+                tether_coords
+            )
 
     tethers.update_tethers_and_safety_check_result(
         tethers=tether_coords,
         min_distance=min_distance,
+        closest_points=closest_points,
         max_length=max_length,
         tethers_over_max_length=tethers_over_max_length,
     )

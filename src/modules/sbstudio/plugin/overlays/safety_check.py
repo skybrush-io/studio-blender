@@ -166,6 +166,21 @@ class SafetyCheckOverlay(ShaderOverlay):
             )
             y -= line_height
 
+        if (
+            tether_safety_check
+            and tether_safety_check.proximity_warning_enabled
+            and tether_safety_check.min_distance_is_valid
+        ):
+            set_warning_color_iff(
+                tether_safety_check.should_show_proximity_warning, font_id
+            )
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(
+                font_id,
+                f"Min tether distance: {tether_safety_check.min_distance:.1f} m",
+            )
+            y -= line_height
+
     def draw_3d(self) -> None:
         if has_gpu_state_module:
             gpu.state.blend_set("ALPHA")

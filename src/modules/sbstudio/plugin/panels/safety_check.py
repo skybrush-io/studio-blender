@@ -82,10 +82,16 @@ class SafetyCheckPanel(Panel):
 
         if settings.use_tethered_drones:
             col.separator()
+
             col.prop(tethers, "length_warning_enabled")
             row = col.row()
             row.prop(tethers, "length_warning_threshold", text="", slider=True)
             row.enabled = tethers.length_warning_enabled
+
+            col.prop(tethers, "proximity_warning_enabled")
+            row = col.row()
+            row.prop(tethers, "proximity_warning_threshold", text="", slider=True)
+            row.enabled = tethers.proximity_warning_enabled
 
         layout.separator()
 
