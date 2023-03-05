@@ -96,9 +96,9 @@ def run_tasks_post_load(*args):
     ensure_overlays_enabled()
 
 
-class TetherTask(Task):
+class UpdateTethersTask(Task):
     """Background task that is invoked after every frame change and that
-    performs all duties related to tethers.
+    updates coordinates of tethers and tether-specific safety checks results.
     """
 
     functions = {

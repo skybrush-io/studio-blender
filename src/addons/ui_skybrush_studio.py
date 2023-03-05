@@ -124,7 +124,7 @@ from sbstudio.plugin.state import (
 from sbstudio.plugin.tasks import (
     InitializationTask,
     SafetyCheckTask,
-    TetherTask,
+    UpdateTethersTask,
     UpdateLightEffectsTask,
 )
 
@@ -210,7 +210,7 @@ headers = ()
 tasks = (
     InitializationTask(),
     SafetyCheckTask(),
-    TetherTask(),
+    UpdateTethersTask(),
     UpdateLightEffectsTask(),
 )
 
