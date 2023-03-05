@@ -80,6 +80,7 @@ class SafetyCheckOverlay(ShaderOverlay):
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
         safety_check = getattr(skybrush, "safety_check", None)
+        tether_safety_check = getattr(skybrush, "tethers", None)
         if not safety_check:
             return
 
@@ -147,6 +148,21 @@ class SafetyCheckOverlay(ShaderOverlay):
                 f"Max velocity XY: {safety_check.max_velocity_xy:.1f} m/s | "
                 f"U: {safety_check.max_velocity_z_up:.1f} m/s | "
                 f"D: {safety_check.max_velocity_z_down:.1f} m/s",
+            )
+            y -= line_height
+
+        if (
+            tether_safety_check
+            and tether_safety_check.length_warning_enabled
+            and tether_safety_check.max_length_is_valid
+        ):
+            set_warning_color_iff(
+                tether_safety_check.should_show_length_warning, font_id
+            )
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(
+                font_id,
+                f"Max tether length: {tether_safety_check.max_length:.1f} m",
             )
             y -= line_height
 
