@@ -48,6 +48,7 @@ def run_tethers(scene, depsgraph):
     # issue, a better method will be needed.
     home_positions = get_position_of_objects_in_collection(first_formation)
     positions = get_position_of_objects_in_collection(drones)
+    tether_coords = [(a, b) for a, b in zip(home_positions, positions)]
 
     # perform safety checks
     min_distance = 0
@@ -58,12 +59,12 @@ def run_tethers(scene, depsgraph):
         if tethers.length_warning_enabled:
             lengths = [
                 ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2) ** 0.5
-                for a, b in zip(home_positions, positions)
+                for a, b in tether_coords
             ]
             max_length = max(lengths)
             tethers_over_max_length = [
-                ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2)
-                for a, b, length in zip(home_positions, positions, lengths)
+                coords
+                for coords, length in zip(tether_coords, lengths)
                 if length > tethers.length_warning_threshold
             ]
 
@@ -71,7 +72,7 @@ def run_tethers(scene, depsgraph):
         # TODO
 
     tethers.update_tethers_and_safety_check_result(
-        tethers=[[a, b] for a, b in zip(home_positions, positions)],
+        tethers=tether_coords,
         min_distance=min_distance,
         max_length=max_length,
         tethers_over_max_length=tethers_over_max_length,

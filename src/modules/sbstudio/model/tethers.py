@@ -50,7 +50,9 @@ class TetherSafetyCheckResult:
     tethers_over_max_angle: List[Coordinate3D] = field(default_factory=list)
 
     max_length: Optional[float] = None
-    tethers_over_max_length: List[Coordinate3D] = field(default_factory=list)
+    tethers_over_max_length: List[Tuple[Coordinate3D, Coordinate3D]] = field(
+        default_factory=list
+    )
 
     min_distance: Optional[float] = None
     closest_points: Optional[Tuple[Coordinate3D, Coordinate3D]] = None

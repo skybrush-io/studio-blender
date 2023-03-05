@@ -3,7 +3,7 @@ import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
-from typing import Any, Optional, List, Sequence, Tuple
+from typing import Any, Optional, List, Tuple
 
 from sbstudio.model.types import Coordinate3D
 

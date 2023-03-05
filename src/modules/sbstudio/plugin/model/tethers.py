@@ -41,7 +41,9 @@ def _get_safety_overlay(create: bool = True):
 
     if _safety_overlay is None and create:
         # Lazy construction, this is intentional
-        _safety_overlay = SafetyCheckOverlay()
+        _safety_overlay = SafetyCheckOverlay(
+            marker_size=10, line_width=5, marker_color=(1, 0, 0.5, 1)
+        )
 
     return _safety_overlay
 
@@ -176,7 +178,7 @@ class TetherProperties(PropertyGroup):
         tethers: TetherList,
         min_distance: Optional[float] = None,
         max_length: Optional[float] = None,
-        tethers_over_max_length: Optional[List[Coordinate3D]] = None,
+        tethers_over_max_length: Optional[TetherList] = None,
     ) -> None:
         """Updates tethers and corresponding safety checks."""
         global _safety_check_result
@@ -222,8 +224,6 @@ class TetherProperties(PropertyGroup):
             markers: List[Sequence[Coordinate3D]] = []
 
             if self.should_show_length_warning:
-                markers.extend(
-                    [point] for point in _safety_check_result.tethers_over_max_length
-                )
+                markers.extend(_safety_check_result.tethers_over_max_length)
 
             overlay.markers = markers
