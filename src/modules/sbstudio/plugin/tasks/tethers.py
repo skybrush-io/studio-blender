@@ -4,7 +4,7 @@ tethers of drones and related safety checks in the current frame.
 
 import bpy
 
-from typing import Sequence
+from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
@@ -13,7 +13,7 @@ from .base import Task
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 
-def get_position_of_objects_in_collection(collection) -> Sequence[Coordinate3D]:
+def get_position_of_objects_in_collection(collection) -> List[Coordinate3D]:
     """Retrieves the current position of objects in the given collection in the
     order they appear in the collection.
     """
