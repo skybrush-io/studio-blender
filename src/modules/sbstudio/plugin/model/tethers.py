@@ -1,16 +1,12 @@
-from bpy.props import BoolProperty, FloatProperty, StringProperty
+from bpy.props import BoolProperty, FloatProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional, List, Sequence, Tuple, overload
+from typing import Optional, List, Sequence, overload
 
 from sbstudio.model.tethers import TetherSafetyCheckResult
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import Coordinate3D, LineSegment3D
 from sbstudio.plugin.overlays import SafetyCheckOverlay, TetherOverlay
 
 __all__ = ("TetherProperties",)
-
-#: Type specification for tethers. Each tether is a tuple of start and end
-# coordinates that are interconnected with a straight line segment
-TetherList = List[Tuple[Coordinate3D, Coordinate3D]]
 
 #: Global tether-specific safety-check overlay. This cannot be an attribute of
 #  TetherProperties for some reason; Blender PropertyGroup objects are weird.
@@ -175,10 +171,10 @@ class TetherProperties(PropertyGroup):
 
     def update_tethers_and_safety_check_result(
         self,
-        tethers: TetherList,
+        tethers: List[LineSegment3D],
         min_distance: Optional[float] = None,
         max_length: Optional[float] = None,
-        tethers_over_max_length: Optional[TetherList] = None,
+        tethers_over_max_length: Optional[List[LineSegment3D]] = None,
     ) -> None:
         """Updates tethers and corresponding safety checks."""
         global _safety_check_result

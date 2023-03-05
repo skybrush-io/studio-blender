@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
-from .types import Coordinate3D
+from .types import Coordinate3D, LineSegment3D
 
 __all__ = (
     "SafetyCheckParams",
@@ -47,7 +47,7 @@ class SafetyCheckResult:
     drones_over_max_altitude: List[Coordinate3D] = field(default_factory=list)
     drones_over_max_velocity_xy: List[Coordinate3D] = field(default_factory=list)
     drones_over_max_velocity_z: List[Coordinate3D] = field(default_factory=list)
-    closest_pair: Optional[Tuple[Coordinate3D, Coordinate3D]] = None
+    closest_pair: Optional[LineSegment3D] = None
     min_distance: Optional[float] = None
     min_altitude: Optional[float] = None
 

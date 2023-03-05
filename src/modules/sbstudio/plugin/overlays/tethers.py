@@ -3,9 +3,9 @@ import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
-from typing import Any, Optional, List, Tuple
+from typing import Any, Optional, List
 
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import LineSegment3D
 
 from .base import ShaderOverlay
 
@@ -22,7 +22,7 @@ __all__ = ("TetherOverlay",)
 
 #: Type specification for tethers. Each tether is a tuple of start and end
 # coordinates that are interconnected with a straight line segment
-TetherList = List[Tuple[Coordinate3D, Coordinate3D]]
+TetherList = List[LineSegment3D]
 
 
 class TetherOverlay(ShaderOverlay):
