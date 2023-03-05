@@ -1,28 +1,23 @@
 """Background task that is invoked after every frame change and that handles
-tethers for drones in the current frame.
+tethers of drones and related safety checks in the current frame.
 """
 
 import bpy
 
-from contextlib import contextmanager
-from typing import Iterator
+from typing import Sequence
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
 
-# from sbstudio.plugin.utils import debounced
-
 from .base import Task
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 
-def create_position_snapshot_for_objects_in_collection(collection):
-    """Create a dictionary mapping the names of the objects in the given
-    collection to their positions.
+def get_position_of_objects_in_collection(collection) -> Sequence[Coordinate3D]:
+    """Retrieves the current position of objects in the given collection in the
+    order they appear in the collection.
     """
-    return {
-        object.name: tuple(object.matrix_world.translation)
-        for object in collection.objects
-    }
+    return [get_position_of_object(object) for object in collection.objects]
 
 
 def run_tethers(scene, depsgraph):
@@ -45,16 +40,14 @@ def run_tethers(scene, depsgraph):
         tethers.clear_tethers()
         return
 
-    # get home positions
-    snapshot = create_position_snapshot_for_objects_in_collection(first_formation)
-    home_positions = list(snapshot.values())
-
-    # get actual positions
-    snapshot = create_position_snapshot_for_objects_in_collection(drones)
-    positions = list(snapshot.values())
-
-    # TODO: is the home position list ok like this?
-    # TODO: is the mapping order ok like this?
+    # get home and current positions
+    # Note that we retrieve home positions from the first formation, assuming
+    # implicitely that it is the takeoff grid and that its position do not
+    # change over time. We do this so that we do not need to change frames.
+    # This method might be buggy in some corner cases; if that comes up as an
+    # issue, a better method will be needed.
+    home_positions = get_position_of_objects_in_collection(first_formation)
+    positions = get_position_of_objects_in_collection(drones)
 
     # perform safety checks
     min_distance = 0
