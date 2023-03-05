@@ -3,7 +3,7 @@ import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
-from typing import Any, List, Optional, Sequence
+from typing import Any, List, Optional, Sequence, Tuple
 
 from sbstudio.model.types import Coordinate3D
 
@@ -35,15 +35,28 @@ def set_warning_color_iff(condition: bool, font_id: int) -> None:
 class SafetyCheckOverlay(ShaderOverlay):
     """Overlay that marks the closest pair of drones and all drones above the
     altitude threshold in the 3D view.
+
+    Args:
+        marker_size: the point size of markers in the 3D view
+        line_width: the line width of lines connecting markers in the 3D view
+        marker_color: the color of markers in the 3D vieww
     """
 
     _markers: Optional[MarkerList] = None
     _shader_batches: Any
 
-    def __init__(self):
+    def __init__(
+        self,
+        marker_size: float = 20,
+        line_width: float = 5,
+        marker_color: Sequence[float] = (1, 0, 0, 1),
+    ):
         super().__init__()
 
         self._shader_batches = None
+        self.marker_size = marker_size
+        self.line_width = line_width
+        self.marker_color = marker_color
 
     @property
     def markers(self) -> Optional[MarkerList]:
@@ -149,13 +162,13 @@ class SafetyCheckOverlay(ShaderOverlay):
 
             if self._shader_batches:
                 self._shader.bind()
-                self._shader.uniform_float("color", (1, 0, 0, 1))
+                self._shader.uniform_float("color", self.marker_color)
                 if has_gpu_state_module:
-                    gpu.state.line_width_set(5)
-                    gpu.state.point_size_set(20)
+                    gpu.state.line_width_set(self.line_width)
+                    gpu.state.point_size_set(self.marker_size)
                 else:
-                    bgl.glLineWidth(5)
-                    bgl.glPointSize(20)
+                    bgl.glLineWidth(self.line_width)
+                    bgl.glPointSize(self.marker_size)
                 for batch in self._shader_batches:
                     batch.draw(self._shader)
 
