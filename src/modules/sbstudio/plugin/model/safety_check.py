@@ -369,6 +369,8 @@ class SafetyCheckProperties(PropertyGroup):
             self.altitude_warning_enabled
             or self.proximity_warning_enabled
             or self.velocity_warning_enabled
+            # TODO: add tether-specific enable test here as 2D text for tethers
+            # is drawn by general safety-check overlay
         )
 
     def set_safety_check_result(
