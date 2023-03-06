@@ -386,7 +386,7 @@ class SafetyCheckProperties(PropertyGroup):
         max_velocity_z_down: Optional[float] = None,
         drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
     ) -> None:
-        """Clears the result of the last minimum distance calculation."""
+        """Updates general safety check results."""
         global _safety_check_result
 
         refresh = False
