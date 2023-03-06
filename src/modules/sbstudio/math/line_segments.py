@@ -72,7 +72,7 @@ def find_closest_points_on_line_segments(lines):
         pair on the line segments and their distance
     """
     lines = array(lines, dtype=float)
-    n = len(lines.shape)
+    n = lines.shape[0]
     if n < 2:
         # we only have one line segment
         return None, inf
