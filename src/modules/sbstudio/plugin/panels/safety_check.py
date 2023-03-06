@@ -88,6 +88,11 @@ class SafetyCheckPanel(Panel):
             row.prop(tethers, "length_warning_threshold", text="", slider=True)
             row.enabled = tethers.length_warning_enabled
 
+            col.prop(tethers, "angle_warning_enabled")
+            row = col.row()
+            row.prop(tethers, "angle_warning_threshold", text="", slider=True)
+            row.enabled = tethers.angle_warning_enabled
+
             col.prop(tethers, "proximity_warning_enabled")
             row = col.row()
             row.prop(tethers, "proximity_warning_threshold", text="", slider=True)

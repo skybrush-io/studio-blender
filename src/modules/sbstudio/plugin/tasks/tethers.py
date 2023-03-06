@@ -4,6 +4,7 @@ tethers of drones and related safety checks in the current frame.
 
 import bpy
 
+from math import atan2, hypot
 from typing import List
 
 from sbstudio.math.line_segments import find_closest_points_on_line_segments
@@ -52,11 +53,26 @@ def run_tethers(scene, depsgraph):
     tether_coords = [(a, b) for a, b in zip(home_positions, positions)]
 
     # perform safety checks
-    min_distance = 0
+    max_angle = 0
     max_length = 0
+    min_distance = 0
+    tethers_over_max_angle = []
     tethers_over_max_length = []
     closest_points = []
     if safety_check.enabled:
+        # perform tether angle safety checks
+        if tethers.angle_warning_enabled:
+            angles = [
+                atan2(hypot(b[0] - a[0], b[1] - a[1]), b[2] - a[2])
+                for a, b in tether_coords
+            ]
+            max_angle = max(angles)
+            tethers_over_max_angle = [
+                coords
+                for coords, angle in zip(tether_coords, angles)
+                if angle > tethers.angle_warning_threshold
+            ]
+
         # perform tether length safety checks
         if tethers.length_warning_enabled:
             lengths = [
@@ -82,6 +98,8 @@ def run_tethers(scene, depsgraph):
         closest_points=closest_points,
         max_length=max_length,
         tethers_over_max_length=tethers_over_max_length,
+        max_angle=max_angle,
+        tethers_over_max_angle=tethers_over_max_angle,
     )
 
 

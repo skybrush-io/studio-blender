@@ -1,5 +1,6 @@
 from bpy.props import BoolProperty, FloatProperty
 from bpy.types import Context, PropertyGroup
+from math import pi
 from typing import Optional, List, Sequence, overload
 
 from sbstudio.model.tethers import TetherSafetyCheckResult
@@ -73,6 +74,16 @@ def _get_tether_overlay(create: bool = True):
     return _tether_overlay
 
 
+def angle_warning_enabled_updated(self, context: Optional[Context] = None):
+    """Called when the tether angle warning is enabled or disabled by the user."""
+    self.ensure_overlays_enabled_if_needed()
+    self._refresh_overlays()
+
+
+def angle_warning_threshold_updated(self, context: Optional[Context] = None):
+    self._refresh_overlays()
+
+
 def length_warning_enabled_updated(self, context: Optional[Context] = None):
     """Called when the tether length warning is enabled or disabled by the user."""
     self.ensure_overlays_enabled_if_needed()
@@ -116,10 +127,10 @@ class TetherProperties(PropertyGroup):
         default=False,
     )
 
-    min_distance = FloatProperty(
-        name="Min tether distance",
-        description="Minimum distance between tethers of drones in the current frame",
-        unit="LENGTH",
+    max_angle = FloatProperty(
+        name="Max tether angle",
+        description="Maximum angle deviation of tethers from vertical in the current frame",
+        unit="ROTATION",
         default=0.0,
     )
 
@@ -128,6 +139,34 @@ class TetherProperties(PropertyGroup):
         description="Maximum length of tethers of all drones in the current frame",
         unit="LENGTH",
         default=0.0,
+    )
+
+    min_distance = FloatProperty(
+        name="Min tether distance",
+        description="Minimum distance between tethers of drones in the current frame",
+        unit="LENGTH",
+        default=0.0,
+    )
+
+    angle_warning_enabled = BoolProperty(
+        name="Show tether angle warnings",
+        description=(
+            "Specifies whether Blender should show a warning when the angle of a "
+            "tether is larger than the tether angle threshold"
+        ),
+        update=angle_warning_enabled_updated,
+        default=True,
+    )
+
+    angle_warning_threshold = FloatProperty(
+        name="Tether angle warning threshold",
+        description="Maximum allowed tether angle for a single drone without triggering an tether angle warning",
+        unit="ROTATION",
+        default=pi / 9,
+        min=0.0,
+        soft_min=0.0,
+        soft_max=pi / 2,
+        update=angle_warning_threshold_updated,
     )
 
     length_warning_enabled = BoolProperty(
@@ -174,6 +213,14 @@ class TetherProperties(PropertyGroup):
     )
 
     @property
+    def max_angle_is_valid(self) -> bool:
+        """Returns whether the maximum tether angle property can be considered
+        valid. Right now we use zero to denote cases when there are no drones in
+        the scene at all.
+        """
+        return self.max_angle > 0
+
+    @property
     def max_length_is_valid(self) -> bool:
         """Returns whether the maximum tether length property can be considered
         valid. Right now we use zero to denote cases when there are no drones in
@@ -188,6 +235,17 @@ class TetherProperties(PropertyGroup):
         no drones in the scene at all.
         """
         return self.min_distance > 0
+
+    @property
+    def should_show_angle_warning(self) -> bool:
+        """Returns whether the tether angle warning should be drawn in the 3D
+        view _right now_, given the current values of the properties.
+        """
+        return (
+            self.angle_warning_enabled
+            and self.max_angle_is_valid
+            and self.max_angle > self.angle_warning_threshold
+        )
 
     @property
     def should_show_length_warning(self) -> bool:
@@ -221,8 +279,9 @@ class TetherProperties(PropertyGroup):
         """Clear tether-specific safety checks."""
         global _safety_check_result
 
-        self.min_distance = 0
+        self.max_angle = 0
         self.max_length = 0
+        self.min_distance = 0
 
         _safety_check_result.clear()
 
@@ -231,7 +290,9 @@ class TetherProperties(PropertyGroup):
     def ensure_overlays_enabled_if_needed(self) -> None:
         _get_tether_overlay().enabled = self.enabled
         _get_safety_overlay().enabled = self.enabled and (
-            self.length_warning_enabled or self.proximity_warning_enabled
+            self.angle_warning_enabled
+            or self.length_warning_enabled
+            or self.proximity_warning_enabled
         )
 
     def update_tethers_and_safety_check_result(
@@ -241,6 +302,8 @@ class TetherProperties(PropertyGroup):
         closest_points: Optional[LineSegment3D] = None,
         max_length: Optional[float] = None,
         tethers_over_max_length: Optional[List[LineSegment3D]] = None,
+        max_angle: Optional[float] = None,
+        tethers_over_max_angle: Optional[List[LineSegment3D]] = None,
     ) -> None:
         """Updates tethers and corresponding safety checks."""
         global _safety_check_result
@@ -267,6 +330,15 @@ class TetherProperties(PropertyGroup):
 
         if tethers_over_max_length is not None:
             _safety_check_result.tethers_over_max_length = tethers_over_max_length
+            refresh = True
+
+        if max_angle is not None:
+            self.max_angle = max_angle
+            _safety_check_result.max_angle = max_angle
+            refresh = True
+
+        if tethers_over_max_angle is not None:
+            _safety_check_result.tethers_over_max_angle = tethers_over_max_angle
             refresh = True
 
         if refresh:
@@ -300,5 +372,11 @@ class TetherProperties(PropertyGroup):
                 and _safety_check_result.closest_points is not None
             ):
                 markers.append(_safety_check_result.closest_points)
+
+            if (
+                self.should_show_angle_warning
+                and _safety_check_result.tethers_over_max_angle
+            ):
+                markers.extend(_safety_check_result.tethers_over_max_angle)
 
             overlay.markers = markers

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-from .types import Coordinate3D, LineSegment3D
+from .types import LineSegment3D
 
 __all__ = (
     "TetherSafetyCheckParams",
@@ -47,13 +47,22 @@ class TetherSafetyCheckResult:
     safety check."""
 
     max_angle: Optional[float] = None
-    tethers_over_max_angle: List[Coordinate3D] = field(default_factory=list)
+    """Max measured angle in [rad]."""
+
+    tethers_over_max_angle: List[LineSegment3D] = field(default_factory=list)
+    """List of tethers over max angle."""
 
     max_length: Optional[float] = None
+    """Max measured length in [m]."""
+
     tethers_over_max_length: List[LineSegment3D] = field(default_factory=list)
+    """List of tethers over max length."""
 
     min_distance: Optional[float] = None
+    """Min measured distance in [m]."""
+
     closest_points: Optional[LineSegment3D] = None
+    """Closest two points between all tethers."""
 
     def clear(self) -> None:
         self.tethers_over_max_length.clear()

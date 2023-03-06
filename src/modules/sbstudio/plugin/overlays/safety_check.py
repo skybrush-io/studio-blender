@@ -3,7 +3,8 @@ import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
-from typing import Any, List, Optional, Sequence, Tuple
+from math import degrees
+from typing import Any, List, Optional, Sequence
 
 from sbstudio.model.types import Coordinate3D
 
@@ -163,6 +164,21 @@ class SafetyCheckOverlay(ShaderOverlay):
             blf.draw(
                 font_id,
                 f"Max tether length: {tether_safety_check.max_length:.1f} m",
+            )
+            y -= line_height
+
+        if (
+            tether_safety_check
+            and tether_safety_check.angle_warning_enabled
+            and tether_safety_check.max_angle_is_valid
+        ):
+            set_warning_color_iff(
+                tether_safety_check.should_show_angle_warning, font_id
+            )
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(
+                font_id,
+                f"Max tether angle: {degrees(tether_safety_check.max_angle):.1f} °",
             )
             y -= line_height
 
