@@ -22,13 +22,22 @@ _tether_overlay = None
 _safety_check_result = TetherSafetyCheckResult()
 
 
+class TetherSafetyCheckOverlay(SafetyCheckOverlay):
+    """Custom class for tether-specific safety checks."""
+
+    def draw_2d(self) -> None:
+        # overload parent's 2D drawing functionality not to get called twice;
+        # 2d drawing is done in the safety check overlay, for tethers, too
+        return
+
+
 @overload
-def _get_safety_overlay() -> SafetyCheckOverlay:
+def _get_safety_overlay() -> TetherSafetyCheckOverlay:
     ...
 
 
 @overload
-def _get_safety_overlay(create: bool) -> Optional[SafetyCheckOverlay]:
+def _get_safety_overlay(create: bool) -> Optional[TetherSafetyCheckOverlay]:
     ...
 
 
@@ -37,7 +46,7 @@ def _get_safety_overlay(create: bool = True):
 
     if _safety_overlay is None and create:
         # Lazy construction, this is intentional
-        _safety_overlay = SafetyCheckOverlay(
+        _safety_overlay = TetherSafetyCheckOverlay(
             marker_size=10, line_width=5, marker_color=(1, 0, 0.5, 1)
         )
 
