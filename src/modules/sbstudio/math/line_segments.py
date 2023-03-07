@@ -90,18 +90,17 @@ def find_closest_points_on_line_segments(lines):
         for j in range(i + 1, n):
             # first check bounding box, if they are far away, there is no
             # need to perform more cpu-intensive calculations
-            if all(
-                bboxes[i][k][0] < bboxes[j][k][1] + min_distance
-                and bboxes[j][k][0] < bboxes[i][k][1] + min_distance
+            if any(
+                bboxes[i][k][0] >= bboxes[j][k][1] + min_distance
+                or bboxes[j][k][0] >= bboxes[i][k][1] + min_distance
                 for k in range(3)
             ):
-                # if needed, check accurate distance
-                distance_sq, p, q = _closest_points_on_two_line_segments(
-                    lines[i], lines[j]
-                )
-                if distance_sq < min_distance_sq:
-                    min_distance_sq = distance_sq
-                    min_distance = min_distance_sq ** 0.5
-                    closest_points = (p, q)
+                continue
+            # if needed, check accurate distance
+            distance_sq, p, q = _closest_points_on_two_line_segments(lines[i], lines[j])
+            if distance_sq < min_distance_sq:
+                min_distance_sq = distance_sq
+                min_distance = min_distance_sq ** 0.5
+                closest_points = (p, q)
 
     return closest_points, min_distance
