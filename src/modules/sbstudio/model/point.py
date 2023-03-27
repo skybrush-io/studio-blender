@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from mathutils import Vector
 
 __all__ = ("Point3D", "Point4D")
 
@@ -27,6 +28,10 @@ class Point3D:
             Point4D: the constructed 4D point
         """
         return Point4D(t=t, x=self.x, y=self.y, z=self.z)
+
+    def as_vector(self) -> Vector:
+        """Returns a Point3D instance as a Blender Vector."""
+        return Vector((self.x, self.y, self.z))
 
 
 @dataclass

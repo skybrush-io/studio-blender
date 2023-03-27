@@ -41,6 +41,7 @@ FORMATION_UPDATE_ITEMS = {
         "",
         5,
     ),
+    "IMPORT_CSV": ("IMPORT_CSV", "Import from CSV", "", 6),
 }
 
 
@@ -51,7 +52,7 @@ def get_options_for_formation_update(scene: Scene, context: Context):
     """
     global FORMATION_UPDATE_ITEMS
 
-    items = ["EMPTY", "ALL_DRONES"]
+    items = ["EMPTY", "IMPORT_CSV", "ALL_DRONES"]
 
     if context and context.mode == "EDIT_MESH":
         items.extend(["POSITIONS_OF_SELECTED_VERTICES"])
@@ -83,7 +84,7 @@ def propose_mode_for_formation_update(context) -> str:
         return "SELECTED_OBJECTS" if has_selection(context=context) else "ALL_DRONES"
 
 
-def collect_objects_and_points_for_formation_update(selection):
+def collect_objects_and_points_for_formation_update(selection, name):
     """Collects the objects and points that should be placed in a formation,
     given the user's selection for the 'Initialize with' or 'Update to' property
     of the corresponding operator.
@@ -91,6 +92,14 @@ def collect_objects_and_points_for_formation_update(selection):
     The returned objects will be added to the formation "as is". For each
     returned _point_, an empty mesh will be created and it will be added to the
     formation instead of the point.
+
+    Args:
+        selection: the selection from `FORMATION_UPDATE_ITEMS`
+        name: the name of the formation
+
+    Returns:
+        objects and points to be used for updating the given formation
+
     """
     objects = []
 
@@ -100,6 +109,10 @@ def collect_objects_and_points_for_formation_update(selection):
         points_in_local_coords = {
             obj: [Vector()] for obj in Collections.find_drones().objects
         }
+    elif selection == "IMPORT_CSV":
+        bpy.ops.skybrush.import_csv("INVOKE_DEFAULT", formation_name=name)
+        objects.extend(get_selected_objects())
+        points_in_local_coords = {}
     elif selection == "SELECTED_OBJECTS":
         objects.extend(get_selected_objects())
         points_in_local_coords = {}
@@ -139,7 +152,7 @@ class UpdateFormationOperator(FormationOperator):
         objects_in_formation = formation.objects
 
         new_objects, new_points = collect_objects_and_points_for_formation_update(
-            self.update_with
+            self.update_with, formation.name
         )
 
         # Make sure to delete only those objects where the only user was the

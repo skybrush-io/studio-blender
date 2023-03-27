@@ -13,6 +13,7 @@ from .export_to_skyc import SkybrushExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
+from .import_from_csv import SkybrushCSVImportOperator
 from .land import LandOperator
 from .move_light_effect import (
     MoveLightEffectDownOperator,
@@ -67,6 +68,7 @@ __all__ = (
     "SelectStoryboardEntryForCurrentFrameOperator",
     "SkybrushExportOperator",
     "SkybrushCSVExportOperator",
+    "SkybrushCSVImportOperator",
     "SkybrushPDFExportOperator",
     "SwapColorsInLEDControlPanelOperator",
     "UpdateFormationOperator",

@@ -84,6 +84,7 @@ from sbstudio.plugin.operators import (
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
+    SkybrushCSVImportOperator,
     SwapColorsInLEDControlPanelOperator,
     TakeoffOperator,
     UpdateFormationOperator,
@@ -180,6 +181,7 @@ operators = (
     TakeoffOperator,
     LandOperator,
     ReturnToHomeOperator,
+    SkybrushCSVImportOperator,
 )
 
 #: List widgets in this addon.

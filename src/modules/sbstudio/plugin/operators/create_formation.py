@@ -54,7 +54,9 @@ class CreateFormationOperator(FormationOperator):
         bpy.ops.skybrush.prepare()
 
         name = propose_name(self.name, for_collection=True)
-        objects, points = collect_objects_and_points_for_formation_update(self.contents)
+        objects, points = collect_objects_and_points_for_formation_update(
+            self.contents, name
+        )
 
         formation = create_formation(name, points)
         add_objects_to_formation(formation, objects)
