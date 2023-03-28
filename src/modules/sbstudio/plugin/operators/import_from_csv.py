@@ -15,7 +15,7 @@ from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.model.formation import create_formation
 
-__all__ = "SkybrushCSVImportOperator"
+__all__ = ("SkybrushCSVImportOperator",)
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class SkybrushCSVImportOperator(Operator, ImportHelper):
             return {"CANCELLED"}
 
         # create a static formation from the first points
-        create_formation(
+        formation = create_formation(
             self.formation_name,
             [
                 trajectory.points[0].as_3d().as_vector()
@@ -108,7 +108,7 @@ def parse_compressed_csv_zip(
                         continue
                     # check for errors
                     try:
-                        t = int((float(row[0]) / 1000.0) * fps)
+                        t = float(row[0]) / 1000.0
                         x, y, z = (float(value) for value in row[1:4])
                         if len(row) > 4:
                             r, g, b = (int(value) for value in row[4:7])
