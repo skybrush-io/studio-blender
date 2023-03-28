@@ -123,6 +123,8 @@ def collect_objects_and_points_for_formation_update(selection, name):
             obj: [point.co for point in points]
             for obj, points in get_selected_vertices_grouped_by_objects().items()
         }
+    else:
+        raise ValueError("Unknown selection: {}".format(selection))
 
     points = []
     for parent, points_of_parent in points_in_local_coords.items():
