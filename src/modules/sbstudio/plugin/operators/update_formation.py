@@ -41,7 +41,7 @@ FORMATION_UPDATE_ITEMS = {
         "",
         5,
     ),
-    "IMPORT_CSV": ("IMPORT_CSV", "Import from CSV", "", 6),
+    "IMPORT_CSV": ("IMPORT_CSV", "Import from zipped CSV", "", 6),
 }
 
 
@@ -71,9 +71,7 @@ def propose_mode_for_formation_update(context) -> str:
         the proposed value or `None` if the previous setting should be used
     """
     if context and context.mode == "EDIT_MESH":
-        # We are in Edit mode.
-        # TODO(ntamas): use "SELECTED_VERTICES" once we have implemented
-        # using vertex groups in a formation
+        # We are in Edit mode
         return (
             "POSITIONS_OF_SELECTED_VERTICES"
             if has_selection(context=context)
@@ -102,9 +100,10 @@ def collect_objects_and_points_for_formation_update(selection, name):
 
     """
     objects = []
+    points_in_local_coords = {}
 
     if selection == "EMPTY":
-        points_in_local_coords = {}
+        pass
     elif selection == "ALL_DRONES":
         points_in_local_coords = {
             obj: [Vector()] for obj in Collections.find_drones().objects
@@ -112,10 +111,8 @@ def collect_objects_and_points_for_formation_update(selection, name):
     elif selection == "IMPORT_CSV":
         bpy.ops.skybrush.import_csv("INVOKE_DEFAULT", formation_name=name)
         objects.extend(get_selected_objects())
-        points_in_local_coords = {}
     elif selection == "SELECTED_OBJECTS":
         objects.extend(get_selected_objects())
-        points_in_local_coords = {}
     elif selection == "POSITIONS_OF_SELECTED_OBJECTS":
         points_in_local_coords = {obj: [Vector()] for obj in get_selected_objects()}
     elif selection == "POSITIONS_OF_SELECTED_VERTICES":

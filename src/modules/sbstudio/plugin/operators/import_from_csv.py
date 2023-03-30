@@ -2,6 +2,7 @@ import csv
 import logging
 
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Dict, List
 from zipfile import ZipFile
@@ -10,7 +11,10 @@ from sbstudio.model.color import Color4D
 from sbstudio.model.point import Point4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.trajectory import Trajectory
-from sbstudio.plugin.actions import ensure_action_exists_for_object
+from sbstudio.plugin.actions import (
+    ensure_action_exists_for_object,
+    find_f_curve_for_data_path_and_index,
+)
 from sbstudio.plugin.model.formation import get_markers_from_formation
 
 from bpy.path import ensure_ext
@@ -48,7 +52,9 @@ class SkybrushCSVImportOperator(Operator, ImportHelper):
     filename_ext = ".zip"
 
     # name under which the new formation will be created
-    formation_name = StringProperty(default="Formation from CSV", options={"HIDDEN"})
+    formation_name = StringProperty(
+        default="Formation from zipped CSV", options={"HIDDEN"}
+    )
 
     def execute(self, context):
         """Executes the Skybrush import procedure."""
@@ -82,15 +88,41 @@ class SkybrushCSVImportOperator(Operator, ImportHelper):
             action = ensure_action_exists_for_object(
                 marker, name=f"Animation data for {marker.name}"
             )
-            f_curves = [action.fcurves.new("location", index=i) for i in range(3)]
+
+            if len(trajectory.points) <= 1:
+                # does not need animation, but we still create the action so
+                # we have uniform names for the actions
+                continue
+
+            f_curves = []
+            for i in range(3):
+                f_curve = find_f_curve_for_data_path_and_index(action, "location", i)
+                if f_curve is None:
+                    f_curve = action.fcurves.new("location", index=i)
+                else:
+                    # TODO(ntamas): clear the keyframes that fall within the
+                    # range of our keyframes
+                    pass
+                f_curves.append(f_curve)
 
             t0 = trajectory.points[0].t
-            insert = [f_curve.keyframe_points.insert for f_curve in f_curves]
+            insert = [
+                partial(f_curve.keyframe_points.insert, options={"FAST"})
+                for f_curve in f_curves
+            ]
             for point in trajectory.points:
                 frame = start_frame + int((point.t - t0) * fps)
-                insert[0](frame, point.x)
-                insert[1](frame, point.y)
-                insert[2](frame, point.z)
+                keyframes = (
+                    insert[0](frame, point.x),
+                    insert[1](frame, point.y),
+                    insert[2](frame, point.z),
+                )
+                for keyframe in keyframes:
+                    keyframe.interpolation = "LINEAR"
+
+            # Commit the insertions that we've made in "fast" mode
+            for f_curve in f_curves:
+                f_curve.update()
 
         return {"FINISHED"}
 
