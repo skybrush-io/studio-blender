@@ -30,7 +30,7 @@ class Point3D:
         return Point4D(t=t, x=self.x, y=self.y, z=self.z)
 
     def as_vector(self) -> Vector:
-        """Returns a Point3D instance as a Blender Vector."""
+        """Converts a Point3D instance to a Blender vector."""
         return Vector((self.x, self.y, self.z))
 
 
@@ -59,3 +59,9 @@ class Point4D:
                 instance
         """
         return Point3D(x=self.x, y=self.y, z=self.z)
+
+    def as_vector(self) -> Vector:
+        """Converts a Point3D instance to a Blender vector, ignoring the
+        timestamp.
+        """
+        return Vector((self.x, self.y, self.z))

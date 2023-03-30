@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import List, Sequence, TypeVar
+from typing import List, Optional, Sequence, TypeVar
 
 from .point import Point4D
 
@@ -18,6 +18,10 @@ class Trajectory:
 
     def __init__(self, points: Sequence[Point4D] = []):
         self.points = sorted(points, key=attrgetter("t"))
+
+    @property
+    def first_point(self) -> Optional[Point4D]:
+        return self.points[0] if self.points else None
 
     def append(self, point: Point4D) -> None:
         """Add a point to the end of the trajectory."""
