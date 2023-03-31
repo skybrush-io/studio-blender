@@ -5,13 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- You can now import dynamic formations from a ZIP file containing CSV files,
+  one per drone. See the documentation for more details about the format of the
+  CSV file.
+
+- The Formations panel now shows a warning if the selected formation has less
+  markers than the number of drones in the show. This is because in this case
+  we are not able to plan transitions into the formation as we would not know
+  what to do with the excess drones.
+
 ## [2.8.0] - 2023-02-16
 
 ### Added
 
 - An "Export validation report" button is now available on the Export tab on
   the Safety & Export panel to be able to create a detailed safety report of the
-  show in PDF format. *This feature is available for Pro users only.*
+  show in PDF format. _This feature is available for Pro users only._
 
 - Timeline markers are now exported to the .skyc files and to the .pdf
   validation report also.
