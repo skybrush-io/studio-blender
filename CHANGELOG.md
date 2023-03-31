@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   we are not able to plan transitions into the formation as we would not know
   what to do with the excess drones.
 
+### Fixed
+
+- View scaling setting from the Blender preferences is now taken into account
+  properly when drawing overlays on the 3D view.
+
 ## [2.8.0] - 2023-02-16
 
 ### Added
