@@ -42,6 +42,7 @@ for candidate in candidates:
 # imports needed by the addon
 
 from sbstudio.plugin.lists import SKYBRUSH_UL_lightfxlist
+from sbstudio.plugin.menus import GenerateFormationMenu
 from sbstudio.plugin.model import (
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
@@ -56,6 +57,7 @@ from sbstudio.plugin.model import (
     Storyboard,
 )
 from sbstudio.plugin.operators import (
+    AddMarkersFromZippedCSVOperator,
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
     CreateFormationOperator,
@@ -84,7 +86,6 @@ from sbstudio.plugin.operators import (
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
-    SkybrushCSVImportOperator,
     SwapColorsInLEDControlPanelOperator,
     TakeoffOperator,
     UpdateFormationOperator,
@@ -108,11 +109,13 @@ from sbstudio.plugin.panels import (
 from sbstudio.plugin.plugin_helpers import (
     register_header,
     register_list,
+    register_menu,
     register_operator,
     register_panel,
     register_type,
     unregister_header,
     unregister_list,
+    unregister_menu,
     unregister_operator,
     unregister_panel,
     unregister_type,
@@ -181,11 +184,14 @@ operators = (
     TakeoffOperator,
     LandOperator,
     ReturnToHomeOperator,
-    SkybrushCSVImportOperator,
+    AddMarkersFromZippedCSVOperator,
 )
 
 #: List widgets in this addon.
 lists = (SKYBRUSH_UL_lightfxlist,)
+
+#: Menus in this addon
+menus = (GenerateFormationMenu,)
 
 #: Panels in this addon. The order also implicitly defines the order in which
 #: our tabs appear in the sidebar of the 3D view.
@@ -217,6 +223,8 @@ def register():
         register_operator(operator)
     for list_ in lists:
         register_list(list_)
+    for menu in menus:
+        register_menu(menu)
     for panel in panels:
         register_panel(panel)
     for header in headers:
@@ -235,6 +243,8 @@ def unregister():
         unregister_header(header)
     for panel in reversed(panels):
         unregister_panel(panel)
+    for menu in menus:
+        unregister_menu(menu)
     for list_ in lists:
         unregister_list(list_)
     for operator in reversed(operators):

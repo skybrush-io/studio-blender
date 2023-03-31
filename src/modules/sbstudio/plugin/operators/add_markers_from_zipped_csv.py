@@ -7,6 +7,10 @@ from pathlib import Path
 from typing import Dict, List
 from zipfile import ZipFile
 
+from bpy.path import ensure_ext
+from bpy.props import StringProperty
+from bpy_extras.io_utils import ImportHelper
+
 from sbstudio.model.color import Color4D
 from sbstudio.model.point import Point4D
 from sbstudio.model.light_program import LightProgram
@@ -15,16 +19,11 @@ from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
     find_f_curve_for_data_path_and_index,
 )
-from sbstudio.plugin.model.formation import get_markers_from_formation
+from sbstudio.plugin.model.formation import add_points_to_formation
 
-from bpy.path import ensure_ext
-from bpy.props import StringProperty
-from bpy.types import Operator
-from bpy_extras.io_utils import ImportHelper
+from .base import FormationOperator
 
-from sbstudio.plugin.model.formation import create_formation
-
-__all__ = ("SkybrushCSVImportOperator",)
+__all__ = ("AddMarkersFromZippedCSVOperator",)
 
 log = logging.getLogger(__name__)
 
@@ -40,24 +39,20 @@ class ImportedData:
     light_program: LightProgram = field(default_factory=LightProgram)
 
 
-class SkybrushCSVImportOperator(Operator, ImportHelper):
-    """Imports Skybrush-compatible .zip compressed .csv files as a new formation."""
+class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
+    """Adds markers from Skybrush-compatible .zip compressed .csv files to the
+    currently selected formation.
+    """
 
-    bl_idname = "skybrush.import_csv"
-    bl_label = "Import Skybrush CSV"
+    bl_idname = "skybrush.add_markers_from_zipped_csv"
+    bl_label = "Import Skybrush zipped CSV"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush CSV files
     filter_glob = StringProperty(default="*.zip", options={"HIDDEN"})
     filename_ext = ".zip"
 
-    # name under which the new formation will be created
-    formation_name = StringProperty(
-        default="Formation from zipped CSV", options={"HIDDEN"}
-    )
-
-    def execute(self, context):
-        """Executes the Skybrush import procedure."""
+    def execute_on_formation(self, formation, context):
         filepath = ensure_ext(self.filepath, self.filename_ext)
 
         # get trajectories and light program from .zip/.csv files
@@ -67,32 +62,37 @@ class SkybrushCSVImportOperator(Operator, ImportHelper):
             self.report({"ERROR"}, str(error))
             return {"CANCELLED"}
 
-        # TODO(ntamas): make this configurable!
-        start_frame = 1
+        # determine FPS of scene
         fps = context.scene.render.fps
 
-        # create a static formation from the first points. Colors are not
-        # handled yet.
+        # try to figure out the start frame of this formation
+        storyboard_entry = (
+            context.scene.skybrush.storyboard.get_first_entry_for_formation(formation)
+        )
+        frame_start = (
+            storyboard_entry.frame_start
+            if storyboard_entry
+            else context.scene.frame_start
+        )
+
+        # create new markers for the points
         trajectories = [item.trajectory for item in imported_data.values()]
         first_points = [
             trajectory.first_point.as_vector()  # type: ignore
             for trajectory in trajectories
         ]
-        formation = create_formation(self.formation_name, first_points)
+        markers = add_points_to_formation(formation, first_points)
 
         # create animation action for each point in the formation
-        markers = get_markers_from_formation(formation)
         for trajectory, marker in zip(trajectories, markers):
             trajectory.simplify_in_place()
+            if len(trajectory.points) <= 1:
+                # does not need animation so we don't create the action
+                continue
 
             action = ensure_action_exists_for_object(
                 marker, name=f"Animation data for {marker.name}"
             )
-
-            if len(trajectory.points) <= 1:
-                # does not need animation, but we still create the action so
-                # we have uniform names for the actions
-                continue
 
             f_curves = []
             for i in range(3):
@@ -100,8 +100,10 @@ class SkybrushCSVImportOperator(Operator, ImportHelper):
                 if f_curve is None:
                     f_curve = action.fcurves.new("location", index=i)
                 else:
-                    # TODO(ntamas): clear the keyframes that fall within the
-                    # range of our keyframes
+                    # We should clear the keyframes that fall within the
+                    # range of our keyframes. Currently it's not needed because
+                    # it's a freshly created marker so it can't have any
+                    # keyframes that we don't know about.
                     pass
                 f_curves.append(f_curve)
 
@@ -111,7 +113,7 @@ class SkybrushCSVImportOperator(Operator, ImportHelper):
                 for f_curve in f_curves
             ]
             for point in trajectory.points:
-                frame = start_frame + int((point.t - t0) * fps)
+                frame = frame_start + int((point.t - t0) * fps)
                 keyframes = (
                     insert[0](frame, point.x),
                     insert[1](frame, point.y),

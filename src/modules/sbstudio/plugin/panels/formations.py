@@ -1,5 +1,6 @@
 from bpy.types import Panel
 
+from sbstudio.plugin.menus import GenerateFormationMenu
 from sbstudio.plugin.model.formation import count_markers_in_formation
 from sbstudio.plugin.operators import (
     CreateFormationOperator,
@@ -65,6 +66,11 @@ class FormationsPanel(Panel):
                 row.label(
                     text=f"Formation size: {num_markers} < {num_drones}", icon="ERROR"
                 )
+
+        row = layout.row(align=True)
+        row.menu(
+            GenerateFormationMenu.bl_idname, text="Generate Markers", icon="SHADERFX"
+        )
 
         row = layout.row(align=True)
         row.operator(

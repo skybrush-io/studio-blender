@@ -114,14 +114,19 @@ def add_points_to_formation(
     points: Optional[Iterable[Vector]],
     *,
     name: Optional[str] = None,
-) -> None:
+) -> List[Object]:
     """Creates new markers in a formation object.
 
     Parameters:
         formation: the formation to create the markers in
         points: the points to add to the formation
         name: the name of the formation
+
+    Returns:
+        the markers that were added
     """
+    result = []
+
     formation_name = name or formation.name or ""
     existing_names = set(obj.name for obj in formation.objects)
 
@@ -139,10 +144,15 @@ def add_points_to_formation(
             else:
                 break
 
-        create_marker(location=point, name=marker_name, collection=formation, size=0.5)
+        marker = create_marker(
+            location=point, name=marker_name, collection=formation, size=0.5
+        )
+        result.append(marker)
 
         existing_names.add(marker_name)
         index += 1
+
+    return result
 
 
 def count_markers_in_formation(formation: Collection) -> int:

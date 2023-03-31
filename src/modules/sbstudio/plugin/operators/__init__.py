@@ -1,5 +1,6 @@
 """Blender operators registered by Skybrush Studio for Blender."""
 
+from .add_markers_from_zipped_csv import AddMarkersFromZippedCSVOperator
 from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator
 from .create_formation import CreateFormationOperator
@@ -13,7 +14,6 @@ from .export_to_skyc import SkybrushExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
-from .import_from_csv import SkybrushCSVImportOperator
 from .land import LandOperator
 from .move_light_effect import (
     MoveLightEffectDownOperator,
@@ -68,7 +68,7 @@ __all__ = (
     "SelectStoryboardEntryForCurrentFrameOperator",
     "SkybrushExportOperator",
     "SkybrushCSVExportOperator",
-    "SkybrushCSVImportOperator",
+    "AddMarkersFromZippedCSVOperator",
     "SkybrushPDFExportOperator",
     "SwapColorsInLEDControlPanelOperator",
     "UpdateFormationOperator",

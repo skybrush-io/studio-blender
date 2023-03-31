@@ -14,7 +14,6 @@ from sbstudio.plugin.selection import (
     get_selected_objects,
     get_selected_vertices_grouped_by_objects,
     has_selection,
-    select_only,
 )
 
 from .base import FormationOperator
@@ -41,7 +40,6 @@ FORMATION_UPDATE_ITEMS = {
         "",
         5,
     ),
-    "IMPORT_CSV": ("IMPORT_CSV", "Import from zipped CSV", "", 6),
 }
 
 
@@ -52,7 +50,7 @@ def get_options_for_formation_update(scene: Scene, context: Context):
     """
     global FORMATION_UPDATE_ITEMS
 
-    items = ["EMPTY", "IMPORT_CSV", "ALL_DRONES"]
+    items = ["EMPTY", "ALL_DRONES"]
 
     if context and context.mode == "EDIT_MESH":
         items.extend(["POSITIONS_OF_SELECTED_VERTICES"])
@@ -108,9 +106,6 @@ def collect_objects_and_points_for_formation_update(selection, name):
         points_in_local_coords = {
             obj: [Vector()] for obj in Collections.find_drones().objects
         }
-    elif selection == "IMPORT_CSV":
-        bpy.ops.skybrush.import_csv("INVOKE_DEFAULT", formation_name=name)
-        objects.extend(get_selected_objects())
     elif selection == "SELECTED_OBJECTS":
         objects.extend(get_selected_objects())
     elif selection == "POSITIONS_OF_SELECTED_OBJECTS":
