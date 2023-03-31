@@ -42,7 +42,11 @@ class TransitionPlan:
 
     @property
     def total_duration(self) -> float:
-        return max(
-            start_time + duration
-            for start_time, duration in zip(self.start_times, self.durations)
+        return (
+            max(
+                start_time + duration
+                for start_time, duration in zip(self.start_times, self.durations)
+            )
+            if self.start_times and self.durations
+            else 0.0
         )
