@@ -96,21 +96,22 @@ class ShaderOverlay(Overlay):
 
     shader_type: ClassVar[str] = "3D_UNIFORM_COLOR"
 
-    _ui_scale: float
-
     def __init__(self):
         super().__init__()
 
         self._shader = None
-        self._ui_scale = 1
+
+    def get_ui_scale(self) -> float:
+        """Returns the scaling factor to use when drawing text at exact
+        coordinates on the screen to cater for HiDPI vs non-HiDPI displays
+        and the view scaling setting of the user.
+        """
+        # This value cannot be cached because the user might change the view
+        # scaling settings in the preferences.
+        return bpy.context.preferences.system.ui_scale
 
     def prepare(self) -> None:
         self._shader = gpu.shader.from_builtin(self.shader_type)
-        self._ui_scale = (
-            bpy.context.preferences.system.pixel_size
-            * bpy.context.preferences.system.dpi
-            / 72
-        )
 
     def dispose(self) -> None:
         self._shader = None

@@ -82,22 +82,24 @@ class SafetyCheckOverlay(ShaderOverlay):
         left_panel_width = context.area.regions[2].width
         total_height = context.area.height
 
+        ui_scale = self.get_ui_scale()
+
         # Margin width was changed between Blender 2.83 and Blender 2.90
         if bpy.app.version < (2, 90):
-            left_margin = left_panel_width + 19 * self._ui_scale
+            left_margin = left_panel_width + 19 * ui_scale
         else:
-            left_margin = left_panel_width + 10 * self._ui_scale
+            left_margin = left_panel_width + 10 * ui_scale
 
-        y = total_height - 72 * self._ui_scale
+        y = total_height - 72 * ui_scale
         if hasattr(space_data, "overlay"):
             if getattr(space_data.overlay, "show_text", False):
-                y -= 36 * self._ui_scale
+                y -= 36 * ui_scale
             if getattr(space_data.overlay, "show_stats", False):
-                y -= 112 * self._ui_scale
+                y -= 112 * ui_scale
 
-        line_height = 18 * self._ui_scale
+        line_height = 18 * ui_scale
 
-        blf.size(font_id, int(11 * self._ui_scale), 72)
+        blf.size(font_id, int(11 * ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
 
         blf.color(font_id, 1, 1, 1, 1)
