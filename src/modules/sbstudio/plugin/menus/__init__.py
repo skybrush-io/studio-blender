@@ -1,3 +1,3 @@
-from .generate_formation import GenerateFormationMenu
+from .generate_markers import GenerateMarkersMenu
 
-__all__ = ("GenerateFormationMenu",)
+__all__ = ("GenerateMarkersMenu",)

@@ -42,7 +42,7 @@ for candidate in candidates:
 # imports needed by the addon
 
 from sbstudio.plugin.lists import SKYBRUSH_UL_lightfxlist
-from sbstudio.plugin.menus import GenerateFormationMenu
+from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.model import (
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
@@ -68,6 +68,7 @@ from sbstudio.plugin.operators import (
     DetachMaterialsFromDroneTemplateOperator,
     DuplicateLightEffectOperator,
     FixConstraintOrderingOperator,
+    AddMarkersFromQRCodeOperator,
     GetFormationStatisticsOperator,
     LandOperator,
     MoveLightEffectDownOperator,
@@ -185,13 +186,14 @@ operators = (
     LandOperator,
     ReturnToHomeOperator,
     AddMarkersFromZippedCSVOperator,
+    AddMarkersFromQRCodeOperator,
 )
 
 #: List widgets in this addon.
 lists = (SKYBRUSH_UL_lightfxlist,)
 
 #: Menus in this addon
-menus = (GenerateFormationMenu,)
+menus = (GenerateMarkersMenu,)
 
 #: Panels in this addon. The order also implicitly defines the order in which
 #: our tabs appear in the sidebar of the 3D view.

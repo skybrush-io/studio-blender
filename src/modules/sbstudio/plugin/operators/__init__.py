@@ -13,6 +13,7 @@ from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_skyc import SkybrushExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
+from .add_markers_from_qr_code import AddMarkersFromQRCodeOperator
 from .get_formation_stats import GetFormationStatisticsOperator
 from .land import LandOperator
 from .move_light_effect import (
@@ -51,6 +52,7 @@ __all__ = (
     "DetachMaterialsFromDroneTemplateOperator",
     "DuplicateLightEffectOperator",
     "FixConstraintOrderingOperator",
+    "AddMarkersFromQRCodeOperator",
     "GetFormationStatisticsOperator",
     "LandOperator",
     "MoveLightEffectDownOperator",
