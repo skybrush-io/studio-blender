@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one per drone. See the documentation for more details about the format of the
   CSV file.
 
+- Added support for creating a static formation from a QR code where each drone
+  becomes a single dot in the QR code.
+
 - The Formations panel now shows a warning if the selected formation has less
   markers than the number of drones in the show. This is because in this case
   we are not able to plan transitions into the formation as we would not know
