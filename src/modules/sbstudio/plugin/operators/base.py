@@ -26,7 +26,8 @@ class FormationOperator(Operator):
     def get_formation(self, context) -> Collection:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
-    def select_formation(self, formation, context) -> None:
+    @staticmethod
+    def select_formation(formation, context) -> None:
         """Selects the given formation, both in the scene and in the formations
         panel.
         """
