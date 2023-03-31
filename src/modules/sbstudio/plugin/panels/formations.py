@@ -1,5 +1,6 @@
 from bpy.types import Panel
 
+from sbstudio.plugin.model.formation import count_markers_in_formation
 from sbstudio.plugin.operators import (
     CreateFormationOperator,
     DeselectFormationOperator,
@@ -10,6 +11,7 @@ from sbstudio.plugin.operators import (
     UpdateFormationOperator,
     AppendFormationToStoryboardOperator,
 )
+from sbstudio.plugin.stats import get_drone_count
 
 __all__ = ("FormationsPanel",)
 
@@ -38,6 +40,7 @@ class FormationsPanel(Panel):
         if not formations:
             return
 
+        selected_formation = formations.selected
         layout = self.layout
 
         row = layout.row(align=True)
@@ -50,7 +53,20 @@ class FormationsPanel(Panel):
         row.operator(DeselectFormationOperator.bl_idname, text="Deselect")
         row.operator(GetFormationStatisticsOperator.bl_idname, text="Stats")
 
-        row = layout.row()
+        if selected_formation:
+            num_drones = get_drone_count()
+            num_markers = count_markers_in_formation(formations.selected)
+
+            # If the formation has less markers than the number of drones, show
+            # a warning as we won't know what to do with the extra drones
+            if num_markers < num_drones:
+                row = layout.box()
+                row.alert = True
+                row.label(
+                    text=f"Formation size: {num_markers} < {num_drones}", icon="ERROR"
+                )
+
+        row = layout.row(align=True)
         row.operator(
             AppendFormationToStoryboardOperator.bl_idname,
             text="Append to Storyboard",
