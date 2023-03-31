@@ -340,6 +340,14 @@ class Storyboard(PropertyGroup, ListMixin):
             else bpy.context.scene.frame_start
         )
 
+    def get_first_entry_for_formation(self, formation) -> Optional[StoryboardEntry]:
+        """Returns the first storyboard entry that refers to the given formation,
+        or `None` if no storyboard entry uses the given formation.
+        """
+        for entry in self.entries:
+            if entry.formation == formation:
+                return entry
+
     def get_index_of_entry_containing_frame(self, frame: int) -> int:
         """Returns the index of the storyboard entry containing the given
         frame.
