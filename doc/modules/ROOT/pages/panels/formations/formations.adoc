@@ -2,7 +2,7 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-With the Formations panel of the Formations tab you can create, select, deselect, update or remove and sort drones in formations, and you can add them to your storyboard.
+With the Formations panel of the Formations tab you can import, generate, create, update or remove formations, select, deselect and sort drones in formations, and you can also add formations to your storyboard.
 
 image::panels/formations/formations.jpg[Formations panel]
 
@@ -18,7 +18,7 @@ image::panels/formations/create_formation.jpg[Create formation]
 
 You can define a name for your new formation and choose how it should be initialized:
 
-Empty:: Creates an empty formation
+Empty:: Creates an empty formation (useful as a placeholder into which markers are generated later on)
 
 Current positions of drones:: Creates a formation that contains one empty mesh for each drone, placed exactly at the current position of the drone. You can use this option to create a "snapshot" of the drone swarm at a given frame and use it again as a formation later on in the show.
 
@@ -28,17 +28,31 @@ Current positions of selected objects:: _(Only in Object mode)_ Creates a format
 
 Current positions of selected vertices:: _(Only in Edit mode)_ Creates a formation that contains one empty mesh for the position of each selected _vertex_ of the currently edited object.
 
+When the number of markers in the created formation is different from the number of drones in the show, a warning message will appear to indicate the formation size mismatch.
+
+image::panels/formations/formation_size_mismatch.jpg[Formation size mismatch]
+
+If you see such a message, try to harmonize the number of markers in the formation with the number of drones in the show, otherwise automatic transitions won't work.
+
 == Removing a formation
 
 Press the btn:[✕] button to remove the selected formation from the Formations list and the Formations collection entirely. Meshes that were part of the formation but that were _not_ referenced from anywhere else in the Blender scene will also be removed from the scene. If you want to keep them, put them in another collection first or by assigning them to a https://docs.blender.org/manual/en/latest/interface/controls/templates/data_block.html?highlight=fake%20user[fake user] in Blender.
 
-== Selecting a formation
+== Selecting and deselecting a formation
 
 The btn:[Select] button on the Formations panel adds the selected formation to the current selection in Blender. Similarly, the btn:[Deselect] button removes the markers of the selected formation from the current selection.
 
 Since formations may contain meshes as well as _vertices_ of meshes as markers, you may not necessarily see the result of the selection immediately. If you are in Edit mode and you attempt to select a formation that contains meshes, you need to switch back to Object mode. Similarly, if you are in Object mode and you attempt to select a formation that contains vertices a markers, you need to switch to Edit mode to be able to interact with the selected vertices.
 
 TIP: If you are in Object mode _and_ the formation being selected contains vertices _only_ (i.e. no meshes or empties), *Skybrush Studio* will automatically switch to Edit mode.
+
+== Generating markers for a formation
+
+Once a formation is created (and preferably appended to the storybard), use the btn:[Generate Markers] button to generate extra static or dynamic markers into that formation from different sources:
+
+From zipped CSV files:: Use this option to import previously created static formations, dynamic scenes or entire shows modularly from an external .csv source.
+
+From QR code:: Use this option to generate a static QR code as part of the show.
 
 == Updating a formation
 
