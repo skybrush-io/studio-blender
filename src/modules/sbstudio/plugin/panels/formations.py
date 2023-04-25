@@ -58,13 +58,17 @@ class FormationsPanel(Panel):
             num_drones = get_drone_count()
             num_markers = count_markers_in_formation(formations.selected)
 
-            # If the formation has less markers than the number of drones, show
-            # a warning as we won't know what to do with the extra drones
-            if num_markers < num_drones:
+            # If the number of markers in the formation is different from the
+            # number of drones, show a warning as we won't know what to do with
+            # the extra or missing drones
+            if num_markers != num_drones:
                 row = layout.box()
                 row.alert = True
                 row.label(
-                    text=f"Formation size: {num_markers} < {num_drones}", icon="ERROR"
+                    text=f"Formation size: {num_markers} "
+                    f"{'<' if num_markers < num_drones else '>'} "
+                    f"{num_drones}",
+                    icon="ERROR",
                 )
 
         row = layout.row(align=True)
