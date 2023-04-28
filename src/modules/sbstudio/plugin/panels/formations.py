@@ -63,7 +63,7 @@ class FormationsPanel(Panel):
             # the extra or missing drones
             if num_markers != num_drones:
                 row = layout.box()
-                row.alert = True
+                row.alert = False
                 row.label(
                     text=f"Formation size: {num_markers} "
                     f"{'<' if num_markers < num_drones else '>'} "
