@@ -31,6 +31,9 @@ def remove_constraints_for_storyboard_entry(entry):
         return
 
     drones = Collections.find_drones(create=False)
+    if not drones:
+        return
+
     for drone in drones.objects:
         constraint = find_transition_constraint_between(drone, entry)
         if constraint:
