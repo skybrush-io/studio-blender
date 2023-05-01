@@ -5,8 +5,7 @@ __all__ = ("GenerateMarkersMenu",)
 
 class GenerateMarkersMenu(Menu):
     """Generates formations from a ZIP of CSV files, a QR code, a mathematical
-    expression or something similar
-    """
+    expression or something similar"""
 
     bl_label = "Generate Markers"
     bl_idname = "OBJECT_MT_skybrush_generate_markers"
