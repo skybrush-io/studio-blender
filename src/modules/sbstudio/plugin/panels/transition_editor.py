@@ -67,6 +67,8 @@ class TransitionEditorBase(Panel):
             layout.prop(entry, "pre_delay_per_drone_in_frames")
             layout.prop(entry, "post_delay_per_drone_in_frames")
 
+        layout.prop(entry, "is_locked")
+
         props = layout.operator(
             RecalculateTransitionsOperator.bl_idname, text="Recalculate"
         )

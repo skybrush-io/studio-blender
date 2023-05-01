@@ -268,6 +268,10 @@ def update_transition_constraint_properties(drone, entry: StoryboardEntry, marke
     """Updates the constraint that attaches a drone to its target in a
     transition.
 
+    It is assumed (and not checked) that the storyboard entry is _not_ locked;
+    in other words, it is assumed that we are allowed to modify the constraint
+    corresponding to the transition.
+
     Parameters:
         drone: the drone to update
         entry: the storyboard entry; it will be used to select the appropriate
@@ -386,12 +390,17 @@ def update_transition_for_storyboard_entry(
 
     Returns:
         the mapping from drone index to marker index in the current
-        formation, or `None` if the entry is a free segment
+        formation, or `None` if the entry is a free segment or if the
+        transition of the entry is locked and we are not allowed to touch it
 
     Raises:
         SkybrushStudioError: if an error happens while calculating transitions
 
     """
+    if entry.is_locked:
+        # entry is locked, nothing to do here
+        return None
+
     formation = entry.formation
     if formation is None:
         # free segment, nothing to do here
@@ -537,8 +546,12 @@ def recalculate_transitions(
         return
 
     # Mapping from drone indices to marker indices in the previous
-    # formation, or ``None`` if this is the first formation that we are
-    # calculating
+    # formation, or ``None`` if this is not known for some reason. Possible
+    # reasons are:
+    #
+    # - this is the first formation that we are calculating
+    # - the transition of the previous storyboard entry was locked so we
+    #   don't have the mapping now
     previous_mapping: Optional[Mapping] = None
 
     with create_position_evaluator() as get_positions_of:
@@ -621,6 +634,15 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
         # Grab some common constants that we will need
         start_of_scene = min(context.scene.frame_start, storyboard.frame_start)
+
+        # Exclude locked transitions; see if there are any tasks remaining
+        tasks = [task for task in tasks if not task.entry.is_locked]
+        if not tasks:
+            self.report(
+                {"INFO"},
+                "All transitions in the selected scope are locked; nothing to do.",
+            )
+            return {"CANCELLED"}
 
         try:
             recalculate_transitions(tasks, start_of_scene=start_of_scene)

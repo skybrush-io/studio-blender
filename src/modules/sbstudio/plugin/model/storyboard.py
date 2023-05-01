@@ -40,13 +40,19 @@ class StoryboardEntry(PropertyGroup):
 
     maybe_uuid_do_not_use = StringProperty(
         name="Identifier",
-        description="Unique identifier for this storyboard entry; must not change throughout the lifetime of the entry.",
+        description=(
+            "Unique identifier for this storyboard entry; must not change "
+            "throughout the lifetime of the entry."
+        ),
         default="",
         options={"HIDDEN"},
     )
     is_name_customized = BoolProperty(
         name="Custom Name",
-        description="Keeps the name of the storyboard entry when the associated formation changes",
+        description=(
+            "Keeps the name of the storyboard entry when the associated "
+            "formation changes"
+        ),
         default=False,
         options=set(),
     )
@@ -117,6 +123,13 @@ class StoryboardEntry(PropertyGroup):
         min=0,
         unit="TIME",
         step=100,  # button step is 1/100th of step
+    )
+    is_locked = BoolProperty(
+        name="Locked",
+        description=(
+            "Whether the transition is locked. Locked transitions are never "
+            "re-calculated"
+        ),
     )
 
     #: Sorting key for storyboard entries

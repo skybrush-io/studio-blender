@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because in this case we are not able to plan transitions into the formation
   as we would not know what to do with the missing/excess drones.
 
+- Transitions can now be marked as locked. Keyframes corresponding to the
+  locked transitions are never modified by transition recalculations.
+
 ### Fixed
 
 - View scaling setting from the Blender preferences is now taken into account
