@@ -79,6 +79,17 @@ We call the desired positions of the drones within a formation _markers_. Recall
 When the show timeline is within the start and end frame of a storyboard entry, *Skybrush Studio for Blender* ensures that the drones follow the formation markers using standard Blender constraints. When the show timeline is _between_ two formations, *Skybrush Studio for Blender* will smoothly animate the influence parameters of these constraints automatically to make the drones fly from one formation to the next one. The assignment between drones and markers is calculated on the *Skybrush Studio Server* when you click on the btn:[Recalculate Transitions] button on the storyboard panel.
 
 
+== Transition planning
+
+Automatic transitions between two formations are always calculated by *Skybrush Studio Server* in the background using highly-optimized proprietary maths. *Skybrush* provides automatic transitions between static, non-staggered formations with the following guarantees:
+
+* the transitions will be straight line
+* the velocity at the starting and ending point will remain zero
+* the minimum distance between any drones at any time during the transition will not be lower than `D/sqrt(2)` (equalling roughly `0.7*D`), assuming that the minimum distance in the source or target formations is `D`.
+
+Note that the automatic transition planner tries to find an optimal matching between source and target formations even in dynamic (nonzero starting or ending velocity) or staggered (different starting or ending time of different drones) cases, but without minimum distance guarantees, for the time being.
+
+
 == Return-to-home and landing
 
 A drone show does not end with the last visible formation on the sky -- one should also bring the drones back to the takeoff area in a safe manner. This is typically done in two parts: the _return-to-home_ (RTH) maneuver makes the drones fly back above the takeoff area to a designated altitude (typically between 10-20 meters), while the _landing_ maneuver lands them in a straight vertical line. In *Skybrush Studio for Blender*, the RTH maneuver is simply treated as a transition to an extra formation in which the desired positions of the drones are arranged in a grid identical to the takeoff grid, lifted 10-20 meters above ground. The landing maneuver is optional; the firmware running on Skybrush-compatible drones will land the drones automatically when they reach the end of the show trajectories, therefore you only need to design the RTH maneuver.
