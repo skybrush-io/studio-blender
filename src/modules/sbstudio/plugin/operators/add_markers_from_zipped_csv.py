@@ -40,8 +40,9 @@ class ImportedData:
 
 
 class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
-    """Adds markers from Skybrush-compatible .zip compressed .csv files to the
-    currently selected formation.
+    """Adds markers from Skybrush-compatible .zip compressed dynamic .csv files
+    (each containing baked animation of a single drone) to the currently
+    selected formation.
     """
 
     bl_idname = "skybrush.add_markers_from_zipped_csv"
@@ -134,7 +135,8 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
 
 
 def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
-    """Parse a .zip file containing Skybrush .csv files.
+    """Parse a .zip file containing Skybrush .csv files (one file per drone,
+    each containing baked animation with timestamped positions and colors).
 
     Args:
         filename: the name of the .zip input file
@@ -156,6 +158,7 @@ def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
                 raise RuntimeError(f"Duplicate object name in input CSV files: {name}")
 
             data = ImportedData()
+            header_passed: bool = False
 
             timestamps = data.timestamps
             trajectory = data.trajectory
@@ -164,10 +167,15 @@ def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
             with zip_file.open(filename, "r") as csv_file:
                 lines = [line.decode("ascii") for line in csv_file]
                 for row in csv.reader(lines, delimiter=","):
-                    # skip header line
-                    if row[0].lower().startswith("t"):
+                    # skip empty lines
+                    if not row:
                         continue
-                    # check for errors
+                    # skip possible header line (starting with "Time_msec")
+                    if not header_passed:
+                        header_passed = True
+                        if row[0].lower().startswith("time_msec"):
+                            continue
+                    # parse line and check for errors
                     try:
                         t = float(row[0]) / 1000.0
                         x, y, z = (float(value) for value in row[1:4])
@@ -177,7 +185,7 @@ def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
                             r, g, b = 255, 255, 255
                     except Exception:
                         raise RuntimeError(
-                            "Invalid content in input CSV file {filename!r}, row {row}"
+                            f"Invalid content in input CSV file {filename!r}, row {row!r}"
                         )
 
                     # store position and color entry

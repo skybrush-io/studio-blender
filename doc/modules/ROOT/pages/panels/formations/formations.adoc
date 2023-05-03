@@ -50,7 +50,9 @@ TIP: If you are in Object mode _and_ the formation being selected contains verti
 
 Once a formation is created (and preferably appended to the storybard), use the btn:[Generate Markers] button to generate extra static or dynamic markers into that formation from different sources:
 
-From zipped CSV files:: Use this option to import previously created static formations, dynamic scenes or entire shows modularly from an external .csv source.
+From static CSV file:: Use this option to import a previously created static formation from an external .csv file, in which each line contains the following values in order (colors are optional): `Name`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
+
+From zipped CSV files:: Use this option to import previously created animated formations or entire shows modularly from an external .zip source that contains multiple .csv files (one per drone), each containing baked trajectory and light animation in the following line format (colors are optional): `Time_msec`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
 
 From QR code:: Use this option to generate a static QR code as part of the show.
 

@@ -14,6 +14,10 @@ class GenerateMarkersMenu(Menu):
         layout = self.layout
 
         layout.operator(
+            "skybrush.add_markers_from_static_csv",
+            text="From static CSV file",
+        )
+        layout.operator(
             "skybrush.add_markers_from_zipped_csv",
             text="From zipped CSV files",
         )

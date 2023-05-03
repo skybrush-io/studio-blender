@@ -57,6 +57,7 @@ from sbstudio.plugin.model import (
     Storyboard,
 )
 from sbstudio.plugin.operators import (
+    AddMarkersFromStaticCSVOperator,
     AddMarkersFromZippedCSVOperator,
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
@@ -185,6 +186,7 @@ operators = (
     TakeoffOperator,
     LandOperator,
     ReturnToHomeOperator,
+    AddMarkersFromStaticCSVOperator,
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromQRCodeOperator,
 )
