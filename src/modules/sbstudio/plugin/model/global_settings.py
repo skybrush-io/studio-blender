@@ -41,7 +41,3 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
         op = row.operator(SetServerURLOperator.bl_idname, text="Use community server")
         op.url = ""
-
-        layout.label(
-            text="Restart Blender if you change the settings above.", icon="ERROR"
-        )

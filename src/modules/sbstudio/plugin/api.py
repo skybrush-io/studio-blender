@@ -1,6 +1,7 @@
 import bpy
 
 from contextlib import contextmanager
+from functools import lru_cache
 from typing import Iterator, Optional, TypeVar
 
 from sbstudio.api import SkybrushStudioAPI
@@ -20,20 +21,34 @@ _fallback_api_key: str = "trial"
 T = TypeVar("T")
 
 
+@lru_cache(maxsize=1)
+def _get_api_from_url_and_key(url: str, key: str):
+    """Constructs a Skybrush Studio API object from a root URL and an API key.
+
+    Memoized so we do not need to re-construct the same instance as long as
+    the user does not change the add-on settings.
+    """
+    global _fallback_api_key
+
+    print("Constructing API object")
+    result = SkybrushStudioAPI()
+
+    result.api_key = key or _fallback_api_key
+    if url:
+        result.url = url
+
+    # This is bad practice, but the default installation of Blender does not find
+    # the SSL certificates on macOS and there are reports about similar problems
+    # on Windows as well
+    # TODO(ntamas): sort this out!
+    result._skip_ssl_checks()
+
+    return result
+
+
 def get_api() -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object."""
     from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
-
-    global _api, _fallback_api_key
-
-    if _api is None:
-        _api = SkybrushStudioAPI()
-
-        # This is bad practice, but the default installation of Blender does not find
-        # the SSL certificates on macOS and there are reports about similar problems
-        # on Windows as well
-        # TODO(ntamas): sort this out!
-        _api._skip_ssl_checks()
 
     api_key: str
     server_url: str
@@ -47,11 +62,7 @@ def get_api() -> SkybrushStudioAPI:
         api_key = ""
         server_url = ""
 
-    _api.api_key = api_key or _fallback_api_key
-    if server_url:
-        _api.url = server_url
-
-    return _api
+    return _get_api_from_url_and_key(server_url, api_key)
 
 
 @contextmanager
