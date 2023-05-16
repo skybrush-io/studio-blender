@@ -3,7 +3,8 @@ import bpy
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Operator
 
-from numpy import mgrid, zeros
+from numpy import array, column_stack, mgrid, repeat, tile, zeros
+from numpy.typing import NDArray
 from typing import List
 
 from sbstudio.model.types import Coordinate3D
@@ -53,8 +54,68 @@ def create_drone(location, *, name: str, template=None, collection=None):
     return drone
 
 
+TAKEOFF_SLOT_TEMPLATES: List[NDArray[float]] = [  # type: ignore
+    # No drones in a slot
+    array([], dtype=float).reshape(0, 2),
+    # One drone per slot, this is trivial
+    array([[0, 0]], dtype=float),
+    # Two drones per slot
+    array([[-0.5, 0.0], [0.5, 0.0]]),
+    # ...and so on
+    array([[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]]),
+    array([[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]),
+    array([[-1.0, -0.5], [0.0, -0.5], [1.0, -0.5], [-1, 0.5], [0.0, 0.5]]),
+    array([[-1.0, -0.5], [0.0, -0.5], [1.0, -0.5], [-1, 0.5], [0.0, 0.5], [1.0, 0.5]]),
+    array(
+        [
+            [-1.0, -1.0],
+            [0.0, -1.0],
+            [1.0, -1.0],
+            [-1, 0.0],
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+        ]
+    ),
+    array(
+        [
+            [-1.0, -1.0],
+            [0.0, -1.0],
+            [1.0, -1.0],
+            [-1, 0.0],
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [-1.0, 1.0],
+            [0.0, 1.0],
+        ]
+    ),
+    array(
+        [
+            [-1.0, -1.0],
+            [0.0, -1.0],
+            [1.0, -1.0],
+            [-1, 0.0],
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [-1.0, 1.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+        ]
+    ),
+]
+"""List where the i-th element maps to a NumPy array describing the arrangement
+of i drones in a single slot of the takeoff grid. The arrays must be scaled by
+the intra-slot spacing.
+"""
+
+
 def create_points_of_takeoff_grid(
-    center: Coordinate3D, spacing: float = 1, rows: int = 1, columns: int = 1
+    center: Coordinate3D,
+    rows: int = 1,
+    columns: int = 1,
+    num_drones_per_slot: int = 1,
+    spacing: float = 1,
+    intra_slot_spacing: float = 0.5,
 ) -> List[Coordinate3D]:
     """Creates the points of a takeoff grid centered at the given coordinate.
 
@@ -63,6 +124,8 @@ def create_points_of_takeoff_grid(
         spacing: the spacing of points within each row and column of the grid
         rows: the number of rows in the grid
         columns: the number of columns in the grid
+        num_drones_per_slot: the number of drones in a single grid slot
+        intra_slot_spacing: spacing within a single slot of the grid
 
     Returns:
         the list of points in the grid
@@ -78,16 +141,44 @@ def create_points_of_takeoff_grid(
     ys = (ys.ravel() - (rows - 1) / 2) * spacing + cy
     zs = cz + zeros(columns * rows)
 
+    # At this point we have the coordinates of the cells in the grid. Replace
+    # each cell with multiple drones if needed
+    if num_drones_per_slot > 1:
+        num_drones_per_slot = int(
+            min(num_drones_per_slot, len(TAKEOFF_SLOT_TEMPLATES) - 1)
+        )
+
+        coords = repeat(column_stack((xs, ys, zs)), num_drones_per_slot, axis=0)
+        template = column_stack(
+            (TAKEOFF_SLOT_TEMPLATES[num_drones_per_slot], zeros(num_drones_per_slot))
+        )
+        coords += tile(
+            (template * intra_slot_spacing), (columns * rows, 1)  # type: ignore
+        )
+
+        xs, ys, zs = coords[:, 0], coords[:, 1], coords[:, 2]
+
     return list(zip(xs, ys, zs))
 
 
+def _get_num_drones_per_slot(operator):
+    if hasattr(operator, "drones_per_slot"):
+        return min(max(1, operator.drones_per_slot), len(TAKEOFF_SLOT_TEMPLATES) - 1)
+    else:
+        # backwards compatibility
+        return 1
+
+
+def _get_max_possible_drone_count(operator):
+    return operator.rows * operator.columns * _get_num_drones_per_slot(operator)
+
+
 def _ensure_rows_columns_and_counts_consistent(operator, context):
-    num_drones = operator.rows * operator.columns - operator.empty_slots
+    max_possible_drone_count = _get_max_possible_drone_count(operator)
+    num_drones = max_possible_drone_count - operator.empty_slots
     if num_drones < 1:
         operator.drones = 1
-        operator.empty_slots = max(
-            0, operator.rows * operator.columns - operator.drones
-        )
+        operator.empty_slots = max(0, max_possible_drone_count)
     else:
         # condition needed to prevent recursion
         if operator.drones != num_drones:
@@ -95,7 +186,12 @@ def _ensure_rows_columns_and_counts_consistent(operator, context):
 
 
 def _handle_drone_count_change(operator, context):
-    operator.empty_slots = max(0, operator.rows * operator.columns - operator.drones)
+    max_possible_drone_count = _get_max_possible_drone_count(operator)
+    operator.empty_slots = max(0, max_possible_drone_count - operator.drones)
+    _ensure_rows_columns_and_counts_consistent(operator, context)
+
+
+def _handle_drones_per_slot_change(operator, context):
     _ensure_rows_columns_and_counts_consistent(operator, context)
 
 
@@ -127,6 +223,18 @@ class CreateTakeoffGridOperator(Operator):
         update=_ensure_rows_columns_and_counts_consistent,
     )
 
+    drones_per_slot = IntProperty(
+        name="Drones per slot",
+        description=(
+            "Number of drones that can be placed in a single slot in the "
+            "takeoff grid"
+        ),
+        default=1,
+        soft_min=1,
+        soft_max=len(TAKEOFF_SLOT_TEMPLATES) - 1,
+        update=_handle_drones_per_slot_change,
+    )
+
     drones = IntProperty(
         name="Drone count",
         description="Number of drones in the grid",
@@ -136,16 +244,29 @@ class CreateTakeoffGridOperator(Operator):
         update=_handle_drone_count_change,
     )
 
+    # Name is a misnomer, should be excess_drones, but we have to leave it
+    # for sake of backward compatibiity
     empty_slots = IntProperty(
-        name="Number of slots to leave empty", default=0, options={"HIDDEN"}
+        name="Number of drones that could be placed in the slots but are not needed",
+        default=0,
+        options={"HIDDEN"},
     )
 
     spacing = FloatProperty(
         name="Spacing",
-        description="Spacing between the drones in the grid",
+        description="Spacing between the slots in the grid",
         default=3,
         soft_min=0,
         soft_max=50,
+        unit="LENGTH",
+    )
+
+    intra_slot_spacing = FloatProperty(
+        name="Intra-slot spacing",
+        description="Spacing between drones in the same slot of the grid",
+        default=0.5,
+        soft_min=0,
+        soft_max=5,
         unit="LENGTH",
     )
 
@@ -173,9 +294,11 @@ class CreateTakeoffGridOperator(Operator):
 
         points = create_points_of_takeoff_grid(
             center=context.scene.cursor.location,
-            spacing=self.spacing,
             rows=self.rows,
             columns=self.columns,
+            num_drones_per_slot=_get_num_drones_per_slot(self),
+            spacing=self.spacing,
+            intra_slot_spacing=self.intra_slot_spacing,
         )[: self.drones]
 
         drone_template = Templates.find_drone()

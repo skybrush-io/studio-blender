@@ -1,7 +1,7 @@
 import bpy
 
 from bpy.types import Material
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from sbstudio.model.types import RGBAColor
 from sbstudio.plugin.actions import ensure_action_exists_for_object
@@ -174,7 +174,13 @@ def set_emission_strength_of_material(material, value: float) -> None:
 
 
 def create_keyframe_for_diffuse_color_of_material(
-    material, color: RGBAColor, *, frame: Optional[int] = None, step: bool = False
+    material,
+    color: Union[
+        Tuple[float, float, float], Tuple[float, float, float, float], RGBAColor
+    ],
+    *,
+    frame: Optional[int] = None,
+    step: bool = False,
 ):
     """Creates keyframes for the diffuse color of the given material to set it
     to the given color in the given frame.
