@@ -6,7 +6,6 @@ from typing import Iterator, Optional, TypeVar
 from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
-from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
 
 __all__ = ("get_api",)
 
@@ -23,6 +22,8 @@ T = TypeVar("T")
 
 def get_api() -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object."""
+    from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
+
     global _api, _fallback_api_key
 
     if _api is None:

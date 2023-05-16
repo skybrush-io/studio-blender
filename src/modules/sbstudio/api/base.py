@@ -21,6 +21,7 @@ from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.utils import create_path_and_open
 
+from .constants import COMMUNITY_SERVER_URL
 from .errors import SkybrushStudioAPIError
 from .types import Mapping, TransitionPlan
 
@@ -133,7 +134,7 @@ class SkybrushStudioAPI:
 
     def __init__(
         self,
-        url: str = "https://studio.skybrush.io/api/v1/",
+        url: str = COMMUNITY_SERVER_URL,
         api_key: Optional[str] = None,
     ):
         """Constructor.

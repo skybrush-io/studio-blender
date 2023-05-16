@@ -69,6 +69,7 @@ __all__ = (
     "ReturnToHomeOperator",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",
+    "SetServerURLOperator",
     "SkybrushExportOperator",
     "SkybrushCSVExportOperator",
     "AddMarkersFromStaticCSVOperator",

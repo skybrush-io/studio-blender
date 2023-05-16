@@ -5,12 +5,12 @@ from gzip import compress
 from json import JSONEncoder
 from pathlib import Path
 from ssl import create_default_context, CERT_NONE
-from typing import Union
+from typing import Optional, Union
 from urllib.request import urlopen, Request
 
-from ..enums import SkybrushJSONFormat
-
 from sbstudio.api.base import Response
+from sbstudio.api.constants import COMMUNITY_SERVER_URL
+from sbstudio.api.enums import SkybrushJSONFormat
 from sbstudio.utils import create_path_and_open
 
 
@@ -79,10 +79,9 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
             f.write(self.as_json(format=format, ndigits=ndigits))
 
     def _ask_skybrush_studio_server(
-        self, operation: str, output: Path = None
+        self, operation: str, output: Optional[Path] = None
     ) -> Union[str, None]:
-        """Call Skybrush Studio Server at https://studio.skybrush.io to
-        perform the required operation on self.
+        """Call Skybrush Studio Server to perform the required operation.
 
         Parameters:
             operation: the name of the operation to perform
@@ -104,7 +103,7 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
         ctx.check_hostname = False
         ctx.verify_mode = CERT_NONE
         # create request
-        url = rf"https://studio.skybrush.io/api/v1/operations/{operation}"
+        url = COMMUNITY_SERVER_URL + "/operations/{operation}"
         req = Request(url, data=data, headers=headers, method="POST")
         # send it and wait for response
         log.info(
