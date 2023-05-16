@@ -30,7 +30,6 @@ def _get_api_from_url_and_key(url: str, key: str):
     """
     global _fallback_api_key
 
-    print("Constructing API object")
     result = SkybrushStudioAPI()
 
     result.api_key = key or _fallback_api_key
@@ -86,6 +85,7 @@ def call_api_from_blender_operator(
         raise
     except SkybrushStudioAPIError as ex:
         operator.report({"ERROR"}, str(ex) or default_message)
+        print(repr(ex))
         raise
     except Exception:
         operator.report({"ERROR"}, default_message)
