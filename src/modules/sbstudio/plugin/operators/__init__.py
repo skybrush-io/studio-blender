@@ -34,6 +34,7 @@ from .reorder_formation_markers import ReorderFormationMarkersOperator
 from .return_to_home import ReturnToHomeOperator
 from .select_formation import SelectFormationOperator, DeselectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
+from .set_server_url import SetServerURLOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
 from .takeoff import TakeoffOperator
 from .update_formation import UpdateFormationOperator
