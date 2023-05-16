@@ -226,6 +226,10 @@ def export_show_to_file_using_api(
         min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
     )
 
+    renderer_params = {}
+    if "min_nav_altitude" in settings:
+        renderer_params = {"min_nav_altitude": settings["min_nav_altitude"]}
+
     # create Skybrush converter object
     if renderer == "skyc":
         log.info("Exporting show to .skyc")
@@ -238,6 +242,7 @@ def export_show_to_file_using_api(
             output=filepath,
             time_markers=time_markers,
             renderer="skyc",
+            renderer_params=renderer_params,
         )
     elif renderer == "csv":
         log.info("Exporting show to CSV")
@@ -250,7 +255,7 @@ def export_show_to_file_using_api(
             output=filepath,
             time_markers=time_markers,
             renderer="csv",
-            renderer_params={"fps": settings["output_fps"]},
+            renderer_params={**renderer_params, "fps": settings["output_fps"]},
         )
     elif renderer == "plot":
         log.info("Exporting validation plots to .pdf")
