@@ -85,7 +85,6 @@ def call_api_from_blender_operator(
         raise
     except SkybrushStudioAPIError as ex:
         operator.report({"ERROR"}, str(ex) or default_message)
-        print(repr(ex))
         raise
     except Exception:
         operator.report({"ERROR"}, default_message)

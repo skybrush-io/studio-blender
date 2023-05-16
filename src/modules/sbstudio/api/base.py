@@ -86,24 +86,19 @@ class Response:
             "application/octet-stream",
             "application/json",
             "application/zip",
+            "text/plain",
         ):
             raise SkybrushStudioAPIError("Invalid response type")
 
         data = self._response.read()
-        if self.content_type in ("application/octet-stream", "application/zip"):
+        if isinstance(data, bytes):
             data = data.decode("utf-8")
 
         return data
 
     def save_to_file(self, filename: Path) -> None:
         """Writes response to a given file."""
-        if self.content_type in ("application/octet-stream", "application/zip"):
-            mode = "wb"
-        elif self.content_type == "application/json":
-            mode = "w"
-        else:
-            raise SkybrushStudioAPIError("Invalid response type")
-        with create_path_and_open(filename, mode) as f:
+        with create_path_and_open(filename, "wb") as f:
             copyfileobj(self._response, f)
 
 
