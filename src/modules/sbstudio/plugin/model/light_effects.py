@@ -13,7 +13,15 @@ from bpy.props import (
     IntProperty,
     PointerProperty,
 )
-from bpy.types import ColorRamp, Context, PropertyGroup, Mesh, Object, Texture
+from bpy.types import (
+    ColorRamp,
+    Context,
+    Image,
+    PropertyGroup,
+    Mesh,
+    Object,
+    ImageTexture,
+)
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
@@ -25,6 +33,7 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.image import update_image_from, get_pixel
 from sbstudio.utils import distance_sq_of
 
 from .mixins import ListMixin
@@ -178,9 +187,12 @@ class LightEffect(PropertyGroup):
     )
 
     texture = PointerProperty(
-        type=Texture,
+        type=ImageTexture,
         name="Texture",
-        description="Texture of the light effect, used for the sole purpose of having a way to create a color ramp",
+        description=(
+            "Texture of the light effect, used for the sole purpose of having a "
+            " way to create a color ramp or an image holding baked color animation"
+        ),
         options={"HIDDEN"},
     )
 
@@ -262,6 +274,7 @@ class LightEffect(PropertyGroup):
 
         output_type: str = self.output
         color_ramp = self.color_ramp
+        color_image = self.color_image
         new_color = [0.0] * 4
         order: Optional[List[int]] = None
 
@@ -383,7 +396,12 @@ class LightEffect(PropertyGroup):
                 min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
 
-            if color_ramp:
+            if color_image:
+                new_color[:] = get_pixel(
+                    color_image, int((color_image.size[0] - 1) * output), 0
+                )
+                new_color[3] *= alpha
+            elif color_ramp:
                 new_color[:] = color_ramp.evaluate(output)
                 new_color[3] *= alpha
             else:
@@ -395,8 +413,17 @@ class LightEffect(PropertyGroup):
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
-        """The color ramp of the effect."""
-        return self.texture.color_ramp if self.texture else None
+        """The color ramp of the effect, if exists and is used."""
+        return (
+            self.texture.color_ramp
+            if self.texture and 0 in self.texture.image.size
+            else None
+        )
+
+    @property
+    def color_image(self) -> Optional[Image]:
+        """The color image of the effect, if exists and valid."""
+        return self.texture.image if self.texture else None
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
@@ -430,6 +457,7 @@ class LightEffect(PropertyGroup):
         self.blend_mode = other.blend_mode
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
+        update_image_from(self.color_image, other.color_image)
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -564,7 +592,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         entry.name = name
 
         entry.texture = bpy.data.textures.new(
-            name="Texture for light effect", type="NONE"
+            name="Texture for light effect '{}'".format(name), type="IMAGE"
         )
         entry.texture.use_color_ramp = True
 
@@ -572,6 +600,11 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         elts = entry.texture.color_ramp.elements
         for elt in elts:
             elt.color[3] = 1.0
+
+        # create empty image to be used later on for imported, baked colors
+        entry.texture.image = bpy.data.images.new(
+            name="Image for light effect '{}'".format(name), width=0, height=0
+        )
 
         # Copy default colors from the LED Control panel
         if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "led_control"):
