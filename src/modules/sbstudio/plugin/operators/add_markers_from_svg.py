@@ -1,7 +1,6 @@
 import logging
 
 from dataclasses import dataclass
-from numpy import linspace
 from typing import List, Tuple
 
 from bpy.path import ensure_ext
@@ -14,6 +13,7 @@ from sbstudio.model.point import Point3D
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.model.formation import add_points_to_formation
 from sbstudio.plugin.selection import Collections
+from sbstudio.plugin.utils.image import set_pixel
 
 from .base import FormationOperator
 
@@ -106,20 +106,10 @@ class AddMarkersFromSVGOperator(FormationOperator, ImportHelper):
             )
             light_effect = light_effects.active_entry
             light_effect.output = "INDEXED_BY_FORMATION"
-            color_ramp = light_effect.color_ramp
-            color_ramp.color_mode = "RGB"
-            # color_ramp.interpolation = "CONSTANT"
-            elements = color_ramp.elements
-            elements.remove(elements[-1])
-            colors = [color.as_vector() for color in colors]
-            for position, color in zip(
-                linspace(start=0, stop=1, num=len(colors), endpoint=True), colors
-            ):
-                if position == 0:
-                    elements[0].color = color
-                else:
-                    elements.new(position)
-                    elements[-1].color = color
+            image = light_effect.color_image
+            image.scale(len(colors), 1)
+            for i, color in enumerate(colors):
+                set_pixel(image, i, 0, color.as_vector())
 
         return {"FINISHED"}
 

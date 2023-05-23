@@ -13,6 +13,7 @@ from sbstudio.model.color import Color3D
 from sbstudio.model.point import Point3D
 
 from sbstudio.plugin.model.formation import add_points_to_formation
+from sbstudio.plugin.utils.image import set_pixel
 
 from .base import FormationOperator
 
@@ -83,20 +84,11 @@ class AddMarkersFromStaticCSVOperator(FormationOperator, ImportHelper):
             )
             light_effect = light_effects.active_entry
             light_effect.output = "INDEXED_BY_FORMATION"
-            color_ramp = light_effect.color_ramp
-            color_ramp.color_mode = "RGB"
-            # color_ramp.interpolation = "CONSTANT"
-            elements = color_ramp.elements
-            elements.remove(elements[-1])
             colors = [item.color.as_vector() for item in imported_data.values()]
-            for position, color in zip(
-                linspace(start=0, stop=1, num=len(colors), endpoint=True), colors
-            ):
-                if position == 0:
-                    elements[0].color = color
-                else:
-                    elements.new(position)
-                    elements[-1].color = color
+            image = light_effect.color_image
+            image.scale(len(colors), 1)
+            for i, color in enumerate(colors):
+                set_pixel(image, i, 0, color)
 
         return {"FINISHED"}
 
