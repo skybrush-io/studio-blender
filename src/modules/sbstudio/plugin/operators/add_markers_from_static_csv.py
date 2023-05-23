@@ -2,6 +2,7 @@ import csv
 import logging
 
 from dataclasses import dataclass
+from numpy import linspace
 from typing import Dict
 
 from bpy.path import ensure_ext
@@ -53,12 +54,49 @@ class AddMarkersFromStaticCSVOperator(FormationOperator, ImportHelper):
             self.report({"ERROR"}, str(error))
             return {"CANCELLED"}
 
+        # try to figure out the start frame of this formation
+        storyboard_entry = (
+            context.scene.skybrush.storyboard.get_first_entry_for_formation(formation)
+        )
+        frame_start = (
+            storyboard_entry.frame_start
+            if storyboard_entry
+            else context.scene.frame_start
+        )
+        duration = storyboard_entry.duration if storyboard_entry else 1
+
         # create new markers for the points
         points = [item.position.as_vector() for item in imported_data.values()]
         if not points:
             self.report({"ERROR"}, "Formation would be empty, nothing was created")
         else:
             add_points_to_formation(formation, points)
+
+        # add a light effect from the imported colors
+        light_effects = context.scene.skybrush.light_effects
+        if light_effects:
+            light_effects.append_new_entry(
+                name=formation.name,
+                frame_start=frame_start,
+                duration=duration,
+                select=True,
+            )
+            light_effect = light_effects.active_entry
+            light_effect.output = "INDEXED_BY_FORMATION"
+            color_ramp = light_effect.color_ramp
+            color_ramp.color_mode = "RGB"
+            # color_ramp.interpolation = "CONSTANT"
+            elements = color_ramp.elements
+            elements.remove(elements[-1])
+            colors = [item.color.as_vector() for item in imported_data.values()]
+            for position, color in zip(
+                linspace(start=0, stop=1, num=len(colors), endpoint=True), colors
+            ):
+                if position == 0:
+                    elements[0].color = color
+                else:
+                    elements.new(position)
+                    elements[-1].color = color
 
         return {"FINISHED"}
 
