@@ -23,6 +23,9 @@ FOR %%A in (natsort pyledctrl svgpathtools svgwrite webcolors) DO mklink /D dev\
 :: skybrush is included as a development version for the time being
 set VENV_PYTHONPATH=%SKYBRUSH_ROOT%\.venv\Lib\site-packages
 mklink /D dev\vendor\skybrush\skybrush %SKYBRUSH_ROOT%\src\skybrush
+FOR %%A in (svgpathtools svgwrite webcolors) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
 FOR %%A in (jsonref.py proxytypes.py) DO mklink dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
+
+
 
 cd etc/scripts

@@ -56,6 +56,8 @@ def update_light_effects(scene, depsgraph):
     frame = scene.frame_current
     drones = None
 
+    mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
+
     if _last_frame != frame:
         # Frame changed, clear the base color cache
         _last_frame = frame
@@ -67,6 +69,9 @@ def update_light_effects(scene, depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
+            # we filter and sort drones for a certain effect type
+            if effect.output == "INDEXED_BY_FORMATION" and mapping:
+                drones = [drones[m.target] for m in mapping]
             positions = [get_position_of_object(drone) for drone in drones]
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
