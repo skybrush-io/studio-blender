@@ -21,6 +21,10 @@ class GenerateMarkersMenu(Menu):
             "skybrush.add_markers_from_zipped_csv",
             text="From zipped CSV files",
         )
+        layout.operator(
+            "skybrush.add_markers_from_svg",
+            text="From SVG file",
+        )
         layout.operator("skybrush.add_markers_from_qr_code", text="From QR Code")
 
     @classmethod
