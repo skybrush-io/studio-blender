@@ -14,6 +14,8 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+from sbstudio.model.color import Color3D
+from sbstudio.model.point import Point3D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.time_markers import TimeMarkers
@@ -381,10 +383,45 @@ class SkybrushStudioAPI:
             else:
                 return response.as_bytes()
 
-    def get_limits(self) -> Limits:
-        """Returns the limits and supported file formats of the server."""
-        with self._send_request("queries/limits") as response:
-            return Limits.from_json(response.as_json())
+    def create_formation_from_svg(
+        self,
+        source: str,
+        n: int,
+        size: float,
+    ) -> Tuple[List[Point3D], List[Color3D]]:
+        """Samples the path objects of an SVG string into a list of coordinates
+        and corresponding colors.
+
+        Args:
+            source: the SVG source string
+            n: the number of points to generate
+            size: the maximum extent of the returned points along the main axes
+
+        Returns:
+            the list of evenly sampled points and corresponding colors
+
+        """
+        data = {
+            "version": 1,
+            "method": "svg",
+            "parameters": {
+                "version": 1,
+                "source": source,
+                "n": n,
+                "size": size,
+            },
+        }
+
+        with self._send_request("operations/create-static-formation", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        points = [Point3D(*point) for point in result.get("points")]
+        colors = [Color3D(*color) for color in result.get("colors")]
+
+        return points, colors
 
     def generate_plots(
         self,
@@ -449,6 +486,11 @@ class SkybrushStudioAPI:
 
         with self._send_request("operations/render", data) as response:
             response.save_to_file(output)
+
+    def get_limits(self) -> Limits:
+        """Returns the limits and supported file formats of the server."""
+        with self._send_request("queries/limits") as response:
+            return Limits.from_json(response.as_json())
 
     def match_points(
         self,

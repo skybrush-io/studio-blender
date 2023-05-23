@@ -2,6 +2,7 @@
 
 from .add_markers_from_qr_code import AddMarkersFromQRCodeOperator
 from .add_markers_from_static_csv import AddMarkersFromStaticCSVOperator
+from .add_markers_from_svg import AddMarkersFromSVGOperator
 from .add_markers_from_zipped_csv import AddMarkersFromZippedCSVOperator
 from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator
@@ -86,6 +87,7 @@ __all__ = (
     "SkybrushExportOperator",
     "SkybrushCSVExportOperator",
     "AddMarkersFromStaticCSVOperator",
+    "AddMarkersFromSVGOperator",
     "AddMarkersFromZippedCSVOperator",
     "SkybrushPDFExportOperator",
     "SwapColorsInLEDControlPanelOperator",
