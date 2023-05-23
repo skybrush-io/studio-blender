@@ -25,7 +25,7 @@ from sbstudio.plugin.utils import sort_collection, with_context
 from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
-__all__ = ("StoryboardEntry", "Storyboard")
+__all__ = ("MappingType", "StoryboardEntry", "Storyboard")
 
 
 def _handle_formation_change(operator, context):
@@ -33,10 +33,16 @@ def _handle_formation_change(operator, context):
         operator.name = operator.formation.name if operator.formation else ""
 
 
+class MappingType(bpy.types.PropertyGroup):
+    target = bpy.props.IntProperty()
+
+
 class StoryboardEntry(PropertyGroup):
     """Blender property group representing a single entry in the storyboard
     of the drone show.
     """
+
+    mapping = CollectionProperty(type=MappingType)
 
     maybe_uuid_do_not_use = StringProperty(
         name="Identifier",
@@ -379,7 +385,7 @@ class Storyboard(PropertyGroup, ListMixin):
         frame.
 
         Returns:
-            the index of the storyboard entry containing the given frame, or
+            the index of the storyboard entry closest after the given frame, or
             -1 if the current frame is after the end of the storyboard
         """
         best_distance, closest = float("inf"), -1
@@ -391,6 +397,41 @@ class Storyboard(PropertyGroup, ListMixin):
                     closest = index
 
         return closest
+
+    def get_index_of_entry_before_frame(self, frame: int) -> int:
+        """Returns the index of the storyboard entry that comes before the given
+        frame.
+
+        Returns:
+            the index of the storyboard entry closest before the given frame, or
+            -1 if the current frame is before the start of the storyboard
+        """
+        best_distance, closest = float("inf"), -1
+        for index, entry in enumerate(self.entries):
+            if entry.frame_end < frame:
+                diff = entry.frame_end - frame
+                if diff < best_distance:
+                    best_distance = diff
+                    closest = index
+
+        return closest
+
+    def get_mapping_at_frame(self, frame: int):
+        """Returns the mapping of drones at a given frame based on mappings
+        stored in formations.
+
+        Returns:
+            The mapping between drones and the formation at the given frame.
+        """
+        index = self.get_index_of_entry_containing_frame(frame)
+        if index >= 0:
+            return self.entries[index].mapping
+
+        index = self.get_index_of_entry_before_frame(frame)
+        if index >= 0:
+            return self.entries[index].mapping
+
+        return None
 
     def get_formation_status_at_frame(self, frame: int) -> str:
         """Returns the name of the storyboard entry containing the given frame

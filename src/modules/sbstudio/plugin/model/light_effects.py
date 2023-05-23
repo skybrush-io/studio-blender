@@ -147,16 +147,17 @@ class LightEffect(PropertyGroup):
         items=[
             ("FIRST_COLOR", "First color of color ramp", "", 1),
             ("LAST_COLOR", "Last color of color ramp", "", 2),
-            ("INDEXED", "Gradient", "", 3),
-            ("GRADIENT_XYZ", "Gradient (XYZ)", "", 4),
-            ("GRADIENT_XZY", "Gradient (XZY)", "", 5),
-            ("GRADIENT_YXZ", "Gradient (YXZ)", "", 6),
-            ("GRADIENT_YZX", "Gradient (YZX)", "", 7),
-            ("GRADIENT_ZXY", "Gradient (ZXY)", "", 8),
-            ("GRADIENT_ZYX", "Gradient (ZYX)", "", 9),
-            ("TEMPORAL", "Temporal", "", 10),
-            ("DISTANCE", "Distance from mesh", "", 11),
-            ("CUSTOM", "Custom expression", "", 12),
+            ("INDEXED_BY_DRONES", "Indexed by drones", "", 3),
+            ("INDEXED_BY_FORMATION", "Indexed by formation", "", 4),
+            ("GRADIENT_XYZ", "Gradient (XYZ)", "", 5),
+            ("GRADIENT_XZY", "Gradient (XZY)", "", 6),
+            ("GRADIENT_YXZ", "Gradient (YXZ)", "", 7),
+            ("GRADIENT_YZX", "Gradient (YZX)", "", 8),
+            ("GRADIENT_ZXY", "Gradient (ZXY)", "", 9),
+            ("GRADIENT_ZYX", "Gradient (ZYX)", "", 10),
+            ("TEMPORAL", "Temporal", "", 11),
+            ("DISTANCE", "Distance from mesh", "", 12),
+            ("CUSTOM", "Custom expression", "", 13),
         ],
         default="LAST_COLOR",
     )
@@ -333,8 +334,16 @@ class LightEffect(PropertyGroup):
                     for u, v in enumerate(order):
                         outputs[v] = u / (num_positions - 1)
 
-        elif output_type == "INDEXED":
-            # Gradient based on index
+        elif output_type == "INDEXED_BY_DRONES":
+            # Gradient based on drone index
+            if num_positions > 1:
+                np_m1 = num_positions - 1
+                outputs = [index / np_m1 for index in range(num_positions)]
+            else:
+                common_output = 1.0
+        elif output_type == "INDEXED_BY_FORMATION":
+            # Gradient based on formation index (colors should be ordered and
+            # filtered according to formation index by now)
             if num_positions > 1:
                 np_m1 = num_positions - 1
                 outputs = [index / np_m1 for index in range(num_positions)]

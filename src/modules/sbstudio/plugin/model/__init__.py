@@ -6,7 +6,7 @@ from .object_props import DroneShowAddonObjectProperties
 from .safety_check import SafetyCheckProperties
 from .settings import DroneShowAddonFileSpecificSettings
 from .show import DroneShowAddonProperties
-from .storyboard import StoryboardEntry, Storyboard
+from .storyboard import MappingType, StoryboardEntry, Storyboard
 
 __all__ = (
     "DroneShowAddonFileSpecificSettings",
@@ -17,6 +17,7 @@ __all__ = (
     "LEDControlPanelProperties",
     "LightEffect",
     "LightEffectCollection",
+    "MappingType",
     "SafetyCheckProperties",
     "StoryboardEntry",
     "Storyboard",
