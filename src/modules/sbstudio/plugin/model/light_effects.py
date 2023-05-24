@@ -397,8 +397,11 @@ class LightEffect(PropertyGroup):
             )
 
             if color_image:
+                width, height = color_image.size
                 new_color[:] = get_pixel(
-                    color_image, int((color_image.size[0] - 1) * output), 0
+                    color_image,
+                    int((width - 1) * output),
+                    int((height / self.duration * (frame - self.frame_start))),
                 )
                 new_color[3] *= alpha
             elif color_ramp:
@@ -571,8 +574,8 @@ class LightEffectCollection(PropertyGroup, ListMixin):
             name: the name of the new entry
             frame_start: the start frame of the new entry; `None` chooses a
                 sensible default
-            duration: the duration of the new entry; `None` chooses a sensible
-                default
+            duration: the duration of the new entry in frames; `None` chooses a
+                sensible default
             select: whether to select the newly added entry after it was created
         """
         scene = context.scene
