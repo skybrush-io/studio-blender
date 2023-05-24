@@ -20,6 +20,7 @@ from sbstudio.plugin.actions import (
     find_f_curve_for_data_path_and_index,
 )
 from sbstudio.plugin.model.formation import add_points_to_formation
+from sbstudio.plugin.utils.image import set_pixel
 
 from .base import FormationOperator
 
@@ -126,6 +127,41 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
             # Commit the insertions that we've made in "fast" mode
             for f_curve in f_curves:
                 f_curve.update()
+
+        # store light program as a light effect with color image
+        light_effects = context.scene.skybrush.light_effects
+        if light_effects:
+            light_programs = [item.light_program for item in imported_data.values()]
+            duration = (
+                int(
+                    (light_programs[0].colors[-1].t - light_programs[0].colors[0].t)
+                    * fps
+                )
+                + 1
+            )
+            light_effects.append_new_entry(
+                name=formation.name,
+                frame_start=frame_start,
+                duration=duration,
+                select=True,
+            )
+            light_effect = light_effects.active_entry
+            light_effect.output = "INDEXED_BY_FORMATION"
+            image = light_effect.color_image
+            image.scale(len(light_programs), duration)
+            for i, light_program in enumerate(light_programs):
+                # TODO: so far this is very slow (~1min for 100drones, 1200 frames, 5fps csv)
+                print(i, duration)
+                color = light_program.colors[0]
+                t0 = color.t
+                j_last = 0
+                for next_color in light_program.colors[1:]:
+                    j_next = int((next_color.t - t0) * fps)
+                    for j in range(j_last, j_next):
+                        set_pixel(image, i, j, color.as_vector())
+                    j_last = j_next
+                    color = next_color
+                set_pixel(image, i, j_last, color.as_vector())
 
         return {"FINISHED"}
 
