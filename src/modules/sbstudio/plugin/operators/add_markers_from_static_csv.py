@@ -2,7 +2,6 @@ import csv
 import logging
 
 from dataclasses import dataclass
-from numpy import linspace
 from typing import Dict
 
 from bpy.path import ensure_ext
