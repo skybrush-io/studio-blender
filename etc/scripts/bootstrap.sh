@@ -25,7 +25,7 @@ ln -s ../src/modules
 cd vendor/skybrush/
 VENV_PYTHONPATH=`ls -d ../../../.venv/lib/python*/site-packages | sed -e 's#/$##'`
 
-for dependency in natsort pyledctrl skybrush; do
+for dependency in natsort pyledctrl skybrush svgpathtools svgwrite webcolors; do
     if [ -d "${VENV_PYTHONPATH}/${dependency}" ]; then
         ln -s "${VENV_PYTHONPATH}/${dependency}"
     fi
