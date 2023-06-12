@@ -77,6 +77,15 @@ class Trajectory:
                 "version": 1,
             }
 
+    @property
+    def duration(self) -> float:
+        """Returns the duration of the trajectory in seconds."""
+
+        if len(self.points) < 2:
+            return 0
+
+        return self.points[-1].t - self.points[0].t
+
     def shift_time_in_place(self: C, delta: float) -> C:
         """Shifts all timestamp of the trajectory in-place.
 
