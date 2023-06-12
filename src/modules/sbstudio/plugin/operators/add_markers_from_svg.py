@@ -113,7 +113,7 @@ class AddMarkersFromSVGOperator(FormationOperator, ImportHelper):
                 height=len(colors),
             )
             image.pixels.foreach_set(
-                chain(*[list(color.as_vector()) for color in colors])
+                list(chain(*[list(color.as_vector()) for color in colors]))
             )
 
         return {"FINISHED"}
