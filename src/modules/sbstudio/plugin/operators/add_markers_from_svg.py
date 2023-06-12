@@ -1,6 +1,7 @@
 import logging
 
 from dataclasses import dataclass
+from itertools import chain
 from typing import List, Tuple
 
 from bpy.path import ensure_ext
@@ -111,8 +112,9 @@ class AddMarkersFromSVGOperator(FormationOperator, ImportHelper):
                 width=1,
                 height=len(colors),
             )
-            for i, color in enumerate(colors):
-                set_pixel(image, 0, i, color.as_vector())
+            image.pixels.foreach_set(
+                chain(*[list(color.as_vector()) for color in colors])
+            )
 
         return {"FINISHED"}
 

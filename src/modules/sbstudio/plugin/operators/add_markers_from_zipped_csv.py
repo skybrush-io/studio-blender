@@ -152,19 +152,18 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
                 width=duration,
                 height=len(light_programs),
             )
+            pixels = []
             for i, light_program in enumerate(light_programs):
-                # TODO: so far this is very slow (~1min for 100drones, 1200 frames, 5fps csv)
-                print("TODO: speedup; at drone", i)
                 color = light_program.colors[0]
                 t0 = color.t
                 j_last = 0
                 for next_color in light_program.colors[1:]:
                     j_next = int((next_color.t - t0) * fps)
-                    for j in range(j_last, j_next):
-                        set_pixel(image, j, i, color.as_vector())
+                    pixels.extend(list(color.as_vector()) * (j_next - j_last))
                     j_last = j_next
                     color = next_color
-                set_pixel(image, j_last, i, color.as_vector())
+                pixels.extend(list(color.as_vector()))
+            image.pixels.foreach_set(pixels)
 
         return {"FINISHED"}
 
