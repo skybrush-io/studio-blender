@@ -8,7 +8,7 @@ from typing import Dict, List
 from zipfile import ZipFile
 
 from bpy.path import ensure_ext
-from bpy.props import StringProperty
+from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
 from sbstudio.model.color import Color4D
@@ -48,7 +48,13 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
 
     bl_idname = "skybrush.add_markers_from_zipped_csv"
     bl_label = "Import Skybrush zipped CSV"
-    bl_options = {"REGISTER"}
+    bl_options = {"REGISTER", "UNDO"}
+
+    update_duration = BoolProperty(
+        name="Update duration of formation",
+        default=True,
+        description="Update the duration of the storyboard entry based on animation length",
+    )
 
     # List of file extensions that correspond to Skybrush CSV files
     filter_glob = StringProperty(default="*.zip", options={"HIDDEN"})
@@ -84,6 +90,13 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
             for trajectory in trajectories
         ]
         markers = add_points_to_formation(formation, first_points)
+
+        # update storyboard duration based on animation data
+        if self.update_duration and storyboard_entry:
+            duration = (
+                int(max(trajectory.duration for trajectory in trajectories) * fps) + 1
+            )
+            storyboard_entry.duration = duration
 
         # create animation action for each point in the formation
         for trajectory, marker in zip(trajectories, markers):
