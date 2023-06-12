@@ -20,12 +20,13 @@ url = "https://pypi.fury.io/skybrush/"
 secondary = true
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 natsort = "^8.0.0"
-skybrush-studio = { version = "^4.4.0", optional = true, source = "collmot" }
+skybrush-studio = { version = "^4.4.2", optional = true, source = "collmot" }
+svgpathtools = { version = "^1.6.1", optional = true, source = "fury" }
 
 [tool.poetry.extras]
-standalone = ["skybrush-studio"]
+standalone = ["skybrush-studio", "svgpathtools"]
 
 [tool.poetry.dev-dependencies]
 pyclean = "^2.0.0"
