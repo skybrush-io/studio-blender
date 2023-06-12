@@ -90,8 +90,13 @@ class AddMarkersFromStaticCSVOperator(FormationOperator, ImportHelper):
                 height=len(colors),
             )
             image.pixels.foreach_set(
-                chain(
-                    *[list(item.color.as_vector()) for item in imported_data.values()]
+                list(
+                    chain(
+                        *[
+                            list(item.color.as_vector())
+                            for item in imported_data.values()
+                        ]
+                    )
                 )
             )
 

@@ -153,7 +153,7 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
                 height=len(light_programs),
             )
             pixels = []
-            for i, light_program in enumerate(light_programs):
+            for light_program in light_programs:
                 color = light_program.colors[0]
                 t0 = color.t
                 j_last = 0
