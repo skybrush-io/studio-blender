@@ -396,12 +396,12 @@ class LightEffect(PropertyGroup):
                 min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
 
-            if color_image:
+            if self.color_image is not None:
                 width, height = color_image.size
                 new_color[:] = get_pixel(
                     color_image,
-                    int((width - 1) * output),
-                    int((height / self.duration * (frame - self.frame_start))),
+                    int((width / self.duration * (frame - self.frame_start))),
+                    int((height - 1) * output),
                 )
                 new_color[3] *= alpha
             elif color_ramp:
@@ -419,14 +419,20 @@ class LightEffect(PropertyGroup):
         """The color ramp of the effect, if exists and is used."""
         return (
             self.texture.color_ramp
-            if self.texture and 0 in self.texture.image.size
+            if self.texture and self.color_image is None
             else None
         )
 
     @property
     def color_image(self) -> Optional[Image]:
-        """The color image of the effect, if exists and valid."""
+        """The color image of the effect, if exists."""
         return self.texture.image if self.texture else None
+
+    @color_image.setter
+    def color_image(self, image):
+        if self.texture.image is not None:
+            bpy.data.images.remove(self.texture.image)
+        self.texture.image = image
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
@@ -436,6 +442,24 @@ class LightEffect(PropertyGroup):
         contain their end frames.
         """
         return 0 <= (frame - self.frame_start) < self.duration
+
+    def create_color_image(self, name: str, width: int, height: int) -> Image:
+        """Create a new color image for the light effect (and delete old).
+
+        Args:
+            name: the name of the image to create
+            width: the width of the image in pixels, corresponding to the
+                time axis of the color animation
+            height: the height of the image in pixels, corresponding to
+                the number of drones to color
+
+        Returns:
+            the created color image itself for easy chaining
+
+        """
+        self.color_image = bpy.data.images.new(name=name, width=width, height=height)
+
+        return self.color_image
 
     @property
     def frame_end(self) -> int:
@@ -460,7 +484,11 @@ class LightEffect(PropertyGroup):
         self.blend_mode = other.blend_mode
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
-        update_image_from(self.color_image, other.color_image)
+
+        if self.color_image is None and other.color_image is not None:
+            self.color_image = other.color_image.copy()
+        if self.color_image is not None:
+            update_image_from(self.color_image, other.color_image)
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -598,16 +626,12 @@ class LightEffectCollection(PropertyGroup, ListMixin):
             name="Texture for light effect '{}'".format(name), type="IMAGE"
         )
         entry.texture.use_color_ramp = True
+        entry.texture.image = None
 
         # Clear alpha from color ramp
         elts = entry.texture.color_ramp.elements
         for elt in elts:
             elt.color[3] = 1.0
-
-        # create empty image to be used later on for imported, baked colors
-        entry.texture.image = bpy.data.images.new(
-            name="Image for light effect '{}'".format(name), width=0, height=0
-        )
 
         # Copy default colors from the LED Control panel
         if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "led_control"):
