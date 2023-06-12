@@ -106,10 +106,13 @@ class AddMarkersFromSVGOperator(FormationOperator, ImportHelper):
             )
             light_effect = light_effects.active_entry
             light_effect.output = "INDEXED_BY_FORMATION"
-            image = light_effect.color_image
-            image.scale(len(colors), 1)
+            image = light_effect.create_color_image(
+                name="Image for light effect '{}'".format(formation.name),
+                width=1,
+                height=len(colors),
+            )
             for i, color in enumerate(colors):
-                set_pixel(image, i, 0, color.as_vector())
+                set_pixel(image, 0, i, color.as_vector())
 
         return {"FINISHED"}
 

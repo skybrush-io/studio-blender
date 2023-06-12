@@ -67,7 +67,16 @@ class LightEffectsPanel(Panel):
         entry = light_effects.active_entry
         if entry is not None:
             if entry.texture:
-                layout.template_color_ramp(entry.texture, "color_ramp")
+                if entry.color_image is not None:
+                    # TODO: perhaps display image instead of text
+                    row = layout.box()
+                    row.alert = False
+                    row.label(
+                        text="Read-only light effect",
+                        icon="LOCKED",
+                    )
+                else:
+                    layout.template_color_ramp(entry.texture, "color_ramp")
                 layout.separator()
 
             col = layout.column()
