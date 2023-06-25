@@ -70,7 +70,7 @@ def call_api_from_blender_operator(
 ) -> Iterator[SkybrushStudioAPI]:
     """Context manager that yields immediately back to the caller from a
     try-except block, catches all exceptions, and calls the ``report()`` method
-    of the given Blender operator with an approriate error message if there
+    of the given Blender operator with an appropriate error message if there
     was an error. All exceptions are then re-raised; the caller is expected to
     return ``{"CANCELLED"}`` from the operator immediately in response to an
     exception.
