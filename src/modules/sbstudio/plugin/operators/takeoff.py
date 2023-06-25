@@ -5,6 +5,7 @@ from bpy.types import Context, Object
 from math import ceil
 from typing import List
 
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
@@ -49,10 +50,17 @@ class TakeoffOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
+    # TODO(ntamas): test whether it is safe to remove this property without
+    # breaking compatibility with older versions
+
     altitude_is_relative = BoolProperty(
         name="Relative Altitude",
-        description="Specifies whether the takeoff altitude is relative to the current altitude of the drone",
+        description=(
+            "Specifies whether the takeoff altitude is relative to the current "
+            "altitude of the drone. Deprecated; not used any more."
+        ),
         default=False,
+        options={"HIDDEN"},
     )
 
     """
@@ -117,15 +125,11 @@ class TakeoffOperator(StoryboardOperator):
 
         self._sort_drones(drones)
 
-        # Prepare the points of the target formation to take off to
+        # Evaluate the initial positions of the drones
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
-        if self.altitude_is_relative:
-            target = [(x, y, z + self.altitude) for x, y, z in source]
-            max_distance = self.altitude
-        else:
-            target = [(x, y, self.altitude) for x, y, z in source]
+        target = [(x, y, self.altitude) for x, y, z in source]
 
         diffs = [t[2] - s[2] for s, t in zip(source, target)]
         if min(diffs) < 0:
