@@ -358,7 +358,7 @@ class SkybrushStudioAPI:
         trajectories: Dict[str, Trajectory],
         output: Path,
         validation: SafetyCheckParams,
-        plots: List[str] = ["pos", "vel", "nn"],
+        plots: Sequence[str] = ("pos", "vel", "nn"),
         fps: float = 4,
         ndigits: int = 3,
         time_markers: Optional[TimeMarkers] = None,
