@@ -242,7 +242,8 @@ class SkybrushStudioAPI:
                     raise SkybrushStudioAPIError(str(decoded_body.get("detail")))
             else:
                 raise SkybrushStudioAPIError(
-                    f"HTTP error {ex.status}. This is most likely a server-side issue; please contact us and let us know."
+                    f"HTTP error {ex.status}. This is most likely a "
+                    f"server-side issue; please contact us and let us know."
                 ) from ex
 
     def _skip_ssl_checks(self) -> None:
