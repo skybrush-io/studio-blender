@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Transitions can now be marked as locked. Keyframes corresponding to the
   locked transitions are never modified by transition recalculations.
 
+- You can now tweak the departure and arrival times of individual drones within
+  a transition with schedule overrides. This can be used to resolve collisions
+  during a staggered transition manually, or to manually create more complex
+  transition patterns.
+
 ### Fixed
 
 - View scaling setting from the Blender preferences is now taken into account

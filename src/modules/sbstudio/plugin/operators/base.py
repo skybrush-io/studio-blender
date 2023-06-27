@@ -74,3 +74,21 @@ class StoryboardOperator(Operator):
             return self.execute_on_storyboard(storyboard, entries, context)
         else:
             return self.execute_on_storyboard(storyboard, context)
+
+
+class StoryboardEntryOperator(Operator):
+    """Operator mixin that allows an operator to be executed if we have a
+    selected storyboard entry in the current scene.
+    """
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.scene.skybrush
+            and context.scene.skybrush.storyboard
+            and context.scene.skybrush.storyboard.active_entry
+        )
+
+    def execute(self, context):
+        entry = context.scene.skybrush.storyboard.active_entry
+        return self.execute_on_storyboard_entry(entry, context)
