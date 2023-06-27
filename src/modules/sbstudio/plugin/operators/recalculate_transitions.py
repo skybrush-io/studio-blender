@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
+from functools import partial
 from math import inf
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple
 
 import bpy
 
@@ -430,6 +431,7 @@ def update_transition_for_storyboard_entry(
     # Now we have the index of the target point that each drone
     # should be mapped to, and we have `None` for those drones that
     # will not participate in the formation
+    todo: List[Callable[[], None]] = []
     for drone_index, drone in enumerate(drones):
         target_index = mapping[drone_index]
         if target_index is None:
@@ -445,6 +447,7 @@ def update_transition_for_storyboard_entry(
 
             windup_start_frame = end_of_previous
             start_frame = entry.frame_start
+
             if entry.is_staggered:
                 # Determine the index of the drone in the departure sequence
                 # and in the arrival sequence
@@ -487,16 +490,20 @@ def update_transition_for_storyboard_entry(
                 # formation; this is easy
                 arrival_index = objects_in_formation.find(obj)
 
-                windup_start_frame += (
-                    entry.pre_delay_per_drone_in_frames * departure_index
-                )
-                start_frame -= entry.post_delay_per_drone_in_frames * (
+                departure_delay = entry.pre_delay_per_drone_in_frames * departure_index
+                arrival_delay = -entry.post_delay_per_drone_in_frames * (
                     num_drones_transitioning - arrival_index - 1
                 )
+
+                windup_start_frame += departure_delay
+                start_frame += arrival_delay
+
                 if windup_start_frame >= start_frame:
                     raise SkybrushStudioError(
-                        f"Not enough time to plan staggered transition to formation {entry.name!r}. "
-                        f"Try decreasing departure or arrival delay or allow more time for the transition."
+                        f"Not enough time to plan staggered transition to "
+                        f"formation {entry.name!r} at drone index {drone_index+1} "
+                        f"(1-based). Try decreasing departure or arrival delay "
+                        f"or allow more time for the transition."
                     )
 
             # start_frame can be earlier than entry.frame_start for
@@ -507,7 +514,22 @@ def update_transition_for_storyboard_entry(
                 start_frame=start_frame,
                 end_frame=start_of_next,
             )
-            update_transition_constraint_influence(drone, constraint, descriptor)
+
+            # Do not update the influence curve now in case we have problems
+            # with drones coming later in the enumeration; just store the
+            # operation to call and then we'll do it in one batch at the end
+            todo.append(
+                partial(
+                    update_transition_constraint_influence,
+                    drone,
+                    constraint,
+                    descriptor,
+                )
+            )
+
+    # Commit all the changes to the influence curves that we have planned above
+    for func in todo:
+        func()
 
     return mapping
 
