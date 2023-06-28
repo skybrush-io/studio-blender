@@ -258,6 +258,31 @@ class SkybrushStudioAPI:
         ctx.verify_mode = CERT_NONE
         self._request_context = ctx
 
+    def decompose_points(
+        self,
+        points: Sequence[Coordinate3D],
+        *,
+        min_distance: float,
+        method: str = "greedy",
+    ) -> List[int]:
+        """Decomposes a set of points into multiple groups while ensuring that
+        the minimum distance of points within the same group is at least as
+        large as the given threshold.
+        """
+        data = {
+            "version": 1,
+            "method": str(method),
+            "min_distance": float(min_distance),
+            "points": points,
+        }
+        with self._send_request("operations/decompose", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        return result.get("groups")
+
     def export(
         self,
         validation: SafetyCheckParams,

@@ -8,6 +8,7 @@ from typing import List
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.storyboard import Storyboard
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
@@ -113,7 +114,7 @@ class TakeoffOperator(StoryboardOperator):
     def execute_on_storyboard(self, storyboard, entries, context):
         return {"FINISHED"} if self._run(storyboard, context=context) else {"CANCELLED"}
 
-    def _run(self, storyboard, *, context) -> bool:
+    def _run(self, storyboard: Storyboard, *, context) -> bool:
         bpy.ops.skybrush.prepare()
 
         if not self._validate_start_frame(context):
@@ -129,8 +130,24 @@ class TakeoffOperator(StoryboardOperator):
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
-        target = [(x, y, self.altitude) for x, y, z in source]
+        # Figure out how many phases we will need, based on the current safety
+        # threshold and the arrangement of the drones
+        min_distance: float = (
+            context.scene.skybrush.safety_check.proximity_warning_threshold
+        )
+        groups = get_api().decompose_points(
+            source, min_distance=min_distance, method="balanced"
+        )
+        num_groups = max(groups) + 1
 
+        # Prepare the points of the target formation to take off to
+        altitude_shift_per_group = 5
+        target = [
+            (x, y, self.altitude + (num_groups - group - 1) * altitude_shift_per_group)
+            for (x, y, _), group in zip(source, groups)
+        ]
+
+        # Calculate the Z distance to travel for each drone
         diffs = [t[2] - s[2] for s, t in zip(source, target)]
         if min(diffs) < 0:
             dist = abs(min(diffs))
@@ -140,11 +157,15 @@ class TakeoffOperator(StoryboardOperator):
             )
             return False
 
-        # Calculate takeoff duration from max distance to travel and the
+        # Calculate takeoff durations from distances to travel and the
         # average velocity
-        max_distance = max(diffs)
         fps = context.scene.render.fps
-        takeoff_duration = ceil((max_distance / self.velocity) * fps)
+        takeoff_durations = [ceil((diff / self.velocity) * fps) for diff in diffs]
+
+        # We ensure that drones arrive at the same time, so calculate the
+        # takeoff delays for those drones that take off to lower altitudes
+        takeoff_duration = max(takeoff_durations)
+        delays = [takeoff_duration - d for d in takeoff_durations]
 
         # Calculate when the takeoff should end
         end_of_takeoff = self.start_frame + takeoff_duration
@@ -160,13 +181,22 @@ class TakeoffOperator(StoryboardOperator):
                 return False
 
         # Add a new storyboard entry with the given formation
-        storyboard.add_new_entry(
+        entry = storyboard.add_new_entry(
             formation=create_formation("Takeoff", target),
             frame_start=end_of_takeoff,
             duration=0,
             select=True,
             context=context,
         )
+
+        # Set up the custom departure delays for the drones
+        if delays and max(delays) > 0:
+            entry.schedule_overrides_enabled = True
+            for index, delay in enumerate(delays):
+                if delay > 0:
+                    override = entry.add_new_schedule_override()
+                    override.index = index
+                    override.pre_delay = delay
 
         # Recalculate the transitions leading from and to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
