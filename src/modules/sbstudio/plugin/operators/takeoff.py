@@ -64,6 +64,19 @@ class TakeoffOperator(StoryboardOperator):
         options={"HIDDEN"},
     )
 
+    altitude_shift = FloatProperty(
+        name="Layer height",
+        description=(
+            "Specifies the difference between altitudes of takeoff layers "
+            "for multi-phase takeoffs when multiple drones occupy the same "
+            "takeoff slot within safety distance."
+        ),
+        default=5,
+        soft_min=0,
+        soft_max=50,
+        unit="LENGTH",
+    )
+
     """
     delay = FloatProperty(
         name="Delay",
@@ -141,7 +154,7 @@ class TakeoffOperator(StoryboardOperator):
         num_groups = max(groups) + 1
 
         # Prepare the points of the target formation to take off to
-        altitude_shift_per_group = 5
+        altitude_shift_per_group = self.altitude_shift
         target = [
             (x, y, self.altitude + (num_groups - group - 1) * altitude_shift_per_group)
             for (x, y, _), group in zip(source, groups)
