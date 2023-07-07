@@ -77,41 +77,6 @@ class TakeoffOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
-    """
-    delay = FloatProperty(
-        name="Delay",
-        description="Delay between takeoffs of consecutive drones in the takeoff sequence",
-        default=0,
-        min=0,
-        soft_min=0,
-        soft_max=5,
-        unit="TIME",
-        subtype="TIME",
-    )
-
-    order = EnumProperty(
-        name="Order",
-        description="Order of drones in the takeoff sequence",
-        items=(
-            (
-                "DEFAULT",
-                "Default",
-                "Use the order in which the drones appear in the drone collection",
-            ),
-            ("NAME", "Name", "Sort the drones alphabetically"),
-            ("XY", "X axis first", "Sort the drones by X axis first, then by Y axis"),
-            ("YX", "Y axis first", "Sort the drones by Y axis first, then by X axis"),
-        ),
-        default="DEFAULT",
-    )
-
-    reverse_order = BoolProperty(
-        name="Reverse ordering",
-        description="Whether to reverse the ordering of the takeoff sequence",
-        default=False,
-    )
-    """
-
     @classmethod
     def poll(cls, context):
         if not super().poll(context):
