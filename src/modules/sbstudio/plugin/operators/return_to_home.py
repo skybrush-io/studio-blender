@@ -3,21 +3,18 @@ import bpy
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Context, Object
 from math import ceil, sqrt
-from typing import List
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
-from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
+from .takeoff import create_helper_formation_for_takeoff_and_landing
 
 __all__ = ("ReturnToHomeOperator",)
 
 
 class ReturnToHomeOperator(StoryboardOperator):
-    """Blender operator that adds a return-to-home transition to the show, starting at
-    the current frame.
-    """
+    """Blender operator that adds a return-to-home transition to the show."""
 
     bl_idname = "skybrush.rth"
     bl_label = "Return Drones to Home Positions"
@@ -49,6 +46,19 @@ class ReturnToHomeOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
+    altitude_shift = FloatProperty(
+        name="Layer height",
+        description=(
+            "Specifies the difference between altitudes of landing layers "
+            "for multi-phase landings when multiple drones occupy the same "
+            "slot within safety distance."
+        ),
+        default=5,
+        soft_min=0,
+        soft_max=50,
+        unit="LENGTH",
+    )
+
     @classmethod
     def poll(cls, context):
         if not super().poll(context):
@@ -75,14 +85,14 @@ class ReturnToHomeOperator(StoryboardOperator):
         if not drones:
             return False
 
-        self._sort_drones(drones)
-
-        # Prepare the points of the target formation to move to
         first_frame = storyboard.frame_start
-        with create_position_evaluator() as get_positions_of:
-            source = get_positions_of(drones, frame=first_frame)
-
-        target = [(x, y, self.altitude) for x, y, z in source]
+        source, target = create_helper_formation_for_takeoff_and_landing(
+            drones,
+            frame=first_frame,
+            base_altitude=self.altitude,
+            layer_height=self.altitude_shift,
+            min_distance=context.scene.skybrush.safety_check.proximity_warning_threshold,
+        )
 
         diffs = [
             sqrt((s[0] - t[0]) ** 2 + (s[1] - t[1]) ** 2 + (s[2] - t[2]) ** 2)
@@ -116,13 +126,6 @@ class ReturnToHomeOperator(StoryboardOperator):
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
         return True
 
-    def _sort_drones(self, drones: List[Object]):
-        """Sorts the given list of drones in-place according to the order
-        specified by the user in this operator.
-        """
-        # TODO(ntamas): add support for ordering the drones
-        pass
-
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the return to home time chosen by the user is valid."""
         storyboard = context.scene.skybrush.storyboard
@@ -138,7 +141,8 @@ class ReturnToHomeOperator(StoryboardOperator):
         if last_frame is not None and self.start_frame < last_frame:
             self.report(
                 {"ERROR"},
-                f"Return to home maneuver must not start before the last entry of the storyboard (frame {last_frame})",
+                f"Return to home maneuver must not start before the last entry "
+                f"of the storyboard (frame {last_frame})",
             )
             return False
 

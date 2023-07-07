@@ -102,28 +102,13 @@ class TakeoffOperator(StoryboardOperator):
         if not drones:
             return False
 
-        self._sort_drones(drones)
-
-        # Evaluate the initial positions of the drones
-        with create_position_evaluator() as get_positions_of:
-            source = get_positions_of(drones, frame=self.start_frame)
-
-        # Figure out how many phases we will need, based on the current safety
-        # threshold and the arrangement of the drones
-        min_distance: float = (
-            context.scene.skybrush.safety_check.proximity_warning_threshold
+        source, target = create_helper_formation_for_takeoff_and_landing(
+            drones,
+            frame=self.start_frame,
+            base_altitude=self.altitude,
+            layer_height=self.altitude_shift,
+            min_distance=context.scene.skybrush.safety_check.proximity_warning_threshold,
         )
-        groups = get_api().decompose_points(
-            source, min_distance=min_distance, method="balanced"
-        )
-        num_groups = max(groups) + 1
-
-        # Prepare the points of the target formation to take off to
-        altitude_shift_per_group = self.altitude_shift
-        target = [
-            (x, y, self.altitude + (num_groups - group - 1) * altitude_shift_per_group)
-            for (x, y, _), group in zip(source, groups)
-        ]
 
         # Calculate the Z distance to travel for each drone
         diffs = [t[2] - s[2] for s, t in zip(source, target)]
@@ -183,13 +168,6 @@ class TakeoffOperator(StoryboardOperator):
 
         return True
 
-    def _sort_drones(self, drones: List[Object]):
-        """Sorts the given list of drones in-place according to the order
-        specified by the user in this operator.
-        """
-        # TODO(ntamas): add support for ordering the drones
-        pass
-
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the takeoff time chosen by the user is valid."""
         storyboard = context.scene.skybrush.storyboard
@@ -212,3 +190,36 @@ class TakeoffOperator(StoryboardOperator):
                     return False
 
         return True
+
+
+def create_helper_formation_for_takeoff_and_landing(
+    drones,
+    *,
+    frame: int,
+    base_altitude: float,
+    layer_height: float,
+    min_distance: float,
+):
+    """Creates a layer helper formation for takeoff and landing where the drones
+    are placed directly above their positions at the given frame, at the given
+    base altitude plus an altitude shift per layer to ensure minimum distance
+    constraints.
+    """
+    # Evaluate the initial positions of the drones
+    with create_position_evaluator() as get_positions_of:
+        source = get_positions_of(drones, frame=frame)
+
+    # Figure out how many phases we will need, based on the current safety
+    # threshold and the arrangement of the drones
+    groups = get_api().decompose_points(
+        source, min_distance=min_distance, method="balanced"
+    )
+    num_groups = max(groups) + 1
+
+    # Prepare the points of the target formation to take off to
+    target = [
+        (x, y, base_altitude + (num_groups - group - 1) * layer_height)
+        for (x, y, _), group in zip(source, groups)
+    ]
+
+    return source, target
