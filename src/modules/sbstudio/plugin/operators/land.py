@@ -75,8 +75,6 @@ class LandOperator(StoryboardOperator):
         if not drones:
             return False
 
-        self._sort_drones(drones)
-
         # Prepare the points of the target formation to land to
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
@@ -119,13 +117,6 @@ class LandOperator(StoryboardOperator):
         # Recalculate the transition leading to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
         return True
-
-    def _sort_drones(self, drones: List[Object]):
-        """Sorts the given list of drones in-place according to the order
-        specified by the user in this operator.
-        """
-        # TODO(ntamas): add support for ordering the drones
-        pass
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the takeoff time chosen by the user is valid."""
