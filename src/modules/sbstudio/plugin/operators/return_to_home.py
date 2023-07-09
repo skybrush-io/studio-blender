@@ -6,6 +6,7 @@ from math import ceil, sqrt
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 
 from .base import StoryboardOperator
 from .takeoff import create_helper_formation_for_takeoff_and_landing
@@ -91,7 +92,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             frame=first_frame,
             base_altitude=self.altitude,
             layer_height=self.altitude_shift,
-            min_distance=context.scene.skybrush.safety_check.proximity_warning_threshold,
+            min_distance=get_proximity_warning_threshold(context),
         )
 
         diffs = [

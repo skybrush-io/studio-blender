@@ -8,6 +8,7 @@ from bpy.types import Context
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
@@ -108,10 +109,9 @@ class LandOperator(StoryboardOperator):
         # Ask the API to figure out the start times and durations for each drone
         # TODO(ntamas): spindown time!
         fps = context.scene.render.fps
-        min_distance = context.scene.skybrush.safety_check.proximity_warning_threshold
         delays, durations = get_api().plan_landing(
             source,
-            min_distance=min_distance,
+            min_distance=get_proximity_warning_threshold(context),
             velocity=self.velocity,
             target_altitude=self.altitude,
             spindown_time=self.spindown_time,

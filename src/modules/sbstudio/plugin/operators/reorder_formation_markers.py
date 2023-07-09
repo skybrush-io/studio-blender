@@ -8,6 +8,7 @@ import bpy
 
 from bpy.props import EnumProperty
 
+from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.utils.collections import sort_collection
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
@@ -132,9 +133,7 @@ class ReorderFormationMarkersOperator(FormationOperator):
         skipped: List[int] = []
         result: List[int] = []
 
-        dist_threshold: float = (
-            context.scene.skybrush.safety_check.proximity_warning_threshold
-        )
+        dist_threshold: float = get_proximity_warning_threshold(context)
 
         while queue:
             # Reset the mask

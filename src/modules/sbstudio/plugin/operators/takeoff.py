@@ -3,11 +3,11 @@ import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context, Object
 from math import ceil
-from typing import List
 
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.model.storyboard import Storyboard
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
@@ -107,7 +107,7 @@ class TakeoffOperator(StoryboardOperator):
             frame=self.start_frame,
             base_altitude=self.altitude,
             layer_height=self.altitude_shift,
-            min_distance=context.scene.skybrush.safety_check.proximity_warning_threshold,
+            min_distance=get_proximity_warning_threshold(context),
         )
 
         # Calculate the Z distance to travel for each drone
