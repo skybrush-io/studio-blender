@@ -7,6 +7,7 @@ from math import ceil, sqrt
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
+from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
 from .takeoff import create_helper_formation_for_takeoff_and_landing
@@ -86,8 +87,11 @@ class ReturnToHomeOperator(StoryboardOperator):
         if not drones:
             return False
 
+        with create_position_evaluator() as get_positions_of:
+            source = get_positions_of(drones, frame=self.start_frame)
+
         first_frame = storyboard.frame_start
-        source, target, _ = create_helper_formation_for_takeoff_and_landing(
+        _, target, _ = create_helper_formation_for_takeoff_and_landing(
             drones,
             frame=first_frame,
             base_altitude=self.altitude,
