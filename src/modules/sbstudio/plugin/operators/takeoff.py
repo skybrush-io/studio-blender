@@ -178,7 +178,10 @@ class TakeoffOperator(StoryboardOperator):
             if self.start_frame < frame:
                 self.report(
                     {"ERROR"},
-                    f"Takeoff maneuver must start after the first (takeoff grid) entry of the storyboard (frame {frame})",
+                    (
+                        f"Takeoff maneuver must start after the first (takeoff "
+                        f"grid) entry of the storyboard (frame {frame})"
+                    ),
                 )
                 return False
             if len(storyboard.entries) > 1:
@@ -186,7 +189,10 @@ class TakeoffOperator(StoryboardOperator):
                 if frame is not None and self.start_frame >= frame:
                     self.report(
                         {"ERROR"},
-                        f"Takeoff maneuver must start before the second entry of the storyboard (frame {frame})",
+                        (
+                            f"Takeoff maneuver must start before the second "
+                            f"entry of the storyboard (frame {frame})"
+                        ),
                     )
                     return False
 
