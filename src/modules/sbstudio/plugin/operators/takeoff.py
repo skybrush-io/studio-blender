@@ -4,6 +4,7 @@ from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context, Object
 from math import ceil
 
+from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
@@ -222,10 +223,16 @@ def create_helper_formation_for_takeoff_and_landing(
 
     # Figure out how many phases we will need, based on the current safety
     # threshold and the arrangement of the drones
-    groups = get_api().decompose_points(
-        source, min_distance=min_distance, method="balanced"
-    )
-    num_groups = max(groups) + 1
+    _, _, dist = find_nearest_neighbors(source)
+    if dist < min_distance:
+        groups = get_api().decompose_points(
+            source, min_distance=min_distance, method="balanced"
+        )
+    else:
+        # We can save an API call here
+        groups = [0] * len(source)
+
+    num_groups = max(groups) + 1 if groups else 0
 
     # Prepare the points of the target formation to take off to
     target = [

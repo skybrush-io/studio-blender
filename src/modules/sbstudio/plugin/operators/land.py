@@ -5,6 +5,7 @@ import bpy
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Context
 
+from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
@@ -107,15 +108,22 @@ class LandOperator(StoryboardOperator):
             return False
 
         # Ask the API to figure out the start times and durations for each drone
-        # TODO(ntamas): spindown time!
         fps = context.scene.render.fps
-        delays, durations = get_api().plan_landing(
-            source,
-            min_distance=get_proximity_warning_threshold(context),
-            velocity=self.velocity,
-            target_altitude=self.altitude,
-            spindown_time=self.spindown_time,
-        )
+        min_distance = get_proximity_warning_threshold(context)
+        _, _, dist = find_nearest_neighbors(target)
+        if dist < min_distance:
+            delays, durations = get_api().plan_landing(
+                source,
+                min_distance=min_distance,
+                velocity=self.velocity,
+                target_altitude=self.altitude,
+                spindown_time=self.spindown_time,
+            )
+        else:
+            # We can save an API call here
+            delays = [0] * len(source)
+            durations = [diff / self.velocity for diff in diffs]
+
         delays = [int(ceil(delay * fps)) for delay in delays]
         durations = [int(floor(duration * fps)) for duration in durations]
         max_duration = max(
