@@ -723,7 +723,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             ),
         ],
         name="Scope",
-        description="Scope of the operator that defines which transitions must be recalculated",
+        description=(
+            "Scope of the operator that defines which transitions must be "
+            "recalculated"
+        ),
         default="ALL",
     )
 
@@ -762,7 +765,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         except SkybrushStudioAPIError:
             self.report(
                 {"ERROR"},
-                "Error while invoking transition planner on the Skybrush Studio online service",
+                (
+                    "Error while invoking transition planner on the Skybrush "
+                    "Studio online service"
+                ),
             )
             return {"CANCELLED"}
 
