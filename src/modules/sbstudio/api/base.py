@@ -472,6 +472,47 @@ class SkybrushStudioAPI:
 
         return result.get("mapping"), result.get("clearance")
 
+    def plan_landing(
+        self,
+        points: Sequence[Coordinate3D],
+        *,
+        min_distance: float,
+        velocity: float,
+        target_altitude: float = 0,
+        spindown_time: float = 5,
+    ) -> Tuple[List[int], List[int]]:
+        """Plans the landing trajectories for a set of drones, assuming that
+        they should maintain a given minimum distance while the motors are
+        running and that they land with constant speed.
+
+        Arguments:
+            points: coordinates of the drones to land
+            min_distance: minimum distance to maintain while the motors are
+                running
+            velocity: average vertical velocity during landing
+            target_altitude: altitude to land the drones to
+            spindown_time: number of seconds it takes for the motors to
+                shut down after a successful landing
+
+        Returns:
+            the start times and durations of the landing operation for each drone
+        """
+        data = {
+            "version": 1,
+            "points": points,
+            "min_distance": float(min_distance),
+            "velocity": float(velocity),
+            "target_altitude": float(target_altitude),
+            "spindown_time": float(spindown_time),
+        }
+        with self._send_request("operations/plan-landing", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        return result["start_times"], result["durations"]
+
     def plan_transition(
         self,
         source: Sequence[Coordinate3D],

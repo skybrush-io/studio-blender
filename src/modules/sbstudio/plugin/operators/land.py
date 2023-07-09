@@ -1,10 +1,11 @@
+from math import ceil, floor
+
 import bpy
 
 from bpy.props import FloatProperty, IntProperty
-from bpy.types import Context, Object
-from math import ceil
-from typing import List
+from bpy.types import Context
 
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
@@ -49,6 +50,18 @@ class LandOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
+    spindown_time = FloatProperty(
+        name="Motor spindown delay (sec)",
+        description=(
+            "Time it takes for the motors to spin down after a successful landing"
+        ),
+        default=5,
+        min=0,
+        soft_min=0,
+        soft_max=10,
+        unit="TIME",
+    )
+
     @classmethod
     def poll(cls, context):
         if not super().poll(context):
@@ -75,12 +88,14 @@ class LandOperator(StoryboardOperator):
         if not drones:
             return False
 
-        # Prepare the points of the target formation to land to
+        # Get the current positions of the drones to land
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
-        target = [(x, y, self.altitude) for x, y, z in source]
+        # Construct the target formation as well
+        target = [(x, y, self.altitude) for x, y, _ in source]
 
+        # Calculate the Z distance to travel for each drone
         diffs = [s[2] - t[2] for s, t in zip(source, target)]
         if min(diffs) < 0:
             dist = abs(min(diffs))
@@ -90,11 +105,26 @@ class LandOperator(StoryboardOperator):
             )
             return False
 
-        # Calculate landing duration from max distance to travel and the
-        # average velocity
-        max_distance = max(diffs)
+        # Ask the API to figure out the start times and durations for each drone
+        # TODO(ntamas): spindown time!
         fps = context.scene.render.fps
-        landing_duration = ceil((max_distance / self.velocity) * fps)
+        min_distance = context.scene.skybrush.safety_check.proximity_warning_threshold
+        delays, durations = get_api().plan_landing(
+            source,
+            min_distance=min_distance,
+            velocity=self.velocity,
+            target_altitude=self.altitude,
+            spindown_time=self.spindown_time,
+        )
+        delays = [int(ceil(delay * fps)) for delay in delays]
+        durations = [int(floor(duration * fps)) for duration in durations]
+        max_duration = max(
+            delay + duration for delay, duration in zip(delays, durations)
+        )
+        post_delays = [
+            max_duration - delay - duration
+            for delay, duration in zip(delays, durations)
+        ]
 
         # Extend the duration of the last formation to the frame where we want
         # to start the landing
@@ -103,16 +133,27 @@ class LandOperator(StoryboardOperator):
             last_entry.extend_until(self.start_frame)
 
         # Calculate when the landing should end
-        end_of_landing = self.start_frame + landing_duration
+        end_of_landing = self.start_frame + max_duration
 
         # Add a new storyboard entry with the given formation
-        storyboard.add_new_entry(
+        entry = storyboard.add_new_entry(
             formation=create_formation("Landing", target),
             frame_start=end_of_landing,
             duration=0,
             select=True,
             context=context,
         )
+        entry.transition_type = "MANUAL"
+
+        # Set up the custom departure delays for the drones
+        if max(delays) > 0 or max(post_delays) > 0:
+            entry.schedule_overrides_enabled = True
+            for index, (delay, post_delay) in enumerate(zip(delays, post_delays)):
+                if delay > 0 or post_delay > 0:
+                    override = entry.add_new_schedule_override()
+                    override.index = index
+                    override.pre_delay = delay
+                    override.post_delay = post_delay
 
         # Recalculate the transition leading to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
@@ -133,7 +174,10 @@ class LandOperator(StoryboardOperator):
         if last_frame is not None and self.start_frame < last_frame:
             self.report(
                 {"ERROR"},
-                f"Landing maneuver must not start before the last entry of the storyboard (frame {last_frame})",
+                (
+                    f"Landing maneuver must not start before the last entry of "
+                    f"the storyboard (frame {last_frame})"
+                ),
             )
             return False
 
