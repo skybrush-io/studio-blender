@@ -1,3 +1,5 @@
+import bpy
+
 from bpy.props import StringProperty
 from bpy.types import Operator
 
@@ -19,5 +21,7 @@ class SetServerURLOperator(Operator):
         prefs = context.preferences
         prefs = prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
         prefs.server_url = self.url
+
+        bpy.ops.wm.save_userpref()
 
         return {"FINISHED"}

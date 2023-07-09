@@ -11,7 +11,7 @@ from bpy.props import (
 from bpy.types import Collection, Context, PropertyGroup
 from operator import attrgetter
 from uuid import uuid4
-from typing import Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from sbstudio.plugin.constants import (
     Collections,
@@ -25,7 +25,58 @@ from sbstudio.plugin.utils import sort_collection, with_context
 from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
-__all__ = ("MappingType", "StoryboardEntry", "Storyboard")
+__all__ = ("MappingType", "ScheduleOverride", "StoryboardEntry", "Storyboard")
+
+
+class ScheduleOverride(PropertyGroup):
+    """Blender property group representing overrides to the departure and
+    arrival delays of a drone in a transition.
+    """
+
+    enabled = BoolProperty(
+        name="Enabled",
+        description="Whether this override entry is enabled",
+        default=True,
+        options=set(),
+    )
+
+    index = IntProperty(
+        name="Index",
+        description=(
+            "0-based index of the marker in the source formation that the "
+            "override refers to"
+        ),
+        default=0,
+        min=0,
+        options=set(),
+    )
+
+    pre_delay = IntProperty(
+        name="Departure delay",
+        description=(
+            "Number of frames between the start of the entire transition and "
+            "the departure of the drone assigned to this source marker"
+        ),
+        min=0,
+    )
+
+    post_delay = IntProperty(
+        name="Arrival delay",
+        description=(
+            "Number of frames between the end of the entire transition and the "
+            "arrival of the drone assigned to this source marker"
+        ),
+        min=0,
+    )
+
+    @property
+    def label(self) -> str:
+        parts: List[str] = [f"@{self.index}"]
+        if self.pre_delay != 0:
+            parts.append(f"dep {self.pre_delay}")
+        if self.post_delay != 0:
+            parts.append(f"arr {self.post_delay}")
+        return " | ".join(parts)
 
 
 def _handle_formation_change(operator, context):
@@ -130,6 +181,18 @@ class StoryboardEntry(PropertyGroup):
         unit="TIME",
         step=100,  # button step is 1/100th of step
     )
+    schedule_overrides = CollectionProperty(type=ScheduleOverride)
+    schedule_overrides_enabled = BoolProperty(
+        name="Schedule overrides enabled",
+        description=(
+            "Whether the schedule overrides associated to the current entry "
+            "are enabled"
+        ),
+    )
+    active_schedule_override_entry_index = IntProperty(
+        name="Selected override entry index",
+        description="Index of the schedule override entry currently being edited",
+    )
     is_locked = BoolProperty(
         name="Locked",
         description=(
@@ -140,6 +203,47 @@ class StoryboardEntry(PropertyGroup):
 
     #: Sorting key for storyboard entries
     sort_key = attrgetter("frame_start", "frame_end")
+
+    @property
+    def active_schedule_override_entry(self) -> Optional[ScheduleOverride]:
+        """The active schedule override currently selected for editing, or
+        `None` if there is no such entry.
+        """
+        index = self.active_schedule_override_entry_index
+        if index is not None and index >= 0 and index < len(self.schedule_overrides):
+            return self.schedule_overrides[index]
+        else:
+            return None
+
+    @active_schedule_override_entry.setter
+    def active_schedule_override_entry(self, entry: Optional[ScheduleOverride]):
+        if entry is None:
+            self.active_schedule_override_entry_index = -1
+            return
+
+        for i, entry_in_collection in enumerate(self.schedule_overrides):
+            if entry_in_collection == entry:
+                self.active_schedule_override_entry_index = i
+                return
+        else:
+            self.active_schedule_override_entry_index = -1
+
+    @with_context
+    def add_new_schedule_override(
+        self,
+        *,
+        select: bool = False,
+        context: Optional[Context] = None,
+    ) -> ScheduleOverride:
+        """Appends a new schedule override to the end of the storyboard.
+
+        Parameters:
+            select: whether to select the newly added entry after it was created
+        """
+        entry = self.schedule_overrides.add()
+        if select:
+            self.active_schedule_override_entry = entry
+        return entry
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the storyboard entry contains the given frame.
@@ -176,20 +280,49 @@ class StoryboardEntry(PropertyGroup):
         """Whether the transition is staggered."""
         return self.transition_schedule == "STAGGERED"
 
+    def get_enabled_schedule_override_map(self) -> Dict[int, ScheduleOverride]:
+        """Returns a dictionary mapping indices of markers in the source
+        formation to the corresponding transition schedule overrides.
+
+        Only enabled schedule overrides are considered.
+        """
+        result: Dict[int, ScheduleOverride] = {}
+
+        if self.schedule_overrides_enabled:
+            for override in self.schedule_overrides:
+                if override.enabled:
+                    result[override.index] = override
+
+        return result
+
+    def remove_active_schedule_override_entry(self) -> None:
+        """Removes the active schedule override entry from the collection and
+        adjusts the active entry index as needed.
+        """
+        entry = self.active_schedule_override_entry
+        if not entry:
+            return
+
+        index = self.active_schedule_override_entry_index
+        self.schedule_overrides.remove(index)
+        self.active_schedule_override_entry_index = min(
+            max(0, index), len(self.schedule_overrides)
+        )
+
 
 class Storyboard(PropertyGroup, ListMixin):
     """Blender property group representing the entire storyboard of the
     drone show.
     """
 
-    #: The entries in this storyboard
     entries = CollectionProperty(type=StoryboardEntry)
+    """The entries in this storyboard"""
 
-    #: Index of the active entry (currently being edited) in the storyboard
     active_entry_index = IntProperty(
         name="Selected index",
         description="Index of the storyboard entry currently being edited",
     )
+    """Index of the active entry (currently being edited) in the storyboard"""
 
     @property
     def active_entry(self) -> Optional[StoryboardEntry]:

@@ -3,7 +3,11 @@ from bpy.types import Panel
 from typing import List, Optional
 
 from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
-from sbstudio.plugin.operators import RecalculateTransitionsOperator
+from sbstudio.plugin.operators import (
+    CreateNewScheduleOverrideEntryOperator,
+    RecalculateTransitionsOperator,
+    RemoveScheduleOverrideEntryOperator,
+)
 
 
 def format_transition_duration(duration: int) -> str:
@@ -66,6 +70,41 @@ class TransitionEditorBase(Panel):
         if entry.is_staggered:
             layout.prop(entry, "pre_delay_per_drone_in_frames")
             layout.prop(entry, "post_delay_per_drone_in_frames")
+
+        layout.prop(entry, "schedule_overrides_enabled", text="Schedule overrides")
+        if entry.schedule_overrides_enabled:
+            row = layout.row()
+
+            col = row.column()
+            col.template_list(
+                "SKYBRUSH_UL_scheduleoverridelist",
+                self.bl_idname,
+                entry,
+                "schedule_overrides",
+                entry,
+                "active_schedule_override_entry_index",
+                maxrows=6,
+                sort_lock=True,
+            )
+
+            col = row.column(align=True)
+            col.operator(
+                CreateNewScheduleOverrideEntryOperator.bl_idname, icon="ADD", text=""
+            )
+            col.operator(
+                RemoveScheduleOverrideEntryOperator.bl_idname, icon="REMOVE", text=""
+            )
+
+            schedule_override = entry.active_schedule_override_entry
+            if schedule_override:
+                row = layout.row()
+                row.prop(schedule_override, "index", text="Marker index")
+
+                row = layout.row()
+                row.prop(schedule_override, "pre_delay", text="Dep")
+                row.prop(schedule_override, "post_delay", text="Arr")
+
+            layout.separator()
 
         layout.prop(entry, "is_locked")
 

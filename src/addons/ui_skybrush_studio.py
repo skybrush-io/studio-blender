@@ -41,7 +41,10 @@ for candidate in candidates:
 #############################################################################
 # imports needed by the addon
 
-from sbstudio.plugin.lists import SKYBRUSH_UL_lightfxlist
+from sbstudio.plugin.lists import (
+    SKYBRUSH_UL_lightfxlist,
+    SKYBRUSH_UL_scheduleoverridelist,
+)
 from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.model import (
     DroneShowAddonFileSpecificSettings,
@@ -54,6 +57,7 @@ from sbstudio.plugin.model import (
     LightEffectCollection,
     MappingType,
     SafetyCheckProperties,
+    ScheduleOverride,
     StoryboardEntry,
     Storyboard,
 )
@@ -64,6 +68,7 @@ from sbstudio.plugin.operators import (
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
     CreateFormationOperator,
+    CreateNewScheduleOverrideEntryOperator,
     CreateNewStoryboardEntryOperator,
     CreateLightEffectOperator,
     CreateTakeoffGridOperator,
@@ -82,6 +87,7 @@ from sbstudio.plugin.operators import (
     RecalculateTransitionsOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
+    RemoveScheduleOverrideEntryOperator,
     RemoveStoryboardEntryOperator,
     ReorderFormationMarkersOperator,
     ReturnToHomeOperator,
@@ -142,6 +148,7 @@ types = (
     LightEffect,
     LightEffectCollection,
     MappingType,
+    ScheduleOverride,
     StoryboardEntry,
     Storyboard,
     LEDControlPanelProperties,
@@ -168,6 +175,8 @@ operators = (
     MoveStoryboardEntryUpOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     RemoveStoryboardEntryOperator,
+    CreateNewScheduleOverrideEntryOperator,
+    RemoveScheduleOverrideEntryOperator,
     UpdateFrameRangeFromStoryboardOperator,
     UpdateTimeMarkersFromStoryboardOperator,
     CreateLightEffectOperator,
@@ -198,7 +207,7 @@ operators = (
 )
 
 #: List widgets in this addon.
-lists = (SKYBRUSH_UL_lightfxlist,)
+lists = (SKYBRUSH_UL_lightfxlist, SKYBRUSH_UL_scheduleoverridelist)
 
 #: Menus in this addon
 menus = (GenerateMarkersMenu,)

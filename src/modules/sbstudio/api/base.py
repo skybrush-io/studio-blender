@@ -244,7 +244,8 @@ class SkybrushStudioAPI:
                     raise SkybrushStudioAPIError(str(decoded_body.get("detail")))
             else:
                 raise SkybrushStudioAPIError(
-                    f"HTTP error {ex.status}. This is most likely a server-side issue; please contact us and let us know."
+                    f"HTTP error {ex.status}. This is most likely a "
+                    f"server-side issue; please contact us and let us know."
                 ) from ex
 
     def _skip_ssl_checks(self) -> None:
@@ -258,6 +259,31 @@ class SkybrushStudioAPI:
         ctx.check_hostname = False
         ctx.verify_mode = CERT_NONE
         self._request_context = ctx
+
+    def decompose_points(
+        self,
+        points: Sequence[Coordinate3D],
+        *,
+        min_distance: float,
+        method: str = "greedy",
+    ) -> List[int]:
+        """Decomposes a set of points into multiple groups while ensuring that
+        the minimum distance of points within the same group is at least as
+        large as the given threshold.
+        """
+        data = {
+            "version": 1,
+            "method": str(method),
+            "min_distance": float(min_distance),
+            "points": points,
+        }
+        with self._send_request("operations/decompose", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        return result.get("groups")
 
     def export(
         self,
@@ -400,7 +426,7 @@ class SkybrushStudioAPI:
         trajectories: Dict[str, Trajectory],
         output: Path,
         validation: SafetyCheckParams,
-        plots: List[str] = ["pos", "vel", "nn"],
+        plots: Sequence[str] = ("pos", "vel", "nn"),
         fps: float = 4,
         ndigits: int = 3,
         time_markers: Optional[TimeMarkers] = None,
@@ -487,6 +513,47 @@ class SkybrushStudioAPI:
             raise SkybrushStudioAPIError("invalid response version")
 
         return result.get("mapping"), result.get("clearance")
+
+    def plan_landing(
+        self,
+        points: Sequence[Coordinate3D],
+        *,
+        min_distance: float,
+        velocity: float,
+        target_altitude: float = 0,
+        spindown_time: float = 5,
+    ) -> Tuple[List[int], List[int]]:
+        """Plans the landing trajectories for a set of drones, assuming that
+        they should maintain a given minimum distance while the motors are
+        running and that they land with constant speed.
+
+        Arguments:
+            points: coordinates of the drones to land
+            min_distance: minimum distance to maintain while the motors are
+                running
+            velocity: average vertical velocity during landing
+            target_altitude: altitude to land the drones to
+            spindown_time: number of seconds it takes for the motors to
+                shut down after a successful landing
+
+        Returns:
+            the start times and durations of the landing operation for each drone
+        """
+        data = {
+            "version": 1,
+            "points": points,
+            "min_distance": float(min_distance),
+            "velocity": float(velocity),
+            "target_altitude": float(target_altitude),
+            "spindown_time": float(spindown_time),
+        }
+        with self._send_request("operations/plan-landing", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        return result["start_times"], result["durations"]
 
     def plan_transition(
         self,

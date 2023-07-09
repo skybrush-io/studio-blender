@@ -3,10 +3,13 @@ import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context, Object
 from math import ceil
-from typing import List
 
+from sbstudio.math.nearest_neighbors import find_nearest_neighbors
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
+from sbstudio.plugin.model.storyboard import Storyboard
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
@@ -49,46 +52,31 @@ class TakeoffOperator(StoryboardOperator):
         unit="LENGTH",
     )
 
+    # TODO(ntamas): test whether it is safe to remove this property without
+    # breaking compatibility with older versions
+
     altitude_is_relative = BoolProperty(
         name="Relative Altitude",
-        description="Specifies whether the takeoff altitude is relative to the current altitude of the drone",
-        default=False,
-    )
-
-    """
-    delay = FloatProperty(
-        name="Delay",
-        description="Delay between takeoffs of consecutive drones in the takeoff sequence",
-        default=0,
-        min=0,
-        soft_min=0,
-        soft_max=5,
-        unit="TIME",
-        subtype="TIME",
-    )
-
-    order = EnumProperty(
-        name="Order",
-        description="Order of drones in the takeoff sequence",
-        items=(
-            (
-                "DEFAULT",
-                "Default",
-                "Use the order in which the drones appear in the drone collection",
-            ),
-            ("NAME", "Name", "Sort the drones alphabetically"),
-            ("XY", "X axis first", "Sort the drones by X axis first, then by Y axis"),
-            ("YX", "Y axis first", "Sort the drones by Y axis first, then by X axis"),
+        description=(
+            "Specifies whether the takeoff altitude is relative to the current "
+            "altitude of the drone. Deprecated; not used any more."
         ),
-        default="DEFAULT",
+        default=False,
+        options={"HIDDEN"},
     )
 
-    reverse_order = BoolProperty(
-        name="Reverse ordering",
-        description="Whether to reverse the ordering of the takeoff sequence",
-        default=False,
+    altitude_shift = FloatProperty(
+        name="Layer height",
+        description=(
+            "Specifies the difference between altitudes of takeoff layers "
+            "for multi-phase takeoffs when multiple drones occupy the same "
+            "takeoff slot within safety distance."
+        ),
+        default=5,
+        soft_min=0,
+        soft_max=50,
+        unit="LENGTH",
     )
-    """
 
     @classmethod
     def poll(cls, context):
@@ -105,7 +93,7 @@ class TakeoffOperator(StoryboardOperator):
     def execute_on_storyboard(self, storyboard, entries, context):
         return {"FINISHED"} if self._run(storyboard, context=context) else {"CANCELLED"}
 
-    def _run(self, storyboard, *, context) -> bool:
+    def _run(self, storyboard: Storyboard, *, context) -> bool:
         bpy.ops.skybrush.prepare()
 
         if not self._validate_start_frame(context):
@@ -115,18 +103,15 @@ class TakeoffOperator(StoryboardOperator):
         if not drones:
             return False
 
-        self._sort_drones(drones)
+        source, target, _ = create_helper_formation_for_takeoff_and_landing(
+            drones,
+            frame=self.start_frame,
+            base_altitude=self.altitude,
+            layer_height=self.altitude_shift,
+            min_distance=get_proximity_warning_threshold(context),
+        )
 
-        # Prepare the points of the target formation to take off to
-        with create_position_evaluator() as get_positions_of:
-            source = get_positions_of(drones, frame=self.start_frame)
-
-        if self.altitude_is_relative:
-            target = [(x, y, z + self.altitude) for x, y, z in source]
-            max_distance = self.altitude
-        else:
-            target = [(x, y, self.altitude) for x, y, z in source]
-
+        # Calculate the Z distance to travel for each drone
         diffs = [t[2] - s[2] for s, t in zip(source, target)]
         if min(diffs) < 0:
             dist = abs(min(diffs))
@@ -136,11 +121,15 @@ class TakeoffOperator(StoryboardOperator):
             )
             return False
 
-        # Calculate takeoff duration from max distance to travel and the
+        # Calculate takeoff durations from distances to travel and the
         # average velocity
-        max_distance = max(diffs)
         fps = context.scene.render.fps
-        takeoff_duration = ceil((max_distance / self.velocity) * fps)
+        takeoff_durations = [ceil((diff / self.velocity) * fps) for diff in diffs]
+
+        # We ensure that drones arrive at the same time, so calculate the
+        # takeoff delays for those drones that take off to lower altitudes
+        takeoff_duration = max(takeoff_durations)
+        delays = [takeoff_duration - d for d in takeoff_durations]
 
         # Calculate when the takeoff should end
         end_of_takeoff = self.start_frame + takeoff_duration
@@ -156,13 +145,23 @@ class TakeoffOperator(StoryboardOperator):
                 return False
 
         # Add a new storyboard entry with the given formation
-        storyboard.add_new_entry(
+        entry = storyboard.add_new_entry(
             formation=create_formation("Takeoff", target),
             frame_start=end_of_takeoff,
             duration=0,
             select=True,
             context=context,
         )
+        entry.transition_type = "MANUAL"
+
+        # Set up the custom departure delays for the drones
+        if delays and max(delays) > 0:
+            entry.schedule_overrides_enabled = True
+            for index, delay in enumerate(delays):
+                if delay > 0:
+                    override = entry.add_new_schedule_override()
+                    override.index = index
+                    override.pre_delay = delay
 
         # Recalculate the transitions leading from and to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
@@ -170,13 +169,6 @@ class TakeoffOperator(StoryboardOperator):
             bpy.ops.skybrush.recalculate_transitions(scope="FROM_SELECTED")
 
         return True
-
-    def _sort_drones(self, drones: List[Object]):
-        """Sorts the given list of drones in-place according to the order
-        specified by the user in this operator.
-        """
-        # TODO(ntamas): add support for ordering the drones
-        pass
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the takeoff time chosen by the user is valid."""
@@ -187,7 +179,10 @@ class TakeoffOperator(StoryboardOperator):
             if self.start_frame < frame:
                 self.report(
                     {"ERROR"},
-                    f"Takeoff maneuver must start after the first (takeoff grid) entry of the storyboard (frame {frame})",
+                    (
+                        f"Takeoff maneuver must start after the first (takeoff "
+                        f"grid) entry of the storyboard (frame {frame})"
+                    ),
                 )
                 return False
             if len(storyboard.entries) > 1:
@@ -195,8 +190,54 @@ class TakeoffOperator(StoryboardOperator):
                 if frame is not None and self.start_frame >= frame:
                     self.report(
                         {"ERROR"},
-                        f"Takeoff maneuver must start before the second entry of the storyboard (frame {frame})",
+                        (
+                            f"Takeoff maneuver must start before the second "
+                            f"entry of the storyboard (frame {frame})"
+                        ),
                     )
                     return False
 
         return True
+
+
+def create_helper_formation_for_takeoff_and_landing(
+    drones,
+    *,
+    frame: int,
+    base_altitude: float,
+    layer_height: float,
+    min_distance: float,
+):
+    """Creates a layer helper formation for takeoff and landing where the drones
+    are placed directly above their positions at the given frame, at the given
+    base altitude plus an altitude shift per layer to ensure minimum distance
+    constraints.
+
+    Returns:
+        the source points, the target points, and the assignment of target
+        points to layers (layer 0 being at the lowest altitude)
+    """
+    # Evaluate the initial positions of the drones
+    with create_position_evaluator() as get_positions_of:
+        source = get_positions_of(drones, frame=frame)
+
+    # Figure out how many phases we will need, based on the current safety
+    # threshold and the arrangement of the drones
+    _, _, dist = find_nearest_neighbors(source)
+    if dist < min_distance:
+        groups = get_api().decompose_points(
+            source, min_distance=min_distance, method="balanced"
+        )
+    else:
+        # We can save an API call here
+        groups = [0] * len(source)
+
+    num_groups = max(groups) + 1 if groups else 0
+
+    # Prepare the points of the target formation to take off to
+    target = [
+        (x, y, base_altitude + (num_groups - group - 1) * layer_height)
+        for (x, y, _), group in zip(source, groups)
+    ]
+
+    return source, target, groups

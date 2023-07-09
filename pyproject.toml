@@ -10,14 +10,18 @@ repository = "https://github.com/skybrush-io/studio-plugin-blender"
 documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
 name = "collmot"
 url = "https://pypi.collmot.com/simple/"
-secondary = true
+priority = "explicit"
 
 [[tool.poetry.source]]
 name = "fury"
 url = "https://pypi.fury.io/skybrush/"
-secondary = true
+priority = "supplemental"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -28,8 +32,13 @@ svgpathtools = { version = "^1.6.1", optional = true, source = "fury" }
 [tool.poetry.extras]
 standalone = ["skybrush-studio", "svgpathtools"]
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pyclean = "^2.0.0"
+
+[tool.ruff]
+ignore = ["B905", "C901", "E402", "E501"]
+line-length = 80
+select = ["B", "C", "E", "F", "W"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -7,6 +7,7 @@ from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator
 from .create_formation import CreateFormationOperator
 from .create_light_effect import CreateLightEffectOperator
+from .create_new_schedule_override_entry import CreateNewScheduleOverrideEntryOperator
 from .create_new_storyboard_entry import CreateNewStoryboardEntryOperator
 from .create_takeoff_grid import CreateTakeoffGridOperator
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
@@ -30,6 +31,7 @@ from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .remove_formation import RemoveFormationOperator
 from .remove_light_effect import RemoveLightEffectOperator
+from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .reorder_formation_markers import ReorderFormationMarkersOperator
 from .return_to_home import ReturnToHomeOperator
@@ -49,6 +51,7 @@ __all__ = (
     "ApplyColorsToSelectedDronesOperator",
     "CreateFormationOperator",
     "CreateLightEffectOperator",
+    "CreateNewScheduleOverrideEntryOperator",
     "CreateNewStoryboardEntryOperator",
     "CreateTakeoffGridOperator",
     "DeselectFormationOperator",
@@ -64,6 +67,7 @@ __all__ = (
     "MoveStoryboardEntryUpOperator",
     "PrepareSceneOperator",
     "RecalculateTransitionsOperator",
+    "RemoveScheduleOverrideEntryOperator",
     "RemoveFormationOperator",
     "RemoveLightEffectOperator",
     "RemoveStoryboardEntryOperator",

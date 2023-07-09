@@ -31,10 +31,16 @@ from pathlib import Path
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
-candidates = [
-    abspath(bpy.context.preferences.filepaths.script_directory),
-    Path(sys.modules[__name__].__file__).parent.parent,
-]
+
+if bpy.app.version >= (3, 6, 0):
+    candidates = [
+        abspath(script_directory.directory)
+        for script_directory in bpy.context.preferences.filepaths.script_directories
+    ]
+else:
+    candidates = [abspath(bpy.context.preferences.filepaths.script_directory)]
+candidates.append(Path(sys.modules[__name__].__file__).parent.parent)
+
 for candidate in candidates:
     path = (Path(candidate) / "vendor" / "skybrush").resolve()
     if path.exists():

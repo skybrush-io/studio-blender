@@ -36,8 +36,6 @@ image::panels/swarm/takeoff.jpg[Takeoff]
 
 This button should ideally be pressed right after the takeoff grid is created before any other formations are added yet. It is also possible to use the operator later after having defined the first few formations, but you must ensure that there is enough time before the first formation to perform the takeoff _and_ get to the first formation in time.
 
-The btn:[Relative Altitude] checkbox specifies whether the altitude is interpreted relative to the current altitude of each drone (when checked) or as an absolute altitude above ground level (when unchecked). Typically you can leave it unchecked; it makes a difference only if the drones are placed at different heights before takeoff.
-
 NOTE: Skybrush requires you to specify the _average_ vertical velocity of the drones during takeoff. This lets you gauge easily how much time the takeoff will need (e.g., taking off to 6 meters with an average velocity of 1.5 m/s takes 4 seconds), but since the drones need time to accelerate and decelerate, their _maximum_ vertical velocity will be higher than the average velocity to compensate for the time lost during acceleration and deceleration. Make sure to take this into account in order not to overshoot the vertical velocity limits of the drones.
 
 == Return to home (RTH)

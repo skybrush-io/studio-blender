@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
+from functools import partial
 from math import inf
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple
 
 import bpy
 
@@ -264,6 +265,55 @@ def calculate_mapping_for_transition_into_storyboard_entry(
     return result
 
 
+def calculate_departure_index_of_drone(
+    drone,
+    drone_index: int,
+    previous_entry: StoryboardEntry,
+    previous_entry_index: int,
+    previous_mapping: Optional[Mapping],
+    objects_in_previous_formation,
+) -> int:
+    """Calculates the departure index of a drone (i.e. the index of the source
+    marker that a drone is associated to) in a transition.
+    """
+    # In the departure sequence, the index of the drone is dictated
+    # by the index of its associated marker / object within the
+    # previous formation.
+    if previous_mapping:
+        previous_target_index = previous_mapping[drone_index]
+        if previous_target_index is None:
+            # drone did not participate in the previous formation
+            return 0
+        else:
+            return previous_target_index
+    else:
+        # Previous mapping not known. All is not lost, however; we
+        # can find which point in the previous formation the drone
+        # must have belonged to by finding the constraint that binds
+        # the drone to the previous storyboard entry
+        if previous_entry is not None:
+            previous_constraint = find_transition_constraint_between(
+                drone=drone, storyboard_entry=previous_entry
+            )
+            if previous_constraint is not None:
+                previous_obj = previous_constraint.target
+            else:
+                # Either the drone did not participate in the previous formation,
+                # or the previous storyboard entry is the first one in the
+                # storyboard, in which case there are no constraints
+                if previous_entry_index == 0:
+                    return drone_index
+
+                previous_obj = None
+            return objects_in_previous_formation.find(previous_obj)
+        else:
+            # This is the first entry. If we are calculating a
+            # transition _into_ the first entry, the drones are
+            # simply ordered according to how they are placed in the
+            # Drones collection
+            return drone_index
+
+
 def update_transition_constraint_properties(drone, entry: StoryboardEntry, marker, obj):
     """Updates the constraint that attaches a drone to its target in a
     transition.
@@ -363,6 +413,7 @@ def update_transition_constraint_influence(
 
 def update_transition_for_storyboard_entry(
     entry: StoryboardEntry,
+    entry_index: int,
     drones,
     *,
     get_positions_of,
@@ -376,6 +427,8 @@ def update_transition_for_storyboard_entry(
 
     Parameters:
         entry: the storyboard entry
+        entry_index: index of the storyboard entry
+        drones: the drones in the scene
         previous_entry: the storyboard entry that precedes the given entry;
             `None` if the given entry is the first one
         previous_mapping: the mapping from drone indices to target point
@@ -383,7 +436,6 @@ def update_transition_for_storyboard_entry(
             not known or if the given entry is the first one. Used for
             staggered transitions to determine when a given drone should
             depart from the previous formation
-        drones: the drones in the scene
         start_of_scene: the first frame of the scene
         start_of_next: the frame where the _next_ storyboard entry starts;
             `None` if this is the last storyboard entry
@@ -437,9 +489,14 @@ def update_transition_for_storyboard_entry(
     objects_in_formation = _LazyFormationObjectList(entry)
     objects_in_previous_formation = _LazyFormationObjectList(previous_entry)
 
+    # Create a mapping that maps indices of points in the source formation to
+    # the corresponding schedule overrides (if any)
+    schedule_override_map = entry.get_enabled_schedule_override_map()
+
     # Now we have the index of the target point that each drone
     # should be mapped to, and we have `None` for those drones that
     # will not participate in the formation
+    todo: List[Callable[[], None]] = []
     for drone_index, drone in enumerate(drones):
         target_index = mapping[drone_index]
         if target_index is None:
@@ -455,9 +512,21 @@ def update_transition_for_storyboard_entry(
 
             windup_start_frame = end_of_previous
             start_frame = entry.frame_start
+            departure_delay = 0
+            arrival_delay = 0
+            departure_index: Optional[int] = None
+
             if entry.is_staggered:
                 # Determine the index of the drone in the departure sequence
                 # and in the arrival sequence
+                departure_index = calculate_departure_index_of_drone(
+                    drone,
+                    drone_index,
+                    previous_entry,
+                    entry_index - 1,
+                    previous_mapping,
+                    objects_in_previous_formation,
+                )
 
                 # In the departure sequence, the index of the drone is dictated
                 # by the index of its associated marker / object within the
@@ -497,17 +566,41 @@ def update_transition_for_storyboard_entry(
                 # formation; this is easy
                 arrival_index = objects_in_formation.find(obj)
 
-                windup_start_frame += (
-                    entry.pre_delay_per_drone_in_frames * departure_index
-                )
-                start_frame -= entry.post_delay_per_drone_in_frames * (
+                departure_delay = entry.pre_delay_per_drone_in_frames * departure_index
+                arrival_delay = -entry.post_delay_per_drone_in_frames * (
                     num_drones_transitioning - arrival_index - 1
                 )
-                if windup_start_frame >= start_frame:
-                    raise SkybrushStudioError(
-                        f"Not enough time to plan staggered transition to formation {entry.name!r}. "
-                        f"Try decreasing departure or arrival delay or allow more time for the transition."
+
+            if schedule_override_map:
+                # Determine the index of the drone in the departure sequence
+                # so we can look up whether there is an override for it. Note
+                # that we do not need to do this again if we already have the
+                # departure index
+                if departure_index is None:
+                    departure_index = calculate_departure_index_of_drone(
+                        drone,
+                        drone_index,
+                        previous_entry,
+                        entry_index - 1,
+                        previous_mapping,
+                        objects_in_previous_formation,
                     )
+
+                override = schedule_override_map.get(departure_index)
+                if override:
+                    departure_delay = override.pre_delay
+                    arrival_delay = -override.post_delay
+
+            windup_start_frame += departure_delay
+            start_frame += arrival_delay
+
+            if windup_start_frame >= start_frame:
+                raise SkybrushStudioError(
+                    f"Not enough time to plan staggered transition to "
+                    f"formation {entry.name!r} at drone index {drone_index+1} "
+                    f"(1-based). Try decreasing departure or arrival delay "
+                    f"or allow more time for the transition."
+                )
 
             # start_frame can be earlier than entry.frame_start for
             # staggered arrivals.
@@ -517,7 +610,22 @@ def update_transition_for_storyboard_entry(
                 start_frame=start_frame,
                 end_frame=start_of_next,
             )
-            update_transition_constraint_influence(drone, constraint, descriptor)
+
+            # Do not update the influence curve now in case we have problems
+            # with drones coming later in the enumeration; just store the
+            # operation to call and then we'll do it in one batch at the end
+            todo.append(
+                partial(
+                    update_transition_constraint_influence,
+                    drone,
+                    constraint,
+                    descriptor,
+                )
+            )
+
+    # Commit all the changes to the influence curves that we have planned above
+    for func in todo:
+        func()
 
     return mapping
 
@@ -528,6 +636,9 @@ class RecalculationTask:
 
     entry: StoryboardEntry
     """The _target_ entry of the transition to recalculate."""
+
+    entry_index: int
+    """Index of the target entry of the transition."""
 
     previous_entry: Optional[StoryboardEntry] = None
     """The entry that precedes the target entry in the storyboard; `None` if the
@@ -543,6 +654,7 @@ class RecalculationTask:
     def for_entry_by_index(cls, entries: Sequence[StoryboardEntry], index: int):
         return cls(
             entries[index],
+            index,
             entries[index - 1] if index > 0 else None,
             entries[index + 1].frame_start if index + 1 < len(entries) else None,
         )
@@ -570,6 +682,7 @@ def recalculate_transitions(
         for task in tasks:
             previous_mapping = update_transition_for_storyboard_entry(
                 task.entry,
+                task.entry_index,
                 drones,
                 get_positions_of=get_positions_of,
                 previous_entry=task.previous_entry,
@@ -620,7 +733,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             ),
         ],
         name="Scope",
-        description="Scope of the operator that defines which transitions must be recalculated",
+        description=(
+            "Scope of the operator that defines which transitions must be "
+            "recalculated"
+        ),
         default="ALL",
     )
 
@@ -659,7 +775,10 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         except SkybrushStudioAPIError:
             self.report(
                 {"ERROR"},
-                "Error while invoking transition planner on the Skybrush Studio online service",
+                (
+                    "Error while invoking transition planner on the Skybrush "
+                    "Studio online service"
+                ),
             )
             return {"CANCELLED"}
 

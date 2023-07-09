@@ -470,3 +470,10 @@ class SafetyCheckProperties(PropertyGroup):
                 )
 
             overlay.markers = markers
+
+
+def get_proximity_warning_threshold(context: Context) -> float:
+    """Shortcut to return the current proximity warning threshold, irrespectively
+    of whether proximity warnings are enabled or not.
+    """
+    return float(context.scene.skybrush.safety_check.proximity_warning_threshold)
