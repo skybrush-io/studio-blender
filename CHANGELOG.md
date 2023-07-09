@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The plugin now supports takeoff grids where multiple drones occupy the same
+  takeoff slot within safety distance (e.g., four drones in a pod at the same
+  takeoff location). The takeoff, RTH and landing operators were redesigned to
+  cater for dense takeoff grids.
+
 - You can now import dynamic formations from a ZIP file containing CSV files,
   one per drone. See the documentation for more details about the format of the
   CSV file.
