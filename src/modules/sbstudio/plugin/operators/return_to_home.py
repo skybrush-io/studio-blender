@@ -1,7 +1,7 @@
 import bpy
 
 from bpy.props import FloatProperty, IntProperty
-from bpy.types import Context, Object
+from bpy.types import Context
 from math import ceil, sqrt
 
 from sbstudio.plugin.constants import Collections

@@ -1,7 +1,7 @@
 import bpy
 
 from bpy.props import BoolProperty, FloatProperty, IntProperty
-from bpy.types import Context, Object
+from bpy.types import Context
 from math import ceil
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors

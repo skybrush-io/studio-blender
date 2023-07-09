@@ -85,16 +85,16 @@ class SkybrushViewerBridge:
                 if err.code >= 500:
                     raise SkybrushViewerError(
                         "Skybrush Viewer indicated an unexpected error"
-                    )
+                    ) from None
                 elif err.code == 404:
                     # Not found
                     self._discovery.invalidate()
-                    raise SkybrushViewerNotFoundError()
+                    raise SkybrushViewerNotFoundError() from None
                 elif err.code == 400:
                     # Bad request
                     raise SkybrushViewerError(
                         "Skybrush Viewer indicated that the input format is invalid"
-                    )
+                    ) from None
                 else:
                     raise
 

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from .point import Point3D, Point4D
 
@@ -8,8 +8,8 @@ __all__ = ("PointCloud",)
 class PointCloud:
     """Simplest representation of a list/group/cloud of Point3D points."""
 
-    def __init__(self, points: List[Union[Point3D, Point4D]] = []):
-        self._points = [Point3D(x=p.x, y=p.y, z=p.z) for p in points]
+    def __init__(self, points: Optional[List[Union[Point3D, Point4D]]] = None):
+        self._points = [Point3D(x=p.x, y=p.y, z=p.z) for p in points or []]
 
     def __getitem__(self, item):
         return self._points[item]

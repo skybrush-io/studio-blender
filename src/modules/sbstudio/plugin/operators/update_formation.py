@@ -1,5 +1,3 @@
-import bpy
-
 from bpy.props import EnumProperty
 from bpy.types import Context, Scene
 from mathutils import Vector
@@ -153,7 +151,7 @@ class UpdateFormationOperator(FormationOperator):
         # formation; if there were any other users, do not delete the object as
         # the user might need it for something. Also do not delete objects that
         # would be re-added to the formation.
-        to_unlink = set(obj for obj in objects_in_formation if obj.users > 1)
+        to_unlink = {obj for obj in objects_in_formation if obj.users > 1}
         to_delete = set(objects_in_formation) - to_unlink - set(new_objects)
 
         # Unlink the markers from the formation that are used elsewhere

@@ -66,12 +66,12 @@ class Overlay(metaclass=ABCMeta):
         if self._enabled:
             self.prepare()
             if hasattr(self, "draw_3d"):
-                handler: Callable[[], None] = getattr(self, "draw_3d")
+                handler: Callable[[], None] = self.draw_3d  # type: ignore
                 self._handler_3d = SpaceView3D.draw_handler_add(
                     handler, (), "WINDOW", getattr(self, "event", "POST_VIEW")
                 )
             if hasattr(self, "draw_2d"):
-                handler: Callable[[], None] = getattr(self, "draw_2d")
+                handler: Callable[[], None] = self.draw_2d  # type: ignore
                 self._handler_2d = SpaceView3D.draw_handler_add(
                     handler, (), "WINDOW", getattr(self, "event", "POST_PIXEL")
                 )

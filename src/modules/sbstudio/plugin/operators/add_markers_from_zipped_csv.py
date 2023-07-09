@@ -186,7 +186,7 @@ def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
                     except Exception:
                         raise RuntimeError(
                             f"Invalid content in input CSV file {filename!r}, row {row!r}"
-                        )
+                        ) from None
 
                     # store position and color entry
                     timestamps.append(t)

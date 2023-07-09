@@ -110,7 +110,7 @@ def set_keyframes(
     target, sep, prop = data_path.rpartition(".")
     target = object.path_resolve(target) if sep else object
 
-    for frame, value in values:
+    for frame, _value in values:
         target.keyframe_insert(prop, frame=frame)
 
     if is_array:

@@ -36,7 +36,7 @@ standalone = ["skybrush-studio", "svgpathtools"]
 pyclean = "^2.0.0"
 
 [tool.ruff]
-ignore = ["B905", "C901", "E402", "E501"]
+ignore = ["B027", "B905", "C901", "E402", "E501", "E731"]
 line-length = 80
 select = ["B", "C", "E", "F", "W"]
 

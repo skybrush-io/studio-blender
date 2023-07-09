@@ -86,7 +86,7 @@ def parse_static_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
     header_passed: bool = False
 
     with open(filename, "r") as csv_file:
-        lines = [line for line in csv_file]
+        lines = list(csv_file)
         for row in csv.reader(lines, delimiter=","):
             # skip empty lines
             if not row:
@@ -108,7 +108,7 @@ def parse_static_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
             except Exception:
                 raise RuntimeError(
                     f"Invalid content in input CSV file {filename!r}, row {row!r}"
-                )
+                ) from None
 
             # check name
             if name in result:

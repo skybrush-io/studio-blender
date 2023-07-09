@@ -239,7 +239,9 @@ class SkybrushStudioAPI:
                     # got an empty object
                     decoded_body = {}
                 if isinstance(decoded_body, dict) and decoded_body.get("detail"):
-                    raise SkybrushStudioAPIError(str(decoded_body.get("detail")))
+                    raise SkybrushStudioAPIError(
+                        str(decoded_body.get("detail"))
+                    ) from None
             else:
                 raise SkybrushStudioAPIError(
                     f"HTTP error {ex.status}. This is most likely a "

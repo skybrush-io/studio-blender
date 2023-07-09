@@ -1,6 +1,3 @@
-import bpy
-
-
 from sbstudio.plugin.objects import remove_objects
 
 from .base import FormationOperator

@@ -279,7 +279,7 @@ def get_shader_node_and_input_for_diffuse_color_of_material(material):
             except KeyError:
                 raise SkybrushStudioAddonError(
                     "Material does not have a diffuse color shader node"
-                )
+                ) from None
 
 
 def set_specular_reflection_intensity_of_material(material, intensity):

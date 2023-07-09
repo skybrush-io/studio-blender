@@ -38,5 +38,5 @@ class DroneShowAddonObjectPropertiesPanel(Panel):
         return (
             context.object
             and context.object.type == "MESH"
-            and getattr(context.object, "skybrush")
+            and getattr(context.object, "skybrush", None)
         )

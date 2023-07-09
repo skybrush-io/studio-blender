@@ -1,6 +1,6 @@
 import bpy
 
-from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
+from bpy.types import Collection, Context, MeshVertex, Object, Scene, VertexGroup
 from mathutils import Vector
 from typing import Any, Iterable, List, Optional, Union, Tuple
 

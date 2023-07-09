@@ -14,10 +14,10 @@ def FormationProperty(**kwds):
     """Factory function disguised as a class; creates a Blender property that
     is suitable for storing a pointer to a formation.
     """
-    props = dict(
-        name="Formation",
-        type=Collection,
-        poll=_is_formation,
-    )
+    props = {
+        "name": "Formation",
+        "type": Collection,
+        "poll": _is_formation,
+    }
     props.update(kwds)
     return PointerProperty(**props)
