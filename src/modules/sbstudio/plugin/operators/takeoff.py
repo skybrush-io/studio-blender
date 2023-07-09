@@ -102,7 +102,7 @@ class TakeoffOperator(StoryboardOperator):
         if not drones:
             return False
 
-        source, target = create_helper_formation_for_takeoff_and_landing(
+        source, target, _ = create_helper_formation_for_takeoff_and_landing(
             drones,
             frame=self.start_frame,
             base_altitude=self.altitude,
@@ -151,6 +151,7 @@ class TakeoffOperator(StoryboardOperator):
             select=True,
             context=context,
         )
+        entry.transition_type = "MANUAL"
 
         # Set up the custom departure delays for the drones
         if delays and max(delays) > 0:
@@ -204,6 +205,10 @@ def create_helper_formation_for_takeoff_and_landing(
     are placed directly above their positions at the given frame, at the given
     base altitude plus an altitude shift per layer to ensure minimum distance
     constraints.
+
+    Returns:
+        the source points, the target points, and the assignment of target
+        points to layers (layer 0 being at the lowest altitude)
     """
     # Evaluate the initial positions of the drones
     with create_position_evaluator() as get_positions_of:
@@ -222,4 +227,4 @@ def create_helper_formation_for_takeoff_and_landing(
         for (x, y, _), group in zip(source, groups)
     ]
 
-    return source, target
+    return source, target, groups

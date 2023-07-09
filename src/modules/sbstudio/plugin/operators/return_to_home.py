@@ -86,7 +86,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             return False
 
         first_frame = storyboard.frame_start
-        source, target = create_helper_formation_for_takeoff_and_landing(
+        source, target, _ = create_helper_formation_for_takeoff_and_landing(
             drones,
             frame=first_frame,
             base_altitude=self.altitude,
