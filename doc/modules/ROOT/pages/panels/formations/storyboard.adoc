@@ -22,14 +22,24 @@ Duration:: Sets the duration of the selected storyboard entry in the drone show.
 
 Custom Name:: Ticking this check box allows you to keep the label of the storyboard entry even if you change the associated formation. Unticking this will change the label of the storyboard entry to the name of the formation when you change the formation.
 
-Transition from previous:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Skybrush Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order (note that you need to turn off alphabetic ordering in the Outliner first). Blender will then map the nth marker in the initial formation to the nth marker in the target formation. You can also select between two fundamental _temporal_ schedules for the transition: `Synchronized` and `Staggered`. In `Synchronized` mode all drones depart from and arrive to the formations at the same time. In `Staggered` mode drones depart and arrive at different times, with a specific delay value between each of them set by the `Departure delay` and `Arrival delay` variables (see image below). Once you are satisfied with all the parameters of the transition, press the btn:[Recalculate] button on the popup window to update your show with the current transition.
-
+Transition from previous:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Skybrush Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order (note that you need to turn off alphabetic ordering in the Outliner first). Blender will then map the nth marker in the initial formation to the nth marker in the target formation.
++
+You can also select between two fundamental _temporal_ schedules for the transition: `Synchronized` and `Staggered`. In `Synchronized` mode all drones depart from and arrive to the formations at the same time. In `Staggered` mode drones depart and arrive at different times, with a specific delay value between each of them set by the *Departure delay* and *Arrival delay* parameters (see image below).
++
 image::panels/storyboard/staggered_transition.jpg[Staggered transition]
++
+TIP: as an alternative to layered takeoff, you can use a staggered transition for your takeoff as well. If you do so, make sure to use the `Ensure safety distance` reordering operator for the takeoff formation.
++
+If you enable the btn:[Schedule overrides] checkbox, the departure and arrival times of individual markers in the formation can be altered. This option is useful if an automatic transition violates your minimal distance rule. In this case adding a bit of delay to a conflicting drone manually might eliminate the danger. Note that the automatic layered takeoff and landing operations also set individual schedule overrides behind the scenes.
++
+image::panels/storyboard/schedule_overrides.jpg[Schedule overrides]
++
+Finally, enable the btn:[Locked] checkbox to lock a transition and do not allow its automatic update when the btn:[Recalculate transitions] button is pressed.
++
+Once you are satisfied with all the parameters of the transition, press the btn:[Recalculate] button on the popup window to update your show with the current transition.
+
 
 Transition to next:: Shows or sets the type of transition between this formation and the _next_ one. Parameters are identical to those of the **Transition from previous** option, see more details there.
-
-TIP: if your takeoff place is too small and you need to place your drones closer to each other than their minimum distance between each other in the air, select `Staggered` takeoff to create the proper temporal distance between them during takeoff and land. Use the `Ensure safety distance` reordering operator for the relevant formations.
-
 
 == Removing a storyboard entry
 
