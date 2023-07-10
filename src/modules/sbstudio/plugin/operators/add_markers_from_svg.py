@@ -14,7 +14,6 @@ from sbstudio.model.point import Point3D
 from sbstudio.plugin.api import get_api
 from sbstudio.plugin.model.formation import add_points_to_formation
 from sbstudio.plugin.selection import Collections
-from sbstudio.plugin.utils.image import set_pixel
 
 from .base import FormationOperator
 
