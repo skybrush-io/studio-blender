@@ -20,4 +20,3 @@ search = 'version = "{current_version}"'
 src = "src/addons/ui_skybrush_studio.py"
 version_template = "({major}, {minor}, {patch})"
 search = '"version": {current_version}'
-

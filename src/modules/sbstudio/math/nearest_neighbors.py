@@ -55,7 +55,7 @@ def _nearest_neighbors_divide_and_conquer(points):
     principal_axis = points.ptp(axis=0).argmax()
     points = points[points[:, principal_axis].argsort(), :]
     p, q, dist_sq = _nearest_neighbors_divide_and_conquer_step(points, principal_axis)
-    return p, q, dist_sq ** 0.5
+    return p, q, dist_sq**0.5
 
 
 def _nearest_neighbors_divide_and_conquer_step(points, principal_axis):
@@ -91,7 +91,7 @@ def _nearest_neighbors_divide_and_conquer_step(points, principal_axis):
 
     # Look for any potential improvements _between_ the two halves
     p3, q3, dist_sq_split = _nearest_neighbors_find_closest_split_pair(
-        points, principal_axis, mid_index, midpoint, dist_sq_nonsplit ** 0.5
+        points, principal_axis, mid_index, midpoint, dist_sq_nonsplit**0.5
     )
     if dist_sq_nonsplit <= dist_sq_split:
         return closest_nonsplit_solution

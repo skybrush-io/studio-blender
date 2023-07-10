@@ -26,4 +26,3 @@ mklink /D dev\vendor\skybrush\skybrush %SKYBRUSH_ROOT%\src\skybrush
 FOR %%A in (jsonref.py proxytypes.py) DO mklink dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
 
 cd etc/scripts
-

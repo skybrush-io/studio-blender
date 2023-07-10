@@ -60,4 +60,3 @@ hdiutil create \
     -ov \
     -format UDZO \
     "${OUTPUT_DIR}/${NAME} ${VERSION}.dmg"
-

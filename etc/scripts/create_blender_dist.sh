@@ -150,4 +150,3 @@ if [ "x${BOOTLOADER_DIR}" != x ]; then
     echo "Single-file Windows executable created successfully in ${OUTPUT_DIR}/${ZIP_STEM}-win64.exe"
     echo "macOS launcher created successfully in ${OUTPUT_DIR}"
 fi
-

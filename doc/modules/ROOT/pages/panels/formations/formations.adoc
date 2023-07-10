@@ -93,5 +93,3 @@ image::panels/formations/formation_stats.jpg[Formation stats]
 == Appending a formation to the storyboard
 
 Press the btn:[Append to Storyboard] button to append the selected formation to the end of the storyboard. *Skybrush Studio* will calculate the time needed to move from the end of the last formation to the newly added formation, according to the current acceleration and velocity limits, and set up the start time of the new formation accordingly.
-
-
