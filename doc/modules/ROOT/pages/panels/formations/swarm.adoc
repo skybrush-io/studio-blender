@@ -34,7 +34,7 @@ TIP: Once the takeoff grid is created, you are free to modify the created "Takeo
 
 The btn:[Takeoff] button adds a takeoff maneuver to a specified altitude and with a specified _average_ vertical velocity from your initial takeoff grid. The start frame of the maneuver can be customized, although it is usually the same as the first frame of the scene.
 
-If the takeoff grid was created with more than one drones per slot, use the "layer height" parameter to setup the altitude difference between additional target layers above the default layer during the layered takeoff operation.
+If the takeoff grid was created with more than one drones per slot, use the *layer height* parameter to setup the altitude difference between additional target layers above the default layer during the layered takeoff operation.
 
 image::panels/swarm/takeoff.jpg[Takeoff]
 
@@ -46,7 +46,7 @@ NOTE: Skybrush requires you to specify the _average_ vertical velocity of the dr
 
 The btn:[RTH] button performs a return-to-home maneuver with a specified _average_ velocity from your last formation of the show. This maneuver brings the drones straight above the positions where they are supposed to land to an altitude that can be specified in the operator.
 
-If the takeoff grid was created with more than one drones per slot, use the "layer height" parameter to setup the altitude difference between additional target layers above the default layer during the layered RTH operation.
+If the takeoff grid was created with more than one drones per slot, use the *layer height* parameter to setup the altitude difference between additional target layers above the default layer during the layered RTH operation.
 
 image::panels/swarm/return_to_home.jpg[Return to home]
 
@@ -60,7 +60,7 @@ CAUTION: It is not guaranteed that each drone will land at the same position whe
 
 The btn:[Land] button lands the drones, starting from a given frame such that they move downwards in a straight line from their current position until they reach the given target altitude (ground is assumed to be at Z = 0). As usual, the _average_ velocity of the descent can be adjusted.
 
-If the takeoff grid was created with more than one drones per slot, use the "Motor spindown delay" parameter to setup the time difference between landing layers. This ensures that drones will land close to the others within the same slot only when the motors of the neighboring drones are already stopped.
+If the takeoff grid was created with more than one drones per slot, use the *Motor spindown delay* parameter to setup the time difference between landing layers. This ensures that drones will land close to the others within the same slot only when the motors of the neighboring drones are already stopped.
 
 image::panels/swarm/land.jpg[Land]
 

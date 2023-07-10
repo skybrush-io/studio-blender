@@ -21,8 +21,11 @@ The Skybrush compiled show format is a single-file descriptor of your complete d
 If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
+
 Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
+
 Trajectory FPS:: Set output frame rate for drone trajectories (make sure it is a submultiple of your render FPS)
+
 Light FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)
 
 == Export to .csv
@@ -34,7 +37,9 @@ TIP: We recommend using Skybrush Live for drone show control, together with the 
 If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
+
 Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
+
 Frame rate:: Set output frame rate of drone trajectories and light programs (make sure it is a submultiple of your render FPS)
 
 NOTE: Special characters in drone names are converted to standard characters in the exported filenames.
@@ -54,16 +59,23 @@ The validation .pdf is created by a local or remote instance of *Skybrush Studio
 If you press the btn:[Export to validation .pdf] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
-Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
-Trajectory FPS:: Set output sampling frame rate for drone trajectories (make sure it is a submultiple of your render FPS)
-Light FPS:: Set the output sample frame rate for light programs (make sure it is a submultiple of your render FPS)
-Plot positions:: Include position-related plots in the safety report
-Plot velocities:: Include velocity-related plots in the safety report
-Plot nearest neighbor:: Include a unified nearest neighbor plot in the safety report
-Plot all nearest neighbors:: Include nearest neighbor curves on a per-drone basis on a separate page of the safety report.
 
+Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
+
+Trajectory FPS:: Set output sampling frame rate for drone trajectories (make sure it is a submultiple of your render FPS)
+
+Light FPS:: Set the output sample frame rate for light programs (make sure it is a submultiple of your render FPS)
+
+Plot positions:: Include position-related plots in the safety report
+
+Plot velocities:: Include velocity-related plots in the safety report
+
+Plot nearest neighbor:: Include a unified nearest neighbor plot in the safety report
+
+Plot all nearest neighbors:: Include nearest neighbor curves on a per-drone basis on a separate page of the safety report.
++
 WARNING: Creating this plot might take a longer time, depending on the number of drones, frames and output frame rate.
 
 Create individual drone plots:: Include validation plots for each drone individually on separate pages in the final output.
-
++
 WARNING: Creating these plots might take a long time, depending on the number of drones, frames and output frame rate.
