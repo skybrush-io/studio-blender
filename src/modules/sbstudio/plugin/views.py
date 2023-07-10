@@ -23,7 +23,7 @@ def find_all_3d_views(screen: Optional[str] = None):
         Optional[SpaceView3D]: the first 3D view that we find in the given
             Blender screen, or ``None`` if no 3D view was found
     """
-    for space, area in find_all_3d_views_and_their_areas(screen):
+    for space, _area in find_all_3d_views_and_their_areas(screen):
         yield space
 
 

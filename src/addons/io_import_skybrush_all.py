@@ -52,16 +52,8 @@ for candidate in candidates:
 import logging
 
 from bpy_extras.io_utils import ImportHelper
-from bpy.path import ensure_ext
-from bpy.props import (
-    BoolProperty,
-    EnumProperty,
-    FloatProperty,
-    IntProperty,
-    StringProperty,
-)
+from bpy.props import StringProperty
 from bpy.types import Operator
-from copy import deepcopy
 
 from skybrush.io.blender.renderer import render
 from skybrush.io.base.importer import find_importer_function, ImportContext
@@ -109,7 +101,7 @@ def _run_script(filename, importer_parameters, renderer_parameters):
 
     # find importer
     suffix = Path(filename).suffix
-    for key, value in importers.items():
+    for value in importers.values():
         if value["suffix"] == suffix:
             break
     else:

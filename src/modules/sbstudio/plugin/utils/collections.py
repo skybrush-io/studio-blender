@@ -128,7 +128,12 @@ def ensure_object_exists_in_collection(
     else:
         return (
             create_object_in_collection(
-                collection, name, factory, internal=internal, *args, **kwds
+                collection,
+                name,
+                factory,
+                internal=internal,
+                *args,  # noqa: B026
+                **kwds,
             ),
             True,
         )

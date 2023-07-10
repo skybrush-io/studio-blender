@@ -57,10 +57,10 @@ class ReorderFormationMarkersOperator(FormationOperator):
         func = getattr(self, f"_execute_on_formation_{self.type}", None)
         if callable(func):
             index_vector: List[int] = func(markers, context)
-            reversed_mapping = dict(
-                (markers[marker_index], slot_index)
+            reversed_mapping = {
+                markers[marker_index]: slot_index
                 for slot_index, marker_index in enumerate(index_vector)
-            )
+            }
             bpy.ops.ed.undo_push()
             sort_collection(markers, reversed_mapping.__getitem__)
             self.report({"INFO"}, "Formation markers reordered")

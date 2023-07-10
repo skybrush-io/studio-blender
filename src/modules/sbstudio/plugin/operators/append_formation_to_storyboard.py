@@ -57,18 +57,18 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         fps = context.scene.render.fps
 
         # Set up safety check parameters
-        safety_kwds = dict(
-            max_velocity_xy=safety_check.velocity_xy_warning_threshold
+        safety_kwds = {
+            "max_velocity_xy": safety_check.velocity_xy_warning_threshold
             if safety_check
             else 8,
-            max_velocity_z=safety_check.velocity_z_warning_threshold
+            "max_velocity_z": safety_check.velocity_z_warning_threshold
             if safety_check
             else 2,
-            max_velocity_z_up=safety_check.velocity_z_warning_threshold_up_or_none
+            "max_velocity_z_up": safety_check.velocity_z_warning_threshold_up_or_none
             if safety_check
             else None,
-            max_acceleration=settings.max_acceleration if settings else 4,
-        )
+            "max_acceleration": settings.max_acceleration if settings else 4,
+        }
 
         with create_position_evaluator() as get_positions_of:
             if last_formation is not None:

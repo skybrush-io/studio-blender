@@ -71,10 +71,15 @@ Points in every formation have a specific order. This gets useful when staggered
 Reordering a formation can be issued any time with opening the btn:[Reorder] drop down list and selecting the preferred reordering operator. Note that reordering is instantaneous; using multiple reorder operators is possible, each one will take the current order and apply its own modifications to create the new order. The following reorder operators are implemented:
 
 Sort by name:: sort by the name of items in the formation (default sorting)
+
 Shuffle:: shuffle the items in the formation to a completely random order
+
 Reverse:: reverse the current order
+
 Sort by X/Y/Z coordinate:: sort the current order according to the X/Y/Z coordinate value of each point in the formation
+
 Every 2nd/3rd/4th:: pick every 2nd/3rd/4th item and repeat until all items are assigned to the new ordering
+
 Ensure safety distance:: pick the first item, then iteratively pick the next item that is far enough from all previous items picked (based on the distance limit set in the safety settings). When the list is exhausted, start from the beginning with the remaining items, ignoring the items picked in the previous round(s) in distance calculations. Repeat the process until every item is processed. The result is an ordering where consecutive items strive to respect the distance limit.
 
 TIP: to visualize the current order of a formation, enable the btn:[Show order of formations] checkbox, which will connect all points in the formation with linear line segments between each consecutive point in the current order colored from green to red.
@@ -88,5 +93,3 @@ image::panels/formations/formation_stats.jpg[Formation stats]
 == Appending a formation to the storyboard
 
 Press the btn:[Append to Storyboard] button to append the selected formation to the end of the storyboard. *Skybrush Studio* will calculate the time needed to move from the end of the last formation to the newly added formation, according to the current acceleration and velocity limits, and set up the start time of the new formation accordingly.
-
-

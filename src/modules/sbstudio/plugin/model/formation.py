@@ -128,7 +128,7 @@ def add_points_to_formation(
     result = []
 
     formation_name = name or formation.name or ""
-    existing_names = set(obj.name for obj in formation.objects)
+    existing_names = {obj.name for obj in formation.objects}
 
     index = 0
     for index in count():

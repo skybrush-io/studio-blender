@@ -1,5 +1,3 @@
-import bpy
-
 from bpy.types import Panel
 
 from sbstudio.plugin.operators import (

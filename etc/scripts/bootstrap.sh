@@ -30,4 +30,3 @@ for dependency in natsort pyledctrl skybrush svgpathtools svgwrite webcolors; do
         ln -s "${VENV_PYTHONPATH}/${dependency}"
     fi
 done
-

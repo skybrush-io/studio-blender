@@ -3,7 +3,7 @@ from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any, Callable, List, Sequence, TypeVar
 
-from sbstudio.model.types import Coordinate3D, RGBAColor
+from sbstudio.model.types import Coordinate3D
 
 
 __all__ = (

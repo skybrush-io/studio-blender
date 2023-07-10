@@ -1,12 +1,9 @@
-import blf
 import bpy
 import gpu
 
 from gpu_extras.batch import batch_for_shader
 from numpy import linspace
-from typing import Any, List, Optional, Sequence
 
-from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.model.formation import (
     get_world_coordinates_of_markers_from_formation,
 )

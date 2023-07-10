@@ -29,4 +29,3 @@ FOR %%A in (jsonref.py proxytypes.py) DO mklink dev\vendor\skybrush\%%A %VENV_PY
 
 
 cd etc/scripts
-

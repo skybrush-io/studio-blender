@@ -64,10 +64,15 @@ of the two colors according to where they are in the ordered sequence. The
 followig options are available:
 
 Default:: Drones are ordered in exactly the same way they appear in the `Drones` collection.
+
 Random:: Drones are ordered randomly before the operator is applied. You get a new random order every time you invoke the operator.
+
 X coordinate:: Drones are ordered by their X coordinate.
+
 Y coordinate:: Drones are ordered by their Y coordinate.
+
 Z coordinate:: Drones are ordered by their Z coordinate.
+
 Distance from 3D cursor:: Drones are ordered according to their distance from the current position of the 3D cursor in Blender.
 
 Ties are broken according to the order of the drones in the `Drones` collection.
