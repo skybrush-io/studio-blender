@@ -17,18 +17,6 @@ def get_pixel(image, x: int, y: int) -> RGBAColor:
     return image.pixels[offs : offs + 4]
 
 
-def set_pixel(image, x: int, y: int, color: RGBAColor):
-    """Sets a given pixel of an image to a given color.
-
-    Note that this function is very slow, if possible,
-    use the image.pixels.foreach_set() function instead.
-
-    """
-    width = image.size[0]
-    offs = (x + int(y * width)) * 4
-    image.pixels[offs : offs + 4] = color
-
-
 def update_image_from(target, source) -> None:
     """Updates an image from another image.
 
