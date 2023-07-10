@@ -17,10 +17,11 @@ from bpy.types import (
     ColorRamp,
     Context,
     Image,
+    ImageTexture,
     PropertyGroup,
     Mesh,
     Object,
-    ImageTexture,
+    Texture,
 )
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
@@ -187,7 +188,7 @@ class LightEffect(PropertyGroup):
     )
 
     texture = PointerProperty(
-        type=ImageTexture,
+        type=Texture,
         name="Texture",
         description=(
             "Texture of the light effect, used for the sole purpose of having a "
@@ -417,22 +418,29 @@ class LightEffect(PropertyGroup):
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
         """The color ramp of the effect, if exists and is used."""
-        return (
-            self.texture.color_ramp
-            if self.texture and self.color_image is None
-            else None
-        )
+        tex = self.texture
+        if isinstance(tex, ImageTexture):
+            return tex.color_ramp if tex.image is None else None
+        else:
+            return tex.color_ramp
 
     @property
     def color_image(self) -> Optional[Image]:
         """The color image of the effect, if exists."""
-        return self.texture.image if self.texture else None
+        return self.texture.image if isinstance(self.texture, ImageTexture) else None
 
     @color_image.setter
     def color_image(self, image):
-        if self.texture.image is not None:
-            bpy.data.images.remove(self.texture.image)
-        self.texture.image = image
+        # If we have an old, legacy Texture instance, replace it with an
+        # ImageTexture
+        if not isinstance(self.texture, ImageTexture):
+            self._remove_texture()
+            self._create_texture()
+
+        tex = self.texture
+        if tex.image is not None:
+            remove_if_unused(tex.image, from_=bpy.data.images)
+        tex.image = image
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
@@ -560,6 +568,31 @@ class LightEffect(PropertyGroup):
             plane = self._get_plane_from_mesh()
             return partial(test_is_in_front_of, plane)
 
+    def _create_texture(self) -> None:
+        """Creates the texture associated to the light effect."""
+        tex = bpy.data.textures.new(
+            name=f"Texture for light effect {self.name!r}", type="IMAGE"
+        )
+        tex.use_color_ramp = True
+        tex.image = None
+
+        # Clear alpha from color ramp
+        elts = tex.color_ramp.elements
+        for elt in elts:
+            elt.color[3] = 1.0
+
+        self.texture = tex
+
+    def _remove_texture(self) -> None:
+        """Removes the texture associated to the light effect from the Textures
+        collection if there are no other users for the texture in the scene.
+        """
+        if isinstance(self.texture, ImageTexture):
+            if self.texture.image is not None:
+                remove_if_unused(self.texture.image, from_=bpy.data.images)
+
+        remove_if_unused(self.texture, from_=bpy.data.textures)
+
 
 class LightEffectCollection(PropertyGroup, ListMixin):
     """Blender property group representing the list of light effects to apply
@@ -622,16 +655,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         entry.duration = duration
         entry.name = name
 
-        entry.texture = bpy.data.textures.new(
-            name="Texture for light effect '{}'".format(name), type="IMAGE"
-        )
-        entry.texture.use_color_ramp = True
-        entry.texture.image = None
-
-        # Clear alpha from color ramp
-        elts = entry.texture.color_ramp.elements
-        for elt in elts:
-            elt.color[3] = 1.0
+        entry._create_texture()
 
         # Copy default colors from the LED Control panel
         if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "led_control"):
@@ -723,5 +747,5 @@ class LightEffectCollection(PropertyGroup, ListMixin):
                 yield entry
 
     def _on_removing_entry(self, entry) -> bool:
-        remove_if_unused(entry.texture, from_=bpy.data.textures)
+        entry._remove_texture()
         return True
