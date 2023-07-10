@@ -20,7 +20,6 @@ from sbstudio.plugin.actions import (
     find_f_curve_for_data_path_and_index,
 )
 from sbstudio.plugin.model.formation import add_points_to_formation
-from sbstudio.plugin.utils.image import set_pixel
 
 from .base import FormationOperator
 

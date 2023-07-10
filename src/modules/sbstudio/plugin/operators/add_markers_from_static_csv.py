@@ -13,7 +13,6 @@ from sbstudio.model.color import Color3D
 from sbstudio.model.point import Point3D
 
 from sbstudio.plugin.model.formation import add_points_to_formation
-from sbstudio.plugin.utils.image import set_pixel
 
 from .base import FormationOperator
 
