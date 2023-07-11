@@ -199,7 +199,7 @@ class StoryboardEntry(PropertyGroup):
     # mapping is stored as a string so we don't need to maintain a separate
     # Blender collection as it would not be efficient
 
-    _mapping = StringProperty(
+    mapping = StringProperty(
         name="Mapping",
         description=(
             "Mapping where the i-th element is the index of the drone that "
@@ -308,7 +308,7 @@ class StoryboardEntry(PropertyGroup):
         """Returns the mapping of the markers in the storyboard entry to drone
         indices, or ``None`` if there is no mapping yet.
         """
-        encoded_mapping = self._mapping.strip()
+        encoded_mapping = self.mapping.strip()
         if (
             not encoded_mapping
             or len(encoded_mapping) < 2
@@ -343,9 +343,9 @@ class StoryboardEntry(PropertyGroup):
                  unmapped. You can also pass ``None`` to clear the entire mapping.
         """
         if mapping is None:
-            self._mapping = ""
+            self.mapping = ""
         else:
-            self._mapping = json.dumps(mapping)
+            self.mapping = json.dumps(mapping)
 
 
 class Storyboard(PropertyGroup, ListMixin):
