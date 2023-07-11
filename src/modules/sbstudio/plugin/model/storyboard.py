@@ -1,4 +1,5 @@
 import bpy
+import json
 
 from bpy.props import (
     BoolProperty,
@@ -25,7 +26,7 @@ from sbstudio.plugin.utils import sort_collection, with_context
 from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
-__all__ = ("MappingType", "ScheduleOverride", "StoryboardEntry", "Storyboard")
+__all__ = ("ScheduleOverride", "StoryboardEntry", "Storyboard")
 
 
 class ScheduleOverride(PropertyGroup):
@@ -84,16 +85,10 @@ def _handle_formation_change(operator, context):
         operator.name = operator.formation.name if operator.formation else ""
 
 
-class MappingType(bpy.types.PropertyGroup):
-    target = bpy.props.IntProperty()
-
-
 class StoryboardEntry(PropertyGroup):
     """Blender property group representing a single entry in the storyboard
     of the drone show.
     """
-
-    mapping = CollectionProperty(type=MappingType)
 
     maybe_uuid_do_not_use = StringProperty(
         name="Identifier",
@@ -201,6 +196,20 @@ class StoryboardEntry(PropertyGroup):
         ),
     )
 
+    # mapping is stored as a string so we don't need to maintain a separate
+    # Blender collection as it would not be efficient
+
+    _mapping = StringProperty(
+        name="Mapping",
+        description=(
+            "Mapping where the i-th element is the index of the drone that "
+            "marker i was matched to in the storyboard entry, or -1 if the "
+            "marker is unmatched."
+        ),
+        default="",
+        options={"HIDDEN"},
+    )
+
     #: Sorting key for storyboard entries
     sort_key = attrgetter("frame_start", "frame_end")
 
@@ -295,6 +304,21 @@ class StoryboardEntry(PropertyGroup):
 
         return result
 
+    def get_mapping(self) -> Optional[List[int]]:
+        """Returns the mapping of the markers in the storyboard entry to drone
+        indices, or ``None`` if there is no mapping yet.
+        """
+        encoded_mapping = self._mapping.strip()
+        if (
+            not encoded_mapping
+            or len(encoded_mapping) < 2
+            or encoded_mapping[0] != "["
+            or encoded_mapping[-1] != "]"
+        ):
+            return None
+        else:
+            return json.loads(encoded_mapping)
+
     def remove_active_schedule_override_entry(self) -> None:
         """Removes the active schedule override entry from the collection and
         adjusts the active entry index as needed.
@@ -308,6 +332,20 @@ class StoryboardEntry(PropertyGroup):
         self.active_schedule_override_entry_index = min(
             max(0, index), len(self.schedule_overrides)
         )
+
+    def update_mapping(self, mapping: Optional[List[int]]) -> None:
+        """Updates the mapping of the markers in the storyboard entry to drone
+        indices.
+
+        Arguments:
+            mapping: mapping where the i-th item contains the index of the drone
+                that the i-th marker was mapped to, or -1 if the marker is
+                 unmapped. You can also pass ``None`` to clear the entire mapping.
+        """
+        if mapping is None:
+            self._mapping = ""
+        else:
+            self._mapping = json.dumps(mapping)
 
 
 class Storyboard(PropertyGroup, ListMixin):
@@ -561,11 +599,11 @@ class Storyboard(PropertyGroup, ListMixin):
         """
         index = self.get_index_of_entry_containing_frame(frame)
         if index >= 0:
-            return self.entries[index].mapping
+            return self.entries[index].get_mapping()
 
         index = self.get_index_of_entry_before_frame(frame)
         if index >= 0:
-            return self.entries[index].mapping
+            return self.entries[index].get_mapping()
 
         return None
 

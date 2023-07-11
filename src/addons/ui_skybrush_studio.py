@@ -55,7 +55,6 @@ from sbstudio.plugin.model import (
     LEDControlPanelProperties,
     LightEffect,
     LightEffectCollection,
-    MappingType,
     SafetyCheckProperties,
     ScheduleOverride,
     StoryboardEntry,
