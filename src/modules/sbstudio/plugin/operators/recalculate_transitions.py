@@ -447,7 +447,6 @@ def update_transition_for_storyboard_entry(
 
     Raises:
         SkybrushStudioError: if an error happens while calculating transitions
-
     """
     if entry.is_locked:
         # entry is locked, nothing to do here
@@ -584,7 +583,7 @@ def update_transition_for_storyboard_entry(
             windup_start_frame += departure_delay
             start_frame += arrival_delay
 
-            if windup_start_frame >= start_frame:
+            if previous_entry is not None and windup_start_frame >= start_frame:
                 raise SkybrushStudioError(
                     f"Not enough time to plan staggered transition to "
                     f"formation {entry.name!r} at drone index {drone_index+1} "
