@@ -7,8 +7,12 @@ from numpy import array
 from numpy.typing import NDArray
 
 from sbstudio.plugin.errors import StoryboardValidationError
-from sbstudio.plugin.model.formation import add_points_to_formation
+from sbstudio.plugin.model.formation import (
+    add_points_to_formation,
+    get_markers_from_formation,
+)
 from sbstudio.plugin.selection import select_only
+from sbstudio.plugin.selection import Collections
 
 
 class FormationOperator(Operator):
@@ -185,3 +189,18 @@ class StaticMarkerCreationOperator(FormationOperator):
     def _create_points(self, context) -> PointsAndColors:
         """Creates the points where the markers should be placed."""
         raise NotImplementedError
+
+    def _propose_marker_count(self, context) -> int:
+        """Calculates how many markers we need to add to the currently selected
+        formation in order to make it have exactly the same number of markers
+        as the number of drones in the project.
+        """
+        drones = Collections.find_drones(create=False)
+        num_drones = len(drones.objects) if drones else 0
+        if num_drones > 0:
+            num_existing_markers = len(
+                get_markers_from_formation(context.scene.skybrush.formations.selected)
+            )
+        else:
+            num_existing_markers = 0
+        return max(0, num_drones - num_existing_markers)
