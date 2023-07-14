@@ -62,14 +62,12 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
 
     def _create_points(self, context) -> PointsAndColors:
         filepath = ensure_ext(self.filepath, self.filename_ext)
-        points, colors = parse_svg(
-            filepath, num_points=self.count, size=self.size, context=context
-        )
+        points, colors = parse_svg(filepath, num_points=self.count, size=self.size)
         return PointsAndColors(points, colors)
 
 
 def parse_svg(
-    filename: str, num_points: int, size: float, context
+    filename: str, num_points: int, size: float
 ) -> Tuple[NDArray[float], NDArray[float]]:
     """Parse an .svg file (containing a list of static positions and colors)
     using the backend API
