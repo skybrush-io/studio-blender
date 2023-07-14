@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from typing import Dict, Tuple
 
 from bpy.path import ensure_ext
-from bpy.props import StringProperty
+from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
 from .base import StaticMarkerCreationOperator, PointsAndColors
@@ -28,6 +28,12 @@ class AddMarkersFromStaticCSVOperator(StaticMarkerCreationOperator, ImportHelper
     bl_idname = "skybrush.add_markers_from_static_csv"
     bl_label = "Import Skybrush static CSV"
     bl_options = {"REGISTER"}
+
+    import_colors = BoolProperty(
+        name="Import colors",
+        description="Import colors from the CSV file into a light effect",
+        default=True,
+    )
 
     # List of file extensions that correspond to Skybrush static CSV files
     filter_glob = StringProperty(default="*.csv", options={"HIDDEN"})

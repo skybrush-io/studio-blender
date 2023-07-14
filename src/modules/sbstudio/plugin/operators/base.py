@@ -232,8 +232,13 @@ class StaticMarkerCreationOperator(FormationOperator):
         # Create the markers
         add_points_to_formation(formation, points.tolist())
 
+        # Decide whether we should import the colors of the markers as well
+        should_import_colors = (
+            bool(getattr(self, "import_colors", True)) and colors is not None
+        )
+
         # Add a light effect containing the colors of the markers if needed
-        if colors is not None:
+        if should_import_colors:
             # try to figure out the start frame of this formation
             storyboard_entry = (
                 context.scene.skybrush.storyboard.get_first_entry_for_formation(
