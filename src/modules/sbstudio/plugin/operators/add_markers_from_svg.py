@@ -10,7 +10,6 @@ from bpy_extras.io_utils import ImportHelper
 
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.plugin.api import get_api
-from sbstudio.plugin.selection import Collections
 
 from .base import StaticMarkerCreationOperator, PointsAndColors
 
@@ -57,10 +56,7 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
     filename_ext = ".svg"
 
     def invoke(self, context, event):
-        drones = Collections.find_drones(create=False)
-        if drones:
-            self.count = len(drones.objects)
-
+        self.count = self._propose_marker_count(context)
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
 
