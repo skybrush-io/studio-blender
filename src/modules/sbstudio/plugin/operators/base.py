@@ -194,7 +194,7 @@ class PointsAndColors:
     colors: Optional[NDArray[floating]] = None
     """Optional colors corresponding to the points in a marker creation
     operation, in a NumPy array where the i-th row is the color of the i-th
-    point in RGB space; color components must be specified in the range [0; 1].
+    point in RGBA space; color components must be specified in the range [0; 1].
     """
 
 
@@ -214,7 +214,7 @@ class StaticMarkerCreationOperator(FormationOperator):
         points = points_and_colors.points
         colors = points_and_colors.colors
 
-        if points.shape[0] < 1:
+        if len(points) < 1:
             self.report({"ERROR"}, "Formation would be empty, nothing was created")
             return {"CANCELLED"}
 
@@ -259,7 +259,7 @@ class StaticMarkerCreationOperator(FormationOperator):
                     width=1,
                     height=len(colors),
                 )
-                image.pixels.foreach_set(colors.flat)
+                image.pixels.foreach_set(list(colors.flat))
 
         return {"FINISHED"}
 
