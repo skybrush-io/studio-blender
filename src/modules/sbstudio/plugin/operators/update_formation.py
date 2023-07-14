@@ -75,7 +75,7 @@ def propose_mode_for_formation_update(context) -> str:
         )
     else:
         # We are not in Edit mode (most likely Object mode)
-        return "SELECTED_OBJECTS" if has_selection(context=context) else "ALL_DRONES"
+        return "SELECTED_OBJECTS" if has_selection(context=context) else "EMPTY"
 
 
 def collect_objects_and_points_for_formation_update(selection, name):
