@@ -386,7 +386,7 @@ class SkybrushStudioAPI:
     def create_formation_from_svg(
         self,
         source: str,
-        n: int,
+        num_points: int,
         size: float,
     ) -> Tuple[List[Point3D], List[Color3D]]:
         """Samples the path objects of an SVG string into a list of coordinates
@@ -407,7 +407,7 @@ class SkybrushStudioAPI:
             "parameters": {
                 "version": 1,
                 "source": source,
-                "n": n,
+                "n": num_points,
                 "size": size,
             },
         }

@@ -1,13 +1,13 @@
 from bpy.props import EnumProperty, FloatProperty, StringProperty
 
-from sbstudio.plugin.model.formation import add_points_to_formation
+from numpy import array
 
-from .base import FormationOperator
+from .base import StaticMarkerCreationOperator, PointsAndColors
 
 __all__ = ("AddMarkersFromQRCodeOperator",)
 
 
-class AddMarkersFromQRCodeOperator(FormationOperator):
+class AddMarkersFromQRCodeOperator(StaticMarkerCreationOperator):
     """Adds new markers to a formation from the shape of a QR code."""
 
     bl_idname = "skybrush.add_markers_from_qr_code"
@@ -42,8 +42,7 @@ class AddMarkersFromQRCodeOperator(FormationOperator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
-    def execute_on_formation(self, formation, context):
-        from numpy import array
+    def _create_points(self, context) -> PointsAndColors:
         from sbstudio.vendor.qrcode import (
             QRCode,
             ERROR_CORRECT_L,
@@ -78,16 +77,5 @@ class AddMarkersFromQRCodeOperator(FormationOperator):
             points.shape = (0, 3)
 
         points *= self.spacing
-        min_y, max_y = points[:, 1].min(), points[:, 1].max()
-        min_z, max_z = points[:, 2].min(), points[:, 2].max()
-        delta = array(context.scene.cursor.location, dtype=float) - array(
-            [0, (max_y - min_y) / 2, -(max_z - min_z) / 2], dtype=float
-        )  # type: ignore
-        points += delta
 
-        if points.shape[0] < 1:
-            self.report({"ERROR"}, "Formation would be empty, nothing was created")
-        else:
-            add_points_to_formation(formation, points.tolist())
-
-        return {"FINISHED"}
+        return PointsAndColors(points)
