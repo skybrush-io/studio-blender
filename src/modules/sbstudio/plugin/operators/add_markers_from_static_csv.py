@@ -42,7 +42,7 @@ class AddMarkersFromStaticCSVOperator(StaticMarkerCreationOperator, ImportHelper
         point_color_pairs = parse_static_csv_zip(filepath)
 
         points = zeros((len(point_color_pairs), 3), dtype=float)
-        colors = zeros((len(point_color_pairs), 3), dtype=float) + 255
+        colors = zeros((len(point_color_pairs), 3), dtype=float) + 1
 
         for index, (p, c) in enumerate(point_color_pairs.values()):
             points[index, :] = p
@@ -103,6 +103,8 @@ def parse_static_csv_zip(filename: str) -> Dict[str, Item]:
                 raise RuntimeError(f"Duplicate object name in input CSV file: {name}")
 
             # store position and color entry
-            result[name] = array((x, y, z), dtype=float), array((r, g, b), dtype=int)
+            result[name] = array((x, y, z), dtype=float), array(
+                (r, g, b, 255), dtype=int
+            )
 
     return result

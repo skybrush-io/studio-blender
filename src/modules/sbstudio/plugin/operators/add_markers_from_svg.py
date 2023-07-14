@@ -104,7 +104,9 @@ def parse_svg(
                 raise
 
     # rotate from XY to ZY plane
-    points = array((0, p.y, p.x) for p in points)
-    colors = array((c.r / 255, c.g / 255, c.b / 255) for c in colors)
+    points = array([(0, p.y, p.x) for p in points], dtype=float)
+    colors = array(
+        [(c.r / 255, c.g / 255, c.b / 255, 1.0) for c in colors], dtype=float
+    )
 
     return points, colors
