@@ -177,6 +177,7 @@ class StaticMarkerCreationOperator(FormationOperator):
                     height=len(colors),
                 )
                 image.pixels.foreach_set(list(colors.flat))
+                image.pack()
 
         return {"FINISHED"}
 

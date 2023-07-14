@@ -176,6 +176,7 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
                     color = next_color
                 pixels.extend(list(color.as_vector()))
             image.pixels.foreach_set(pixels)
+            image.pack()
 
         return {"FINISHED"}
 
