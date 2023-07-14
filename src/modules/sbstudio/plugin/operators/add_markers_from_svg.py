@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from typing import Tuple
 
 from bpy.path import ensure_ext
-from bpy.props import FloatProperty, IntProperty, StringProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
 from sbstudio.api.errors import SkybrushStudioAPIError
@@ -42,6 +42,7 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
         min=1,
         soft_max=5000,
     )
+
     size = FloatProperty(
         name="Size",
         description="Maximum extent of the imported formation along the main axes",
@@ -49,6 +50,12 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
         soft_min=0,
         soft_max=500,
         unit="LENGTH",
+    )
+
+    import_colors = BoolProperty(
+        name="Import colors",
+        description="Import colors from the SVG file into a light effect",
+        default=False,
     )
 
     # List of file extensions that correspond to SVG files
