@@ -3,7 +3,7 @@ import bmesh
 
 from functools import partial
 from operator import itemgetter
-from typing import Callable, Iterable, List, Optional, Sequence
+from typing import cast, Callable, Iterable, List, Optional, Sequence
 
 from bpy.props import (
     BoolProperty,
@@ -452,7 +452,8 @@ class LightEffect(PropertyGroup):
         return 0 <= (frame - self.frame_start) < self.duration
 
     def create_color_image(self, name: str, width: int, height: int) -> Image:
-        """Create a new color image for the light effect (and delete old).
+        """Creates a new color image for the light effect (and deletes the old
+        one if it already has one).
 
         Args:
             name: the name of the image to create
@@ -466,7 +467,6 @@ class LightEffect(PropertyGroup):
 
         """
         self.color_image = bpy.data.images.new(name=name, width=width, height=height)
-
         return self.color_image
 
     @property
@@ -568,7 +568,7 @@ class LightEffect(PropertyGroup):
             plane = self._get_plane_from_mesh()
             return partial(test_is_in_front_of, plane)
 
-    def _create_texture(self) -> None:
+    def _create_texture(self) -> ImageTexture:
         """Creates the texture associated to the light effect."""
         tex = bpy.data.textures.new(
             name=f"Texture for light effect {self.name!r}", type="IMAGE"
@@ -582,6 +582,7 @@ class LightEffect(PropertyGroup):
             elt.color[3] = 1.0
 
         self.texture = tex
+        return self.texture
 
     def _remove_texture(self) -> None:
         """Removes the texture associated to the light effect from the Textures
@@ -650,16 +651,17 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         if duration is None or duration <= 0:
             duration = fps * DEFAULT_LIGHT_EFFECT_DURATION
 
-        entry = self.entries.add()
+        entry: LightEffect = cast(LightEffect, self.entries.add())
         entry.frame_start = frame_start
         entry.duration = duration
         entry.name = name
 
-        entry._create_texture()
+        texture = entry._create_texture()
 
         # Copy default colors from the LED Control panel
         if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "led_control"):
             led_control = scene.skybrush.led_control
+            elts = texture.color_ramp.elements
             last_elt = len(elts) - 1
             for i in range(3):
                 elts[0].color[i] = led_control.primary_color[i]
