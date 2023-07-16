@@ -17,8 +17,8 @@ mklink /D dev\addons %REPO_ROOT%\src\addons
 mklink /D dev\modules %REPO_ROOT%\src\modules
 
 set VENV_PYTHONPATH=%REPO_ROOT%\.venv\Lib\site-packages
-::FOR %%A in (natsort pyledctrl skybrush) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
-FOR %%A in (natsort pyledctrl) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
+::FOR %%A in (natsort pyledctrl skybrush svgpathtools svgwrite webcolors) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
+FOR %%A in (natsort pyledctrl svgpathtools svgwrite webcolors) DO mklink /D dev\vendor\skybrush\%%A %VENV_PYTHONPATH%\%%A
 
 :: skybrush is included as a development version for the time being
 set VENV_PYTHONPATH=%SKYBRUSH_ROOT%\.venv\Lib\site-packages
