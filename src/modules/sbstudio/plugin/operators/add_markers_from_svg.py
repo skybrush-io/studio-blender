@@ -1,5 +1,3 @@
-import logging
-
 from numpy import array
 from numpy.typing import NDArray
 from pathlib import Path
@@ -9,14 +7,11 @@ from bpy.path import ensure_ext
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
-from sbstudio.api.errors import SkybrushStudioAPIError
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator
 
 from .base import StaticMarkerCreationOperator, PointsAndColors
 
 __all__ = ("AddMarkersFromSVGOperator",)
-
-log = logging.getLogger(__name__)
 
 #############################################################################
 # Helper functions for the exporter
@@ -70,12 +65,15 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
 
     def _create_points(self, context) -> PointsAndColors:
         filepath = ensure_ext(self.filepath, self.filename_ext)
-        points, colors = parse_svg(filepath, num_points=self.count, size=self.size)
+        with call_api_from_blender_operator(self, "SVG formation") as api:
+            points, colors = parse_svg(
+                filepath, num_points=self.count, size=self.size, api=api
+            )
         return PointsAndColors(points, colors)
 
 
 def parse_svg(
-    filename: str, num_points: int, size: float
+    filename: str, *, num_points: int, size: float, api
 ) -> Tuple[NDArray[float], NDArray[float]]:
     """Parse an .svg file (containing a list of static positions and colors)
     using the backend API
@@ -94,15 +92,9 @@ def parse_svg(
     """
     source = Path(filename).read_text()
 
-    try:
-        points, colors = get_api().create_formation_from_svg(
-            source=source, num_points=num_points, size=size
-        )
-    except Exception as ex:
-        if not isinstance(ex, SkybrushStudioAPIError):
-            raise SkybrushStudioAPIError from ex
-        else:
-            raise
+    points, colors = api.create_formation_from_svg(
+        source=source, num_points=num_points, size=size
+    )
 
     # rotate from XY to ZY plane
     points = array([(0, p.y, p.x) for p in points], dtype=float)
