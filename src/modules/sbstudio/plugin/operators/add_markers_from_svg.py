@@ -2,6 +2,7 @@ import logging
 
 from numpy import array
 from numpy.typing import NDArray
+from pathlib import Path
 from typing import Tuple
 
 from bpy.path import ensure_ext
@@ -91,18 +92,17 @@ def parse_svg(
     Raises:
         SkybrushStudioAPIError: on API parse errors
     """
-    with open(filename, "r") as svg_file:
-        source = svg_file.read()
+    source = Path(filename).read_text()
 
-        try:
-            points, colors = get_api().create_formation_from_svg(
-                source=source, num_points=num_points, size=size
-            )
-        except Exception as ex:
-            if not isinstance(ex, SkybrushStudioAPIError):
-                raise SkybrushStudioAPIError from ex
-            else:
-                raise
+    try:
+        points, colors = get_api().create_formation_from_svg(
+            source=source, num_points=num_points, size=size
+        )
+    except Exception as ex:
+        if not isinstance(ex, SkybrushStudioAPIError):
+            raise SkybrushStudioAPIError from ex
+        else:
+            raise
 
     # rotate from XY to ZY plane
     points = array([(0, p.y, p.x) for p in points], dtype=float)
