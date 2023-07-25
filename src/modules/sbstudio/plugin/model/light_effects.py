@@ -360,7 +360,7 @@ class LightEffect(PropertyGroup):
                     for u, v in enumerate(order):
                         outputs[v] = u / (num_positions - 1)
 
-        elif output_type == "INDEXED_BY_DRONES":
+        elif output_type in "INDEXED_BY_DRONES":
             # Gradient based on drone index
             if num_positions > 1:
                 np_m1 = num_positions - 1
@@ -370,6 +370,8 @@ class LightEffect(PropertyGroup):
         elif output_type == "INDEXED_BY_FORMATION":
             # Gradient based on formation index (colors should be ordered and
             # filtered according to formation index by now)
+            # TODO: it should not be assumed that the caller already reordered
+            # the drones; it is the responsibility of _this_ function!
             if num_positions > 1:
                 np_m1 = num_positions - 1
                 outputs = [index / np_m1 for index in range(num_positions)]
