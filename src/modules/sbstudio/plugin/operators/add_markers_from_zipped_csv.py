@@ -158,6 +158,7 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
                 select=True,
             )
             light_effect = light_effects.active_entry
+            light_effect.type = "IMAGE"
             light_effect.output = "INDEXED_BY_FORMATION"
             image = light_effect.create_color_image(
                 name="Image for light effect '{}'".format(formation.name),

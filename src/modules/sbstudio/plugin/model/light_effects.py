@@ -34,7 +34,7 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
-from sbstudio.plugin.utils.image import update_image_from, get_pixel
+from sbstudio.plugin.utils.image import get_pixel
 from sbstudio.utils import distance_sq_of
 
 from .mixins import ListMixin
@@ -71,7 +71,7 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
 def output_type_supports_mapping_mode(type: str) -> bool:
     """Returns whether the light effect output type given in the argument may
     have a mapping mode that defines how the output values are mapped to the
-    [0; 1] range of the color ramp.
+    [0; 1] range of the color ramp or image.
     """
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
@@ -126,6 +126,16 @@ class LightEffect(PropertyGroup):
         options=set(),
     )
 
+    type = EnumProperty(
+        name="Effect Type",
+        description="Type of the light effect: color ramp-based or image-based",
+        items=[
+            ("COLOR_RAMP", "Color ramp", "", 1),
+            ("IMAGE", "Image", "", 2),
+        ],
+        default="COLOR_RAMP",
+    )
+
     frame_start = IntProperty(
         name="Start Frame",
         description="Frame when this light effect should start in the show",
@@ -153,10 +163,10 @@ class LightEffect(PropertyGroup):
 
     output = EnumProperty(
         name="Output",
-        description="Output function that determines the value that is passed through the color ramp to obtain the color to assign to a drone",
+        description="Output function that determines the value that is passed through the color ramp or image to obtain the color to assign to a drone",
         items=[
-            ("FIRST_COLOR", "First color of color ramp", "", 1),
-            ("LAST_COLOR", "Last color of color ramp", "", 2),
+            ("FIRST_COLOR", "First color", "", 1),
+            ("LAST_COLOR", "Last color", "", 2),
             ("INDEXED_BY_DRONES", "Indexed by drones", "", 3),
             ("INDEXED_BY_FORMATION", "Indexed by formation", "", 13),
             ("GRADIENT_XYZ", "Gradient (XYZ)", "", 4),
@@ -174,7 +184,7 @@ class LightEffect(PropertyGroup):
 
     output_mapping_mode = EnumProperty(
         name="Mapping",
-        description="Specifies how the output value should be mapped to the [0; 1] range of the color ramp",
+        description="Specifies how the output value should be mapped to the [0; 1] range of the color ramp or image",
         items=[("ORDERED", "Ordered", "", 1), ("PROPORTIONAL", "Proportional", "", 2)],
     )
 
@@ -191,8 +201,8 @@ class LightEffect(PropertyGroup):
         type=Texture,
         name="Texture",
         description=(
-            "Texture of the light effect, used for the sole purpose of having a "
-            " way to create a color ramp or an image holding baked color animation"
+            "Texture of the light effect, used to hold the color ramp or the "
+            "image that controls how the colors of the drones are determined"
         ),
         options={"HIDDEN"},
     )
@@ -239,7 +249,7 @@ class LightEffect(PropertyGroup):
 
     blend_mode = EnumProperty(
         name="Blend mode",
-        description=("Specifies the blending mode of this light effect"),
+        description="Specifies the blending mode of this light effect",
         items=[
             (member.name, member.description, "", member.value) for member in BlendMode
         ],
@@ -265,7 +275,8 @@ class LightEffect(PropertyGroup):
                 colors in 3D space
             frame: the frame index
             random_seq: a random sequence that is used to spread out the items
-                on the color ramp if randomization is turned on
+                on the color ramp or a principal axis of the image if
+                randomization is turned on
         """
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
@@ -292,12 +303,13 @@ class LightEffect(PropertyGroup):
             # There are two options here:
             # 1. Legacy, non-proportional mode. We sort the drones based on the
             #    sort key derived above and then space them out equally on the
-            #    color ramp.
+            #    color ramp or image axis.
             # 2. Proportional mode. Same as above, but we assign drones to
-            #    positions on the color ramp in a way that their distances on
-            #    the color ramp are proportional to the differences in their
-            #    sort keys. Note that this needs a _scalar_ sorting key so we
-            #    ignore all but the principal axis for gradient output types.
+            #    positions on the color ramp or image axis in a way that their
+            #    distances on the color ramp or image axis are proportional to
+            #    the differences in their sort keys. Note that this needs a
+            #    _scalar_ sorting key so we ignore all but the principal axis
+            #    for gradient output types.
             proportional = self.output_mapping_mode == "PROPORTIONAL"
 
             if output_type == "DISTANCE":
@@ -397,7 +409,7 @@ class LightEffect(PropertyGroup):
                 min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
 
-            if self.color_image is not None:
+            if color_image is not None:
                 width, height = color_image.size
                 new_color[:] = get_pixel(
                     color_image,
@@ -417,17 +429,21 @@ class LightEffect(PropertyGroup):
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
-        """The color ramp of the effect, if exists and is used."""
-        tex = self.texture
-        if isinstance(tex, ImageTexture):
-            return tex.color_ramp if tex.image is None else None
-        else:
-            return tex.color_ramp
+        """The color ramp of the effect, if it exists and is being used according
+        to the type of the effect.
+        """
+        return self.texture.color_ramp if self.type == "COLOR_RAMP" else None
 
     @property
     def color_image(self) -> Optional[Image]:
-        """The color image of the effect, if exists."""
-        return self.texture.image if isinstance(self.texture, ImageTexture) else None
+        """The color image of the effect, if it exists and is being used according
+        to the type of the effect.
+        """
+        return (
+            self.texture.image
+            if self.type == "IMAGE" and isinstance(self.texture, ImageTexture)
+            else None
+        )
 
     @color_image.setter
     def color_image(self, image):
@@ -464,7 +480,6 @@ class LightEffect(PropertyGroup):
 
         Returns:
             the created color image itself for easy chaining
-
         """
         self.color_image = bpy.data.images.new(name=name, width=width, height=height)
         return self.color_image
@@ -490,13 +505,10 @@ class LightEffect(PropertyGroup):
         self.randomness = other.randomness
         self.output_mapping_mode = other.output_mapping_mode
         self.blend_mode = other.blend_mode
+        self.type = other.type
+        self.color_image = other.color_image
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
-
-        if self.color_image is None and other.color_image is not None:
-            self.color_image = other.color_image.copy()
-        if self.color_image is not None:
-            update_image_from(self.color_image, other.color_image)
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -652,6 +664,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
             duration = fps * DEFAULT_LIGHT_EFFECT_DURATION
 
         entry: LightEffect = cast(LightEffect, self.entries.add())
+        entry.type = "COLOR_RAMP"
         entry.frame_start = frame_start
         entry.duration = duration
         entry.name = name

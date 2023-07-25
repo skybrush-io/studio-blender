@@ -1,3 +1,4 @@
+import bpy
 from bpy.types import Panel
 
 from sbstudio.plugin.model.light_effects import (
@@ -66,18 +67,24 @@ class LightEffectsPanel(Panel):
 
         entry = light_effects.active_entry
         if entry is not None:
+            layout.prop(entry, "type")
+
             if entry.texture:
-                if entry.color_image is not None:
-                    # TODO: perhaps display image instead of text
+                if entry.type == "COLOR_RAMP":
                     row = layout.box()
-                    row.alert = False
-                    row.label(
-                        text="Read-only light effect",
-                        icon="LOCKED",
+                    row.template_color_ramp(entry.texture, "color_ramp")
+                elif entry.type == "IMAGE":
+                    layout.prop_search(
+                        entry.texture, "image", bpy.data, "images", text=""
                     )
                 else:
-                    layout.template_color_ramp(entry.texture, "color_ramp")
-                layout.separator()
+                    row = layout.box()
+                    row.alert = True
+                    row.label(
+                        text="Invalid light effect type",
+                        icon="ERROR",
+                    )
+                    layout.separator()
 
             col = layout.column()
             col.prop(entry, "frame_start")
