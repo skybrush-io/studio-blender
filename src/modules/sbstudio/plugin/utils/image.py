@@ -15,20 +15,3 @@ def get_pixel(image, x: int, y: int) -> RGBAColor:
     offs = (x + y * width) * 4
 
     return image.pixels[offs : offs + 4]
-
-
-def update_image_from(target, source) -> None:
-    """Updates an image from another image.
-
-    Note that this function might not work properly due to the copy limitation
-    described here: https://docs.blender.org/api/current/bpy.types.Image.html
-
-    Parameters:
-        target: the target image to update
-        source: the image that serves as a template for the image being updated
-    """
-    width, height = source.size
-    target.scale(width, height)
-    for i in range(len(source.pixels)):
-        target.pixels[i] = source.pixels[i]
-    target.update()
