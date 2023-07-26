@@ -472,15 +472,8 @@ def update_transition_for_storyboard_entry(
     #
     # 'mapping' is a list where the i-th element contains the index of the
     # target point that the i-th drone was matched to, or ``None`` if the drone
-    # was left unmatched; we need to invert that so we get a vector where the
-    # i-th element is the index of the drone that marker i was matched to or
-    # -1 if the marker is unmatched
-    inv_mapping: List[int] = []
-    for drone_index, marker_index in enumerate(inv_mapping):
-        if len(inv_mapping) <= marker_index:
-            inv_mapping.extend([-1] * (marker_index - len(inv_mapping) + 1))
-        inv_mapping[marker_index] = drone_index
-    entry.update_mapping(inv_mapping)
+    # was left unmatched;
+    entry.update_mapping(mapping)
 
     # Calculate how many drones will participate in the transition
     num_drones_transitioning = sum(

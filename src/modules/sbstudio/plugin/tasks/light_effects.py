@@ -69,14 +69,6 @@ def update_light_effects(scene, depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
-            # we filter and sort drones for a certain effect type
-            # TODO: this should be moved to effect.apply_on_colors() -- that one
-            # must work without any pre-processing from the caller
-            if effect.output == "INDEXED_BY_FORMATION" and mapping:
-                # TODO: incorrect mappings (too short, or referring to invalid
-                # drone indices) should be handled gracefully, without user
-                # intervention.
-                drones = [drones[m.target] for m in mapping]
             positions = [get_position_of_object(drone) for drone in drones]
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
@@ -94,7 +86,7 @@ def update_light_effects(scene, depsgraph):
             changed = True
 
         effect.apply_on_colors(
-            colors, positions=positions, frame=frame, random_seq=random_seq
+            colors, positions=positions, mapping=mapping, frame=frame, random_seq=random_seq
         )
 
     # If we haven't changed anything, _but_ this is because we have recently

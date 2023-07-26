@@ -98,6 +98,10 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "output")
             if output_type_supports_mapping_mode(entry.output):
                 col.prop(entry, "output_mapping_mode")
+            if entry.type == "IMAGE":
+                col.prop(entry, "output_y")
+                if output_type_supports_mapping_mode(entry.output_y):
+                    col.prop(entry, "output_mapping_mode_y")
             col.prop(entry, "target")
             col.prop(entry, "blend_mode")
             col.prop(entry, "influence", slider=True)
