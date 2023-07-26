@@ -262,7 +262,8 @@ class StaticMarkerCreationOperator(FormationOperator):
                     select=True,
                 )
                 light_effect = light_effects.active_entry
-                light_effect.output = "INDEXED_BY_FORMATION"
+                light_effect.output = "TEMPORAL"
+                light_effect.output_y = "INDEXED_BY_FORMATION"
                 light_effect.type = "IMAGE"
                 image = light_effect.create_color_image(
                     name="Image for light effect '{}'".format(formation.name),
