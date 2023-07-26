@@ -393,16 +393,23 @@ class LightEffect(PropertyGroup):
                     common_output = 1.0
             elif output_type == "INDEXED_BY_FORMATION":
                 # Gradient based on formation index
-                if num_positions > 1:
-                    np_m1 = num_positions - 1
-                    outputs = [index / np_m1 for index in range(num_positions)]
-                    if mapping:
-                        # TODO: incorrect mappings (too short, or referring to invalid
-                        # indices) should be handled gracefully, without user
-                        # intervention.
-                        outputs = [outputs[m] for m in mapping]
-                else:
-                    common_output = 1.0
+                assert num_positions == len(mapping)
+
+                # TODO: this now works only if the number of valid entries in the mapping
+                # is consistent with the number of drones in the given formation;
+                # e.g., it will not work with two formations of half size at the same time
+                # for this case, single-formation specific mapping would be needed
+
+                # reduce mapping of all positions to rank, in case formation size
+                # is smaller than the number of drones
+                sorted_valid_mapping = sorted(x for x in mapping if x is not None)
+                outputs = [
+                    None if x is None else sorted_valid_mapping.index(x)
+                    for x in mapping
+                ]
+                mul = max(x for x in outputs if x is not None)
+                if mul > 0:
+                    outputs = [None if x is None else x / mul for x in outputs]
             elif output_type == "CUSTOM_EXPRESSION":
                 # TODO(ntamas)
                 common_output = 1.0
@@ -443,12 +450,20 @@ class LightEffect(PropertyGroup):
                 output_x = common_output_x
             else:
                 assert outputs_x is not None
+                # if this specific output is disabled, we
+                # skip the effect
+                if outputs_x[index] is None:
+                    continue
                 output_x = outputs_x[index]
             if color_image is not None:
                 if common_output_y is not None:
                     output_y = common_output_y
                 else:
                     assert outputs_y is not None
+                    # if this specific output is disabled, we
+                    # skip the effect
+                    if outputs_y[index] is None:
+                        continue
                     output_y = outputs_y[index]
 
             # Randomize the output value if needed
