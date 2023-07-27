@@ -12,11 +12,11 @@ Light effects are parametrized and they are not baked in as color keyframes, so 
 
 Every light effect builds on a user-defined color space: a one dimensional _color ramp_ or a two dimensional _color image_:
 
-Color ramp:: Color ramps consist of an arbitrary number of color stops at arbitrary positions, and a given interpolation method between the defined color stops. Essentially, the color ramp is a function that takes a number between 0 and 1 and returns a color. 
+Color ramp:: Color ramps consist of an arbitrary number of color stops at arbitrary positions, and a given interpolation method between the defined color stops. Essentially, the color ramp is a function that takes a number between 0 and 1 and returns a color.
 
 Color image:: Color images are two dimensional analogues of color ramps with discrete colors stored in a regular image. Color images are basically two dimensional functions: they take two numbers between 0 and 1 (along their normalized X and Y axes) and return a color.
 
-The light effect that you define in the panel _produces_ one or two numbers between 0 and 1 for each drone, based on selected output mapping functions. The color ramp turns the first, the color image turns both mapped numbers into the color that gets applied to the drone. 
+The light effect that you define in the panel _produces_ one or two numbers between 0 and 1 for each drone, based on selected output mapping functions. The color ramp turns the first, the color image turns both mapped numbers into the color that gets applied to the drone.
 
 Colors on the color ramp may have an alpha component. When the alpha component is 1, the color is opaque -- it will replace the original color of the drone. When the alpha component is 0, the color is completely transparent and the original color of the drone will not be modified. Values in between 0 and 1 produce transparency effects -- for instance, an alpha component of 0.5 mixes the original color of the drone with the color from the color ramp in equal proportions.
 
@@ -50,9 +50,9 @@ Refer to the documentation of the https://docs.blender.org/manual/en/latest/inte
 
 == The color image
 
-Use the btn:[Effect Type] dropdown list to select a light effect based on a color image. In this case an image selector input field appears where you can select the image used for the light effect. Further below a secondary output type selector and an optional output mapping selector also appears to be able to take advantage of both dimensions of the image as parametric input. 
+Use the btn:[Effect Type] dropdown list to select a light effect based on a color image. In this case an image selector input field appears where you can select the image used for the light effect. Further below a secondary output type selector and an optional output mapping selector also appears to be able to take advantage of both dimensions of the image as parametric input.
 
-The most trivial usage of a color image is where e.g. the `X` axis represents time (`TEMPORAL` output type) and all pixel columns along the `Y` axis at a given `X` represent "discrete color ramps" for different time instants (e.g. using the 'INDEXED_BY_FORMATION' output type). This way color effect design is reduced back to simple color image design that can be performed with any external tool. 
+The most trivial usage of a color image is where e.g. the `X` axis represents time (`TEMPORAL` output type) and all pixel columns along the `Y` axis at a given `X` represent "discrete color ramps" for different time instants (e.g. using the 'INDEXED_BY_FORMATION' output type). This way color effect design is reduced back to simple color image design that can be performed with any external tool.
 
 Note that there is no interpolation between pixels in the color image, they are selected for each drone and each frame discretely. Therefore, color images should be used with a width/height that correspont to the selected output mapping perfectly (e.g. same height as the number of drones, same width as the number of frames in the light effect etc.), or they are suggested to be smooth images without sharp edges to compensate for the rounding errors of the discrete mapping.
 

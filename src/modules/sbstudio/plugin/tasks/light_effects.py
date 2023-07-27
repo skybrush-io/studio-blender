@@ -86,7 +86,11 @@ def update_light_effects(scene, depsgraph):
             changed = True
 
         effect.apply_on_colors(
-            colors, positions=positions, mapping=mapping, frame=frame, random_seq=random_seq
+            colors,
+            positions=positions,
+            mapping=mapping,
+            frame=frame,
+            random_seq=random_seq,
         )
 
     # If we haven't changed anything, _but_ this is because we have recently

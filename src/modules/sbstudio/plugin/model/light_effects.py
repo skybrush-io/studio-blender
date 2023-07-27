@@ -82,7 +82,7 @@ OUTPUT_ITEMS = [
     ("DISTANCE", "Distance from mesh", "", 11),
     ("CUSTOM", "Custom expression", "", 12),
 ]
-"""Output types of light effects, determining the indexing 
+"""Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
 
 
