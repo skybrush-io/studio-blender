@@ -14,7 +14,7 @@ Every light effect builds on a user-defined color space: a one dimensional _colo
 
 Color ramp:: Color ramps consist of an arbitrary number of color stops at arbitrary positions, and a given interpolation method between the defined color stops. Essentially, the color ramp is a function that takes a number between 0 and 1 and returns a color.
 
-Color image:: Color images are two dimensional analogues of color ramps with discrete colors stored in a regular image. Color images are basically two dimensional functions: they take two numbers between 0 and 1 (along their normalized X and Y axes) and return a color.
+Color image:: Color images are two dimensional analogues of color ramps with discrete colors stored in an image. Color images are basically two dimensional functions: they take two numbers between 0 and 1 (along their normalized X and Y axes) and return a color.
 
 The light effect that you define in the panel _produces_ one or two numbers between 0 and 1 for each drone, based on selected output mapping functions. The color ramp turns the first, the color image turns both mapped numbers into the color that gets applied to the drone.
 
@@ -54,7 +54,7 @@ Use the btn:[Effect Type] dropdown list to select a light effect based on a colo
 
 The most trivial usage of a color image is where e.g. the `X` axis represents time (`TEMPORAL` output type) and all pixel columns along the `Y` axis at a given `X` represent "discrete color ramps" for different time instants (e.g. using the 'INDEXED_BY_FORMATION' output type). This way color effect design is reduced back to simple color image design that can be performed with any external tool.
 
-Note that there is no interpolation between pixels in the color image, they are selected for each drone and each frame discretely. Therefore, color images should be used with a width/height that correspont to the selected output mapping perfectly (e.g. same height as the number of drones, same width as the number of frames in the light effect etc.), or they are suggested to be smooth images without sharp edges to compensate for the rounding errors of the discrete mapping.
+Note that there is no interpolation between pixels in the color image, they are selected for each drone and each frame discretely. Therefore, color images should be used with a width/height that correspond to the selected output mapping perfectly (e.g. same height as the number of drones, same width as the number of frames in the light effect etc.), or they are suggested to be smooth images without sharp edges to compensate for the rounding errors of the discrete mapping. You can also scale up a low-resolution image in an external image editor tool and use the scaled-up version to simulate interpolation.
 
 == Temporal constraints
 
