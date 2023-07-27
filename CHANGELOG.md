@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   during a staggered transition manually, or to manually create more complex
   transition patterns.
 
+- Besides the one dimensional color ramp, a two dimensional color image can also be 
+  used as the base color space of light effects to be mapped onto the drones with the desired output mapping. In case of color images, both dimensions / axes can accept any output mapping type.
+
 ### Fixed
 
 - View scaling setting from the Blender preferences is now taken into account
