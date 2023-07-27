@@ -336,12 +336,14 @@ class CreateTakeoffGridOperator(Operator):
         takeoff_grid = Formations.find_takeoff_grid(create=False)
         if not takeoff_grid:
             storyboard = context.scene.skybrush.storyboard
-            storyboard.add_new_entry(
+            entry = storyboard.add_new_entry(
                 formation=create_formation("Takeoff grid", points),
                 frame_start=context.scene.frame_start,
                 duration=0,
                 select=True,
                 context=context,
             )
+            entry.update_mapping(list(range(len(points))))
+
         else:
             add_points_to_formation(takeoff_grid, points)

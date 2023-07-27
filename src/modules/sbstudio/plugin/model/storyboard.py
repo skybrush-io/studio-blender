@@ -273,7 +273,7 @@ class StoryboardEntry(PropertyGroup):
 
     @property
     def frame_end(self) -> int:
-        """Returns the index of the last frame that is covered by the storyboard."""
+        """Returns the index of the last (open ended) frame of the storyboard entry."""
         return self.frame_start + self.duration
 
     @property
@@ -514,7 +514,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
     @property
     def frame_end(self) -> int:
-        """Returns the index of the last frame that is covered by the storyboard."""
+        """Returns the index of the last (open ended) frame of the storyboard."""
         return (
             max(entry.frame_end for entry in self.entries)
             if self.entries
@@ -579,8 +579,10 @@ class Storyboard(PropertyGroup, ListMixin):
         """
         best_distance, closest = float("inf"), -1
         for index, entry in enumerate(self.entries):
-            if entry.frame_end < frame:
-                diff = entry.frame_end - frame
+            # note that entries are open ended from the right,
+            # so we allow equality below as well
+            if entry.frame_end <= frame:
+                diff = frame - entry.frame_end
                 if diff < best_distance:
                     best_distance = diff
                     closest = index
@@ -649,7 +651,10 @@ class Storyboard(PropertyGroup, ListMixin):
 
         index = self.get_index_of_entry_after_frame(frame)
         if index > 0:
-            return self.entries[index - 1].frame_end, self.entries[index].frame_start
+            return (
+                self.entries[index - 1].frame_end,
+                self.entries[index].frame_start,
+            )
         else:
             return None
 

@@ -393,23 +393,28 @@ class LightEffect(PropertyGroup):
                     common_output = 1.0
             elif output_type == "INDEXED_BY_FORMATION":
                 # Gradient based on formation index
-                assert num_positions == len(mapping)
+                if mapping is not None:
+                    assert num_positions == len(mapping)
 
-                # TODO: this now works only if the number of valid entries in the mapping
-                # is consistent with the number of drones in the given formation;
-                # e.g., it will not work with two formations of half size at the same time
-                # for this case, single-formation specific mapping would be needed
+                    # TODO: this now works only if the number of valid entries in the mapping
+                    # is consistent with the number of drones in the given formation;
+                    # e.g., it will not work with two formations of half size at the same time
+                    # for this case, single-formation specific mapping would be needed
 
-                # reduce mapping of all positions to rank, in case formation size
-                # is smaller than the number of drones
-                sorted_valid_mapping = sorted(x for x in mapping if x is not None)
-                outputs = [
-                    None if x is None else sorted_valid_mapping.index(x)
-                    for x in mapping
-                ]
-                mul = max(x for x in outputs if x is not None)
-                if mul > 0:
-                    outputs = [None if x is None else x / mul for x in outputs]
+                    # reduce mapping of all positions to rank, in case formation size
+                    # is smaller than the number of drones
+                    sorted_valid_mapping = sorted(x for x in mapping if x is not None)
+                    outputs = [
+                        None if x is None else sorted_valid_mapping.index(x)
+                        for x in mapping
+                    ]
+                    # normalize output with the number of valid mapping entries only
+                    np_m1 = len(sorted_valid_mapping) - 1
+                    if np_m1 > 0:
+                        outputs = [None if x is None else x / np_m1 for x in outputs]
+                else:
+                    # if there is no mapping at all, we do not change color of drones
+                    outputs = [None] * num_positions
             elif output_type == "CUSTOM_EXPRESSION":
                 # TODO(ntamas)
                 common_output = 1.0
@@ -532,7 +537,7 @@ class LightEffect(PropertyGroup):
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
 
-        Storyboard entries are closed from the left and open from the right;
+        Light effect entries are closed from the left and open from the right;
         in other words, they always contain their start frames but they do not
         contain their end frames.
         """
@@ -557,7 +562,7 @@ class LightEffect(PropertyGroup):
 
     @property
     def frame_end(self) -> int:
-        """Returns the index of the last frame that is covered by the effect."""
+        """Returns the index of the last (open ended) frame of the light effect."""
         return self.frame_start + self.duration
 
     def update_from(self, other: "LightEffect") -> None:
@@ -797,7 +802,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
 
     @property
     def frame_end(self) -> int:
-        """Returns the index of the last frame that is covered by light effects."""
+        """Returns the index of the last (open ended) frame of the light effects."""
         return (
             max(entry.frame_end for entry in self.entries)
             if self.entries

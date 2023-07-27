@@ -469,10 +469,6 @@ def update_transition_for_storyboard_entry(
     )
 
     # Store mapping in Blender-compatible format for later use
-    #
-    # 'mapping' is a list where the i-th element contains the index of the
-    # target point that the i-th drone was matched to, or ``None`` if the drone
-    # was left unmatched;
     entry.update_mapping(mapping)
 
     # Calculate how many drones will participate in the transition
