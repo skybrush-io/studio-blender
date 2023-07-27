@@ -10,7 +10,13 @@ Light effects are parametrized and they are not baked in as color keyframes, so 
 
 == Anatomy of a light effect
 
-Every light effect builds on a user-defined color ramp, consisting of an arbitrary number of color stops at arbitrary positions on the color ramp, and a given interpolation method between the defined color stops on the ramp. Essentially, the color ramp is a function that takes a number between 0 and 1 and returns a color. The light effect that you define in the panel _produces_ a number between 0 and 1 for each drone, and the color ramp turns this number into the color that gets applied to the drone.
+Every light effect builds on a user-defined color space: a one dimensional _color ramp_ or a two dimensional _color image_:
+
+Color ramp:: Color ramps consist of an arbitrary number of color stops at arbitrary positions, and a given interpolation method between the defined color stops. Essentially, the color ramp is a function that takes a number between 0 and 1 and returns a color. 
+
+Color image:: Color images are two dimensional analogues of color ramps with discrete colors stored in a regular image. Color images are basically two dimensional functions: they take two numbers between 0 and 1 (along their normalized X and Y axes) and return a color.
+
+The light effect that you define in the panel _produces_ one or two numbers between 0 and 1 for each drone, based on selected output mapping functions. The color ramp turns the first, the color image turns both mapped numbers into the color that gets applied to the drone. 
 
 Colors on the color ramp may have an alpha component. When the alpha component is 1, the color is opaque -- it will replace the original color of the drone. When the alpha component is 0, the color is completely transparent and the original color of the drone will not be modified. Values in between 0 and 1 produce transparency effects -- for instance, an alpha component of 0.5 mixes the original color of the drone with the color from the color ramp in equal proportions.
 
@@ -27,7 +33,7 @@ Individual light effects can be enabled or disabled by clicking on the check box
 
 == The color ramp
 
-Below the list of light effects there are standard Blender widgets to set up the color ramp associated to the currently selected effect in the light effect stack. These widgets work just like any other color ramp editor in Blender, but here is a short summary for sake of completeness:
+Use the btn:[Effect Type] dropdown list to select a light effect based on a color ramp (this is the default setting). In this case, below the list of light effects there are standard Blender widgets to set up the color ramp associated to the currently selected effect in the light effect stack. These widgets work just like any other color ramp editor in Blender, but here is a short summary for sake of completeness:
 
 * The btn:[+] button below the light effect list adds a new color stop to the color ramp.
 * The btn:[-] button below the light effect list removes the selected color stop from the color ramp.
@@ -42,12 +48,17 @@ Below the list of light effects there are standard Blender widgets to set up the
 
 Refer to the documentation of the https://docs.blender.org/manual/en/latest/interface/controls/templates/color_ramp.html[Color ramp widget] in Blender's own documentation for more details.
 
+== The color image
+
+Use the btn:[Effect Type] dropdown list to select a light effect based on a color image. In this case an image selector input field appears where you can select the image used for the light effect. Further below a secondary output type selector and an optional output mapping selector also appears to be able to take advantage of both dimensions of the image as parametric input. 
+
+The most trivial usage of a color image is where e.g. the `X` axis represents time (`TEMPORAL` output type) and all pixel columns along the `Y` axis at a given `X` represent "discrete color ramps" for different time instants (e.g. using the 'INDEXED_BY_FORMATION' output type). This way color effect design is reduced back to simple color image design that can be performed with any external tool. 
+
+Note that there is no interpolation between pixels in the color image, they are selected for each drone and each frame discretely. Therefore, color images should be used with a width/height that correspont to the selected output mapping perfectly (e.g. same height as the number of drones, same width as the number of frames in the light effect etc.), or they are suggested to be smooth images without sharp edges to compensate for the rounding errors of the discrete mapping.
+
 == Temporal constraints
 
-The next group of widgets below the color ramp specify the temporal constraints
-of the light effect, i.e. _when_ the light effect should be applied. The two
-hard limits are the *start frame* and the *duration*: the light effect will be
-completely inactive outside this time interval. The *fade in* and *fade out*
+The next group of widgets below the color ramp or color image specify the temporal constraints of the light effect, i.e. _when_ the light effect should be applied. The two hard limits are the *start frame* and the *duration*: the light effect will be completely inactive outside this time interval. The *fade in* and *fade out*
 widgets specify the duration of the fade-in and the fade-out periods at the
 beginning and the end of the time interval of the light effect. During the
 fade-in period, the intensity of the light effect grows gradually from zero
@@ -76,13 +87,9 @@ than a full containment test, so for simple cases you should use this instead of
 the more expensive containment test that you can achieve with the *Inside the mesh*
 option.
 
-== Output mode
+== Output modes
 
-The *Output* dropdown determines how the color of a drone is picked
-from the color ramp. Recall that each light effect essentially produces a number
-between 0 and 1 for each drone, and then passes this number through the color
-ramp to calculate the final color that the effect will apply on the drone. The
-*Output* dropdown provides options for picking this number:
+The *Output X* and *Output Y* dropdowns determine how the color of a drone is picked from the color ramp or color image. Recall that each light effect essentially produces one or two numbers between 0 and 1 for each drone, and then passes this number through the color ramp or color image to calculate the final color that the effect will apply on the drone. The output dropdowns provide options for picking this number:
 
 image::panels/light_effects/output.jpg[Output]
 
@@ -90,21 +97,25 @@ First color of color ramp:: The first color of the color ramp will be used by al
 
 Last color of color ramp:: The last color of the color ramp will be used by all drones during the whole light effect; in other words, each drone picks 1, which represents the end of the color ramp.
 
-Gradient:: All the drones are sorted according to the order they appear in the `Drones` collection, and they are then distributed evenly along the color ramp. For instance, if you have five drones, the first drone gets 0 (the left edge of the ramp), the second drone gets 0.25 (25% between the left and the right edge of the ramp), the third drone gets 0.5 (50% between the left and the right edge) and so on.
+Indexed by drones:: All the drones are sorted according to the order they appear in the `Drones` collection, and they are then distributed evenly along the color ramp or color image. For instance, if you have five drones, the first drone gets 0 (the left edge of the ramp), the second drone gets 0.25 (25% between the left and the right edge of the ramp), the third drone gets 0.5 (50% between the left and the right edge) and so on.
 
-Gradient (XYZ):: Drones are sorted according to their coordinates along the X, Y and Z axes (in this order), and they are then distribued evenly along the color ramp. This option has six variants with different axis order.
+Indexed by formation:: All the drones are sorted according to the order they get mapped to the formation of a given frame, in the order markers appear in the corresponding subcollection in the `Formations` collection.
 
-Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected mesh (see the *Mesh* widget) to the color ramp (i.e. the closest drone to the mesh will pick the leftmost color in the ramp, the farthest will pick the rightmost color, all the rest will get a value in between, distributed evenly along the color ramp.
+Gradient (XYZ, XZY, ...):: Drones are sorted according to their coordinates along the X, Y and Z axes (in this order), and they are then distribued evenly along the color ramp. This option has six variants with different axis order.
 
 Temporal:: All drones will cycle through the color ramp simultaneously throughout the total duration of the light effect, starting from the left and ending at the right edge.
+
+Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected mesh (see the *Mesh* widget) to the color ramp (i.e. the closest drone to the mesh will pick the leftmost color in the ramp, the farthest will pick the rightmost color, all the rest will get a value in between, distributed evenly along the color ramp).
+
+Custom expression:: This is not a valid option yet, in the future it will be used for custom, user-defined orderings.
 
 == Mapping
 
 Some output mode types (such as *Distance from mesh* and *Gradient-based* types) support two mapping modes between the drones and the color ramp:
 
-Ordered:: In ordered mode, drones are sorted first based on their coordinates or distances, and then they are distributed evenly along the color ramp.
+Ordered:: In ordered mode, drones are sorted first based on their coordinates or distances, and then they are distributed evenly along the color ramp or image.
 
-Proportional:: In proportional mode, the drones are distributed along the color ramp in a way that their distances on the color ramp are proportional to their distances or coordinates in the scene itself.
+Proportional:: In proportional mode, the drones are distributed along the color ramp or image in a way that their distances on the color space are proportional to their distances or coordinates in the scene itself.
 
 == Influence
 
@@ -114,4 +125,4 @@ TIP: The influence parameter can be animated with keyframes, which is a simple w
 
 == Randomness
 
-The *Randomness* parameter can be used to add a bit of randomness to the numbers picked by the drones according to the *Output* dropdown. Each drone is associated with a unique random number between -0.5 and 0.5, this number is multiplied by the randomness parameter, wrapping around the edges of the color ramp as needed, and the result is _added_ to the number that was calculated based on the setting of the *Output* dropdown. This final number is then used to pick the color of the drone from the color ramp. Note that the default value of the randomness parameter is zero, which means that the value derived from the *Output* setting is used as is.
+The *Randomness* parameter can be used to add a bit of randomness to the numbers picked by the drones according to the *Output* dropdowns. Each drone is associated with a unique random number between -0.5 and 0.5, this number is multiplied by the randomness parameter, wrapping around the edges of the color ramp or image as needed, and the result is _added_ to the number that was calculated based on the setting of the *Output* dropdowns. This final number is then used to pick the color of the drone from the color ramp or image. Note that the default value of the randomness parameter is zero, which means that the value derived from the *Output* settings is used as is.
