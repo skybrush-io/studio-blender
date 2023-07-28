@@ -403,15 +403,19 @@ class LightEffect(PropertyGroup):
 
                     # reduce mapping of all positions to rank, in case formation size
                     # is smaller than the number of drones
-                    sorted_valid_mapping = sorted(x for x in mapping if x is not None)
-                    outputs = [
-                        None if x is None else sorted_valid_mapping.index(x)
-                        for x in mapping
-                    ]
-                    # normalize output with the number of valid mapping entries only
-                    np_m1 = len(sorted_valid_mapping) - 1
-                    if np_m1 > 0:
-                        outputs = [None if x is None else x / np_m1 for x in outputs]
+                    if None in mapping:
+                        sorted_valid_mapping = sorted(
+                            x for x in mapping if x is not None
+                        )
+                        np_m1 = max(len(sorted_valid_mapping) - 1, 1)
+                        outputs = [
+                            None if x is None else sorted_valid_mapping.index(x) / np_m1
+                            for x in mapping
+                        ]
+                    # otherwise just normalize full mapping to [0, 1]
+                    else:
+                        np_m1 = max(num_positions - 1, 1)
+                        outputs = [None if x is None else x / np_m1 for x in mapping]
                 else:
                     # if there is no mapping at all, we do not change color of drones
                     outputs = [None] * num_positions
