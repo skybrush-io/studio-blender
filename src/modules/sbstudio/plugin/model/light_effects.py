@@ -437,9 +437,10 @@ class LightEffect(PropertyGroup):
         outputs_x, common_output_x = get_output_based_on_output_type(
             self.output, self.output_mapping_mode
         )
-        outputs_y, common_output_y = get_output_based_on_output_type(
-            self.output_y, self.output_mapping_mode_y
-        )
+        if color_image is not None:
+            outputs_y, common_output_y = get_output_based_on_output_type(
+                self.output_y, self.output_mapping_mode_y
+            )
 
         # Get the additional predicate required to evaluate whether the effect
         # will be applied at a given position
