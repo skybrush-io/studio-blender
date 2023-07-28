@@ -74,9 +74,13 @@ class LightEffectsPanel(Panel):
                     row = layout.box()
                     row.template_color_ramp(entry.texture, "color_ramp")
                 elif entry.type == "IMAGE":
-                    layout.prop_search(
-                        entry.texture, "image", bpy.data, "images", text=""
-                    )
+                    row = layout.row()
+
+                    col = row.column()
+                    col.prop_search(entry.texture, "image", bpy.data, "images", text="")
+
+                    col = row.column(align=True)
+                    col.operator("image.open", icon="FILE_FOLDER", text="")
                 else:
                     row = layout.box()
                     row.alert = True
