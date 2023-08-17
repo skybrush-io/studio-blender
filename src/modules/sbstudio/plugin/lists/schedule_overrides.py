@@ -21,7 +21,7 @@ class SKYBRUSH_UL_scheduleoverridelist(UIList):
     ):
         if self.layout_type in {"DEFAULT", "COMPACT"}:
             layout.use_property_decorate = False
-            layout.alignment = "LEFT"
+            layout.alignment = "EXPAND"
 
             checkbox = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
             layout.prop(item, "enabled", emboss=False, text="", icon=checkbox)
