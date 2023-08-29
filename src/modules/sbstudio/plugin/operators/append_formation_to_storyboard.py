@@ -53,6 +53,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         entry = storyboard.add_new_entry(
             name=formation.name, select=True, formation=formation
         )
+        assert entry is not None
 
         fps = context.scene.render.fps
 

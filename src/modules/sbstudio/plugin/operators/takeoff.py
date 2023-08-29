@@ -152,6 +152,7 @@ class TakeoffOperator(StoryboardOperator):
             select=True,
             context=context,
         )
+        assert entry is not None
         entry.transition_type = "MANUAL"
 
         # Set up the custom departure delays for the drones
