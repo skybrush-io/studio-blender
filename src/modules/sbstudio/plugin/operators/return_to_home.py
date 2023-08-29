@@ -1,11 +1,18 @@
 import bpy
 
-from bpy.props import FloatProperty, IntProperty
+from bpy.props import FloatProperty, IntProperty, BoolProperty
 from bpy.types import Context
+from functools import partial
 from math import ceil, sqrt
 
+from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.actions import (
+    ensure_action_exists_for_object,
+    find_f_curve_for_data_path_and_index,
+)
+from sbstudio.plugin.model.formation import create_formation, get_markers_from_formation
+
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
@@ -53,12 +60,22 @@ class ReturnToHomeOperator(StoryboardOperator):
         description=(
             "Specifies the difference between altitudes of landing layers "
             "for multi-phase landings when multiple drones occupy the same "
-            "slot within safety distance."
+            "slot within safety distance"
         ),
         default=5,
         soft_min=0,
         soft_max=50,
         unit="LENGTH",
+    )
+
+    use_smart_rth = BoolProperty(
+        name="Use smart RTH",
+        description=(
+            "Enable the smart return to home function that ensures that "
+            "all drones return to their own home position with an optimal "
+            "collision free smart transition"
+        ),
+        default=False,
     )
 
     @classmethod
@@ -95,37 +112,121 @@ class ReturnToHomeOperator(StoryboardOperator):
             drones,
             frame=first_frame,
             base_altitude=self.altitude,
-            layer_height=self.altitude_shift,
+            layer_height=self.altitude_shift if self.use_smart_rth is False else 0,
             min_distance=get_proximity_warning_threshold(context),
         )
-
-        diffs = [
-            sqrt((s[0] - t[0]) ** 2 + (s[1] - t[1]) ** 2 + (s[2] - t[2]) ** 2)
-            for s, t in zip(source, target)
-        ]
-
-        # Calculate RTH duration from max distance to travel and the
-        # average velocity
-        max_distance = max(diffs)
         fps = context.scene.render.fps
-        rth_duration = ceil((max_distance / self.velocity) * fps)
 
-        # Extend the duration of the last formation to the frame where we want
-        # to start the RTH maneuver
-        if len(storyboard.entries) > 0:
-            storyboard.last_entry.extend_until(self.start_frame)
+        if self.use_smart_rth:
+            # Set up safety parameters
+            safety_check = getattr(context.scene.skybrush, "safety_check", None)
+            settings = getattr(context.scene.skybrush, "settings", None)
+            max_velocity_xy = self.velocity
+            max_velocity_z = (
+                safety_check.velocity_z_warning_threshold
+                if safety_check
+                else min(self.velocity, 2)
+            )
+            max_acceleration = settings.max_acceleration if settings else 4
 
-        # Calculate when the RTH should end
-        end_of_rth = self.start_frame + rth_duration
+            # call api to create smart RTH plan
+            plan = get_api().plan_smart_rth(
+                source,
+                target,
+                max_velocity_xy=max_velocity_xy,
+                max_velocity_z=max_velocity_z,
+                max_acceleration=max_acceleration,
+                min_distance=get_proximity_warning_threshold(context),
+                rth_model="straight_line_with_neck",
+            )
+            if not plan.start_times or not plan.durations:
+                return False
 
-        # Add a new storyboard entry with the given formation
-        storyboard.add_new_entry(
-            formation=create_formation("Return to home", target),
-            frame_start=end_of_rth,
-            duration=0,
-            select=True,
-            context=context,
-        )
+            # Add a new storyboard entry for the smart RTH formation
+            entry = storyboard.add_new_entry(
+                formation=create_formation("Smart return to home", source),
+                frame_start=self.start_frame,
+                duration=int(max(plan.durations) * fps),
+                select=True,
+                context=context,
+            )
+            assert entry is not None
+            markers = get_markers_from_formation(entry.formation)
+
+            # generate smart RTH trajectories in the new formation
+            for start_time, duration, inner_points, p, q, marker in zip(
+                plan.start_times,
+                plan.durations,
+                plan.inner_points,
+                source,
+                target,
+                markers,
+                strict=True,
+            ):
+                action = ensure_action_exists_for_object(
+                    marker, name=f"Animation data for {marker.name}"
+                )
+                f_curves = []
+                for i in range(3):
+                    f_curve = find_f_curve_for_data_path_and_index(
+                        action, "location", i
+                    )
+                    if f_curve is None:
+                        f_curve = action.fcurves.new("location", index=i)
+                    else:
+                        # We should clear the keyframes that fall within the
+                        # range of our keyframes. Currently it's not needed because
+                        # it's a freshly created marker so it can't have any
+                        # keyframes that we don't know about.
+                        pass
+                    f_curves.append(f_curve)
+                insert = [
+                    partial(f_curve.keyframe_points.insert, options={"FAST"})
+                    for f_curve in f_curves
+                ]
+                for point in (
+                    [[0, *p], [start_time, *p]]
+                    + inner_points
+                    + [[start_time + duration, *q]]
+                ):
+                    frame = int(self.start_frame + point[0] * fps)
+                    keyframes = (
+                        insert[0](frame, point[1]),
+                        insert[1](frame, point[2]),
+                        insert[2](frame, point[3]),
+                    )
+                    for keyframe in keyframes:
+                        keyframe.interpolation = "LINEAR"
+                # Commit the insertions that we've made in "fast" mode
+                for f_curve in f_curves:
+                    f_curve.update()
+        else:
+            diffs = [
+                sqrt((s[0] - t[0]) ** 2 + (s[1] - t[1]) ** 2 + (s[2] - t[2]) ** 2)
+                for s, t in zip(source, target)
+            ]
+
+            # Calculate RTH duration from max distance to travel and the
+            # average velocity
+            max_distance = max(diffs)
+            rth_duration = ceil((max_distance / self.velocity) * fps)
+
+            # Extend the duration of the last formation to the frame where we want
+            # to start the RTH maneuver
+            if len(storyboard.entries) > 0:
+                storyboard.last_entry.extend_until(self.start_frame)
+
+            # Calculate when the RTH should end
+            end_of_rth = self.start_frame + rth_duration
+
+            # Add a new storyboard entry with the given formation
+            storyboard.add_new_entry(
+                formation=create_formation("Return to home", target),
+                frame_start=end_of_rth,
+                duration=0,
+                select=True,
+                context=context,
+            )
 
         # Recalculate the transition leading to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
