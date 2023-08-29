@@ -20,7 +20,7 @@ __all__ = ("AddMarkersFromStaticCSVOperator",)
 log = logging.getLogger(__name__)
 
 #############################################################################
-# Helper functions for the exporter
+# Helper functions for the importer
 #############################################################################
 
 
