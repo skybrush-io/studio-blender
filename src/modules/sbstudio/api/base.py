@@ -23,7 +23,7 @@ from sbstudio.utils import create_path_and_open
 
 from .constants import COMMUNITY_SERVER_URL
 from .errors import SkybrushStudioAPIError
-from .types import Mapping, TransitionPlan
+from .types import Mapping, SmartRTHPlan, TransitionPlan
 
 __all__ = ("SkybrushStudioAPI",)
 
@@ -515,6 +515,72 @@ class SkybrushStudioAPI:
 
         return result["start_times"], result["durations"]
 
+    def plan_smart_rth(
+        self,
+        source: Sequence[Coordinate3D],
+        target: Sequence[Coordinate3D],
+        *,
+        max_velocity_xy: float,
+        max_velocity_z: float,
+        max_acceleration: float,
+        min_distance: float,
+        rth_model: str = "straight_line_with_neck",
+    ) -> SmartRTHPlan:
+        """Proposes starting times for predefined smart RTH procedures
+        between source and target with the given parameters.
+
+        Parameters:
+            source: the list of source points
+            target: the list of target points
+            max_velocity_xy: maximum allowed velocity in the XY plane
+            max_velocity_z: maximum allowed velocity along the Z axis
+            max_acceleration: maximum allowed acceleration
+            min_distance: minimum distance to maintain during the transition
+            rth_model: the smart RTH model to use when matching source points
+                to target points; see the server documentation for more details.
+        """
+        if not source or not target:
+            return SmartRTHPlan.empty()
+
+        data = {
+            "version": 1,
+            "source": source,
+            "target": target,
+            "max_velocity_xy": max_velocity_xy,
+            "max_velocity_z": max_velocity_z,
+            "max_acceleration": max_acceleration,
+            "min_distance": min_distance,
+            "rth_model": rth_model,
+        }
+
+        with self._send_request("operations/plan-smart-rth", data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        start_times = result.get("start_times")
+        if start_times is None:
+            raise SkybrushStudioAPIError(
+                "invalid response format, start times are missing"
+            )
+        durations = result.get("durations")
+        if durations is None:
+            raise SkybrushStudioAPIError(
+                "invalid response format, durations are missing"
+            )
+        inner_points = result.get("inner_points")
+        if inner_points is None:
+            raise SkybrushStudioAPIError(
+                "invalid response format, inner points are missing"
+            )
+
+        return SmartRTHPlan(
+            start_times=list(start_times),
+            durations=list(durations),
+            inner_points=list(inner_points),
+        )
+
     def plan_transition(
         self,
         source: Sequence[Coordinate3D],
@@ -543,7 +609,7 @@ class SkybrushStudioAPI:
                 downwards
             max_acceleration: maximum allowed acceleration
             matching_method: the algorithm to use when matching source points
-                to target points; see the server documentation fof more details.
+                to target points; see the server documentation for more details.
         """
         if not source or not target:
             return TransitionPlan.empty()
