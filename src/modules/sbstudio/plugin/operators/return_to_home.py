@@ -38,8 +38,18 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     velocity = FloatProperty(
         name="with velocity",
-        description="Average velocity during the return-to-home maneuver",
+        description="Average horizontal velocity during the return-to-home maneuver",
         default=4,
+        min=0.1,
+        soft_min=0.1,
+        soft_max=10,
+        unit="VELOCITY",
+    )
+
+    velocity_z = FloatProperty(
+        name="with velocity Z",
+        description="Average vertical velocity during the return-to-home maneuver",
+        default=2,
         min=0.1,
         soft_min=0.1,
         soft_max=10,
@@ -86,6 +96,28 @@ class ReturnToHomeOperator(StoryboardOperator):
         drones = Collections.find_drones(create=False)
         return drones is not None and len(drones.objects) > 0
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        layout.prop(self, "start_frame")
+        if self.use_smart_rth:
+            # TODO: labels XY and Z consume too much space...
+            row = layout.row()
+            row.prop(self, "velocity")
+            row.separator()
+            row.label(text="XY")
+            row.separator()
+            row.prop(self, "velocity_z", text="")
+            row.separator()
+            row.label(text="Z")
+        else:
+            layout.prop(self, "velocity")
+        layout.prop(self, "altitude")
+        if not self.use_smart_rth:
+            layout.prop(self, "altitude_shift")
+        layout.prop(self, "use_smart_rth")
+
     def invoke(self, context, event):
         storyboard = context.scene.skybrush.storyboard
         self.start_frame = max(context.scene.frame_current, storyboard.frame_end)
@@ -118,25 +150,21 @@ class ReturnToHomeOperator(StoryboardOperator):
         fps = context.scene.render.fps
 
         if self.use_smart_rth:
-            # Set up safety parameters
-            safety_check = getattr(context.scene.skybrush, "safety_check", None)
+            # Set up non-trivial parameters
+            # TODO: get them as explicit parameter if needed
             settings = getattr(context.scene.skybrush, "settings", None)
-            max_velocity_xy = self.velocity
-            max_velocity_z = (
-                safety_check.velocity_z_warning_threshold
-                if safety_check
-                else min(self.velocity, 2)
-            )
             max_acceleration = settings.max_acceleration if settings else 4
+            min_distance = get_proximity_warning_threshold(context)
+            land_speed = min(self.velocity_z, 0.5)
 
             # call api to create smart RTH plan
             plan = get_api().plan_smart_rth(
                 source,
                 target,
-                max_velocity_xy=max_velocity_xy,
-                max_velocity_z=max_velocity_z,
+                max_velocity_xy=self.velocity,
+                max_velocity_z=self.velocity_z,
                 max_acceleration=max_acceleration,
-                min_distance=get_proximity_warning_threshold(context),
+                min_distance=min_distance,
                 rth_model="straight_line_with_neck",
             )
             if not plan.start_times or not plan.durations:
@@ -187,7 +215,15 @@ class ReturnToHomeOperator(StoryboardOperator):
                 for point in (
                     [[0, *p], [start_time, *p]]
                     + inner_points
-                    + [[start_time + duration, *q]]
+                    + [
+                        [start_time + duration, *q],
+                        [
+                            start_time + duration + self.altitude / land_speed,
+                            q[0],
+                            q[1],
+                            0,  # TODO: starting position would be better than explicit 0
+                        ],
+                    ]
                 ):
                     frame = int(self.start_frame + point[0] * fps)
                     keyframes = (
