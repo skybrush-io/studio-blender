@@ -627,7 +627,7 @@ class Storyboard(PropertyGroup, ListMixin):
         else:
             return None
 
-    def validate_and_sort_entries(self) -> None:
+    def validate_and_sort_entries(self) -> List[StoryboardEntry]:
         """Validates the entries in the storyboard and sorts them by start time,
         keeping the active entry index point at the same entry as before.
 
