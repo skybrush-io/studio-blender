@@ -16,6 +16,7 @@ from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
+from sbstudio.plugin.model.file_formats import FileFormat
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
@@ -153,7 +154,7 @@ def export_show_to_file_using_api(
     context: Context,
     settings: Dict,
     filepath: Path,
-    renderer: str,
+    format: FileFormat,
 ) -> None:
     """Creates Skybrush-compatible output from Blender trajectories and color
     animation.
@@ -165,7 +166,7 @@ def export_show_to_file_using_api(
         context: the main Blender context
         settings: export settings dictionary
         filepath: the output path where the export should write
-        renderer: the type of renderer the API should use
+        format: the format that the API should produce
 
     Raises:
         SkybrushStudioExportWarning: when a local check failed and the export
@@ -231,33 +232,7 @@ def export_show_to_file_using_api(
         renderer_params = {"min_nav_altitude": settings["min_nav_altitude"]}
 
     # create Skybrush converter object
-    if renderer == "skyc":
-        log.info("Exporting show to .skyc")
-        api.export(
-            show_title=show_title,
-            show_type=show_type,
-            validation=validation,
-            trajectories=trajectories,
-            lights=lights,
-            output=filepath,
-            time_markers=time_markers,
-            renderer="skyc",
-            renderer_params=renderer_params,
-        )
-    elif renderer == "csv":
-        log.info("Exporting show to CSV")
-        api.export(
-            show_title=show_title,
-            show_type=show_type,
-            validation=validation,
-            trajectories=trajectories,
-            lights=lights,
-            output=filepath,
-            time_markers=time_markers,
-            renderer="csv",
-            renderer_params={**renderer_params, "fps": settings["output_fps"]},
-        )
-    elif renderer == "plot":
+    if format is FileFormat.PDF:
         log.info("Exporting validation plots to .pdf")
         plots = settings.get("plots", ["pos", "vel", "nn"])
         fps = settings.get("output_fps", 4)
@@ -270,6 +245,26 @@ def export_show_to_file_using_api(
             time_markers=time_markers,
         )
     else:
-        raise RuntimeError(f"Unhandled renderer: {renderer!r}")
+        if format is FileFormat.SKYC:
+            log.info("Exporting show to .skyc")
+            renderer = "skyc"
+        elif format is FileFormat.CSV:
+            log.info("Exporting show to CSV")
+            renderer = "csv"
+            renderer_params = {**renderer_params, "fps": settings["output_fps"]}
+        else:
+            raise RuntimeError(f"Unhandled format: {format!r}")
+
+        api.export(
+            show_title=show_title,
+            show_type=show_type,
+            validation=validation,
+            trajectories=trajectories,
+            lights=lights,
+            output=filepath,
+            time_markers=time_markers,
+            renderer=renderer,
+            renderer_params=renderer_params,
+        )
 
     log.info("Export finished")

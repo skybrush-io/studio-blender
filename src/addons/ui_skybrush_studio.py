@@ -83,6 +83,7 @@ from sbstudio.plugin.operators import (
     MoveStoryboardEntryUpOperator,
     PrepareSceneOperator,
     RecalculateTransitionsOperator,
+    RefreshFileFormatsOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
     RemoveScheduleOverrideEntryOperator,
@@ -200,6 +201,7 @@ operators = (
     AddMarkersFromStaticCSVOperator,
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromQRCodeOperator,
+    RefreshFileFormatsOperator,
 )
 
 #: List widgets in this addon.

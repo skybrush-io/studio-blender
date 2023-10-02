@@ -1,6 +1,8 @@
 from bpy.types import Panel
 
+from sbstudio.plugin.model.file_formats import FileFormat, get_supported_file_formats
 from sbstudio.plugin.operators import (
+    RefreshFileFormatsOperator,
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
@@ -32,8 +34,24 @@ class ExportPanel(Panel):
         if settings:
             layout.prop(settings, "show_type")
 
-        layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
-        layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
+        formats = get_supported_file_formats()
+
+        for format in formats:
+            if format is FileFormat.SKYC:
+                layout.operator(
+                    SkybrushExportOperator.bl_idname, text="Export to .skyc"
+                )
+            elif format is FileFormat.CSV:
+                layout.operator(
+                    SkybrushCSVExportOperator.bl_idname, text="Export to .csv"
+                )
+            elif format is FileFormat.PDF:
+                layout.operator(
+                    SkybrushPDFExportOperator.bl_idname, text="Export validation report"
+                )
+
+        layout.separator()
+
         layout.operator(
-            SkybrushPDFExportOperator.bl_idname, text="Export validation report"
+            RefreshFileFormatsOperator.bl_idname, text="Refresh file formats"
         )

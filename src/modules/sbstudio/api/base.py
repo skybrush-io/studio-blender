@@ -381,6 +381,12 @@ class SkybrushStudioAPI:
             else:
                 return response.as_bytes()
 
+    def get_limits(self):
+        """Returns the limits and supported file formats of the server."""
+        with self._send_request("queries/limits") as response:
+            # TODO(ntamas): return a typed object!
+            return response.as_json()
+
     def generate_plots(
         self,
         trajectories: Dict[str, Trajectory],
