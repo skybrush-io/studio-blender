@@ -2,6 +2,7 @@ from bpy.types import Panel
 
 from sbstudio.model.file_formats import FileFormat, get_supported_file_formats
 from sbstudio.plugin.operators import (
+    DACExportOperator,
     RefreshFileFormatsOperator,
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
@@ -45,6 +46,8 @@ class ExportPanel(Panel):
                 layout.operator(
                     SkybrushCSVExportOperator.bl_idname, text="Export to .csv"
                 )
+            elif format is FileFormat.DAC:
+                layout.operator(DACExportOperator.bl_idname, text="Export to .dac")
             elif format is FileFormat.PDF:
                 layout.operator(
                     SkybrushPDFExportOperator.bl_idname, text="Export validation report"

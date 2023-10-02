@@ -252,6 +252,20 @@ def export_show_to_file_using_api(
             log.info("Exporting show to CSV")
             renderer = "csv"
             renderer_params = {**renderer_params, "fps": settings["output_fps"]}
+        elif format is FileFormat.DAC:
+            log.info("Exporting show to .dac format")
+            renderer = "dac"
+            renderer_params = {
+                **renderer_params,
+                "show_id": 1555,
+                "title": "Skybrush show",
+            }
+        elif format is FileFormat.DROTEK:
+            log.info("Exporting show to Drotek format")
+            renderer = "drotek"
+        elif format is FileFormat.DSS:
+            log.info("Exporting show to DSS PATH format")
+            renderer = "dss"
         else:
             raise RuntimeError(f"Unhandled format: {format!r}")
 
