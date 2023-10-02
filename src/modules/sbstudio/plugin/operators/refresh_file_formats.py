@@ -1,5 +1,6 @@
 from bpy.types import Operator
 
+from sbstudio.model.file_formats import update_supported_file_formats_from_limits
 from sbstudio.plugin.api import call_api_from_blender_operator
 
 __all__ = ("RefreshFileFormatsOperator",)
@@ -20,7 +21,7 @@ class RefreshFileFormatsOperator(Operator):
             with call_api_from_blender_operator(
                 self, "Server capabilities query"
             ) as api:
-                print(repr(api.get_limits()))
+                update_supported_file_formats_from_limits(api.get_limits())
         except Exception:
             return {"CANCELLED"}
         return {"FINISHED"}

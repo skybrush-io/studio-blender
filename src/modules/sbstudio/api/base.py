@@ -23,7 +23,7 @@ from sbstudio.utils import create_path_and_open
 
 from .constants import COMMUNITY_SERVER_URL
 from .errors import SkybrushStudioAPIError
-from .types import Mapping, TransitionPlan
+from .types import Limits, Mapping, TransitionPlan
 
 __all__ = ("SkybrushStudioAPI",)
 
@@ -381,11 +381,10 @@ class SkybrushStudioAPI:
             else:
                 return response.as_bytes()
 
-    def get_limits(self):
+    def get_limits(self) -> Limits:
         """Returns the limits and supported file formats of the server."""
         with self._send_request("queries/limits") as response:
-            # TODO(ntamas): return a typed object!
-            return response.as_json()
+            return Limits.from_json(response.as_json())
 
     def generate_plots(
         self,

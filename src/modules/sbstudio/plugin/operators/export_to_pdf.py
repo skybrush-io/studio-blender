@@ -6,7 +6,7 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
 from sbstudio.plugin.api import call_api_from_blender_operator
-from sbstudio.plugin.model.file_formats import FileFormat
+from sbstudio.model.file_formats import FileFormat
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
 from .utils import export_show_to_file_using_api

@@ -1,10 +1,53 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from math import inf
+from typing import Any, List, Optional
 
 Mapping = List[Optional[int]]
 """Type alias for mappings from drone indices to the corresponding target
 marker indices.
 """
+
+
+@dataclass
+class Limits:
+    """Response returned from a "query limits" API request."""
+
+    num_drones: float = inf
+    """Number of drones supported by the server. Infinity is allowed."""
+
+    features: List[str] = field(default_factory=list)
+    """List of feature tags returned by the server."""
+
+    @classmethod
+    def default(cls):
+        """Returns a limits object to be used at startup."""
+        return Limits()
+
+    @classmethod
+    def from_json(cls, obj: Any):
+        if not isinstance(obj, dict):
+            raise TypeError("limits object can only be constructed from a dict")
+
+        num_drones = obj.get("num_drones")
+        if num_drones is None:
+            num_drones = inf
+        elif isinstance(num_drones, int):
+            # This is OK
+            pass
+        elif isinstance(num_drones, float) and num_drones.is_integer():
+            num_drones = int(num_drones)
+        else:
+            raise TypeError("invalid type for num_drones")
+
+        features = obj.get("features")
+        if features is None:
+            features = []
+        elif hasattr(features, "__iter__"):
+            features = [str(feature) for feature in features]
+        else:
+            raise TypeError("invalid type for features")
+
+        return cls(num_drones=num_drones, features=sorted(set(features)))
 
 
 @dataclass

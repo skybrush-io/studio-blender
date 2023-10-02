@@ -1,6 +1,6 @@
 from bpy.types import Panel
 
-from sbstudio.plugin.model.file_formats import FileFormat, get_supported_file_formats
+from sbstudio.model.file_formats import FileFormat, get_supported_file_formats
 from sbstudio.plugin.operators import (
     RefreshFileFormatsOperator,
     SkybrushExportOperator,
