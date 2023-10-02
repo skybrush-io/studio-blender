@@ -19,7 +19,7 @@ class RefreshFileFormatsOperator(Operator):
     def execute(self, context):
         try:
             with call_api_from_blender_operator(
-                self, "Server capabilities query"
+                self, "server capabilities query"
             ) as api:
                 update_supported_file_formats_from_limits(api.get_limits())
         except Exception:

@@ -91,7 +91,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
             raise
             self.report(
                 {"ERROR"},
-                "Error while invoking transition planner on the Skybrush Studio online service",
+                "Error while invoking transition planner on the Skybrush Studio server",
             )
             return {"CANCELLED"}
 

@@ -766,7 +766,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                 {"ERROR"},
                 (
                     "Error while invoking transition planner on the Skybrush "
-                    "Studio online service"
+                    "Studio server"
                 ),
             )
             return {"CANCELLED"}

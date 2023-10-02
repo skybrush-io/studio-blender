@@ -24,4 +24,10 @@ class SetServerURLOperator(Operator):
 
         bpy.ops.wm.save_userpref()
 
+        try:
+            bpy.ops.skybrush.refresh_file_formats()
+        except RuntimeError:
+            # Maybe the server is not running?
+            pass
+
         return {"FINISHED"}

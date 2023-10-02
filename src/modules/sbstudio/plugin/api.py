@@ -75,9 +75,7 @@ def call_api_from_blender_operator(
     return ``{"CANCELLED"}`` from the operator immediately in response to an
     exception.
     """
-    default_message = (
-        f"Error while invoking {what} on the Skybrush Studio online service"
-    )
+    default_message = f"Error while invoking {what} on the Skybrush Studio server"
     try:
         yield get_api()
     except SkybrushStudioExportWarning as ex:
