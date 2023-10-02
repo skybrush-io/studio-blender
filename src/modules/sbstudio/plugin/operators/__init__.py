@@ -14,6 +14,7 @@ from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOper
 from .duplicate_light_effect import DuplicateLightEffectOperator
 from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_dac import DACExportOperator
+from .export_to_drotek import DrotekExportOperator
 from .export_to_skyc import SkybrushExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
@@ -58,6 +59,7 @@ __all__ = (
     "DACExportOperator",
     "DeselectFormationOperator",
     "DetachMaterialsFromDroneTemplateOperator",
+    "DrotekExportOperator",
     "DuplicateLightEffectOperator",
     "FixConstraintOrderingOperator",
     "AddMarkersFromQRCodeOperator",

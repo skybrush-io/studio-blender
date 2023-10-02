@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   during a staggered transition manually, or to manually create more complex
   transition patterns.
 
+- The Export panel now has a button that can be used to query the server about
+  any additional supported file formats besides .skyc and CSV. Additional
+  export operators will appear for third-party file formats if the server
+  supports them. Note that the community server still supports .skyc and CSV only.
+  Contact us for local deployments of the server with support for third-party
+  file formats if you are interested.
+
 ### Fixed
 
 - View scaling setting from the Blender preferences is now taken into account

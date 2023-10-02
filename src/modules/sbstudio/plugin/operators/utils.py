@@ -263,6 +263,11 @@ def export_show_to_file_using_api(
         elif format is FileFormat.DROTEK:
             log.info("Exporting show to Drotek format")
             renderer = "drotek"
+            renderer_params = {
+                **renderer_params,
+                "fps": settings["output_fps"],
+                # TODO(ntamas): takeoff_angle?
+            }
         elif format is FileFormat.DSS:
             log.info("Exporting show to DSS PATH format")
             renderer = "dss"

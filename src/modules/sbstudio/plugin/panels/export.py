@@ -3,6 +3,7 @@ from bpy.types import Panel
 from sbstudio.model.file_formats import FileFormat, get_supported_file_formats
 from sbstudio.plugin.operators import (
     DACExportOperator,
+    DrotekExportOperator,
     RefreshFileFormatsOperator,
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
@@ -48,6 +49,10 @@ class ExportPanel(Panel):
                 )
             elif format is FileFormat.DAC:
                 layout.operator(DACExportOperator.bl_idname, text="Export to .dac")
+            elif format is FileFormat.DROTEK:
+                layout.operator(
+                    DrotekExportOperator.bl_idname, text="Export to Drotek format"
+                )
             elif format is FileFormat.PDF:
                 layout.operator(
                     SkybrushPDFExportOperator.bl_idname, text="Export validation report"
