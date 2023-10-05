@@ -45,7 +45,7 @@ def _make_annotations(cls):
         ):
             _make_annotations(current_class)
 
-    _already_processed_with_make_annotations.add(current_class)
+    _already_processed_with_make_annotations.add(cls)
     bl_props.update(
         {k: v for k, v in cls.__dict__.items() if isinstance(v, PropertyType)}
     )

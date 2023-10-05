@@ -1,15 +1,10 @@
 import bpy
-import os
 
 from bpy.props import BoolProperty, StringProperty, IntProperty
-from bpy.types import Operator
-from bpy_extras.io_utils import ExportHelper
 
-from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.model.file_formats import FileFormat
-from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
-from .utils import export_show_to_file_using_api
+from .base import ExportOperator
 
 __all__ = ("SkybrushPDFExportOperator",)
 
@@ -19,7 +14,7 @@ __all__ = ("SkybrushPDFExportOperator",)
 #############################################################################
 
 
-class SkybrushPDFExportOperator(Operator, ExportHelper):
+class SkybrushPDFExportOperator(ExportOperator):
     """Export object trajectories into validation plots stored in a .pdf file"""
 
     bl_idname = "export_scene.skybrush_pdf"
@@ -29,19 +24,6 @@ class SkybrushPDFExportOperator(Operator, ExportHelper):
     # List of file extensions that correspond to .pdf files
     filter_glob = StringProperty(default="*.pdf", options={"HIDDEN"})
     filename_ext = ".pdf"
-
-    # output all objects or only selected ones
-    export_selected = BoolProperty(
-        name="Export selected drones only",
-        default=False,
-        description=(
-            "Export only the selected drones. "
-            "Uncheck to export all drones, irrespectively of the selection."
-        ),
-    )
-
-    # frame range
-    frame_range = FrameRangeProperty(default="RENDER")
 
     # output trajectory frame rate
     output_fps = IntProperty(
@@ -98,8 +80,16 @@ class SkybrushPDFExportOperator(Operator, ExportHelper):
         ),
     )
 
-    def execute(self, context):
-        filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
+    def get_format(self) -> FileFormat:
+        """Returns the file format that the operator uses. Must be overridden
+        in subclasses.
+        """
+        return FileFormat.PDF
+
+    def get_operator_name(self) -> str:
+        return ".pdf validation plot exporter"
+
+    def get_settings(self):
         plots = {
             "pos": self.plot_pos,
             "vel": self.plot_vel,
@@ -108,36 +98,8 @@ class SkybrushPDFExportOperator(Operator, ExportHelper):
             "indiv": self.plot_indiv,
         }
         plots = ["stats"] + [key for key, value in plots.items() if value]
-        settings = {
-            "export_selected": self.export_selected,
-            "frame_range": self.frame_range,
+        return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "plots": plots,
         }
-
-        if os.path.basename(filepath).lower() == self.filename_ext.lower():
-            self.report({"ERROR_INVALID_INPUT"}, "Filename must not be empty")
-            return {"CANCELLED"}
-
-        try:
-            with call_api_from_blender_operator(
-                self, ".pdf validation plot exporter"
-            ) as api:
-                export_show_to_file_using_api(
-                    api, context, settings, filepath, FileFormat.PDF
-                )
-        except Exception:
-            return {"CANCELLED"}
-
-        self.report({"INFO"}, "Export successful")
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        if not self.filepath:
-            filepath = bpy.data.filepath or "Untitled"
-            filepath, _ = os.path.splitext(filepath)
-            self.filepath = f"{filepath}.pdf"
-
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}

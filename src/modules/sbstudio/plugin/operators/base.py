@@ -167,10 +167,13 @@ class ExportOperator(Operator, ExportHelper):
         return {}
 
     def invoke(self, context, event):
+        if not hasattr(self, "filename_ext") or not self.filename_ext:
+            raise RuntimeError("filename_ext not defined in exporter class")
+
         if not self.filepath:
             filepath = bpy.data.filepath or "Untitled"
             filepath, _ = os.path.splitext(filepath)
-            self.filepath = f"{filepath}.zip"
+            self.filepath = f"{filepath}{self.filename_ext}"
 
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}

@@ -9,6 +9,7 @@ from sbstudio.model.file_formats import FileFormat
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
+from .base import ExportOperator
 from .utils import export_show_to_file_using_api
 
 __all__ = ("DrotekExportOperator",)
@@ -19,7 +20,7 @@ __all__ = ("DrotekExportOperator",)
 #############################################################################
 
 
-class DrotekExportOperator(Operator, ExportHelper):
+class DrotekExportOperator(ExportOperator):
     """Export object trajectories and light animation into Drotek's JSON-based format"""
 
     bl_idname = "export_scene.drotek"
@@ -29,16 +30,6 @@ class DrotekExportOperator(Operator, ExportHelper):
     # List of file extensions that correspond to Drotek files
     filter_glob = StringProperty(default="*.json", options={"HIDDEN"})
     filename_ext = ".json"
-
-    # output all objects or only selected ones
-    export_selected = BoolProperty(
-        name="Export selected drones only",
-        default=False,
-        description=(
-            "Export only the selected drones. "
-            "Uncheck to export all drones, irrespectively of the selection."
-        ),
-    )
 
     # whether to convert RGB colors to RGBW during export
     use_rgbw = BoolProperty(
@@ -54,40 +45,19 @@ class DrotekExportOperator(Operator, ExportHelper):
         description="Distance between slots in the takeoff grid.",
     )
 
-    # frame range
-    frame_range = FrameRangeProperty(default="RENDER")
+    def get_format(self) -> FileFormat:
+        """Returns the file format that the operator uses. Must be overridden
+        in subclasses.
+        """
+        return FileFormat.DROTEK
 
-    def execute(self, context):
-        filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
-        settings = {
-            "export_selected": self.export_selected,
-            "frame_range": self.frame_range,
+    def get_operator_name(self) -> str:
+        return "Drotek exporter"
+
+    def get_settings(self):
+        return {
             "spacing": self.spacing,
             "output_fps": 5,
             "light_fps": 5,
             "use_rgbw": self.use_rgbw,
         }
-
-        try:
-            with call_api_from_blender_operator(self, "Drotek exporter") as api:
-                export_show_to_file_using_api(
-                    api,
-                    context,
-                    settings,
-                    filepath,
-                    FileFormat.DROTEK,
-                )
-        except Exception:
-            return {"CANCELLED"}
-
-        self.report({"INFO"}, "Export successful")
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        if not self.filepath:
-            filepath = bpy.data.filepath or "Untitled"
-            filepath, _ = os.path.splitext(filepath)
-            self.filepath = f"{filepath}.zip"
-
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}

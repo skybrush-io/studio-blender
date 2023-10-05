@@ -13,18 +13,11 @@ This script is created for those who want to use their own scripts or tools for
 post-processing.
 """
 
-import bpy
-import os
+from bpy.props import StringProperty, FloatProperty
 
-from bpy.props import BoolProperty, StringProperty, FloatProperty
-from bpy.types import Operator
-from bpy_extras.io_utils import ExportHelper
-
-from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.model.file_formats import FileFormat
-from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
-from .utils import export_show_to_file_using_api
+from .base import ExportOperator
 
 __all__ = ("SkybrushCSVExportOperator",)
 
@@ -34,7 +27,7 @@ __all__ = ("SkybrushCSVExportOperator",)
 #############################################################################
 
 
-class SkybrushCSVExportOperator(Operator, ExportHelper):
+class SkybrushCSVExportOperator(ExportOperator):
     """Export object trajectories and light animation into a Skybrush-compatible simple CSV format"""
 
     bl_idname = "export_scene.skybrush_csv"
@@ -45,19 +38,6 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
     filter_glob = StringProperty(default="*.zip", options={"HIDDEN"})
     filename_ext = ".zip"
 
-    # output all objects or only selected ones
-    export_selected = BoolProperty(
-        name="Export selected drones only",
-        default=False,
-        description=(
-            "Export only the selected drones. "
-            "Uncheck to export all drones, irrespectively of the selection."
-        ),
-    )
-
-    # frame range
-    frame_range = FrameRangeProperty(default="RENDER")
-
     # output frame rate
     output_fps = FloatProperty(
         name="Frame rate",
@@ -65,34 +45,14 @@ class SkybrushCSVExportOperator(Operator, ExportHelper):
         description="Number of samples to take from trajectories and lights per second",
     )
 
-    def execute(self, context):
-        filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
-        settings = {
-            "export_selected": self.export_selected,
-            "frame_range": self.frame_range,
-            "output_fps": self.output_fps,
-        }
+    def get_format(self) -> FileFormat:
+        """Returns the file format that the operator uses. Must be overridden
+        in subclasses.
+        """
+        return FileFormat.CSV
 
-        if os.path.basename(filepath).lower() == self.filename_ext.lower():
-            self.report({"ERROR_INVALID_INPUT"}, "Filename must not be empty")
-            return {"CANCELLED"}
+    def get_operator_name(self) -> str:
+        return "CSV exporter"
 
-        try:
-            with call_api_from_blender_operator(self, "CSV exporter") as api:
-                export_show_to_file_using_api(
-                    api, context, settings, filepath, FileFormat.CSV
-                )
-        except Exception:
-            return {"CANCELLED"}
-
-        self.report({"INFO"}, "Export successful")
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        if not self.filepath:
-            filepath = bpy.data.filepath or "Untitled"
-            filepath, _ = os.path.splitext(filepath)
-            self.filepath = f"{filepath}.zip"
-
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
+    def get_settings(self):
+        return {"output_fps": self.output_fps}
