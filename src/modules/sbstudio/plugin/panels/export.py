@@ -4,6 +4,7 @@ from sbstudio.model.file_formats import FileFormat, get_supported_file_formats
 from sbstudio.plugin.operators import (
     DACExportOperator,
     DrotekExportOperator,
+    DSSPathExportOperator,
     RefreshFileFormatsOperator,
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
@@ -52,6 +53,10 @@ class ExportPanel(Panel):
             elif format is FileFormat.DROTEK:
                 layout.operator(
                     DrotekExportOperator.bl_idname, text="Export to Drotek format"
+                )
+            elif format is FileFormat.DSS:
+                layout.operator(
+                    DSSPathExportOperator.bl_idname, text="Export to DSS PATH format"
                 )
             elif format is FileFormat.PDF:
                 layout.operator(

@@ -1,7 +1,7 @@
 """Helper functions that can be used in most of our Blender addons."""
 
 from contextlib import contextmanager
-from typing import ContextManager
+from typing import ContextManager, Set, Type
 
 import bpy
 import re
@@ -13,6 +13,9 @@ def _get_menu_by_name(menu):
         return getattr(bpy.types, "TOPBAR_MT_" + menu)
     else:
         return getattr(bpy.types, "INFO_MT_" + menu)
+
+
+_already_processed_with_make_annotations: Set[Type] = set()
 
 
 def _make_annotations(cls):
@@ -28,13 +31,24 @@ def _make_annotations(cls):
     # tuples so we look for that. Blender 2.93 changed this to
     # bpy.props._PropertyDeferred
     try:
-        from bpy.props import _PropertyDeferred
+        from bpy.props import _PropertyDeferred as PropertyType
     except ImportError:
-        _PropertyDeferred = tuple
+        PropertyType = tuple
 
-    bl_props = {
-        k: v for k, v in cls.__dict__.items() if isinstance(v, _PropertyDeferred)
-    }
+    classes = list(reversed(cls.__mro__))
+    bl_props = {}
+    while classes:
+        current_class = classes.pop()
+        if (
+            current_class != cls
+            and current_class not in _already_processed_with_make_annotations
+        ):
+            _make_annotations(current_class)
+
+    _already_processed_with_make_annotations.add(current_class)
+    bl_props.update(
+        {k: v for k, v in cls.__dict__.items() if isinstance(v, PropertyType)}
+    )
 
     if bl_props:
         if "__annotations__" not in cls.__dict__:
