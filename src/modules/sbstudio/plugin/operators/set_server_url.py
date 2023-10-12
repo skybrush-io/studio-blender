@@ -16,10 +16,9 @@ class SetServerURLOperator(Operator):
     url = StringProperty(default="")
 
     def execute(self, context):
-        from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
+        from sbstudio.plugin.model.global_settings import get_preferences
 
-        prefs = context.preferences
-        prefs = prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
+        prefs = get_preferences()
         prefs.server_url = self.url
 
         bpy.ops.wm.save_userpref()

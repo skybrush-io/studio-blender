@@ -47,19 +47,14 @@ def _get_api_from_url_and_key(url: str, key: str):
 
 def get_api() -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object."""
-    from sbstudio.plugin.model.global_settings import DroneShowAddonGlobalSettings
+    from sbstudio.plugin.model.global_settings import get_preferences
 
     api_key: str
     server_url: str
 
-    prefs = bpy.context.preferences
-    try:
-        prefs = prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
-        api_key = str(getattr(prefs, "api_key", "")).strip()
-        server_url = str(getattr(prefs, "server_url", "")).strip()
-    except KeyError:
-        api_key = ""
-        server_url = ""
+    prefs = get_preferences()
+    api_key = str(prefs.api_key).strip()
+    server_url = str(prefs.server_url).strip()
 
     return _get_api_from_url_and_key(server_url, api_key)
 

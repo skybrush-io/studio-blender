@@ -12,7 +12,6 @@ from sbstudio.plugin.actions import (
     find_f_curve_for_data_path_and_index,
 )
 from sbstudio.plugin.model.formation import create_formation, get_markers_from_formation
-
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
@@ -20,6 +19,12 @@ from .base import StoryboardOperator
 from .takeoff import create_helper_formation_for_takeoff_and_landing
 
 __all__ = ("ReturnToHomeOperator",)
+
+
+def is_smart_rth_enabled_globally() -> bool:
+    from sbstudio.plugin.model.global_settings import get_preferences
+
+    return bool(get_preferences().enable_experimental_features)
 
 
 class ReturnToHomeOperator(StoryboardOperator):
@@ -100,8 +105,10 @@ class ReturnToHomeOperator(StoryboardOperator):
         layout = self.layout
         layout.use_property_split = True
 
+        use_smart_rth = self._should_use_smart_rth()
+
         layout.prop(self, "start_frame")
-        if self.use_smart_rth:
+        if use_smart_rth:
             # TODO: labels XY and Z consume too much space...
             row = layout.row()
             row.prop(self, "velocity")
@@ -114,9 +121,11 @@ class ReturnToHomeOperator(StoryboardOperator):
         else:
             layout.prop(self, "velocity")
         layout.prop(self, "altitude")
-        if not self.use_smart_rth:
+        if not use_smart_rth:
             layout.prop(self, "altitude_shift")
-        layout.prop(self, "use_smart_rth")
+
+        if is_smart_rth_enabled_globally():
+            layout.prop(self, "use_smart_rth")
 
     def invoke(self, context, event):
         storyboard = context.scene.skybrush.storyboard
@@ -125,6 +134,9 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     def execute_on_storyboard(self, storyboard, entries, context):
         return {"FINISHED"} if self._run(storyboard, context=context) else {"CANCELLED"}
+
+    def _should_use_smart_rth(self) -> bool:
+        return self.use_smart_rth and is_smart_rth_enabled_globally()
 
     def _run(self, storyboard, *, context) -> bool:
         bpy.ops.skybrush.prepare()
@@ -139,17 +151,18 @@ class ReturnToHomeOperator(StoryboardOperator):
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
+        use_smart_rth = self._should_use_smart_rth()
         first_frame = storyboard.frame_start
         _, target, _ = create_helper_formation_for_takeoff_and_landing(
             drones,
             frame=first_frame,
             base_altitude=self.altitude,
-            layer_height=self.altitude_shift if self.use_smart_rth is False else 0,
+            layer_height=self.altitude_shift if not use_smart_rth else 0,
             min_distance=get_proximity_warning_threshold(context),
         )
         fps = context.scene.render.fps
 
-        if self.use_smart_rth:
+        if use_smart_rth:
             # Set up non-trivial parameters
             # TODO: get them as explicit parameter if needed
             settings = getattr(context.scene.skybrush, "settings", None)
