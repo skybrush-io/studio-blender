@@ -151,7 +151,6 @@ types = (
     LightEffect,
     LightEffectCollection,
     ScheduleOverride,
-    MappingType,
     StoryboardEntry,
     Storyboard,
     LEDControlPanelProperties,
