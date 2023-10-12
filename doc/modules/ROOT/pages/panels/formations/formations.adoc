@@ -54,6 +54,8 @@ From static CSV file:: Use this option to import a previously created static for
 
 From zipped CSV files:: Use this option to import previously created animated formations or entire shows modularly from an external .zip source that contains multiple .csv files (one per drone), each containing baked trajectory and light animation in the following line format (colors are optional): `Time_msec`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
 
+From SVG file:: Use this option to import an SVG file to sample it with the given number of drones. Note that only simple, flat SVG files can be imported correctly, and only vector graphic shapes are supported from the SVG file, text, images and other complex formats are not supported (we support what is supported by the external `svgpathtools` Python library). The importer tries to optimize the given number of drones to the imported shapes, which might result in ugly results if there are not enough or too many drones or if the curves are too complex. Try to simplify the SVG before importing as much as possible and experiment iteratively to find the proper number of drones for your SVG drawing! Colors of the curves are also imported.
+
 From QR code:: Use this option to generate a static QR code as part of the show.
 
 == Updating a formation
