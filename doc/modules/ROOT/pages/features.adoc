@@ -5,7 +5,13 @@ Formations::
 * Smart tools for static/dynamic formation creation
 * Easy integration of internal or external 3D animations
 * Automatic transitions between formations
-* Smart takeoff, return-to-home and landing
+* Simple and smart takeoff in multiple phases
+* Simple and smart return-to-home and landing
+
+Import & Compatibility::
+* Modular import of external formations or animation snippets using simple `.csv` format
+* Optimal sampling of drones onto imported SVG drawings
+* QR code generation based on a simple url
 
 Lights::
 * Dedicated color animation design tools
@@ -27,3 +33,4 @@ Export & Compatibility::
 * Compatible with *Skybrush Viewer* (standalone interactive 3D preview with music, verification, VR and cloud/browser support for easy and clean client previews)
 * Compatible with *Skybrush Live* for professional drone show management (2D map, 3D view, list view, compressed view, individual and fleet-level details and checks, RTK support, geofence, auto mapping and a lot more)
 * Shows can be exported in Skybrush compiled show format (preferred) or as sampled positions and RGB colors with a fixed FPS in CSV format for further post-processing with external tools
+* Shows can also be exported into most of the known drone show formats on the market
