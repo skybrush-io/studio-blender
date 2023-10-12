@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+This release introduces the concept of experimental features in the Blender
+plugin. Experimental features are hidden by default and you need to opt in
+explicitly in the add-on preferences dialog to use them. We reserve the right
+to change, disable or remove experimental features any time in future releases.
+Experimental features that prove to be successful will be finalized in later
+releases, at which point we will commit ourselves to keeping them for the
+foreseeable future.
+
+Some experimental features _may_ be converted to premium features when they are
+finalized and you will need to purchase a Pro license for the add-on to keep on
+using them.
+
 ### Added
 
 - The plugin now supports takeoff grids where multiple drones occupy the same
@@ -40,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   supports them. Note that the community server still supports .skyc and CSV only.
   Contact us for local deployments of the server with support for third-party
   file formats if you are interested.
+
+- Return-to-home can now be performed in a way that every single drone lands in
+  the same spot where it took off from, at the expense of a more complicated
+  trajectory and a slightly increased time needed to land the entire swarm
+  safely. This is an experimental feature.
 
 ### Fixed
 
