@@ -1,16 +1,8 @@
-import bpy
-import os
-
 from bpy.props import BoolProperty, StringProperty, FloatProperty
-from bpy.types import Operator
-from bpy_extras.io_utils import ExportHelper
 
 from sbstudio.model.file_formats import FileFormat
-from sbstudio.plugin.api import call_api_from_blender_operator
-from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
 from .base import ExportOperator
-from .utils import export_show_to_file_using_api
 
 __all__ = ("DrotekExportOperator",)
 

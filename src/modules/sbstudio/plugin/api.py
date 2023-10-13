@@ -1,5 +1,3 @@
-import bpy
-
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Iterator, Optional, TypeVar

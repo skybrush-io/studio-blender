@@ -1,5 +1,3 @@
-import bpy
-
 from bpy.props import StringProperty, IntProperty
 
 from sbstudio.model.file_formats import FileFormat
