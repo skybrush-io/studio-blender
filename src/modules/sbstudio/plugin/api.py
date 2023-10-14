@@ -8,11 +8,6 @@ from sbstudio.plugin.errors import SkybrushStudioExportWarning
 
 __all__ = ("get_api",)
 
-"""One singleton API object that the entire Blender plugin uses to talk to
-Skybrush Studio. Constructed lazily so we can defer importing the API.
-"""
-_api: Optional[SkybrushStudioAPI] = None
-
 _fallback_api_key: str = "trial"
 """Fallback API key to use when the user did not enter any API key"""
 
