@@ -160,6 +160,12 @@ class LandOperator(StoryboardOperator):
             for index, (delay, post_delay) in enumerate(zip(delays, post_delays)):
                 if delay > 0 or post_delay > 0:
                     override = entry.add_new_schedule_override()
+
+                    # index is not okay here. index is the index of the drone
+                    # within the Drones collection. What we would need is the
+                    # index of the _marker_ in the _source_ formation (i.e. the
+                    # formation before the landing transition) that the drone
+                    # occupies before landing.
                     override.index = index
                     override.pre_delay = delay
                     override.post_delay = post_delay
