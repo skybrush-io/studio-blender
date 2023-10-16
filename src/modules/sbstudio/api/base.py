@@ -388,6 +388,7 @@ class SkybrushStudioAPI:
         source: str,
         num_points: int,
         size: float,
+        angle: float,
     ) -> Tuple[List[Point3D], List[Color3D]]:
         """Samples the path objects of an SVG string into a list of coordinates
         and corresponding colors.
@@ -396,6 +397,7 @@ class SkybrushStudioAPI:
             source: the SVG source string
             n: the number of points to generate
             size: the maximum extent of the returned points along the main axes
+            angle: the mimimum angle change at path nodes to treat them as corners
 
         Returns:
             the list of evenly sampled points and corresponding colors
@@ -409,6 +411,7 @@ class SkybrushStudioAPI:
                 "source": source,
                 "n": num_points,
                 "size": size,
+                "angle": angle,
             },
         }
 

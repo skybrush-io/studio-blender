@@ -1,3 +1,4 @@
+from math import degrees, radians
 from numpy import array
 from numpy.typing import NDArray
 from pathlib import Path
@@ -19,7 +20,7 @@ __all__ = ("AddMarkersFromSVGOperator",)
 
 
 class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
-    """Adds markers to the currently selected formatio from sampling an SVG file
+    """Adds markers to the currently selected formation from sampling an SVG file
     with colored path objects. Operator calls the backend API to get the
     sampled positions and colors from the SVG file.
     """
@@ -48,6 +49,16 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
         unit="LENGTH",
     )
 
+    angle = FloatProperty(
+        name="Angle",
+        description="Maximum angle change at nodes to treat the path continuous around them.",
+        default=radians(10),
+        soft_min=0,
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
+
     import_colors = BoolProperty(
         name="Import colors",
         description="Import colors from the SVG file into a light effect",
@@ -67,13 +78,17 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
         filepath = ensure_ext(self.filepath, self.filename_ext)
         with call_api_from_blender_operator(self, "SVG formation") as api:
             points, colors = parse_svg(
-                filepath, num_points=self.count, size=self.size, api=api
+                filepath,
+                num_points=self.count,
+                size=self.size,
+                angle=degrees(self.angle),
+                api=api,
             )
         return PointsAndColors(points, colors)
 
 
 def parse_svg(
-    filename: str, *, num_points: int, size: float, api
+    filename: str, *, num_points: int, size: float, angle: float, api
 ) -> Tuple[NDArray[float], NDArray[float]]:
     """Parse an .svg file (containing a list of static positions and colors)
     using the backend API
@@ -82,7 +97,8 @@ def parse_svg(
         filename: the name of the .svg input file
         num_points: the number of points to generate
         size: the maximum extent of the points along the main axes
-        context: the Blender context
+        angle: maximum angle change at nodes to treat the path continuous around them, in degrees
+        api: the Skybrush Studio API object
 
     Returns:
         the parsed list of positions and corresponding colors
@@ -93,7 +109,7 @@ def parse_svg(
     source = Path(filename).read_text()
 
     points, colors = api.create_formation_from_svg(
-        source=source, num_points=num_points, size=size
+        source=source, num_points=num_points, size=size, angle=angle
     )
 
     # rotate from XY to ZY plane
