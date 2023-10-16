@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- The SVG formation generation got two new keywords: center and angle. 
+  The center of the created formation will be the cursor location.
+  The angle parameter is user defined and determines how large angle change
+  can be tolerated at each path node to still treat the path around the 
+  node to be continuous.
+
 ## [2.9.0]
 
 This release introduces the concept of experimental features in the Blender
