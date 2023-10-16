@@ -33,6 +33,10 @@ class Point3D:
         """Converts a Point3D instance to a Blender vector."""
         return Vector((self.x, self.y, self.z))
 
+    def as_json(self) -> list[float]:
+        """Converts a Point3D instance to a JSON serializable format."""
+        return [round(value, ndigits=3) for value in [self.x, self.y, self.z]]
+
 
 @dataclass
 class Point4D:
