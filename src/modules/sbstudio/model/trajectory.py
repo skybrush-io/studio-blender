@@ -1,7 +1,7 @@
 from operator import attrgetter
 from typing import List, Optional, Sequence, TypeVar
 
-from .point import Point4D
+from .point import Point3D, Point4D
 
 __all__ = ("Trajectory",)
 
@@ -85,6 +85,24 @@ class Trajectory:
             return 0
 
         return self.points[-1].t - self.points[0].t
+
+    def shift_in_place(self: C, offset: Point3D) -> C:
+        """Shifts all points of the trajectory in-place.
+
+        Parameters:
+            offset: the spatial offset to add to each point in the
+                trajectory.
+        """
+        self.points = [
+            Point4D(
+                t=point.t,
+                x=point.x + offset.x,
+                y=point.y + offset.y,
+                z=point.z + offset.z,
+            )
+            for point in self.points
+        ]
+        return self
 
     def shift_time_in_place(self: C, delta: float) -> C:
         """Shifts all timestamp of the trajectory in-place.

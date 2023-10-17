@@ -12,7 +12,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
 from sbstudio.model.color import Color4D
-from sbstudio.model.point import Point4D
+from sbstudio.model.point import Point3D, Point4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.actions import (
@@ -82,8 +82,11 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
             else context.scene.frame_start
         )
 
-        # create new markers for the points
-        trajectories = [item.trajectory for item in imported_data.values()]
+        # create new markers for the points around cursor location
+        center = Point3D(*context.scene.cursor.location)
+        trajectories = [
+            item.trajectory.shift_in_place(center) for item in imported_data.values()
+        ]
         first_points = [
             trajectory.first_point.as_vector()  # type: ignore
             for trajectory in trajectories
