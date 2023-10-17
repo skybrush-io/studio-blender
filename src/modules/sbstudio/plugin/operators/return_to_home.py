@@ -148,10 +148,14 @@ class ReturnToHomeOperator(StoryboardOperator):
         if not drones:
             return False
 
+        use_smart_rth = self._should_use_smart_rth()
+        self.start_frame = max(self.start_frame, storyboard.frame_end) + (
+            1 if use_smart_rth else 0
+        )
+
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
-        use_smart_rth = self._should_use_smart_rth()
         first_frame = storyboard.frame_start
         _, target, _ = create_helper_formation_for_takeoff_and_landing(
             drones,
@@ -187,7 +191,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             entry = storyboard.add_new_entry(
                 formation=create_formation("Smart return to home", source),
                 frame_start=self.start_frame,
-                duration=int(max(plan.durations) * fps),
+                duration=int((plan.duration + self.altitude / land_speed) * fps),
                 select=True,
                 context=context,
             )

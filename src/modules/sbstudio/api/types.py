@@ -75,6 +75,17 @@ class SmartRTHPlan:
     def empty(cls):
         return cls(start_times=[], durations=[], inner_points=[])
 
+    @property
+    def duration(self) -> float:
+        """Returns the overall duration of the smart RTH plan in seconds."""
+        if not self.start_times or not self.durations:
+            return 0
+
+        return max(
+            start + duration
+            for start, duration in zip(self.start_times, self.durations, strict=True)
+        )
+
 
 @dataclass
 class TransitionPlan:
