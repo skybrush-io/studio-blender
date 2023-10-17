@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The SVG formation generation got two new keywords: center and angle. 
-  The center of the created formation will be the cursor location.
-  The angle parameter is user defined and determines how large angle change
-  can be tolerated at each path node to still treat the path around the 
-  node to be continuous.
+- The SVG formation generation got a new angle keyword which determines 
+  how large angle change can be tolerated at each path node to still 
+  treat the path around the node to be continuous.
+
+### Fixed
+
+- smartRTH operation starting frame and duration is fixed
+
+- all operations of the "Generate Markers" dropdown list are treating
+  the cursor position now as the origin of the generated marker positions
 
 ## [2.9.0]
 

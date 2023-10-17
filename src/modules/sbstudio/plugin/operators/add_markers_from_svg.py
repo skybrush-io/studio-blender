@@ -8,7 +8,6 @@ from bpy.path import ensure_ext
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
-from sbstudio.model.point import Point3D
 from sbstudio.plugin.api import call_api_from_blender_operator
 
 from .base import StaticMarkerCreationOperator, PointsAndColors
@@ -83,14 +82,13 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
                 num_points=self.count,
                 size=self.size,
                 angle=degrees(self.angle),
-                center=Point3D(*context.scene.cursor.location),
                 api=api,
             )
         return PointsAndColors(points, colors)
 
 
 def parse_svg(
-    filename: str, *, num_points: int, size: float, angle: float, center: Point3D, api
+    filename: str, *, num_points: int, size: float, angle: float, api
 ) -> Tuple[NDArray[float], NDArray[float]]:
     """Parse an .svg file (containing a list of static positions and colors)
     using the backend API
@@ -100,7 +98,6 @@ def parse_svg(
         num_points: the number of points to generate
         size: the maximum extent of the points along the main axes
         angle: maximum angle change at nodes to treat the path continuous around them, in degrees
-        center: the center of the created formation
         api: the Skybrush Studio API object
 
     Returns:
@@ -112,7 +109,10 @@ def parse_svg(
     source = Path(filename).read_text()
 
     points, colors = api.create_formation_from_svg(
-        source=source, num_points=num_points, size=size, angle=angle, center=center
+        source=source,
+        num_points=num_points,
+        size=size,
+        angle=angle,
     )
 
     # rotate from XY to ZY plane
