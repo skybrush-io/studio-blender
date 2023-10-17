@@ -77,6 +77,5 @@ class AddMarkersFromQRCodeOperator(StaticMarkerCreationOperator):
             points.shape = (0, 3)
 
         points *= self.spacing
-        points += context.scene.cursor.position
 
         return PointsAndColors(points)
