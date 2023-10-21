@@ -519,43 +519,6 @@ def update_transition_for_storyboard_entry(
                     previous_mapping,
                     objects_in_previous_formation,
                 )
-
-                # In the departure sequence, the index of the drone is dictated
-                # by the index of its associated marker / object within the
-                # previous formation.
-                if previous_mapping:
-                    previous_target_index = previous_mapping[drone_index]
-                    if previous_target_index is None:
-                        # drone did not participate in the previous formation
-                        departure_index = 0
-                    else:
-                        departure_index = previous_target_index
-                else:
-                    # Previous mapping not known. All is not lost, however; we
-                    # can find which point in the previous formation the drone
-                    # must have belonged to by finding the constraint that binds
-                    # the drone to the previous storyboard entry
-                    if previous_entry is not None:
-                        previous_constraint = find_transition_constraint_between(
-                            drone=drone, storyboard_entry=previous_entry
-                        )
-                        if previous_constraint is not None:
-                            previous_obj = previous_constraint.target
-                        else:
-                            previous_obj = None
-                        departure_index = objects_in_previous_formation.find(
-                            previous_obj
-                        )
-                    else:
-                        # This is the first entry. If we are calculating a
-                        # transition _into_ the first entry, the drones are
-                        # simply ordered according to how they are placed in the
-                        # Drones collection
-                        departure_index = drone_index
-
-                # In the arrival sequence, the index of the drone is dictated
-                # by the index of its associated marker / object within the
-                # formation; this is easy
                 arrival_index = objects_in_formation.find(obj)
 
                 departure_delay = entry.pre_delay_per_drone_in_frames * departure_index
