@@ -12,6 +12,7 @@ from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
+from sbstudio.plugin.utils.transition import find_transition_constraint_between
 
 from .base import StoryboardOperator
 
@@ -143,6 +144,11 @@ class LandOperator(StoryboardOperator):
         if len(storyboard.entries) > 0:
             last_entry = storyboard.entries[-1]
             last_entry.extend_until(self.start_frame)
+        else:
+            last_entry = None
+
+        formation = last_entry.formation if last_entry is not None else None
+        objects_in_last_formation = list(formation.objects) if formation else []
 
         # Calculate when the landing should end
         end_of_landing = self.start_frame + max_duration
@@ -158,21 +164,44 @@ class LandOperator(StoryboardOperator):
         assert entry is not None
         entry.transition_type = "MANUAL"
 
+        # The addition of the new entry invalidated our reference to the last
+        # entry so we need to query it again
+        if len(storyboard.entries) > 1:
+            last_entry = storyboard.entries[-2]
+        else:
+            last_entry = None
+
         # Set up the custom departure delays for the drones
         if max(delays) > 0 or max(post_delays) > 0:
             entry.schedule_overrides_enabled = True
             for index, (delay, post_delay) in enumerate(zip(delays, post_delays)):
                 if delay > 0 or post_delay > 0:
-                    override = entry.add_new_schedule_override()
+                    # We need to figure out the index of the _marker_ that the
+                    # drone was mapped to in the last formation before the
+                    # landing
+                    constraint = find_transition_constraint_between(
+                        drone=drones[index], storyboard_entry=last_entry
+                    )
+                    if constraint is not None:
+                        marker = constraint.target
+                        try:
+                            override_index = objects_in_last_formation.index(marker)
+                        except ValueError:
+                            # Should not happen, but hey, defensive programming
+                            override_index = -1
+                    else:
+                        # Either the drone did not participate in the previous formation,
+                        # or the previous storyboard entry is the first one in the
+                        # storyboard, in which case there are no constraints
+                        # (but in this case we don't need to do anything for the
+                        # landing either)
+                        override_index = -1
 
-                    # index is not okay here. index is the index of the drone
-                    # within the Drones collection. What we would need is the
-                    # index of the _marker_ in the _source_ formation (i.e. the
-                    # formation before the landing transition) that the drone
-                    # occupies before landing.
-                    override.index = index
-                    override.pre_delay = delay
-                    override.post_delay = post_delay
+                    if override_index >= 0:
+                        override = entry.add_new_schedule_override()
+                        override.pre_delay = delay
+                        override.post_delay = post_delay
+                        override.index = override_index
 
         # Recalculate the transition leading to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
@@ -180,7 +209,7 @@ class LandOperator(StoryboardOperator):
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the landing time chosen by the user is valid."""
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         if storyboard.last_entry is not None:
             last_frame = storyboard.frame_end
         else:
