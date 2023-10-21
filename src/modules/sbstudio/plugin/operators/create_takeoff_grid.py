@@ -14,6 +14,7 @@ from sbstudio.plugin.materials import (
     create_keyframe_for_diffuse_color_of_material,
 )
 from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
+from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_material_from_drone_template,
 )
@@ -335,7 +336,7 @@ class CreateTakeoffGridOperator(Operator):
         # points if there is one
         takeoff_grid = Formations.find_takeoff_grid(create=False)
         if not takeoff_grid:
-            storyboard = context.scene.skybrush.storyboard
+            storyboard = get_storyboard(context)
             entry = storyboard.add_new_entry(
                 formation=create_formation("Takeoff grid", points),
                 frame_start=context.scene.frame_start,

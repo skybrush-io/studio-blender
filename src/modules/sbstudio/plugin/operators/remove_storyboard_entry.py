@@ -1,4 +1,5 @@
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.transition import find_transition_constraint_between
 
 from .base import StoryboardOperator
@@ -17,7 +18,7 @@ class RemoveStoryboardEntryOperator(StoryboardOperator):
     def poll(cls, context):
         return (
             StoryboardOperator.poll(context)
-            and context.scene.skybrush.storyboard.active_entry is not None
+            and get_storyboard(context).active_entry is not None
         )
 
     def execute_on_storyboard(self, storyboard, context):

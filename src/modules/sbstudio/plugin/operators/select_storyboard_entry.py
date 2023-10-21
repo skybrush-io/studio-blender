@@ -1,3 +1,5 @@
+from sbstudio.plugin.model.storyboard import get_storyboard
+
 from .base import StoryboardOperator
 
 __all__ = ("SelectStoryboardEntryForCurrentFrameOperator",)
@@ -22,10 +24,7 @@ class SelectStoryboardEntryForCurrentFrameOperator(StoryboardOperator):
 
     @classmethod
     def poll(cls, context):
-        return (
-            StoryboardOperator.poll(context)
-            and context.scene.skybrush.storyboard.entries
-        )
+        return StoryboardOperator.poll(context) and get_storyboard(context).entries
 
     def execute_on_storyboard(self, storyboard, context):
         frame = context.scene.frame_current

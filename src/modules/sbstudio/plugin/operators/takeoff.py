@@ -9,7 +9,7 @@ from sbstudio.plugin.api import get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
-from sbstudio.plugin.model.storyboard import Storyboard
+from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
@@ -173,9 +173,10 @@ class TakeoffOperator(StoryboardOperator):
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the takeoff time chosen by the user is valid."""
-        storyboard = context.scene.skybrush.storyboard
+        storyboard = get_storyboard(context)
         # Note: we assume here that the first entry is the takeoff grid on ground
         if len(storyboard.entries) > 0:
+            assert storyboard.first_entry is not None
             frame = storyboard.first_entry.frame_end
             if self.start_frame < frame:
                 self.report(
@@ -187,6 +188,7 @@ class TakeoffOperator(StoryboardOperator):
                 )
                 return False
             if len(storyboard.entries) > 1:
+                assert storyboard.second_entry is not None
                 frame = storyboard.second_entry.frame_start
                 if frame is not None and self.start_frame >= frame:
                     self.report(

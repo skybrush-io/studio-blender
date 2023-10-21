@@ -20,6 +20,7 @@ from sbstudio.plugin.actions import (
     find_f_curve_for_data_path_and_index,
 )
 from sbstudio.plugin.model.formation import add_points_to_formation
+from sbstudio.plugin.model.storyboard import get_storyboard
 
 from .base import FormationOperator
 
@@ -73,8 +74,8 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
         fps = context.scene.render.fps
 
         # try to figure out the start frame of this formation
-        storyboard_entry = (
-            context.scene.skybrush.storyboard.get_first_entry_for_formation(formation)
+        storyboard_entry = get_storyboard(context).get_first_entry_for_formation(
+            formation
         )
         frame_start = (
             storyboard_entry.frame_start

@@ -1,3 +1,4 @@
+from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.objects import remove_objects
 
 from .base import FormationOperator
@@ -14,7 +15,7 @@ class RemoveFormationOperator(FormationOperator):
     bl_description = "Remove the selected formation from the show"
 
     def execute_on_formation(self, formation, context):
-        storyboard = context.scene.skybrush.storyboard
+        storyboard = get_storyboard(context)
 
         for entry in storyboard.entries:
             if entry.formation is formation:

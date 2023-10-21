@@ -786,3 +786,12 @@ class Storyboard(PropertyGroup, ListMixin):
         """Sort the items in the storyboard in ascending order of start time."""
         # Sort the items in the storyboard itself
         sort_collection(self.entries, key=StoryboardEntry.sort_key)
+
+
+@with_context
+def get_storyboard(context: Optional[Context] = None) -> Storyboard:
+    """Helper function to retrieve the storyboard of the add-on from the
+    given context object.
+    """
+    assert context is not None
+    return context.scene.skybrush.storyboard

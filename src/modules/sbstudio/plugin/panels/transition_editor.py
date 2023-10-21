@@ -2,7 +2,7 @@ from bpy.types import Panel
 
 from typing import List, Optional
 
-from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
+from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard, StoryboardEntry
 from sbstudio.plugin.operators import (
     CreateNewScheduleOverrideEntryOperator,
     RecalculateTransitionsOperator,
@@ -36,8 +36,8 @@ class TransitionEditorBase(Panel):
 
     @classmethod
     def poll(cls, context) -> bool:
-        storyboard: Optional[Storyboard] = context.scene.skybrush.storyboard
-        if storyboard:
+        storyboard = get_storyboard(context)
+        if storyboard is not None:
             return cls._get_entry(storyboard) is not None
         else:
             return False
@@ -53,10 +53,7 @@ class TransitionEditorBase(Panel):
         return "ALL"
 
     def draw(self, context):
-        storyboard: Optional[Storyboard] = context.scene.skybrush.storyboard
-        if not storyboard:
-            return
-
+        storyboard = get_storyboard(context)
         entry = self._get_entry(storyboard)
         if entry is None:
             return

@@ -1,3 +1,5 @@
+from sbstudio.plugin.model.storyboard import get_storyboard
+
 from .base import StoryboardOperator
 
 __all__ = ("MoveStoryboardEntryDownOperator", "MoveStoryboardEntryUpOperator")
@@ -17,7 +19,7 @@ class MoveStoryboardEntryDownOperator(StoryboardOperator):
         if not StoryboardOperator.poll(context):
             return False
 
-        storyboard = context.scene.skybrush.storyboard
+        storyboard = get_storyboard(context)
         if storyboard.active_entry is None:
             return False
 
@@ -45,7 +47,7 @@ class MoveStoryboardEntryUpOperator(StoryboardOperator):
         if not StoryboardOperator.poll(context):
             return False
 
-        storyboard = context.scene.skybrush.storyboard
+        storyboard = get_storyboard(context)
         if storyboard.active_entry is None:
             return False
 

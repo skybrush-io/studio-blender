@@ -3,6 +3,7 @@ from bpy.types import Context
 
 from typing import Optional, Tuple
 
+from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.utils import with_context
 
 __all__ = ("FrameRangeProperty",)
@@ -48,14 +49,12 @@ def resolve_frame_range(
         return (context.scene.frame_preview_start, context.scene.frame_preview_end)
     elif range == "STORYBOARD":
         # Return the frame range covered by the storyboard
-        return (
-            context.scene.skybrush.storyboard.frame_start,
-            context.scene.skybrush.storyboard.frame_end,
-        )
+        storyboard = get_storyboard(context)
+        return (storyboard.frame_start, storyboard.frame_end)
     elif range == "AROUND_CURRENT_FRAME":
         # Return the frame range covered by the formation or transition around
         # the current frame
-        storyboard = context.scene.skybrush.storyboard
+        storyboard = get_storyboard(context)
         return storyboard.get_frame_range_of_formation_or_transition_at_frame(
             context.scene.frame_current
         )

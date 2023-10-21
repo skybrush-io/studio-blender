@@ -1,3 +1,5 @@
+from sbstudio.plugin.model.storyboard import get_storyboard
+
 from .base import StoryboardEntryOperator
 
 __all__ = ("RemoveScheduleOverrideEntryOperator",)
@@ -19,7 +21,9 @@ class RemoveScheduleOverrideEntryOperator(StoryboardEntryOperator):
         if not StoryboardEntryOperator.poll(context):
             return False
 
-        entry = context.scene.skybrush.storyboard.active_entry
+        entry = get_storyboard(context).active_entry
+        assert entry is not None
+
         return entry.active_schedule_override_entry is not None
 
     def execute_on_storyboard_entry(self, entry, context):

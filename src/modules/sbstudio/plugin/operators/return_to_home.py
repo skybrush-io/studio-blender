@@ -13,6 +13,7 @@ from sbstudio.plugin.actions import (
 )
 from sbstudio.plugin.model.formation import create_formation, get_markers_from_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
+from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
@@ -128,8 +129,9 @@ class ReturnToHomeOperator(StoryboardOperator):
             layout.prop(self, "use_smart_rth")
 
     def invoke(self, context, event):
-        storyboard = context.scene.skybrush.storyboard
-        self.start_frame = max(context.scene.frame_current, storyboard.frame_end)
+        self.start_frame = max(
+            context.scene.frame_current, get_storyboard(context).frame_end
+        )
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard, entries, context):
@@ -287,11 +289,8 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the return to home time chosen by the user is valid."""
-        storyboard = context.scene.skybrush.storyboard
-        if storyboard.last_entry is not None:
-            last_frame = context.scene.skybrush.storyboard.frame_end
-        else:
-            last_frame = None
+        storyboard = get_storyboard(context)
+        last_frame = storyboard.frame_end if storyboard.last_entry is not None else None
 
         # TODO(ntamas): what if the last entry in the storyboard _is_ the
         # RTH, what shall we do then? Probably we should ignore it and look

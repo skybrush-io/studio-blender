@@ -17,6 +17,7 @@ from sbstudio.plugin.model.formation import (
     add_points_to_formation,
     get_markers_from_formation,
 )
+from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 from sbstudio.plugin.selection import select_only
 from sbstudio.plugin.selection import Collections
@@ -78,7 +79,7 @@ class StoryboardOperator(Operator):
         return context.scene.skybrush and context.scene.skybrush.storyboard
 
     def execute(self, context):
-        storyboard = context.scene.skybrush.storyboard
+        storyboard = get_storyboard(context)
 
         validate = getattr(self.__class__, "only_with_valid_storyboard", False)
 
@@ -108,7 +109,7 @@ class StoryboardEntryOperator(Operator):
         )
 
     def execute(self, context):
-        entry = context.scene.skybrush.storyboard.active_entry
+        entry = get_storyboard(context).active_entry
         return self.execute_on_storyboard_entry(entry, context)
 
 
@@ -240,10 +241,8 @@ class StaticMarkerCreationOperator(FormationOperator):
         # Add a light effect containing the colors of the markers if needed
         if should_import_colors:
             # try to figure out the start frame of this formation
-            storyboard_entry = (
-                context.scene.skybrush.storyboard.get_first_entry_for_formation(
-                    formation
-                )
+            storyboard_entry = get_storyboard(context).get_first_entry_for_formation(
+                formation
             )
             frame_start = (
                 storyboard_entry.frame_start
