@@ -90,7 +90,9 @@ class LandOperator(StoryboardOperator):
         if not drones:
             return False
 
-        # Get the current positions of the drones to land
+        # Get the current positions of the drones to land. We are operating under
+        # the implicit assumption that the drones do not move between the end
+        # of the last formation and the frame where the landing starts.
         with create_position_evaluator() as get_positions_of:
             source = get_positions_of(drones, frame=self.start_frame)
 
@@ -175,7 +177,7 @@ class LandOperator(StoryboardOperator):
         return True
 
     def _validate_start_frame(self, context: Context) -> bool:
-        """Returns whether the takeoff time chosen by the user is valid."""
+        """Returns whether the landing time chosen by the user is valid."""
         storyboard = context.scene.skybrush.storyboard
         if storyboard.last_entry is not None:
             last_frame = context.scene.skybrush.storyboard.frame_end
