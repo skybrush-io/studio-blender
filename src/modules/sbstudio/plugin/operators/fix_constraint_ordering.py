@@ -1,6 +1,6 @@
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.transition import get_id_for_formation_constraint
 from sbstudio.plugin.utils import sort_collection
+from sbstudio.plugin.utils.transition import get_id_for_formation_constraint
 
 from .base import StoryboardOperator
 

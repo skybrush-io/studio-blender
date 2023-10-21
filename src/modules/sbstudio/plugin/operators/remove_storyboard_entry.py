@@ -1,6 +1,6 @@
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.storyboard import get_storyboard
-from sbstudio.plugin.transition import find_transition_constraint_between
+from sbstudio.plugin.utils.transition import find_transition_constraint_between
 
 from .base import StoryboardOperator
 

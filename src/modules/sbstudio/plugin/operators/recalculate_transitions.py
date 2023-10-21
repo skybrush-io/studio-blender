@@ -23,13 +23,13 @@ from sbstudio.plugin.model.formation import (
 )
 from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry
 from sbstudio.plugin.tasks.safety_check import invalidate_caches
-from sbstudio.plugin.transition import (
+from sbstudio.plugin.utils import create_internal_id
+from sbstudio.plugin.utils.evaluator import create_position_evaluator
+from sbstudio.plugin.utils.transition import (
     create_transition_constraint_between,
     find_transition_constraint_between,
     set_constraint_name_from_storyboard_entry,
 )
-from sbstudio.plugin.utils import create_internal_id
-from sbstudio.plugin.utils.evaluator import create_position_evaluator
 from sbstudio.utils import constant
 
 from .base import StoryboardOperator

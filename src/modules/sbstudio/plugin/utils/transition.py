@@ -1,4 +1,4 @@
-from .utils.identifiers import create_internal_id, is_internal_id
+from .identifiers import create_internal_id, is_internal_id
 
 __all__ = (
     "create_transition_constraint_between",
@@ -10,6 +10,7 @@ __all__ = (
 
 
 def get_id_for_formation_constraint(storyboard_entry):
+    """Returns a unique identifier for the given storyboard entry."""
     # Make sure to update is_transition_constraint() as well if you change the
     # format of the ID
     return create_internal_id(f"Entry {storyboard_entry.id}")

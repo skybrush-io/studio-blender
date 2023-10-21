@@ -176,7 +176,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             min_distance = get_proximity_warning_threshold(context)
             land_speed = min(self.velocity_z, 0.5)
 
-            # call api to create smart RTH plan
+            # call API to create smart RTH plan
             plan = get_api().plan_smart_rth(
                 source,
                 target,
