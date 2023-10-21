@@ -174,5 +174,5 @@ standalone = ["skybrush-studio", "svgpathtools"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.9"
-content-hash = "6c4a24195a0b78811146817e8884519e558bfa0220d0df7e36e2a13394cc512f"
+python-versions = "^3.10"
+content-hash = "d4e6cbc53c90f6c5bafb8889a9a49908b29c4f2d7ba1cc6da49467183bafcc1d"

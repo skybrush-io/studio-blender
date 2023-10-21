@@ -3,7 +3,7 @@ bl_info = {
     "author": "CollMot Robotics Ltd.",
     "description": "Extends Blender with UI components for drone show design",
     "version": (2, 9, 0),
-    "blender": (2, 93, 0),
+    "blender": (3, 3, 0),
     "category": "Interface",
     "doc_url": "https://doc.collmot.com/public/skybrush-studio-for-blender/latest/",
     "tracker_url": "https://github.com/skybrush-io/studio-blender/issues",
