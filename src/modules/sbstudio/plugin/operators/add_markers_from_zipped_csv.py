@@ -74,9 +74,9 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
         fps = context.scene.render.fps
 
         # try to figure out the start frame of this formation
-        storyboard_entry = get_storyboard(context).get_first_entry_for_formation(
-            formation
-        )
+        storyboard_entry = get_storyboard(
+            context=context
+        ).get_first_entry_for_formation(formation)
         frame_start = (
             storyboard_entry.frame_start
             if storyboard_entry

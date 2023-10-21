@@ -173,7 +173,7 @@ class TakeoffOperator(StoryboardOperator):
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the takeoff time chosen by the user is valid."""
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         # Note: we assume here that the first entry is the takeoff grid on ground
         if len(storyboard.entries) > 0:
             assert storyboard.first_entry is not None

@@ -15,7 +15,7 @@ class RemoveFormationOperator(FormationOperator):
     bl_description = "Remove the selected formation from the show"
 
     def execute_on_formation(self, formation, context):
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
 
         for entry in storyboard.entries:
             if entry.formation is formation:

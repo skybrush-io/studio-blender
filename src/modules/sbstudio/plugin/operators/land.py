@@ -75,7 +75,7 @@ class LandOperator(StoryboardOperator):
 
     def invoke(self, context, event):
         self.start_frame = max(
-            context.scene.frame_current, get_storyboard(context).frame_end
+            context.scene.frame_current, get_storyboard(context=context).frame_end
         )
         return context.window_manager.invoke_props_dialog(self)
 

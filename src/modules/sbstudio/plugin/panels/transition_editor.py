@@ -36,7 +36,7 @@ class TransitionEditorBase(Panel):
 
     @classmethod
     def poll(cls, context) -> bool:
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         if storyboard is not None:
             return cls._get_entry(storyboard) is not None
         else:
@@ -53,7 +53,7 @@ class TransitionEditorBase(Panel):
         return "ALL"
 
     def draw(self, context):
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         entry = self._get_entry(storyboard)
         if entry is None:
             return

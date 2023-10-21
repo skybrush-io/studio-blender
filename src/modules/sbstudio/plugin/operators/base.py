@@ -79,7 +79,7 @@ class StoryboardOperator(Operator):
         return context.scene.skybrush and context.scene.skybrush.storyboard
 
     def execute(self, context):
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
 
         validate = getattr(self.__class__, "only_with_valid_storyboard", False)
 
@@ -109,7 +109,7 @@ class StoryboardEntryOperator(Operator):
         )
 
     def execute(self, context):
-        entry = get_storyboard(context).active_entry
+        entry = get_storyboard(context=context).active_entry
         return self.execute_on_storyboard_entry(entry, context)
 
 
@@ -241,9 +241,9 @@ class StaticMarkerCreationOperator(FormationOperator):
         # Add a light effect containing the colors of the markers if needed
         if should_import_colors:
             # try to figure out the start frame of this formation
-            storyboard_entry = get_storyboard(context).get_first_entry_for_formation(
-                formation
-            )
+            storyboard_entry = get_storyboard(
+                context=context
+            ).get_first_entry_for_formation(formation)
             frame_start = (
                 storyboard_entry.frame_start
                 if storyboard_entry

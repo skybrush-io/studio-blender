@@ -24,7 +24,9 @@ class SelectStoryboardEntryForCurrentFrameOperator(StoryboardOperator):
 
     @classmethod
     def poll(cls, context):
-        return StoryboardOperator.poll(context) and get_storyboard(context).entries
+        return (
+            StoryboardOperator.poll(context) and get_storyboard(context=context).entries
+        )
 
     def execute_on_storyboard(self, storyboard, context):
         frame = context.scene.frame_current

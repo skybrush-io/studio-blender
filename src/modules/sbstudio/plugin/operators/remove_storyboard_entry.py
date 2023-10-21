@@ -18,7 +18,7 @@ class RemoveStoryboardEntryOperator(StoryboardOperator):
     def poll(cls, context):
         return (
             StoryboardOperator.poll(context)
-            and get_storyboard(context).active_entry is not None
+            and get_storyboard(context=context).active_entry is not None
         )
 
     def execute_on_storyboard(self, storyboard, context):

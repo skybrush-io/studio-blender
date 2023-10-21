@@ -19,7 +19,7 @@ class MoveStoryboardEntryDownOperator(StoryboardOperator):
         if not StoryboardOperator.poll(context):
             return False
 
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         if storyboard.active_entry is None:
             return False
 
@@ -47,7 +47,7 @@ class MoveStoryboardEntryUpOperator(StoryboardOperator):
         if not StoryboardOperator.poll(context):
             return False
 
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         if storyboard.active_entry is None:
             return False
 

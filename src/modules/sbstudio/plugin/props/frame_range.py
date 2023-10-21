@@ -50,12 +50,12 @@ def resolve_frame_range(
         return (context.scene.frame_preview_start, context.scene.frame_preview_end)
     elif range == "STORYBOARD":
         # Return the frame range covered by the storyboard
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         return (storyboard.frame_start, storyboard.frame_end)
     elif range == "AROUND_CURRENT_FRAME":
         # Return the frame range covered by the formation or transition around
         # the current frame
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         return storyboard.get_frame_range_of_formation_or_transition_at_frame(
             context.scene.frame_current
         )

@@ -130,7 +130,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     def invoke(self, context, event):
         self.start_frame = max(
-            context.scene.frame_current, get_storyboard(context).frame_end
+            context.scene.frame_current, get_storyboard(context=context).frame_end
         )
         return context.window_manager.invoke_props_dialog(self)
 
@@ -289,7 +289,7 @@ class ReturnToHomeOperator(StoryboardOperator):
 
     def _validate_start_frame(self, context: Context) -> bool:
         """Returns whether the return to home time chosen by the user is valid."""
-        storyboard = get_storyboard(context)
+        storyboard = get_storyboard(context=context)
         last_frame = storyboard.frame_end if storyboard.last_entry is not None else None
 
         # TODO(ntamas): what if the last entry in the storyboard _is_ the
