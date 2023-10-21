@@ -3,7 +3,6 @@ from bpy.types import Context
 
 from typing import Optional, Tuple
 
-from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.utils import with_context
 
 __all__ = ("FrameRangeProperty",)
@@ -39,6 +38,8 @@ def resolve_frame_range(
     """Resolves one of the commonly used frame ranges used in multiple places
     throughout the plugin.
     """
+    from sbstudio.plugin.model.storyboard import get_storyboard
+
     assert context is not None  # it was injected
 
     if range == "RENDER":
