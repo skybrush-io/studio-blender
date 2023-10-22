@@ -14,6 +14,7 @@
 OUTPUT_DIR="./dist"
 TMP_DIR="./tmp"
 MINIFY=1
+SKIP_BOOTLOADER=1
 
 ###############################################################################
 
@@ -26,7 +27,7 @@ cd "${REPO_ROOT}"
 
 # Check whether the bootloader is present on the system
 BOOTLOADER_DIR=${BOOTLOADER_DIR:-"${REPO_ROOT}/../sbstudio-bootloader/dist"}
-if [ ! -d "${BOOTLOADER_DIR}" -o ! -f "${BOOTLOADER_DIR}/sbstudio-bootloader-linux" ]; then
+if [ "x${SKIP_BOOTLOADER}" = x1 -o ! -d "${BOOTLOADER_DIR}" -o ! -f "${BOOTLOADER_DIR}/sbstudio-bootloader-linux" ]; then
     BOOTLOADER_DIR=
 fi
 
@@ -41,6 +42,11 @@ rm -f requirements*.txt
 poetry export -f requirements.txt -o requirements.txt --without-hashes
 trap "rm -f requirements.txt" EXIT
 
+# Log requirements for debugging purposes
+echo "[>] List of requirements"
+cat requirements.txt
+echo ""
+
 # Create virtual environment if it doesn't exist yet
 if [ ! -d .venv ]; then
   echo -n "--> Creating virtual environment... "
@@ -54,11 +60,11 @@ rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
-echo -n "--> Installing dependencies... "
+echo "[>] Installing dependencies"
 .venv/bin/pip install -q -U pip wheel pyclean
-.venv/bin/pip install -q -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
+.venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
-echo "done."
+echo ""
 
 # Copy our code as well
 echo -n "--> Copying addon code... "
