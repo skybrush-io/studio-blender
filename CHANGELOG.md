@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [3.0.0] - 2023-10-22
+
+### Breaking change
+
+- Dropped support for Python <3.10.
+
+- The add-on now declares that it needs at least Blender 3.3 LTS as this was
+  the first version of Blender where the bundled Python was from the 3.10
+  series.
 
 ### Added
 
@@ -22,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed an issue with the ordering of drones in multi-stage landings.
 
-## [2.9.0]
+## [2.9.0] - 2023-10-13
 
 This release introduces the concept of experimental features in the Blender
 plugin. Experimental features are hidden by default and you need to opt in
