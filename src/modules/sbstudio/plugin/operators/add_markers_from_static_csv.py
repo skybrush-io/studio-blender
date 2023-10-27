@@ -48,7 +48,7 @@ class AddMarkersFromStaticCSVOperator(StaticMarkerCreationOperator, ImportHelper
         point_color_pairs = parse_static_csv_zip(filepath)
 
         points = zeros((len(point_color_pairs), 3), dtype=float)
-        colors = zeros((len(point_color_pairs), 3), dtype=float) + 1
+        colors = zeros((len(point_color_pairs), 4), dtype=float)
 
         for index, (p, c) in enumerate(point_color_pairs.values()):
             points[index, :] = p
