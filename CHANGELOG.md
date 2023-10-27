@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The static CSV import option of the "Generate Markers" operator got fixed, 
-  now it works properly without runtime errors
+- Fixed the static CSV import option of the "Generate Markers" operator.
 
 ## [3.0.0] - 2023-10-22
 
