@@ -7,8 +7,12 @@ from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
+from sbstudio.model.yaw import YawSetpoint, YawSetpointList
 from sbstudio.plugin.materials import get_led_light_color
-from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.evaluator import (
+    get_position_of_object,
+    get_xyz_euler_rotation_of_object,
+)
 
 from .decorators import with_context
 
@@ -17,8 +21,10 @@ __all__ = (
     "frame_range",
     "sample_colors_of_objects",
     "sample_positions_of_objects",
+    "sample_positions_and_yaw_of_objects",
     "sample_positions_of_objects_in_frame_range",
     "sample_positions_and_colors_of_objects",
+    "sample_positions_colors_and_yaw_of_objects",
 )
 
 
@@ -92,12 +98,66 @@ def sample_positions_of_objects(
     for _, time in each_frame_in(frames, context=context):
         for obj in objects:
             key = obj.name if by_name else obj
-            trajectories[key].append(Point4D(time, *(obj.matrix_world.translation)))
+            trajectories[key].append(Point4D(time, *get_position_of_object(obj)))
 
     if simplify:
         return {key: value.simplify_in_place() for key, value in trajectories.items()}
     else:
         return dict(trajectories)
+
+
+@with_context
+def sample_positions_and_yaw_of_objects(
+    objects: Sequence[Object],
+    frames: Iterable[int],
+    *,
+    by_name: bool = False,
+    simplify: bool = False,
+    context: Optional[Context] = None,
+) -> Dict[Object, Tuple[Trajectory, YawSetpointList]]:
+    """Samples the positions of the given Blender objects at the given frames,
+    returning a dictionary mapping the objects to their trajectories.
+
+    Parameters:
+        objects: the Blender objects to process
+        frames: an iterable yielding the indices of the frames to process
+        by_name: whether the result dictionary should be keyed by the _names_
+            of the objects
+        context: the Blender execution context; `None` means the current
+            Blender context
+        simplify: whether to simplify the trajectories. If this option is
+            enabled, the resulting trajectories might not contain samples for
+            all the input frames; excess samples that are identical to previous
+            ones will be removed.
+
+    Returns:
+        a dictionaries mapping the objects to their trajectories and yaw setpoints
+    """
+    trajectories = defaultdict(Trajectory)
+    yaw_setpoints = defaultdict(YawSetpointList)
+
+    for _, time in each_frame_in(frames, context=context):
+        for obj in objects:
+            key = obj.name if by_name else obj
+            trajectories[key].append(Point4D(time, *get_position_of_object(obj)))
+            yaw_setpoints[key].append(
+                YawSetpoint(time, get_xyz_euler_rotation_of_object(obj)[2])
+            )
+
+    if simplify:
+        return {
+            key: (
+                trajectory.simplify_in_place(),
+                yaw_setpoints[key].simplify(),
+            )
+            for key, trajectory in trajectories.items()
+        }
+
+    else:
+        return {
+            key: (trajectory, yaw_setpoints[key])
+            for key, trajectory in trajectories.items()
+        }
 
 
 @with_context
@@ -202,6 +262,72 @@ def sample_positions_and_colors_of_objects(
     else:
         return {
             key: (trajectory, lights[key]) for key, trajectory in trajectories.items()
+        }
+
+
+@with_context
+def sample_positions_colors_and_yaw_of_objects(
+    objects: Sequence[Object],
+    frames: Iterable[int],
+    *,
+    by_name: bool = False,
+    simplify: bool = False,
+    context: Optional[Context] = None,
+) -> Dict[Object, Tuple[Trajectory, LightProgram, YawSetpointList]]:
+    """Samples the positions, colors and yaw angles of the given Blender objects
+    at the given frames, returning a dictionary mapping the objects to their
+    trajectories, light programs and yaw setpoints.
+
+    Parameters:
+        objects: the Blender objects to process
+        frames: an iterable yielding the indices of the frames to process
+        by_name: whether the result dictionary should be keyed by the _names_
+            of the objects
+        simplify: whether to simplify the trajectories, light programs and yaw
+            setpoints. If this option is enabled, the resulting trajectories,
+            light programs and yaw setpoints might not contain samples for all
+            the input frames; excess samples that are identical to previous
+            ones will be removed.
+        context: the Blender execution context; `None` means the current
+            Blender context
+
+    Returns:
+        a dictionary mapping the objects to their trajectories and light programs
+    """
+    trajectories = defaultdict(Trajectory)
+    lights = defaultdict(LightProgram)
+    yaw_setpoints = defaultdict(YawSetpointList)
+
+    for _, time in each_frame_in(frames, context=context):
+        for obj in objects:
+            key = obj.name if by_name else obj
+            pos = get_position_of_object(obj)
+            color = get_led_light_color(obj)
+            rotation = get_xyz_euler_rotation_of_object(obj)
+            trajectories[key].append(Point4D(time, *pos))
+            lights[key].append(
+                Color4D(
+                    time,
+                    _to_int_255(color[0]),
+                    _to_int_255(color[1]),
+                    _to_int_255(color[2]),
+                )
+            )
+            yaw_setpoints[key].append(YawSetpoint(time, rotation[2]))
+
+    if simplify:
+        return {
+            key: (
+                trajectory.simplify_in_place(),
+                lights[key].simplify(),
+                yaw_setpoints[key].simplify(),
+            )
+            for key, trajectory in trajectories.items()
+        }
+    else:
+        return {
+            key: (trajectory, lights[key], yaw_setpoints[key])
+            for key, trajectory in trajectories.items()
         }
 
 

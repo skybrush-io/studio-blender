@@ -1,4 +1,4 @@
-from bpy.props import StringProperty, IntProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty
 
 from sbstudio.model.file_formats import FileFormat
 
@@ -37,6 +37,13 @@ class SkybrushExportOperator(ExportOperator):
         description="Number of samples to take from light programs per second",
     )
 
+    # yaw control enable/disable
+    use_yaw_control = BoolProperty(
+        name="Use yaw control",
+        description="Specifies whether yaw control should be used during the show",
+        default=False,
+    )
+
     def get_format(self) -> FileFormat:
         """Returns the file format that the operator uses. Must be overridden
         in subclasses.
@@ -50,4 +57,5 @@ class SkybrushExportOperator(ExportOperator):
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
+            "use_yaw_control": self.use_yaw_control,
         }

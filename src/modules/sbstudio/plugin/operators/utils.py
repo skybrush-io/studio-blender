@@ -14,6 +14,7 @@ from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
+from sbstudio.model.yaw import YawSetpointList
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.model.file_formats import FileFormat
@@ -26,6 +27,8 @@ from sbstudio.plugin.utils.sampling import (
     sample_colors_of_objects,
     sample_positions_of_objects,
     sample_positions_and_colors_of_objects,
+    sample_positions_and_yaw_of_objects,
+    sample_positions_colors_and_yaw_of_objects,
 )
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
 
@@ -149,6 +152,85 @@ def _get_trajectories_and_lights(
     return trajectories, lights
 
 
+@with_context
+def _get_trajectories_lights_and_yaw_setpoints(
+    drones,
+    settings: Dict,
+    bounds: Tuple[int, int],
+    *,
+    context: Optional[Context] = None,
+) -> Tuple[Dict[str, Trajectory], Dict[str, LightProgram], Dict[str, YawSetpointList]]:
+    """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
+
+    Parameters:
+        context: the main Blender context
+        drones: the list of drones to export
+        settings: export settings
+        bounds: the frame range used for exporting
+
+    Returns:
+        dictionary of Trajectory, LightProgram and YawSetpointList objects indexed by object names
+    """
+    trajectory_fps = settings.get("output_fps", 4)
+    light_fps = settings.get("light_output_fps", 4)
+
+    trajectories: Dict[str, Trajectory]
+    lights: Dict[str, LightProgram]
+    yaw_setpoints: Dict[str, YawSetpointList]
+
+    if trajectory_fps == light_fps:
+        # This is easy, we can iterate over the show once
+        with suspended_safety_checks():
+            result = sample_positions_colors_and_yaw_of_objects(
+                drones,
+                frame_range(bounds[0], bounds[1], fps=trajectory_fps, context=context),
+                context=context,
+                by_name=True,
+                simplify=True,
+            )
+
+        trajectories = {}
+        lights = {}
+        yaw_setpoints = {}
+
+        for key, (trajectory, light_program, yaw_curve) in result.items():
+            trajectories[key] = trajectory
+            lights[key] = light_program.simplify()
+            yaw_setpoints[key] = yaw_curve
+
+    else:
+        # We need to iterate over the show twice, once for the trajectories
+        # and yaw setpoints, once for the lights
+        with suspended_safety_checks():
+            with suspended_light_effects():
+                result = sample_positions_and_yaw_of_objects(
+                    drones,
+                    frame_range(
+                        bounds[0], bounds[1], fps=trajectory_fps, context=context
+                    ),
+                    context=context,
+                    by_name=True,
+                    simplify=True,
+                )
+
+                trajectories = {}
+                yaw_setpoints = {}
+
+                for key, (trajectory, yaw_curve) in result.items():
+                    trajectories[key] = trajectory
+                    yaw_setpoints[key] = yaw_curve
+
+            lights = sample_colors_of_objects(
+                drones,
+                frame_range(bounds[0], bounds[1], fps=light_fps, context=context),
+                context=context,
+                by_name=True,
+                simplify=True,
+            )
+
+    return trajectories, lights, yaw_setpoints
+
+
 def export_show_to_file_using_api(
     api: SkybrushStudioAPI,
     context: Context,
@@ -197,11 +279,26 @@ def export_show_to_file_using_api(
                 "There are no objects to export; export cancelled"
             )
 
-    # get trajectories
-    log.info("Getting object trajectories and light programs")
-    trajectories, lights = _get_trajectories_and_lights(
-        drones, settings, frame_range, context=context
-    )
+    # get yaw control enabled state
+    use_yaw_control = settings.get("use_yaw_control", False)
+
+    # get trajectories, light programs and yaw setpoints
+    if use_yaw_control:
+        log.info("Getting object trajectories, light programs and yaw setpoints")
+        (
+            trajectories,
+            lights,
+            yaw_setpoints,
+        ) = _get_trajectories_lights_and_yaw_setpoints(
+            drones, settings, frame_range, context=context
+        )
+    else:
+        log.info("Getting object trajectories and light programs")
+        (
+            trajectories,
+            lights,
+        ) = _get_trajectories_and_lights(drones, settings, frame_range, context=context)
+        yaw_setpoints = None
 
     # get automatic show title
     show_title = str(basename(filepath).split(".")[0])
@@ -280,6 +377,7 @@ def export_show_to_file_using_api(
             validation=validation,
             trajectories=trajectories,
             lights=lights,
+            yaw_setpoints=yaw_setpoints,
             output=filepath,
             time_markers=time_markers,
             renderer=renderer,

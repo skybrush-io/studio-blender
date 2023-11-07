@@ -10,6 +10,7 @@ from math import hypot
 from typing import Iterator
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.constants import Collections
 from sbstudio.utils import LRUCache
 
@@ -37,10 +38,7 @@ def create_position_snapshot_for_drones_in_collection(collection, *, frame):
     """Create a dictionary mapping the names of the drones in the given
     collection to their positions.
     """
-    return {
-        drone.name: tuple(drone.matrix_world.translation)
-        for drone in collection.objects
-    }
+    return {drone.name: get_position_of_object(drone) for drone in collection.objects}
 
 
 def estimate_velocities_of_drones_at_frame(snapshot, *, frame, scene):
