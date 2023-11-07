@@ -108,7 +108,12 @@ class YawSetpointList:
                     raise RuntimeError(
                         f"Yaw timestamps are not causal ({setpoint.time} <= {new_setpoints[-1].time})"
                     )
-                angular_speed = (setpoint.angle - new_setpoints[-1].angle) / dt
+                # when calculating angular speed, we round timestamps and angles
+                # to avoid large numeric errors at division by small numbers
+                angular_speed = (
+                    round(setpoint.angle, ndigits=3)
+                    - round(new_setpoints[-1].angle, ndigits=3)
+                ) / round(dt, ndigits=3)
                 if abs(angular_speed - last_angular_speed) < 1e-6:
                     new_setpoints[-1] = setpoint
                 else:
