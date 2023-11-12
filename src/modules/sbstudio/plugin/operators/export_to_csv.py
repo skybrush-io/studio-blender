@@ -1,8 +1,4 @@
-"""This file is mostly a copy of addons/io_export_skybrush_csv.py, which
-will probably be deprecated soon as its functionality is merged with the
-"main" Blender addon.
-
-The operator provided in this file exports drone show trajectories and light
+"""The operator provided in this file exports drone show trajectories and light
 animation to a simple (zipped) .csv format compatible with the Skybrush suite.
 
 The primary and recommended drone show format of the Skybrush suite is the

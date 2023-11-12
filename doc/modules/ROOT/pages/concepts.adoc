@@ -94,7 +94,12 @@ Note that the automatic transition planner tries to find an optimal matching bet
 
 A drone show does not end with the last visible formation on the sky -- one should also bring the drones back to the takeoff area in a safe manner. This is typically done in two parts: the _return-to-home_ (RTH) maneuver makes the drones fly back above the takeoff area to a designated altitude (typically between 10-20 meters), while the _landing_ maneuver lands them in a straight vertical line. In *Skybrush Studio for Blender*, the RTH maneuver is simply treated as a transition to an extra formation in which the desired positions of the drones are arranged in a grid identical to the takeoff grid, lifted 10-20 meters above ground. The landing maneuver is optional; the firmware running on Skybrush-compatible drones will land the drones automatically when they reach the end of the show trajectories, therefore you only need to design the RTH maneuver.
 
-NOTE: It is not guaranteed that each drone will land at the same position where it took off from. In the vast majority of cases, they will land at a different position in the grid. This is intentional; safe collision-free trajectories are easier and faster to design when the software is free to choose which drone should occupy which landing position.
+NOTE: While using the regular return to home, it is not guaranteed that each drone will land at the same position where it took off from. In the vast majority of cases, they will land at a different position in the grid. This is intentional; safe collision-free trajectories are easier and faster to design when the software is free to choose which drone should occupy which landing position. If you need to enforce that all drones return to their individual takeoff places, use the smart return to home pro feature that creates a more complex transition for the entire swarm that ensures collision free transition for all drones to their own initial location.
+
+
+== Light design
+
+*Skybrush Studio for Blender* also supports flawless light design for your drone light shows. In Blender we support a single RGB color to be mapped to each drone at each frame in the timeline by simple baked colors or by complex parametric light effects overlayed to the base color. The RGB color output from Blender will be transformed to the RGB or RGBW color of your led driver on your drones by the Skybrush backend and firmware. There are several smart tools dedicated in *Skybrush Studio for Blender* for light design, to see these options please checkout the description of the xref:panels/leds.adoc[LEDs tab].
 
 
 == Useful Blender settings
