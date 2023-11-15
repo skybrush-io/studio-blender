@@ -94,7 +94,7 @@ class Overlay(metaclass=ABCMeta):
 class ShaderOverlay(Overlay):
     """Overlay subclass that works with a Blender built-in shader."""
 
-    shader_type: ClassVar[str] = "3D_UNIFORM_COLOR"
+    shader_type: ClassVar[str] = "UNIFORM_COLOR"
 
     def __init__(self):
         super().__init__()

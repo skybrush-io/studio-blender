@@ -79,7 +79,10 @@ class SafetyCheckOverlay(ShaderOverlay):
         ):
             return
 
-        left_panel_width = context.area.regions[2].width
+        if bpy.app.version >= (4, 0, 0):
+            left_panel_width = context.area.regions[4].width
+        else:
+            left_panel_width = context.area.regions[2].width
         total_height = context.area.height
 
         ui_scale = self.get_ui_scale()
@@ -99,7 +102,11 @@ class SafetyCheckOverlay(ShaderOverlay):
 
         line_height = 18 * ui_scale
 
-        blf.size(font_id, int(11 * ui_scale), 72)
+        if bpy.app.version >= (4, 0, 0):
+            # DPI argument was removed in Blender 4.0
+            blf.size(font_id, int(11 * ui_scale))
+        else:
+            blf.size(font_id, int(11 * ui_scale), 72)
         blf.enable(font_id, blf.SHADOW)
 
         blf.color(font_id, 1, 1, 1, 1)

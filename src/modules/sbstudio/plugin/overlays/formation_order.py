@@ -27,7 +27,7 @@ class FormationOrderOverlay(ShaderOverlay):
     in the 3D view.
     """
 
-    shader_type = "3D_SMOOTH_COLOR"
+    shader_type = "SMOOTH_COLOR"
 
     def draw_3d(self) -> None:
         if has_gpu_state_module:
