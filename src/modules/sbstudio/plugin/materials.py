@@ -18,6 +18,8 @@ __all__ = (
     "set_specular_reflection_intensity_of_material",
 )
 
+is_blender_4 = bpy.app.version >= (4, 0, 0)
+
 
 def _create_material(name: str):
     """Creates a new, general purpose material with the given name."""
@@ -274,7 +276,7 @@ def get_shader_node_and_input_for_diffuse_color_of_material(material):
                 node = _find_shader_node_by_name_and_type(
                     material, "Principled BSDF", "BSDF_PRINCIPLED"
                 )
-                input = node.inputs["Emission"]
+                input = node.inputs["Emission Color" if is_blender_4 else "Emission"]
                 return node, input
             except KeyError:
                 raise SkybrushStudioAddonError(
