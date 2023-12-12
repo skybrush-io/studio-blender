@@ -338,9 +338,6 @@ class SkybrushStudioAPI:
         if lights is None:
             lights = {name: LightProgram() for name in trajectories.keys()}
 
-        if yaw_setpoints is None:
-            yaw_setpoints = {name: YawSetpointList() for name in trajectories.keys()}
-
         environment = {"type": show_type}
 
         if time_markers is None:
@@ -348,6 +345,16 @@ class SkybrushStudioAPI:
 
         # TODO(ntamas): add cameras to environment in the "environment" key
         # TODO: add music to the "media" key
+
+        def format_drone(name: str):
+            settings = {
+                "name": name,
+                "lights": lights[name].as_dict(ndigits=ndigits),
+                "trajectory": trajectories[name].as_dict(ndigits=ndigits, version=0),
+            }
+            if yaw_setpoints is not None:
+                settings["yawControl"] = yaw_setpoints[name].as_dict(ndigits=ndigits)
+            return {"type": "generic", "settings": settings}
 
         data = {
             "input": {
@@ -361,19 +368,7 @@ class SkybrushStudioAPI:
                     },
                     "swarm": {
                         "drones": [
-                            {
-                                "type": "generic",
-                                "settings": {
-                                    "name": name,
-                                    "lights": lights[name].as_dict(ndigits=ndigits),
-                                    "trajectory": trajectories[name].as_dict(
-                                        ndigits=ndigits, version=0
-                                    ),
-                                    "yawControl": yaw_setpoints[name].as_dict(
-                                        ndigits=ndigits
-                                    ),
-                                },
-                            }
+                            format_drone(name)
                             for name in natsorted(trajectories.keys())
                         ]
                     },
