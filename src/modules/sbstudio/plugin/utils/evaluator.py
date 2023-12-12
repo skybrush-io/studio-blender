@@ -1,13 +1,18 @@
 from bpy.types import Context, Object
 from contextlib import contextmanager
 from functools import partial
+from math import degrees
 from typing import Callable, Optional, Sequence
 
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import Coordinate3D, Rotation3D
 
 from .decorators import with_context
 
-__all__ = ("create_position_evaluator", "get_position_of_object")
+__all__ = (
+    "create_position_evaluator",
+    "get_position_of_object",
+    "get_xyz_euler_rotation_of_object",
+)
 
 
 @contextmanager
@@ -36,7 +41,7 @@ def _evaluate_positions_of_objects(
 ) -> Sequence[Coordinate3D]:
     if frame is not None:
         seek_to(frame)
-    return [tuple(obj.matrix_world.translation) for obj in objects]
+    return [get_position_of_object(obj) for obj in objects]
 
 
 def get_position_of_object(object: Object) -> Coordinate3D:
@@ -49,3 +54,17 @@ def get_position_of_object(object: Object) -> Coordinate3D:
         location of object in the world frame
     """
     return tuple(object.matrix_world.translation)
+
+
+def get_xyz_euler_rotation_of_object(object: Object) -> Rotation3D:
+    """Returns the global rotation of an object at the current frame
+    in XYZ Euler order, in degrees.
+
+    Parameters:
+        object: a Blender object
+
+    Returns:
+        rotation of object in the world frame, in degrees
+    """
+
+    return tuple(degrees(angle) for angle in object.matrix_world.to_euler("XYZ"))

@@ -28,6 +28,8 @@ Trajectory FPS:: Set output frame rate for drone trajectories (make sure it is a
 
 Light FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)
 
+Use yaw control:: Enable this checkbox to output yaw rotations of your drone objects into the .skyc file
+
 == Export to .csv
 
 The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range.

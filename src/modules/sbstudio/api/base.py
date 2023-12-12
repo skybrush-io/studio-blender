@@ -21,6 +21,7 @@ from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
+from sbstudio.model.yaw import YawSetpointList
 from sbstudio.utils import create_path_and_open
 
 from .constants import COMMUNITY_SERVER_URL
@@ -292,6 +293,7 @@ class SkybrushStudioAPI:
         validation: SafetyCheckParams,
         trajectories: Dict[str, Trajectory],
         lights: Optional[Dict[str, LightProgram]] = None,
+        yaw_setpoints: Optional[Dict[str, YawSetpointList]] = None,
         output: Optional[Path] = None,
         show_title: Optional[str] = None,
         show_type: str = "outdoor",
@@ -307,6 +309,7 @@ class SkybrushStudioAPI:
             validation: safety check parameters
             trajectories: dictionary of trajectories indexed by drone names
             lights: dictionary of light programs indexed by drone names
+            yaw_setpoints: dictionary of yaw setpoints indexed by drone names
             output: the file path where the output should be saved or `None`
                 if the output must be returned instead of saving it to a file
             show_title: arbitrary show title; `None` if no title is needed
@@ -335,6 +338,9 @@ class SkybrushStudioAPI:
         if lights is None:
             lights = {name: LightProgram() for name in trajectories.keys()}
 
+        if yaw_setpoints is None:
+            yaw_setpoints = {name: YawSetpointList() for name in trajectories.keys()}
+
         environment = {"type": show_type}
 
         if time_markers is None:
@@ -362,6 +368,9 @@ class SkybrushStudioAPI:
                                     "lights": lights[name].as_dict(ndigits=ndigits),
                                     "trajectory": trajectories[name].as_dict(
                                         ndigits=ndigits, version=0
+                                    ),
+                                    "yawControl": yaw_setpoints[name].as_dict(
+                                        ndigits=ndigits
                                     ),
                                 },
                             }

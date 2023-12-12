@@ -102,6 +102,15 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 *Skybrush Studio for Blender* also supports flawless light design for your drone light shows. In Blender we support a single RGB color to be mapped to each drone at each frame in the timeline by simple baked colors or by complex parametric light effects overlayed to the base color. The RGB color output from Blender will be transformed to the RGB or RGBW color of your led driver on your drones by the Skybrush backend and firmware. There are several smart tools dedicated in *Skybrush Studio for Blender* for light design, to see these options please checkout the description of the xref:panels/leds.adoc[LEDs tab].
 
 
+== Yaw control
+
+*Skybrush* also supports yaw control as part of a drone show for certain drone types. The yaw angle for yaw control in *Skyrush Studio for Blender* is simply inferred from the Z component of the global rotation of objects assuming "XYZ Euler" notation. So far there are no specific tools to aid yaw control, it is the responsibility of the designer to create a yaw curve that harmonizes with the concept and spatio-temporal trajectory of the show. 
+
+TIP: if you wish to use yaw control, change your default drone object template to something that is not as isotropic as the default icosphere, so that you can also visualize your rotations in Blender.
+
+To export yaw control for your show, check the "Use yaw control" checkbox in the .skyc export panel.
+
+
 == Useful Blender settings
 
 We suggest you to check the following Blender settings before you start designing your drone show:
