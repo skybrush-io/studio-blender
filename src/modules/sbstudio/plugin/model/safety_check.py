@@ -19,16 +19,16 @@ _safety_check_result = SafetyCheckResult()
 
 
 @overload
-def _get_overlay() -> SafetyCheckOverlay:
+def get_overlay() -> SafetyCheckOverlay:
     ...
 
 
 @overload
-def _get_overlay(create: bool) -> Optional[SafetyCheckOverlay]:
+def get_overlay(create: bool) -> Optional[SafetyCheckOverlay]:
     ...
 
 
-def _get_overlay(create: bool = True):
+def get_overlay(create: bool = True):
     global _overlay
 
     if _overlay is None and create:
@@ -365,7 +365,7 @@ class SafetyCheckProperties(PropertyGroup):
         self._refresh_overlay()
 
     def ensure_overlays_enabled_if_needed(self) -> None:
-        _get_overlay().enabled = (
+        get_overlay().enabled = (
             self.altitude_warning_enabled
             or self.proximity_warning_enabled
             or self.velocity_warning_enabled
@@ -444,7 +444,7 @@ class SafetyCheckProperties(PropertyGroup):
         """Refreshes the safety check overlay on the 3D view if needed."""
         global _safety_check_result
 
-        overlay = _get_overlay(create=False)
+        overlay = get_overlay(create=False)
 
         if overlay:
             markers: List[Sequence[Coordinate3D]] = []

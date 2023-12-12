@@ -20,6 +20,7 @@ import sys
 
 from bpy.props import PointerProperty
 from bpy.types import Object, Scene
+from functools import partial
 from pathlib import Path
 
 
@@ -59,6 +60,8 @@ from sbstudio.plugin.model import (
     ScheduleOverride,
     StoryboardEntry,
     Storyboard,
+    get_formation_order_overlay,
+    get_safety_check_overlay,
 )
 from sbstudio.plugin.operators import (
     AddMarkersFromStaticCSVOperator,
@@ -239,6 +242,12 @@ headers = ()
 #: Background tasks in this addon
 tasks = (InitializationTask(), SafetyCheckTask(), UpdateLightEffectsTask())
 
+#: Getters for the overlays in this addon, used to disable them before unloading
+overlay_getters = (
+    partial(get_safety_check_overlay, create=False),
+    get_formation_order_overlay,
+)
+
 
 def register():
     register_state()
@@ -262,6 +271,10 @@ def register():
 
 
 def unregister():
+    for getter in overlay_getters:
+        overlay = getter()
+        if overlay:
+            overlay.enabled = False
     for task in tasks:
         task.unregister()
     for header in reversed(headers):

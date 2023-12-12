@@ -15,6 +15,10 @@ _formation_order_overlay = FormationOrderOverlay()
 """Overlay that shows the order of markers in the current formation."""
 
 
+def get_overlay() -> FormationOrderOverlay:
+    return _formation_order_overlay
+
+
 def order_overlay_enabled_updated(
     self: "FormationsPanelProperties", context: Optional[Context] = None
 ):
