@@ -226,9 +226,9 @@ class SkybrushStudioAPI:
                 response._run_sanity_checks()
                 yield response
         except HTTPError as ex:
-            # If the status code is 400, we may have more details about the
+            # If the status code is 400 or 403, we may have more details about the
             # error in the response itself
-            if ex.status == 400:
+            if ex.status in (400, 403):
                 try:
                     body = ex.read().decode("utf-8")
                 except Exception:
@@ -245,11 +245,12 @@ class SkybrushStudioAPI:
                     raise SkybrushStudioAPIError(
                         str(decoded_body.get("detail"))
                     ) from None
-            else:
-                raise SkybrushStudioAPIError(
-                    f"HTTP error {ex.status}. This is most likely a "
-                    f"server-side issue; please contact us and let us know."
-                ) from ex
+
+            # No detailed information about the error so use a generic message
+            raise SkybrushStudioAPIError(
+                f"HTTP error {ex.status}. This is most likely a "
+                f"server-side issue; please contact us and let us know."
+            ) from ex
 
     def _skip_ssl_checks(self) -> None:
         """Configures the API object to skip SSL checks when making requests.
