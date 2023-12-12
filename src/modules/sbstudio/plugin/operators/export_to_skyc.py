@@ -39,8 +39,8 @@ class SkybrushExportOperator(ExportOperator):
 
     # yaw control enable/disable
     use_yaw_control = BoolProperty(
-        name="Use yaw control",
-        description="Specifies whether yaw control should be used during the show",
+        name="Export yaw",
+        description="Specifies whether the yaw angle of each drone should be controlled during the show",
         default=False,
     )
 

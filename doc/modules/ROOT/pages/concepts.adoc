@@ -108,7 +108,7 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 
 TIP: if you wish to use yaw control, change your default drone object template to something that is not as isotropic as the default icosphere, so that you can also visualize your rotations in Blender.
 
-To export yaw control for your show, check the "Use yaw control" checkbox in the .skyc export panel.
+To export yaw control for your show, check the "Export yaw" checkbox in the .skyc export panel.
 
 
 == Useful Blender settings

@@ -325,6 +325,7 @@ def export_show_to_file_using_api(
     )
 
     renderer_params = {}
+    settings["min_nav_altitude"] = 0.1
     if "min_nav_altitude" in settings:
         renderer_params = {"min_nav_altitude": settings["min_nav_altitude"]}
 

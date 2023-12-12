@@ -28,7 +28,7 @@ Trajectory FPS:: Set output frame rate for drone trajectories (make sure it is a
 
 Light FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)
 
-Use yaw control:: Enable this checkbox to output yaw rotations of your drone objects into the .skyc file
+Export yaw:: Enable this checkbox to output rotations around the yaw (vertical) axis of your drone objects into the .skyc file
 
 == Export to .csv
 
