@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The SVG formation generation got a new angle keyword that determines
-  the maximum allowed change of angleat each path node to still treat the path
+  the maximum allowed change of angle at each path node to still treat the path
   around the node to be continuous.
 
 ### Fixed
