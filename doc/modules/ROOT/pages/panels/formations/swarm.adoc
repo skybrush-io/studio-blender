@@ -12,6 +12,16 @@ Click on the btn:[Drones] button to select the collection that is your primary s
 
 IMPORTANT: Any mesh that is placed in the collection selected here will be treated as a drone by *Skybrush Studio*, and it may adjust the constraints and other properties of the mesh as needed when performing certain operations. Make sure that there are no other objects in the collection that you select here, only the ones that you want to consider drones.
 
+== Drone template
+
+Before creating your first takeoff grid that initializes your drone objects, you can select a template object for your future drones. There are three options to select from, given by the btn:[Drone template] drop down menu.
+
+image::panels/swarm/drone_template.jpg[Drone template]
+
+The default option is an isotropic *Sphere*. Select *Cone* to have a simple anisotropic object (suitable for yaw-controlled shows), or select *Selected Object* for any custom object that will be used as your drone template. 
+
+If *Selected Object* is chosen, make sure you have your template object selected before pressing the btn:[Create takeoff grid] button. Note that this object will disappear after the creation of the swarm as it shall be used for the template only.
+
 == Max acceleration
 
 The btn:[Max acceleration] button sets up a maximal acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
