@@ -35,6 +35,6 @@ class PrepareSceneOperator(Operator):
         link_object_to_scene(templates, allow_nested=True)
 
         # Create the drone template as well
-        Templates.find_drone()
+        Templates.find_drone(template=context.scene.skybrush.settings.drone_template)
 
         return {"FINISHED"}

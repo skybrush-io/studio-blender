@@ -1,10 +1,11 @@
 import bpy
 
 from bpy.types import Collection
+from functools import partial
 from typing import Callable, ClassVar, Optional
 
 from .materials import create_glowing_material
-from .meshes import create_icosphere
+from .meshes import create_icosphere, create_cone
 from .utils import (
     ensure_object_exists_in_collection,
     get_object_in_collection,
@@ -72,7 +73,7 @@ class Collections:
         key: str,
         *,
         create: bool = True,
-        on_created: Optional[Callable[[bpy.types.Object], None]] = None
+        on_created: Optional[Callable[[bpy.types.Object], None]] = None,
     ):
         """Returns the Blender collection with the given name, and optionally
         creates it if it does not exist yet.
@@ -88,7 +89,7 @@ class Collections:
         key: str,
         *,
         create: bool = True,
-        on_created: Optional[Callable[[bpy.types.Object], None]] = None
+        on_created: Optional[Callable[[bpy.types.Object], None]] = None,
     ):
         """Returns an object from a Blender collection given its name, and
         optionally creates it if it does not exist yet.
@@ -129,27 +130,49 @@ class Templates:
     """Name of the drone template object"""
 
     @classmethod
-    def find_drone(cls, *, create: bool = True):
+    def find_drone(cls, *, create: bool = True, template: str = "SPHERE"):
         """Returns the Blender object that serves as a template for newly
-        created drones, and optionally creates it if it does not exist yet.
+        created drones.
+
+        Args:
+            template: the drone template to use.
+                Possible values: SPHERE, CONE, SELECTED
+            create: whether to create the template if it does not exist yet
+
         """
         templates = Collections.find_templates()
         coll = templates.objects
         if create:
             drone, _ = ensure_object_exists_in_collection(
-                coll, cls.DRONE, factory=cls._create_drone_template
+                coll,
+                cls.DRONE,
+                factory=partial(cls._create_drone_template, template=template),
             )
             return drone
         else:
             return get_object_in_collection(coll, cls.DRONE)
 
     @staticmethod
-    def _create_drone_template():
-        object = create_icosphere(radius=DRONE_RADIUS)
+    def _create_drone_template(template: str = "SPHERE"):
+        if template == "SPHERE":
+            object = create_icosphere(radius=DRONE_RADIUS)
+        elif template == "CONE":
+            object = create_cone(radius=DRONE_RADIUS)
+        elif template == "SELECTED":
+            objects = bpy.context.selected_objects
+            if not objects:
+                object = create_icosphere(radius=DRONE_RADIUS)
+            else:
+                object = objects[0]
+        else:
+            raise ValueError(f"Unknown drone template name: {template!r}")
 
-        # The icosphere is created in the current scene collection of the Blender
-        # context, but we don't need it there so let's remove it.
-        bpy.context.scene.collection.objects.unlink(object)
+        # We remove the object from all collections it is in.
+        for collection in bpy.data.collections:
+            if object.name in collection.objects:
+                collection.objects.unlink(object)
+        if object.name in bpy.context.scene.collection.objects:
+            bpy.context.scene.collection.objects.unlink(object)
 
         # Hide the object from the viewport and the render
         object.hide_viewport = True

@@ -38,6 +38,23 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         description="The collection that contains all the objects that are to be treated as drones",
     )
 
+    drone_template = EnumProperty(
+        items=[
+            ("SPHERE", "Sphere", "", 1),
+            ("CONE", "Cone", "", 2),
+            ("SELECTED", "Selected Object", "", 3),
+        ],
+        name="Drone template",
+        description=(
+            "Drone template object to use for all drones. "
+            "The SPHERE is the default simplest isotropic drone object, "
+            "the CONE is anisotropic for visualizing yaw control, "
+            "or use SELECTED for any custom object that is selected right now."
+        ),
+        default="SPHERE",
+        options=set(),
+    )
+
     max_acceleration = FloatProperty(
         name="Max acceleration",
         description="Maximum acceleration allowed when planning the duration of transitions between fixed points",

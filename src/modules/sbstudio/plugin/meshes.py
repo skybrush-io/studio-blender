@@ -6,6 +6,7 @@ import bmesh
 import bpy
 
 from contextlib import contextmanager
+from math import radians
 from mathutils import Matrix
 from typing import Optional
 
@@ -14,6 +15,7 @@ from sbstudio.model.types import Coordinate3D
 from .objects import create_object
 
 __all__ = (
+    "create_cone",
     "create_cube",
     "create_icosphere",
     "edit_mesh",
@@ -53,6 +55,45 @@ def create_cube(
     bpy.context.object.scale = size
 
     return _current_object_renamed_to(name)
+
+
+def create_cone(
+    center: Coordinate3D = (0, 0, 0), radius: float = 1, *, name: Optional[str] = None
+):
+    """Creates a Blender cone mesh object thats tip is pointing horizontally,
+    to be suitable for visualizing yaw controlled shows.
+
+    Parameters:
+        center: the center of the cone
+        radius: the radius of the cone
+        name: the name of the mesh object; `None` to use the default name that
+            Blender assigns to the object
+
+    Returns:
+        object: the created mesh object
+    """
+    with use_b_mesh() as bm:
+        if bpy.app.version < (3, 0, 0):
+            raise NotImplementedError(
+                "Creating cone is not implemented for Blender < 3.0.0"
+            )
+        else:
+            # Blender 3.0 and later. The Python API naming is consistent here.
+            bmesh.ops.create_cone(
+                bm,
+                cap_ends=True,
+                cap_tris=True,
+                segments=32,
+                radius1=radius,
+                depth=radius * 2,
+                matrix=Matrix.Rotation(radians(90), 3, "Y"),
+                calc_uvs=True,
+            )
+        obj = create_object_from_bmesh(bm, name=name or "Cone")
+
+    obj.location = center
+
+    return obj
 
 
 def create_icosphere(
