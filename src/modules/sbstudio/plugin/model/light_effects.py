@@ -1,3 +1,4 @@
+import types
 import bpy
 import bmesh
 
@@ -12,6 +13,7 @@ from bpy.props import (
     FloatProperty,
     IntProperty,
     PointerProperty,
+    StringProperty,
 )
 from bpy.types import (
     ColorRamp,
@@ -35,11 +37,11 @@ from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import get_pixel
-from sbstudio.utils import distance_sq_of
+from sbstudio.utils import distance_sq_of, load_module
 
 from .mixins import ListMixin
 
-__all__ = ("LightEffect", "LightEffectCollection")
+__all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
 
 
 def object_has_mesh_data(self, obj) -> bool:
@@ -129,6 +131,25 @@ def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
     else:
         return True
 
+def get_color_function_names(self, context: Context) -> List[Tuple[str, str, str]]:
+    if not self.path:
+        return []
+    absolute_path = bpy.path.abspath(self.path)
+    module = load_module(absolute_path)
+    return [(name, name, "") for name in dir(module) if isinstance(getattr(module, name), types.FunctionType)]
+
+class ColorFunctionProperties(PropertyGroup):
+    path = StringProperty(
+        name="Color Function File",
+        description="Path to the custom color function file",
+        subtype="FILE_PATH",
+    )
+
+    name = EnumProperty(
+        name="Color Function Name",
+        description="Name of the custom color function",
+        items=get_color_function_names,
+    )
 
 class LightEffect(PropertyGroup):
     """Blender property group representing a single, time- and possibly space-limited
@@ -146,10 +167,11 @@ class LightEffect(PropertyGroup):
 
     type = EnumProperty(
         name="Effect Type",
-        description="Type of the light effect: color ramp-based or image-based",
+        description="Type of the light effect: color ramp-based, image-based or custom function",
         items=[
             ("COLOR_RAMP", "Color ramp", "", 1),
             ("IMAGE", "Image", "", 2),
+            ("FUNCTION", "Function", "", 3),
         ],
         default="COLOR_RAMP",
     )
@@ -186,11 +208,23 @@ class LightEffect(PropertyGroup):
         default="LAST_COLOR",
     )
 
+    output_function = PointerProperty(
+        type=ColorFunctionProperties,
+        name="Output X Function",
+        description="Custom function for the output X",
+    )
+
     output_y = EnumProperty(
         name="Output Y",
         description="Output function that determines the value that is passed through the image vertical (Y) axis to obtain the color to assign to a drone",
         items=OUTPUT_ITEMS,
         default="LAST_COLOR",
+    )
+
+    output_function_y = PointerProperty(
+        type=ColorFunctionProperties,
+        name="Output Y Function",
+        description="Custom function for the output Y",
     )
 
     output_mapping_mode = EnumProperty(
@@ -222,6 +256,12 @@ class LightEffect(PropertyGroup):
             "image that controls how the colors of the drones are determined"
         ),
         options={"HIDDEN"},
+    )
+
+    color_function = PointerProperty(
+        type=ColorFunctionProperties,
+        name="Color Function",
+        description="Color function of the light effect",
     )
 
     mesh = PointerProperty(
@@ -299,9 +339,12 @@ class LightEffect(PropertyGroup):
                 randomization is turned on
         """
 
+        time_fraction = (frame - self.frame_start) / self.duration
+
         def get_output_based_on_output_type(
             output_type: str,
             mapping_mode: str,
+            output_function,
         ) -> Tuple[Optional[List[float]], Optional[float]]:
             """Get the float output(s) for color ramp or image indexing based on the output type.
 
@@ -321,7 +364,7 @@ class LightEffect(PropertyGroup):
             elif output_type == "LAST_COLOR":
                 common_output = 1.0
             elif output_type == "TEMPORAL":
-                common_output = (frame - self.frame_start) / self.duration
+                common_output = time_fraction
             elif output_type_supports_mapping_mode(output_type):
                 # There are two options here:
                 # 1. Legacy, non-proportional mode. We sort the drones based on the
@@ -419,9 +462,18 @@ class LightEffect(PropertyGroup):
                 else:
                     # if there is no mapping at all, we do not change color of drones
                     outputs = [None] * num_positions
-            elif output_type == "CUSTOM_EXPRESSION":
-                # TODO(ntamas)
-                common_output = 1.0
+            elif output_type == "CUSTOM":
+                absolute_path = bpy.path.abspath(output_function.path)
+                module = load_module(absolute_path)
+                fn = getattr(module, self.output_function.name)
+                outputs = [fn(
+                    frame = frame,
+                    time_fraction = time_fraction, 
+                    drone_index = index, 
+                    formation_index = mapping[index], 
+                    position = positions[index], 
+                    drone_count = num_positions
+                ) for index in range(num_positions)]
             else:
                 # Should not get here
                 common_output = 1.0
@@ -436,14 +488,15 @@ class LightEffect(PropertyGroup):
 
         color_ramp = self.color_ramp
         color_image = self.color_image
+        color_function_ref = self.color_function_ref
         new_color = [0.0] * 4
 
         outputs_x, common_output_x = get_output_based_on_output_type(
-            self.output, self.output_mapping_mode
+            self.output, self.output_mapping_mode, self.output_function
         )
         if color_image is not None:
             outputs_y, common_output_y = get_output_based_on_output_type(
-                self.output_y, self.output_mapping_mode_y
+                self.output_y, self.output_mapping_mode_y, self.output_function_y
             )
 
         # Get the additional predicate required to evaluate whether the effect
@@ -490,20 +543,34 @@ class LightEffect(PropertyGroup):
                 min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
 
-            if color_image is not None:
+            if color_function_ref is not None:
+                try:
+                    new_color[:] = color_function_ref(
+                        frame = frame,
+                        time_fraction = time_fraction, 
+                        drone_index = index, 
+                        formation_index = mapping[index], 
+                        position = position, 
+                        drone_count = num_positions
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"ERROR_COLOR_FUNCTION"
+                    )
+            elif color_image is not None:
                 width, height = color_image.size
                 new_color[:] = get_pixel(
                     color_image,
                     int((width - 1) * output_x),
                     int((height - 1) * output_y),
                 )
-                new_color[3] *= alpha
             elif color_ramp:
                 new_color[:] = color_ramp.evaluate(output_x)
-                new_color[3] *= alpha
             else:
                 # should not happen
-                new_color[:] = (1.0, 1.0, 1.0, alpha)
+                new_color[:] = (1.0, 1.0, 1.0, 1.0)
+
+            new_color[3] *= alpha
 
             # Apply the new color with alpha blending
             blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
@@ -525,7 +592,7 @@ class LightEffect(PropertyGroup):
             if self.type == "IMAGE" and isinstance(self.texture, ImageTexture)
             else None
         )
-
+    
     @color_image.setter
     def color_image(self, image):
         # If we have an old, legacy Texture instance, replace it with an
@@ -538,6 +605,14 @@ class LightEffect(PropertyGroup):
         if tex.image is not None:
             remove_if_unused(tex.image, from_=bpy.data.images)
         tex.image = image
+
+    @property
+    def color_function_ref(self) -> Optional[str]:
+        if self.type != "FUNCTION" or not self.color_function:
+            return None
+        absolute_path = bpy.path.abspath(self.color_function.path)
+        module = load_module(absolute_path)
+        return getattr(module, self.color_function.name)
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
@@ -580,7 +655,9 @@ class LightEffect(PropertyGroup):
         self.fade_in_duration = other.fade_in_duration
         self.fade_out_duration = other.fade_out_duration
         self.output = other.output
+        self.output_function = other.output_function
         self.output_y = other.output_y
+        self.output_function_y = other.output_function_y
         self.influence = other.influence
         self.mesh = other.mesh
         self.target = other.target
@@ -590,6 +667,7 @@ class LightEffect(PropertyGroup):
         self.blend_mode = other.blend_mode
         self.type = other.type
         self.color_image = other.color_image
+        self.color_function = other.color_function
 
         update_color_ramp_from(self.color_ramp, other.color_ramp)
 

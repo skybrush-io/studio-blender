@@ -56,6 +56,7 @@ from sbstudio.plugin.model import (
     LEDControlPanelProperties,
     LightEffect,
     LightEffectCollection,
+    ColorFunctionProperties,
     SafetyCheckProperties,
     ScheduleOverride,
     StoryboardEntry,
@@ -151,6 +152,7 @@ from sbstudio.plugin.tasks import (
 #: Custom types in this addon
 types = (
     FormationsPanelProperties,
+    ColorFunctionProperties,
     LightEffect,
     LightEffectCollection,
     ScheduleOverride,

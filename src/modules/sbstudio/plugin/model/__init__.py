@@ -4,7 +4,7 @@ from .formations_panel import (
 )
 from .global_settings import DroneShowAddonGlobalSettings
 from .led_control import LEDControlPanelProperties
-from .light_effects import LightEffect, LightEffectCollection
+from .light_effects import LightEffect, LightEffectCollection, ColorFunctionProperties
 from .object_props import DroneShowAddonObjectProperties
 from .safety_check import SafetyCheckProperties, get_overlay as get_safety_check_overlay
 from .settings import DroneShowAddonFileSpecificSettings
@@ -18,6 +18,7 @@ __all__ = (
     "DroneShowAddonProperties",
     "FormationsPanelProperties",
     "LEDControlPanelProperties",
+    "ColorFunctionProperties",
     "LightEffect",
     "LightEffectCollection",
     "SafetyCheckProperties",
