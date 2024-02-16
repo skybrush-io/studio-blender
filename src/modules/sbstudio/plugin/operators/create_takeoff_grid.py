@@ -185,10 +185,9 @@ class CreateTakeoffGridOperator(Operator):
     )
 
     drones_per_slot_row = IntProperty(
-        name="Drones per slot row",
+        name="Intra-slot drones per row",
         description=(
-            "Number of drones that can be placed in a single slot in the "
-            "takeoff grid"
+            "Number of drones that can be placed within a single slot row"
         ),
         default=1,
         soft_min=1,
@@ -197,10 +196,9 @@ class CreateTakeoffGridOperator(Operator):
     )
 
     drones_per_slot_col = IntProperty(
-        name="Drones per slot column",
+        name="Intra-slot drones per column",
         description=(
-            "Number of drones that can be placed in a single slot in the "
-            "takeoff grid"
+            "Number of drones that can be placed within a single slot column"
         ),
         default=1,
         soft_min=1,
@@ -218,7 +216,7 @@ class CreateTakeoffGridOperator(Operator):
     )
 
     # Name is a misnomer, should be excess_drones, but we have to leave it
-    # for sake of backward compatibiity
+    # for sake of backward compatibility
     empty_slots = IntProperty(
         name="Number of drones that could be placed in the slots but are not needed",
         default=0,
@@ -235,8 +233,8 @@ class CreateTakeoffGridOperator(Operator):
     )
 
     intra_slot_spacing_row = FloatProperty(
-        name="Intra-slot spacing row",
-        description="Spacing between drones in the same slot of the grid",
+        name="Intra-slot row spacing",
+        description="Row spacing between drones within each slot",
         default=0.5,
         soft_min=0,
         soft_max=5,
@@ -244,8 +242,8 @@ class CreateTakeoffGridOperator(Operator):
     )
 
     intra_slot_spacing_col = FloatProperty(
-        name="Intra-slot spacing column",
-        description="Spacing between drones in the same slot of the grid",
+        name="Intra-slot column spacing",
+        description="Column spacing between drones within each slot",
         default=0.5,
         soft_min=0,
         soft_max=5,
