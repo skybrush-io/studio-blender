@@ -16,7 +16,7 @@ Color ramp:: Color ramps consist of an arbitrary number of color stops at arbitr
 
 Color image:: Color images are two dimensional analogues of color ramps with discrete colors stored in an image. Color images are basically two dimensional functions: they take two numbers between 0 and 1 (along their normalized X and Y axes) and return a color.
 
-Custom function:: A Python function called for every drone at every frame of the light effect. The function should return a color, a tuple of four numbers ranging between 0 and 1 (r,g,b,a).
+Custom function:: A Python function called for every drone at every frame of the light effect. The function should return a color, a tuple of four numbers ranging between 0 and 1 (red, green, blue and alpha components).
 
 The light effect that you define in the panel _produces_ one or two numbers between 0 and 1 for each drone, based on selected output mapping functions. The color ramp turns the first, the color image turns both mapped numbers into the color that gets applied to the drone.
 
