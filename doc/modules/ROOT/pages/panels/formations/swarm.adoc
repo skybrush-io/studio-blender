@@ -18,7 +18,7 @@ Before creating your first takeoff grid that initializes your drone objects, you
 
 image::panels/swarm/drone_template.jpg[Drone template]
 
-The default option is an isotropic *Sphere*. Select *Cone* to have a simple anisotropic object (suitable for yaw-controlled shows), or select *Selected Object* for any custom object that will be used as your drone template. 
+The default option is an isotropic *Sphere*. Select *Cone* to have a simple anisotropic object (suitable for yaw-controlled shows), or select *Selected Object* for any custom object that will be used as your drone template.
 
 If *Selected Object* is chosen, make sure you have your template object selected before pressing the btn:[Create takeoff grid] button. Note that this object will disappear after the creation of the swarm as it shall be used for the template only.
 
@@ -54,7 +54,7 @@ NOTE: Skybrush requires you to specify the _average_ vertical velocity of the dr
 
 == Return to home (RTH)
 
-The btn:[RTH] button performs a return-to-home maneuver with a specified _average_ velocity from your last formation of the show. This maneuver brings the drones straight above the positions where they are supposed to land to an altitude that can be specified in the operator.
+The btn:[RTH] button performs a return-to-home maneuver with a specified _average_ velocity from your last formation of the show. This procedure brings the drones straight above the positions where they are supposed to land to an altitude that can be specified in the operator.
 
 If the takeoff grid was created with more than one drones per slot, use the *layer height* parameter to setup the altitude difference between additional target layers above the default layer during the layered RTH operation.
 
@@ -68,9 +68,9 @@ CAUTION: It is not guaranteed that each drone will land at the same position whe
 
 === Smart return to home
 
-If you intend to land each drone to its original home position, check the btn:[Use smart RTH] checkbox. This is an experimental/pro feature that attempts to create a special trajectory for each drone from its latest location to its original home position, without collisions, using the minimum distance safety checking threshold in its planner. 
+If you intend to land each drone to its original home position, use the btn:[Use smart RTH] checkbox. This is an experimental/pro feature that attempts to create a special trajectory for each drone from its latest location to its original home position, without collisions, using the minimum distance safety checking threshold in its planner.
 
-If you use the smart RTH option, you do not need to land your drones afterwards, as the landing process is an integrated part of the smart RTH manoeuvre. For the same reason, the layer height parameter is also neglected in this case.
+If you use the smart RTH option, you do not need to land your drones afterwards, as the landing process is an integrated part of the smart RTH maneuver. For the same reason, the layer height parameter is also neglected in this case.
 
 CAUTION: it is not ensured that there is a smart RTH solution for each situation. If the planner fails to perform the operation, try reducing the minimum distance threshold or change the RTH altitude setting.
 
