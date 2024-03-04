@@ -313,13 +313,15 @@ def export_show_to_file_using_api(
     # get validation parameters
     safety_check = getattr(context.scene.skybrush, "safety_check", None)
     validation = SafetyCheckParams(
-        max_velocity_xy=safety_check.velocity_xy_warning_threshold
-        if safety_check
-        else 8,
+        max_velocity_xy=(
+            safety_check.velocity_xy_warning_threshold if safety_check else 8
+        ),
         max_velocity_z=safety_check.velocity_z_warning_threshold if safety_check else 2,
-        max_velocity_z_up=safety_check.velocity_z_warning_threshold_up_or_none
-        if safety_check
-        else None,
+        max_velocity_z_up=(
+            safety_check.velocity_z_warning_threshold_up_or_none
+            if safety_check
+            else None
+        ),
         max_altitude=safety_check.altitude_warning_threshold if safety_check else 150,
         min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
     )
@@ -368,6 +370,9 @@ def export_show_to_file_using_api(
         elif format is FileFormat.DSS:
             log.info("Exporting show to DSS PATH format")
             renderer = "dss"
+        elif format is FileFormat.LITEBEE:
+            log.info("Exporting show to Litebee format")
+            renderer = "litebee"
         else:
             raise RuntimeError(f"Unhandled format: {format!r}")
 

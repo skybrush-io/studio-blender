@@ -18,6 +18,7 @@ class FileFormat(Enum):
     DSS = "dss"
     DAC = "dac"
     DROTEK = "drotek"
+    LITEBEE = "litebee"
 
 
 _file_formats: Tuple[FileFormat, ...] = ()
@@ -45,6 +46,8 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
             formats.append(FileFormat.DSS)
         elif feature == "export:drotek":
             formats.append(FileFormat.DROTEK)
+        elif feature == "export:litebee":
+            formats.append(FileFormat.LITEBEE)
         elif feature == "export:plot":
             formats.append(FileFormat.PDF)
 

@@ -17,6 +17,7 @@ from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_dac import DACExportOperator
 from .export_to_dss import DSSPathExportOperator
 from .export_to_drotek import DrotekExportOperator
+from .export_to_litebee import LitebeeExportOperator
 from .export_to_skyc import SkybrushExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
@@ -68,6 +69,7 @@ __all__ = (
     "AddMarkersFromQRCodeOperator",
     "GetFormationStatisticsOperator",
     "LandOperator",
+    "LitebeeExportOperator",
     "MoveLightEffectDownOperator",
     "MoveLightEffectUpOperator",
     "MoveStoryboardEntryDownOperator",
