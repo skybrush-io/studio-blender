@@ -5,9 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [3.2.0] - 2024-03-03
 
 ### Added
+
+- Custom Python functions can now be used to create light effects that have not
+  been possible so far. Thanks to [@thomas-advantitge](https://github.com/thomas-advantitge)
+  for the contribution! Talk to us on Discord in the #studio channel if you are
+  interested in what the possibilities are.
 
 - Yaw angles can now be exported into the `.skyc` show format.
 
