@@ -66,6 +66,14 @@ This button should be pressed after all formations of the show are inserted to t
 
 CAUTION: It is not guaranteed that each drone will land at the same position where it took off from. In the vast majority of cases, they will land at a different position in the grid. This is intentional; safe collision-free trajectories are easier and faster to design when the software is free to choose which drone should occupy which landing position.
 
+=== Smart return to home
+
+If you intend to land each drone to its original home position, check the btn:[Use smart RTH] checkbox. This is an experimental/pro feature that attempts to create a special trajectory for each drone from its latest location to its original home position, without collisions, using the minimum distance safety checking threshold in its planner. 
+
+If you use the smart RTH option, you do not need to land your drones afterwards, as the landing process is an integrated part of the smart RTH manoeuvre. For the same reason, the layer height parameter is also neglected in this case.
+
+CAUTION: it is not ensured that there is a smart RTH solution for each situation. If the planner fails to perform the operation, try reducing the minimum distance threshold or change the RTH altitude setting.
+
 == Land
 
 The btn:[Land] button lands the drones, starting from a given frame such that they move downwards in a straight line from their current position until they reach the given target altitude (ground is assumed to be at Z = 0). As usual, the _average_ velocity of the descent can be adjusted.
