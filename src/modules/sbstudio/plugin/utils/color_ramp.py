@@ -1,7 +1,11 @@
 """Utility functions related to Blender color ramps."""
 
+from bpy.types import ColorRamp
 
-def update_color_ramp_from(target, source) -> None:
+__all__ = ("update_color_ramp_from",)
+
+
+def update_color_ramp_from(target: ColorRamp, source: ColorRamp) -> None:
     """Updates a color ramp from another color ramp.
 
     This function is needed because Blender provides no functions for creating

@@ -591,7 +591,8 @@ class LightEffect(PropertyGroup):
         self.type = other.type
         self.color_image = other.color_image
 
-        update_color_ramp_from(self.color_ramp, other.color_ramp)
+        if self.color_ramp is not None:
+            update_color_ramp_from(self.color_ramp, other.color_ramp)
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
