@@ -81,6 +81,10 @@ class LightEffectsPanel(Panel):
 
                     col = row.column(align=True)
                     col.operator("image.open", icon="FILE_FOLDER", text="")
+                elif entry.type == "FUNCTION":
+                    row = self.layout.box()
+                    row.prop(entry.color_function, "path", text="")
+                    row.prop(entry.color_function, "name", text="")
                 else:
                     row = layout.box()
                     row.alert = True
@@ -99,11 +103,18 @@ class LightEffectsPanel(Panel):
             col.separator()
             col.prop(entry, "mesh")
             col.separator()
-            col.prop(entry, "output")
+            if entry.type == "COLOR_RAMP" or entry.type == "IMAGE":
+                col.prop(entry, "output")
+                if entry.output == "CUSTOM":
+                    col.prop(entry.output_function, "path", text="Fn file")
+                    col.prop(entry.output_function, "name", text="Fn name")
             if output_type_supports_mapping_mode(entry.output):
                 col.prop(entry, "output_mapping_mode")
             if entry.type == "IMAGE":
                 col.prop(entry, "output_y")
+                if entry.output_y == "CUSTOM":
+                    col.prop(entry.output_function_y, "path", text="Fn file")
+                    col.prop(entry.output_function_y, "name", text="Fn name")
                 if output_type_supports_mapping_mode(entry.output_y):
                     col.prop(entry, "output_mapping_mode_y")
             col.prop(entry, "target")

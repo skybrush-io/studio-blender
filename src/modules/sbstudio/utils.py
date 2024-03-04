@@ -1,3 +1,5 @@
+import importlib.util
+
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from pathlib import Path
@@ -87,6 +89,20 @@ def _simplify_line(points, *, eps, distance_func):
         post = _simplify_line(points[index:], eps=eps, distance_func=distance_func)
         return pre[:-1] + post
 
+
+def load_module(path: str) -> Any:
+    """Loads a module and returns it.
+
+    Parameters:
+        path: the path to the module.
+
+    Returns:
+        the loaded module.
+    """
+    spec = importlib.util.spec_from_file_location("colors_module", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 class LRUCache(MutableMapping):
     """Size-limited cache with least-recently-used eviction policy."""

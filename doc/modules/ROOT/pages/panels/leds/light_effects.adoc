@@ -10,11 +10,13 @@ Light effects are parametrized and they are not baked in as color keyframes, so 
 
 == Anatomy of a light effect
 
-Every light effect builds on a user-defined color space: a one dimensional _color ramp_ or a two dimensional _color image_:
+Every light effect builds on a user-defined color space: a one dimensional _color ramp_, a two dimensional _color image_ or a _custom function_:
 
 Color ramp:: Color ramps consist of an arbitrary number of color stops at arbitrary positions, and a given interpolation method between the defined color stops. Essentially, the color ramp is a function that takes a number between 0 and 1 and returns a color.
 
 Color image:: Color images are two dimensional analogues of color ramps with discrete colors stored in an image. Color images are basically two dimensional functions: they take two numbers between 0 and 1 (along their normalized X and Y axes) and return a color.
+
+Custom function:: A Python function called for every drone at every frame of the light effect. The function should return a color, a tuple of four numbers ranging between 0 and 1 (red, green, blue and alpha components).
 
 The light effect that you define in the panel _produces_ one or two numbers between 0 and 1 for each drone, based on selected output mapping functions. The color ramp turns the first, the color image turns both mapped numbers into the color that gets applied to the drone.
 
@@ -57,6 +59,15 @@ The most trivial usage of a color image is where e.g. the `X` axis represents ti
 Another usage is to project a static image onto the drones in a grid formation, using the properly selected `Gradient (...)` axis assignments on both axis.
 
 Note that there is no interpolation between pixels in the color image, they are selected for each drone and each frame discretely. Therefore, color images should be used with a width/height that correspond to the selected output mapping perfectly (e.g. same height as the number of drones, same width as the number of frames in the light effect etc.), or they are suggested to be smooth images without sharp edges to compensate for the rounding errors of the discrete mapping. You can also scale up a low-resolution image in an external image editor tool and use the scaled-up version to simulate interpolation.
+
+== The custom function
+
+Use the btn:[Effect Type] dropdown list to select a light effect based on a custom function. In this case a file can be selected that contains the Python function that will be used as the custom function for the light effect. The file should contain a Python function with the following named arguments:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    return (1.0, 1.0, 1.0, 1.0)
+```
 
 == Temporal constraints
 
@@ -109,7 +120,12 @@ Temporal:: All drones will cycle through the color ramp simultaneously throughou
 
 Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected mesh (see the *Mesh* widget) to the color ramp (i.e. the closest drone to the mesh will pick the leftmost color in the ramp, the farthest will pick the rightmost color, all the rest will get a value in between, distributed evenly along the color ramp).
 
-Custom expression:: This is not a valid option yet, in the future it will be used for custom, user-defined orderings.
+Custom expression:: A Python function which returns a number between 0 and 1. The function is called for each drone and each frame of the light effect.
+EXAMPLE:
+```python
+def odd_even(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    return drone_index % 2
+```
 
 == Mapping
 
