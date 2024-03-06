@@ -5,6 +5,7 @@ from sbstudio.plugin.operators import (
     DACExportOperator,
     DrotekExportOperator,
     DSSPathExportOperator,
+    DSSPath3ExportOperator,
     LitebeeExportOperator,
     RefreshFileFormatsOperator,
     SkybrushExportOperator,
@@ -58,6 +59,9 @@ class ExportPanel(Panel):
             elif format is FileFormat.DSS:
                 layout.operator(
                     DSSPathExportOperator.bl_idname, text="Export to DSS PATH format"
+                )
+                layout.operator(
+                    DSSPath3ExportOperator.bl_idname, text="Export to DSS PATH3 format"
                 )
             elif format is FileFormat.LITEBEE:
                 layout.operator(

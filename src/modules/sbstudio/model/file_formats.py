@@ -16,6 +16,7 @@ class FileFormat(Enum):
     CSV = "csv"
     PDF = "pdf"
     DSS = "dss"
+    DSS3 = "dss3"
     DAC = "dac"
     DROTEK = "drotek"
     LITEBEE = "litebee"
@@ -44,6 +45,7 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
             formats.append(FileFormat.DAC)
         elif feature == "export:dss":
             formats.append(FileFormat.DSS)
+            formats.append(FileFormat.DSS3)
         elif feature == "export:drotek":
             formats.append(FileFormat.DROTEK)
         elif feature == "export:litebee":
