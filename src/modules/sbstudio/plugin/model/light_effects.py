@@ -564,6 +564,12 @@ class LightEffect(PropertyGroup):
                     int((width - 1) * output_x),
                     int((height - 1) * output_y),
                 )
+
+                # This check is needed to cater for the cases when the calculated
+                # pixel coordinate is out of the bounds of the image, in which
+                # case get_pixel() returns an empty list
+                if len(pixel_color) == len(new_color):
+                    new_color[:] = pixel_color
             elif color_ramp:
                 new_color[:] = color_ramp.evaluate(output_x)
             else:
