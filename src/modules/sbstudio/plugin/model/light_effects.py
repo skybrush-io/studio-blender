@@ -157,6 +157,11 @@ class ColorFunctionProperties(PropertyGroup):
         items=get_color_function_names,
     )
 
+    def copy_to(self, other):
+        other.path = self.path
+        if self.name:
+            other.name = self.name
+
 
 class LightEffect(PropertyGroup):
     """Blender property group representing a single, time- and possibly space-limited
@@ -669,9 +674,7 @@ class LightEffect(PropertyGroup):
         self.fade_in_duration = other.fade_in_duration
         self.fade_out_duration = other.fade_out_duration
         self.output = other.output
-        self.output_function = other.output_function
         self.output_y = other.output_y
-        self.output_function_y = other.output_function_y
         self.influence = other.influence
         self.mesh = other.mesh
         self.target = other.target
@@ -681,7 +684,10 @@ class LightEffect(PropertyGroup):
         self.blend_mode = other.blend_mode
         self.type = other.type
         self.color_image = other.color_image
-        self.color_function = other.color_function
+
+        self.color_function.copy_to(other.color_function)
+        self.output_function.copy_to(other.output_function)
+        self.output_function_y.copy_to(other.output_function_y)
 
         if self.color_ramp is not None:
             update_color_ramp_from(self.color_ramp, other.color_ramp)
