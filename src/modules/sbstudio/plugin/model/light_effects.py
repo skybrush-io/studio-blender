@@ -131,12 +131,18 @@ def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
     else:
         return True
 
+
 def get_color_function_names(self, context: Context) -> List[Tuple[str, str, str]]:
     if not self.path:
         return []
     absolute_path = bpy.path.abspath(self.path)
     module = load_module(absolute_path)
-    return [(name, name, "") for name in dir(module) if isinstance(getattr(module, name), types.FunctionType)]
+    return [
+        (name, name, "")
+        for name in dir(module)
+        if isinstance(getattr(module, name), types.FunctionType)
+    ]
+
 
 class ColorFunctionProperties(PropertyGroup):
     path = StringProperty(
@@ -150,6 +156,7 @@ class ColorFunctionProperties(PropertyGroup):
         description="Name of the custom color function",
         items=get_color_function_names,
     )
+
 
 class LightEffect(PropertyGroup):
     """Blender property group representing a single, time- and possibly space-limited
@@ -466,14 +473,17 @@ class LightEffect(PropertyGroup):
                 absolute_path = bpy.path.abspath(output_function.path)
                 module = load_module(absolute_path)
                 fn = getattr(module, self.output_function.name)
-                outputs = [fn(
-                    frame = frame,
-                    time_fraction = time_fraction, 
-                    drone_index = index, 
-                    formation_index = mapping[index], 
-                    position = positions[index], 
-                    drone_count = num_positions
-                ) for index in range(num_positions)]
+                outputs = [
+                    fn(
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=mapping[index],
+                        position=positions[index],
+                        drone_count=num_positions,
+                    )
+                    for index in range(num_positions)
+                ]
             else:
                 # Should not get here
                 common_output = 1.0
@@ -546,20 +556,18 @@ class LightEffect(PropertyGroup):
             if color_function_ref is not None:
                 try:
                     new_color[:] = color_function_ref(
-                        frame = frame,
-                        time_fraction = time_fraction, 
-                        drone_index = index, 
-                        formation_index = mapping[index], 
-                        position = position, 
-                        drone_count = num_positions
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=mapping[index],
+                        position=position,
+                        drone_count=num_positions,
                     )
                 except Exception as e:
-                    raise RuntimeError(
-                        f"ERROR_COLOR_FUNCTION"
-                    )
+                    raise RuntimeError(f"ERROR_COLOR_FUNCTION")
             elif color_image is not None:
                 width, height = color_image.size
-                new_color[:] = get_pixel(
+                pixel_color = get_pixel(
                     color_image,
                     int((width - 1) * output_x),
                     int((height - 1) * output_y),
@@ -598,7 +606,7 @@ class LightEffect(PropertyGroup):
             if self.type == "IMAGE" and isinstance(self.texture, ImageTexture)
             else None
         )
-    
+
     @color_image.setter
     def color_image(self, image):
         # If we have an old, legacy Texture instance, replace it with an
