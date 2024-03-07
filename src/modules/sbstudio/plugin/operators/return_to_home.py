@@ -23,9 +23,9 @@ __all__ = ("ReturnToHomeOperator",)
 
 
 def is_smart_rth_enabled_globally() -> bool:
-    from sbstudio.plugin.model.global_settings import get_preferences
-
-    return bool(get_preferences().enable_experimental_features)
+    # Smart RTH used to be an experimental feature but we are now releasing it
+    # for testing by a larger audience.
+    return True
 
 
 class ReturnToHomeOperator(StoryboardOperator):
