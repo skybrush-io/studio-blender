@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2024-03-07
+
+### Added
+
+- Smart RTH is not an experimental feature any more. Feel free to test it and
+  report any issues that you run into while using smart RTH transitions, but
+  note that the calculation is done on our servers and we reserve the right to
+  make smart RTH transitions a feature for pro users only in the future.
+
+### Fixed
+
+- Fixed a problem with light effects when trying to index into a color image
+  whose width or height was zero.
+
+- Fixed a problem with repeated smart return-to-home transitions when the
+  animation data of the previous smart RTH attempt was accidentally kept in the
+  keyframes.
+
 ## [3.2.0] - 2024-03-03
 
 ### Added
