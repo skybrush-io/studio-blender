@@ -213,8 +213,9 @@ class ReturnToHomeOperator(StoryboardOperator):
                 strict=True,
             ):
                 action = ensure_action_exists_for_object(
-                    marker, name=f"Animation data for {marker.name}"
+                    marker, name=f"Animation data for {marker.name}", clean=True
                 )
+
                 f_curves = []
                 for i in range(3):
                     f_curve = find_f_curve_for_data_path_and_index(
@@ -227,6 +228,7 @@ class ReturnToHomeOperator(StoryboardOperator):
                         # range of our keyframes. Currently it's not needed because
                         # it's a freshly created marker so it can't have any
                         # keyframes that we don't know about.
+                        print(f"Already existing F-curve! {marker.name} {i}")
                         pass
                     f_curves.append(f_curve)
                 insert = [
@@ -249,6 +251,7 @@ class ReturnToHomeOperator(StoryboardOperator):
                         ),
                     )
                 )
+                print(len(path_points))
                 for point in path_points:
                     frame = int(self.start_frame + point[0] * fps)
                     keyframes = (

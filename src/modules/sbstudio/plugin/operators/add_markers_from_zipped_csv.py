@@ -109,7 +109,7 @@ class AddMarkersFromZippedCSVOperator(FormationOperator, ImportHelper):
                 continue
 
             action = ensure_action_exists_for_object(
-                marker, name=f"Animation data for {marker.name}"
+                marker, name=f"Animation data for {marker.name}", clean=True
             )
 
             f_curves = []

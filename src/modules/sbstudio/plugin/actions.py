@@ -24,9 +24,19 @@ def get_name_of_action_for_object(object) -> str:
     return f"{object.name} Action"
 
 
-def ensure_action_exists_for_object(object, name: Optional[str] = None) -> Action:
+def ensure_action_exists_for_object(
+    object, name: Optional[str] = None, *, clean: bool = False
+) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
+
+    Args:
+        object: the object to attach the action to
+        name: the name of the action to attach to the object
+        clean: whether the action is expected to be clean, i.e. should not
+            already contain any F-curves. If this is true and an action
+            already existed with the given name, the F-curves of the action
+            will be cleared
     """
     action = get_action_for_object(object)
     if action is not None:
@@ -38,6 +48,10 @@ def ensure_action_exists_for_object(object, name: Optional[str] = None) -> Actio
     action, _ = ensure_object_exists_in_collection(
         bpy.data.actions, name or get_name_of_action_for_object(object)
     )
+
+    if clean:
+        action.fcurves.clear()
+
     object.animation_data.action = action
 
     return action
