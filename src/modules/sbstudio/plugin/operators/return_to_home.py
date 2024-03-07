@@ -190,10 +190,12 @@ class ReturnToHomeOperator(StoryboardOperator):
                 return False
 
             # Add a new storyboard entry for the smart RTH formation
+            # TODO: What should happen if there is already a formation with the
+            # same name?
             entry = storyboard.add_new_entry(
                 formation=create_formation("Smart return to home", source),
                 frame_start=self.start_frame,
-                duration=int((plan.duration + self.altitude / land_speed) * fps),
+                duration=int(ceil((plan.duration + self.altitude / land_speed) * fps)),
                 select=True,
                 context=context,
             )
@@ -231,19 +233,23 @@ class ReturnToHomeOperator(StoryboardOperator):
                     partial(f_curve.keyframe_points.insert, options={"FAST"})
                     for f_curve in f_curves
                 ]
-                for point in (
-                    [[0, *p], [start_time, *p]]
-                    + inner_points
-                    + [
-                        [start_time + duration, *q],
-                        [
+                path_points = []
+                if start_time > 0:
+                    path_points.append((0, *p))
+                path_points.append((start_time, *p))
+                path_points.extend(tuple(inner_points))
+                path_points.extend(
+                    (
+                        (start_time + duration, *q),
+                        (
                             start_time + duration + self.altitude / land_speed,
                             q[0],
                             q[1],
                             0,  # TODO: starting position would be better than explicit 0
-                        ],
-                    ]
-                ):
+                        ),
+                    )
+                )
+                for point in path_points:
                     frame = int(self.start_frame + point[0] * fps)
                     keyframes = (
                         insert[0](frame, point[1]),
