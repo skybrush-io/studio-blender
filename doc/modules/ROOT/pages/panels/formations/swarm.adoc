@@ -70,7 +70,7 @@ CAUTION: It is not guaranteed that each drone will land at the same position whe
 
 If you intend to land each drone to its original home position, use the btn:[Use smart RTH] checkbox. This is an experimental/pro feature that attempts to create a special trajectory for each drone from its latest location to its original home position, without collisions, using the minimum distance safety checking threshold in its planner.
 
-If you use the smart RTH option, you do not need to land your drones afterwards, as the landing process is an integrated part of the smart RTH maneuver. For the same reason, the layer height parameter is also neglected in this case.
+If you use the smart RTH option, you do not need to land your drones afterwards, as the landing process is an integrated part of the smart RTH maneuver. For the same reason, the layer height parameter is also neglected in this case. The altitude parameter is used to specify an altitude _threshold_ below which the drones are guaranteed not to move horizontally.
 
 CAUTION: it is not ensured that there is a smart RTH solution for each situation. If the planner fails to perform the operation, try reducing the minimum distance threshold or change the RTH altitude setting.
 
