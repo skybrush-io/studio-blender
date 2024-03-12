@@ -133,15 +133,23 @@ def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
 
 
 def get_color_function_names(self, context: Context) -> List[Tuple[str, str, str]]:
-    if not self.path:
-        return []
-    absolute_path = bpy.path.abspath(self.path)
-    module = load_module(absolute_path)
-    return [
-        (name, name, "")
-        for name in dir(module)
-        if isinstance(getattr(module, name), types.FunctionType)
-    ]
+    names: List[str]
+
+    if self.path:
+        absolute_path = bpy.path.abspath(self.path)
+        module = load_module(absolute_path)
+        names = [
+            name
+            for name in dir(module)
+            if isinstance(getattr(module, name), types.FunctionType)
+        ]
+    else:
+        names = []
+
+    # Always add an empty entry so we have a reasonable default for the case
+    # when no module is selected
+    names.insert(0, "")
+    return [(name, name, "") for name in names]
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -477,18 +485,21 @@ class LightEffect(PropertyGroup):
             elif output_type == "CUSTOM":
                 absolute_path = bpy.path.abspath(output_function.path)
                 module = load_module(absolute_path)
-                fn = getattr(module, self.output_function.name)
-                outputs = [
-                    fn(
-                        frame=frame,
-                        time_fraction=time_fraction,
-                        drone_index=index,
-                        formation_index=mapping[index],
-                        position=positions[index],
-                        drone_count=num_positions,
-                    )
-                    for index in range(num_positions)
-                ]
+                if self.output_function.name:
+                    fn = getattr(module, self.output_function.name)
+                    outputs = [
+                        fn(
+                            frame=frame,
+                            time_fraction=time_fraction,
+                            drone_index=index,
+                            formation_index=mapping[index],
+                            position=positions[index],
+                            drone_count=num_positions,
+                        )
+                        for index in range(num_positions)
+                    ]
+                else:
+                    common_output = 1.0
             else:
                 # Should not get here
                 common_output = 1.0
@@ -626,12 +637,12 @@ class LightEffect(PropertyGroup):
         tex.image = image
 
     @property
-    def color_function_ref(self) -> Optional[str]:
+    def color_function_ref(self) -> Optional[Callable]:
         if self.type != "FUNCTION" or not self.color_function:
             return None
         absolute_path = bpy.path.abspath(self.color_function.path)
         module = load_module(absolute_path)
-        return getattr(module, self.color_function.name)
+        return getattr(module, self.color_function.name, None)
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
