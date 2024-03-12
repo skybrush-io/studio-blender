@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.2] - 2024-03-12
+
+### Fixed
+
+- Fixed a bug that sometimes resulted in a crash or out-of-memory errors when
+  duplicating light effects.
+
+## [3.3.1] - 2024-03-08
+
+### Fixed
+
+- Copying light effects resulted in an error due to the newly added properties
+  for selecting functions to use for coloring. A temporary fix has been
+  introduced to restore the old functionality _without_ copying the associated
+  function.
+
 ## [3.3.0] - 2024-03-07
 
 ### Added

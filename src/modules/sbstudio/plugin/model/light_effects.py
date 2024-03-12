@@ -896,7 +896,13 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         assert index is not None
 
         entry = self.append_new_entry(name=f"Copy of {active_entry.name}")
-        entry.update_from(active_entry)
+
+        # For some reason this invalidates `active_entry` or at least the
+        # texture on it, at least in Blender 4.x, so it is best to query the
+        # entry again. Blender is weird.
+        entry_to_duplicate = self.entries[index]
+
+        entry.update_from(entry_to_duplicate)
         self.entries.move(len(self.entries) - 1, index + 1)
 
         if select:
