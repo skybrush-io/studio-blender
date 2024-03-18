@@ -233,7 +233,7 @@ def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
                         first_token = row[0].lower()
                         if first_token.startswith(
                             "time_msec"
-                        ) or first_token.startswith("Time [msec]"):
+                        ) or first_token.startswith("time [msec]"):
                             continue
                     # parse line and check for errors
                     try:
