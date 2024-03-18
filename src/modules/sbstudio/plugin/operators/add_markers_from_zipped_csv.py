@@ -230,7 +230,10 @@ def parse_compressed_csv_zip(filename: str, context) -> Dict[str, ImportedData]:
                     # skip possible header line (starting with "Time_msec")
                     if not header_passed:
                         header_passed = True
-                        if row[0].lower().startswith("time_msec"):
+                        first_token = row[0].lower()
+                        if first_token.startswith(
+                            "time_msec"
+                        ) or first_token.startswith("Time [msec]"):
                             continue
                     # parse line and check for errors
                     try:
