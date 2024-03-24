@@ -100,6 +100,8 @@ than a full containment test, so for simple cases you should use this instead of
 the more expensive containment test that you can achieve with the *Inside the mesh*
 option.
 
+The result of the spatial constraint can also be inverted with the *Invert target* checkbox. This is mostly useful in conjunction with the *Inside the mesh* option, allowing you to match only those drones that are _outside_ the associated mesh instead of being inside.
+
 == Output modes
 
 The *Output X* and *Output Y* dropdowns determine how the color of a drone is picked from the color ramp or color image. Recall that each light effect essentially produces one or two numbers between 0 and 1 for each drone, and then passes this number through the color ramp or color image to calculate the final color that the effect will apply on the drone. The output dropdowns provide options for picking this number:
