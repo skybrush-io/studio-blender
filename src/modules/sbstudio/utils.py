@@ -2,6 +2,7 @@ import importlib.util
 
 from collections import OrderedDict
 from collections.abc import MutableMapping
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, List, Sequence, TypeVar
 
@@ -41,6 +42,19 @@ def create_path_and_open(filename, *args, **kwds):
 def distance_sq_of(p: Coordinate3D, q: Coordinate3D) -> float:
     """Returns the squared Euclidean distance of two 3D points."""
     return (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2
+
+
+def negate(func: Callable[..., bool]) -> Callable[..., bool]:
+    """Decorator that takes a function that returns a Boolean value and returns
+    another function that returns the negation of the result of the original
+    function.
+    """
+
+    @wraps(func)
+    def new_func(*args, **kwds) -> bool:
+        return not func(*args, **kwds)
+
+    return new_func
 
 
 def simplify_path(
@@ -103,6 +117,7 @@ def load_module(path: str) -> Any:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
 
 class LRUCache(MutableMapping):
     """Size-limited cache with least-recently-used eviction policy."""

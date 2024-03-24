@@ -37,7 +37,7 @@ from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import get_pixel
-from sbstudio.utils import distance_sq_of, load_module
+from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
 
@@ -130,6 +130,9 @@ def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
         return plane.is_front(point)
     else:
         return True
+
+
+_always_true = constant(True)
 
 
 def get_color_function_names(self, context: Context) -> List[Tuple[str, str, str]]:
@@ -300,7 +303,8 @@ class LightEffect(PropertyGroup):
         description=(
             "Specifies whether to apply this light effect to all drones or only"
             " to those drones that are inside the given mesh or are in front of"
-            " the plane of the first face of the mesh"
+            " the plane of the first face of the mesh. See also the 'Invert'"
+            " property"
         ),
         items=[
             ("ALL", "All drones", "", 1),
@@ -331,6 +335,16 @@ class LightEffect(PropertyGroup):
             (member.name, member.description, "", member.value) for member in BlendMode
         ],
         default=BlendMode.NORMAL.name,
+    )
+
+    invert_target = BoolProperty(
+        name="Invert target",
+        description=(
+            "Invert the effect target; when checked, applies the effect to"
+            " those drones that do not match the target"
+        ),
+        default=False,
+        options=set(),
     )
 
     # If you add new properties above, make sure to update update_from()
@@ -695,6 +709,7 @@ class LightEffect(PropertyGroup):
         self.blend_mode = other.blend_mode
         self.type = other.type
         self.color_image = other.color_image
+        self.invert_target = other.invert_target
 
         self.color_function.copy_to(other.color_function)
         self.output_function.copy_to(other.output_function)
@@ -768,10 +783,17 @@ class LightEffect(PropertyGroup):
     def _get_spatial_effect_predicate(self) -> Optional[Callable[[Coordinate3D], bool]]:
         if self.target == "INSIDE_MESH":
             bvh_tree = self._get_bvh_tree_from_mesh()
-            return partial(test_containment, bvh_tree)
+            func = partial(test_containment, bvh_tree)
         elif self.target == "FRONT_SIDE":
             plane = self._get_plane_from_mesh()
-            return partial(test_is_in_front_of, plane)
+            func = partial(test_is_in_front_of, plane)
+        else:
+            func = None
+
+        if self.invert_target:
+            func = negate(func or _always_true)
+
+        return func
 
     def _create_texture(self) -> ImageTexture:
         """Creates the texture associated to the light effect."""
