@@ -195,6 +195,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
 
         for key, (trajectory, light_program, yaw_curve) in result.items():
             trajectories[key] = trajectory
+            # TODO(ntamas): why are we simplifying here once again?
             lights[key] = light_program.simplify()
             yaw_setpoints[key] = yaw_curve
 
