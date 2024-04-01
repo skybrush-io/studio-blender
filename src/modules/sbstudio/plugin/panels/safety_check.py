@@ -51,8 +51,10 @@ class SafetyCheckPanel(Panel):
         row.enabled = safety_check.proximity_warning_enabled
 
         col.prop(safety_check, "altitude_warning_enabled")
+
         row = col.row()
-        row.prop(safety_check, "altitude_warning_threshold", text="", slider=True)
+        row.prop(safety_check, "min_navigation_altitude", text="Low", slider=True)
+        row.prop(safety_check, "altitude_warning_threshold", text="High", slider=True)
         row.enabled = safety_check.altitude_warning_enabled
 
         col.prop(safety_check, "velocity_warning_enabled")

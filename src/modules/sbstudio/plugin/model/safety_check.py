@@ -19,13 +19,11 @@ _safety_check_result = SafetyCheckResult()
 
 
 @overload
-def get_overlay() -> SafetyCheckOverlay:
-    ...
+def get_overlay() -> SafetyCheckOverlay: ...
 
 
 @overload
-def get_overlay(create: bool) -> Optional[SafetyCheckOverlay]:
-    ...
+def get_overlay(create: bool) -> Optional[SafetyCheckOverlay]: ...
 
 
 def get_overlay(create: bool = True):
@@ -45,6 +43,9 @@ def altitude_warning_enabled_updated(self, context: Optional[Context] = None):
 
 
 def altitude_warning_threshold_updated(self, context: Optional[Context] = None):
+    """Called when the maximum altitude threshold or the minimum navigation
+    altitude is updated by the user.
+    """
     self._refresh_overlay()
 
 
@@ -231,6 +232,17 @@ class SafetyCheckProperties(PropertyGroup):
         update=velocity_warning_threshold_updated,
     )
 
+    min_navigation_altitude = FloatProperty(
+        name="Minimum navigation altitude",
+        description="Altitude below which drones are not allowed to move sideways",
+        unit="LENGTH",
+        default=2.5,
+        min=0.0,
+        soft_min=0.0,
+        soft_max=1000.0,
+        update=altitude_warning_threshold_updated,
+    )
+
     @property
     def effective_velocity_z_threshold_up(self) -> float:
         """Returns the effective velocity threshold in the Z direction, upwards."""
@@ -383,6 +395,7 @@ class SafetyCheckProperties(PropertyGroup):
         max_velocity_z_up: Optional[float] = None,
         max_velocity_z_down: Optional[float] = None,
         drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
+        drones_below_min_nav_altitude: Optional[List[Coordinate3D]] = None,
     ) -> None:
         """Updates general safety check results."""
         global _safety_check_result
@@ -436,6 +449,12 @@ class SafetyCheckProperties(PropertyGroup):
             _safety_check_result.drones_over_max_velocity_z = drones_over_max_velocity_z
             refresh = True
 
+        if drones_below_min_nav_altitude is not None:
+            _safety_check_result.drones_below_min_nav_altitude = (
+                drones_below_min_nav_altitude
+            )
+            refresh = True
+
         if refresh:
             self.ensure_overlays_enabled_if_needed()
             self._refresh_overlay()
@@ -456,6 +475,10 @@ class SafetyCheckProperties(PropertyGroup):
             if self.should_show_altitude_warning:
                 markers.extend(
                     [point] for point in _safety_check_result.drones_over_max_altitude
+                )
+                markers.extend(
+                    [point]
+                    for point in _safety_check_result.drones_below_min_nav_altitude
                 )
 
             if self.should_show_velocity_xy_warning:
