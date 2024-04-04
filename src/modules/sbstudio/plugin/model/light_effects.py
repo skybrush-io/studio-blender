@@ -756,12 +756,15 @@ class LightEffect(PropertyGroup):
         effect has no associated mesh.
         """
         if self.mesh:
-            b_mesh = bmesh.new()
-            b_mesh.from_mesh(self.mesh.data)
-            b_mesh.transform(self.mesh.matrix_world)
-            tree = BVHTree.FromBMesh(b_mesh)
-            b_mesh.free()
-            return tree
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            mesh = self.mesh
+
+            obj = depsgraph.objects.get(mesh.name)
+            if obj:
+                obj.data.transform(mesh.matrix_world)
+                tree = BVHTree.FromObject(mesh, depsgraph, deform=True)
+                obj.data.transform(mesh.matrix_world.inverted())
+                return tree
 
     def _get_plane_from_mesh(self) -> Optional[Plane]:
         """Returns a plane that is an infinite expansion of the first face of the
