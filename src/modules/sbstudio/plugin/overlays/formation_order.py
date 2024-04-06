@@ -41,6 +41,8 @@ class FormationOrderOverlay(ShaderOverlay):
         batch = self._create_shader_batch()
 
         if batch:
+            assert self._shader is not None
+
             self._shader.bind()
             if has_gpu_state_module:
                 gpu.state.line_width_set(3)
@@ -55,6 +57,8 @@ class FormationOrderOverlay(ShaderOverlay):
             formation = None
 
         if formation:
+            assert self._shader is not None
+
             coords = get_world_coordinates_of_markers_from_formation(formation).tolist()
 
             # Use a gradient from green to red, green = start, red = stop
