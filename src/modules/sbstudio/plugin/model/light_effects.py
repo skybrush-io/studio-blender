@@ -33,6 +33,7 @@ from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
+from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
@@ -755,15 +756,25 @@ class LightEffect(PropertyGroup):
         light effect for easy containment detection, or `None` if the light
         effect has no associated mesh.
         """
-        if self.mesh:
+        if self.mesh and self.mesh.data:
             depsgraph = bpy.context.evaluated_depsgraph_get()
             mesh = self.mesh
 
             obj = depsgraph.objects.get(mesh.name)
-            if obj:
-                obj.data.transform(mesh.matrix_world)
-                tree = BVHTree.FromObject(mesh, depsgraph, deform=True)
-                obj.data.transform(mesh.matrix_world.inverted())
+            if obj and obj.data:
+                # Object is in the evaluated depsgraph so we use the mesh data
+                # from there
+                ev_mesh = cast(Mesh, obj.data)
+                ev_mesh.transform(mesh.matrix_world)
+                tree = BVHTree.FromObject(ev_mesh, depsgraph, deform=True)
+                ev_mesh.transform(mesh.matrix_world.inverted())
+            else:
+                # Object is not in the evaluated depsgraph -- maybe it is
+                # hidden? Use self.mesh directly
+                with use_b_mesh() as b_mesh:
+                    b_mesh.from_mesh(mesh.data)
+                    b_mesh.transform(mesh.matrix_world)
+                    tree = BVHTree.FromBMesh(b_mesh)
                 return tree
 
     def _get_plane_from_mesh(self) -> Optional[Plane]:

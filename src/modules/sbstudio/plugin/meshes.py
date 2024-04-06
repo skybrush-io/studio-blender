@@ -8,7 +8,7 @@ import bpy
 from contextlib import contextmanager
 from math import radians
 from mathutils import Matrix
-from typing import Optional
+from typing import Iterator, Optional
 
 from sbstudio.model.types import Coordinate3D
 
@@ -73,22 +73,16 @@ def create_cone(
         object: the created mesh object
     """
     with use_b_mesh() as bm:
-        if bpy.app.version < (3, 0, 0):
-            raise NotImplementedError(
-                "Creating cone is not implemented for Blender < 3.0.0"
-            )
-        else:
-            # Blender 3.0 and later. The Python API naming is consistent here.
-            bmesh.ops.create_cone(
-                bm,
-                cap_ends=True,
-                cap_tris=True,
-                segments=32,
-                radius1=radius,
-                depth=radius * 2,
-                matrix=Matrix.Rotation(radians(90), 3, "Y"),
-                calc_uvs=True,
-            )
+        bmesh.ops.create_cone(
+            bm,
+            cap_ends=True,
+            cap_tris=True,
+            segments=32,
+            radius1=radius,
+            depth=radius * 2,
+            matrix=Matrix.Rotation(radians(90), 3, "Y"),
+            calc_uvs=True,
+        )
         obj = create_object_from_bmesh(bm, name=name or "Cone")
 
     obj.location = center
@@ -111,17 +105,9 @@ def create_icosphere(
         object: the created mesh object
     """
     with use_b_mesh() as bm:
-        if bpy.app.version < (3, 0, 0):
-            # Blender 2.93 and earlier. The Python API incorrectly uses 'diameter'
-            # for the name of the parameter; it actually expects the radius there.
-            bmesh.ops.create_icosphere(
-                bm, subdivisions=2, diameter=radius, matrix=Matrix(), calc_uvs=True
-            )
-        else:
-            # Blender 3.0 and later. The Python API naming is consistent here.
-            bmesh.ops.create_icosphere(
-                bm, subdivisions=2, radius=radius, matrix=Matrix(), calc_uvs=True
-            )
+        bmesh.ops.create_icosphere(
+            bm, subdivisions=2, radius=radius, matrix=Matrix(), calc_uvs=True
+        )
         obj = create_object_from_bmesh(bm, name=name or "Icosphere")
 
     obj.location = center
@@ -171,7 +157,7 @@ def create_sphere(
 
 
 @contextmanager
-def edit_mesh(obj):
+def edit_mesh(obj) -> Iterator[bmesh.types.BMesh]:
     """Establishes a context in which the mesh of the given Blender object
     is converted into a B-mesh representation for easier editing. The B-mesh
     representation will be converted back to the original mesh upon exiting
@@ -199,7 +185,7 @@ def edit_mesh(obj):
 
 
 @contextmanager
-def use_b_mesh():
+def use_b_mesh() -> Iterator[bmesh.types.BMesh]:
     """Context manager that creates a new B-mesh object when entering the
     context and frees the B-mesh object when exiting the context.
     """
