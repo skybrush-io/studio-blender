@@ -1,0 +1,3 @@
+from .types import BMesh
+
+def new(use_operators: bool = True) -> BMesh: ...
