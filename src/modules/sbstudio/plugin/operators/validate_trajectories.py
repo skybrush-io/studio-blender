@@ -52,21 +52,23 @@ class ValidateTrajectoriesOperator(Operator):
 
         safety_check = getattr(context.scene.skybrush, "safety_check", None)
         validation = SafetyCheckParams(
-            max_velocity_xy=safety_check.velocity_xy_warning_threshold
-            if safety_check
-            else 8,
-            max_velocity_z=safety_check.velocity_z_warning_threshold
-            if safety_check
-            else 2,
-            max_velocity_z_up=safety_check.velocity_z_warning_threshold_up_or_none
-            if safety_check
-            else None,
-            max_altitude=safety_check.altitude_warning_threshold
-            if safety_check
-            else 150,
-            min_distance=safety_check.proximity_warning_threshold
-            if safety_check
-            else 3,
+            max_velocity_xy=(
+                safety_check.velocity_xy_warning_threshold if safety_check else 8
+            ),
+            max_velocity_z=(
+                safety_check.velocity_z_warning_threshold if safety_check else 2
+            ),
+            max_velocity_z_up=(
+                safety_check.velocity_z_warning_threshold_up_or_none
+                if safety_check
+                else None
+            ),
+            max_altitude=(
+                safety_check.altitude_warning_threshold if safety_check else 150
+            ),
+            min_distance=(
+                safety_check.proximity_warning_threshold if safety_check else 3
+            ),
         )
 
         try:
@@ -114,9 +116,9 @@ class ValidateTrajectoriesOperator(Operator):
                 show_data = api.export(
                     trajectories=trajectories,
                     validation=validation,
-                    timestamp_offset=timestamp_offset
-                    if timestamp_offset != 0
-                    else None,
+                    timestamp_offset=(
+                        timestamp_offset if timestamp_offset != 0 else None
+                    ),
                     renderer="skyc",
                 )
         except Exception:

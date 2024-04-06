@@ -104,7 +104,7 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 
 == Yaw control
 
-*Skybrush* also supports yaw control as part of a drone show for certain drone types. The yaw angle for yaw control in *Skyrush Studio for Blender* is simply inferred from the Z component of the global rotation of objects assuming "XYZ Euler" notation. So far there are no specific tools to aid yaw control, it is the responsibility of the designer to create a yaw curve that harmonizes with the concept and spatio-temporal trajectory of the show. 
+*Skybrush* also supports yaw control as part of a drone show for certain drone types. The yaw angle for yaw control in *Skyrush Studio for Blender* is simply inferred from the Z component of the global rotation of objects assuming "XYZ Euler" notation. So far there are no specific tools to aid yaw control, it is the responsibility of the designer to create a yaw curve that harmonizes with the concept and spatio-temporal trajectory of the show.
 
 TIP: if you wish to use yaw control, change your default drone object template to something that is not as isotropic as the default icosphere, so that you can also visualize your rotations in Blender.
 

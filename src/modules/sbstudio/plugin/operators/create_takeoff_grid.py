@@ -4,7 +4,6 @@ from bpy.props import FloatProperty, IntProperty
 from bpy.types import Operator
 
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
-from numpy.typing import NDArray
 from typing import List
 
 from sbstudio.model.types import Coordinate3D
@@ -54,6 +53,7 @@ def create_drone(location, *, name: str, template=None, collection=None):
 
     return drone
 
+
 def create_points_of_takeoff_grid(
     center: Coordinate3D,
     rows: int = 1,
@@ -93,8 +93,12 @@ def create_points_of_takeoff_grid(
     if num_drones_per_slot_row > 1 or num_drones_per_slot_col > 1:
         num_drones_per_slot = num_drones_per_slot_row * num_drones_per_slot_col
         # Calculate the ranges for x and y based on the number of drones
-        x_range = [x - num_drones_per_slot_col // 2 for x in range(num_drones_per_slot_col)]
-        y_range = [y - num_drones_per_slot_row // 2 for y in range(num_drones_per_slot_row)]
+        x_range = [
+            x - num_drones_per_slot_col // 2 for x in range(num_drones_per_slot_col)
+        ]
+        y_range = [
+            y - num_drones_per_slot_row // 2 for y in range(num_drones_per_slot_row)
+        ]
 
         # Adjust for even numbers to symmetrically distribute around the center
         if num_drones_per_slot_col % 2 == 0:
@@ -102,8 +106,13 @@ def create_points_of_takeoff_grid(
         if num_drones_per_slot_row % 2 == 0:
             y_range = [y + 0.5 for y in y_range]
 
-        slot_template = array([[x * intra_slot_spacing_col, y * intra_slot_spacing_row] 
-                                  for y in y_range for x in x_range])
+        slot_template = array(
+            [
+                [x * intra_slot_spacing_col, y * intra_slot_spacing_row]
+                for y in y_range
+                for x in x_range
+            ]
+        )
         template = column_stack((slot_template, zeros((len(slot_template), 1))))
 
         coords = repeat(column_stack((xs, ys, zs)), num_drones_per_slot, axis=0)
@@ -114,7 +123,10 @@ def create_points_of_takeoff_grid(
 
 
 def _get_num_drones_per_slot(operator):
-    return _get_num_drones_per_slot_row(operator) * _get_num_drones_per_slot_col(operator)
+    return _get_num_drones_per_slot_row(operator) * _get_num_drones_per_slot_col(
+        operator
+    )
+
 
 def _get_num_drones_per_slot_row(operator):
     if hasattr(operator, "drones_per_slot_row"):
@@ -122,13 +134,15 @@ def _get_num_drones_per_slot_row(operator):
     else:
         # backwards compatibility
         return 1
-    
+
+
 def _get_num_drones_per_slot_col(operator):
     if hasattr(operator, "drones_per_slot_col"):
         return max(1, operator.drones_per_slot_col)
     else:
         # backwards compatibility
         return 1
+
 
 def _get_max_possible_drone_count(operator):
     return operator.rows * operator.columns * _get_num_drones_per_slot(operator)
@@ -186,9 +200,7 @@ class CreateTakeoffGridOperator(Operator):
 
     drones_per_slot_row = IntProperty(
         name="Intra-slot drones per row",
-        description=(
-            "Number of drones that can be placed within a single slot row"
-        ),
+        description=("Number of drones that can be placed within a single slot row"),
         default=1,
         soft_min=1,
         soft_max=10,
@@ -197,9 +209,7 @@ class CreateTakeoffGridOperator(Operator):
 
     drones_per_slot_col = IntProperty(
         name="Intra-slot drones per column",
-        description=(
-            "Number of drones that can be placed within a single slot column"
-        ),
+        description=("Number of drones that can be placed within a single slot column"),
         default=1,
         soft_min=1,
         soft_max=10,

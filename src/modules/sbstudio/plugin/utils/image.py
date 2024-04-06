@@ -1,6 +1,5 @@
 """Utility functions related to Blender images."""
 
-
 from sbstudio.model.types import RGBAColor
 
 
