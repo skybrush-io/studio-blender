@@ -59,15 +59,17 @@ class AppendFormationToStoryboardOperator(FormationOperator):
 
         # Set up safety check parameters
         safety_kwds = {
-            "max_velocity_xy": safety_check.velocity_xy_warning_threshold
-            if safety_check
-            else 8,
-            "max_velocity_z": safety_check.velocity_z_warning_threshold
-            if safety_check
-            else 2,
-            "max_velocity_z_up": safety_check.velocity_z_warning_threshold_up_or_none
-            if safety_check
-            else None,
+            "max_velocity_xy": (
+                safety_check.velocity_xy_warning_threshold if safety_check else 8
+            ),
+            "max_velocity_z": (
+                safety_check.velocity_z_warning_threshold if safety_check else 2
+            ),
+            "max_velocity_z_up": (
+                safety_check.velocity_z_warning_threshold_up_or_none
+                if safety_check
+                else None
+            ),
             "max_acceleration": settings.max_acceleration if settings else 4,
         }
 

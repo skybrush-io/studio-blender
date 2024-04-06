@@ -593,8 +593,8 @@ class LightEffect(PropertyGroup):
                         position=position,
                         drone_count=num_positions,
                     )
-                except Exception as e:
-                    raise RuntimeError(f"ERROR_COLOR_FUNCTION")
+                except Exception as exc:
+                    raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
             elif color_image is not None:
                 width, height = color_image.size
                 pixel_color = get_pixel(
