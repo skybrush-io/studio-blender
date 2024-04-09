@@ -70,7 +70,7 @@ class Texture(ID):
     use_color_ramp: bool
 
 class ImageTexture(Texture):
-    image: Image
+    image: Optional[Image]
 
 class Depsgraph(bpy_struct):
     objects: bpy_prop_collection[Object]
