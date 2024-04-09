@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import bpy
 
 from bpy.types import Collection
 from functools import partial
-from typing import Callable, ClassVar, Optional
+from typing import Callable, ClassVar, Optional, TYPE_CHECKING
 
 from .materials import create_glowing_material
 from .meshes import create_icosphere, create_cone
@@ -10,6 +12,9 @@ from .utils import (
     ensure_object_exists_in_collection,
     get_object_in_collection,
 )
+
+if TYPE_CHECKING:
+    from .model import DroneShowAddonProperties
 
 __all__ = ("Collections", "Templates")
 
@@ -50,7 +55,9 @@ class Collections:
         # Return the collection specified in the settings if the user specified
         # one; otherwise fall back to finding the collection by name.
         if bpy.context.scene:
-            skybrush = getattr(bpy.context.scene, "skybrush", None)
+            skybrush: Optional[DroneShowAddonProperties] = getattr(
+                bpy.context.scene, "skybrush", None
+            )
             collection = skybrush.settings.drone_collection if skybrush else None
             if collection:
                 return collection

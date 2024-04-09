@@ -56,6 +56,12 @@ class RenderSettings(bpy_struct):
     fps: int
     fps_base: float
 
+class ViewLayer(bpy_struct): ...
+
+class Collection(ID):
+    children: CollectionChildren
+    objects: CollectionObjects
+
 class Image(ID):
     depth: int
     size: tuple[int, int]
@@ -88,6 +94,7 @@ class Scene:
     frame_step: int
     frame_subframe: float
 
+    collection: Collection
     render: RenderSettings
     skybrush: DroneShowAddonProperties
 
@@ -97,14 +104,39 @@ class Context(bpy_struct):
     def evaluated_depsgraph_get(self) -> Depsgraph: ...
 
 class Object(ID):
+    active_material: Material
+
     data: ID
     location: Vector3
     scale: Vector3
+
+    hide_render: bool
+    hide_select: bool
+    hide_viewport: bool
 
     matrix_basis: Matrix
     matrix_local: Matrix
     matrix_parent_inverse: Matrix
     matrix_world: Matrix
+
+    def select_get(self, view_layer: Optional[ViewLayer] = None) -> bool: ...
+    def select_set(
+        self, state: bool, view_layer: Optional[ViewLayer] = None
+    ) -> None: ...
+
+class CollectionChildren(bpy_prop_collection[Collection]):
+    def link(self, object: Object) -> None: ...
+    def unlink(self, object: Object) -> None: ...
+
+class CollectionObjects(bpy_prop_collection[Object]):
+    def link(self, object: Object) -> None: ...
+    def unlink(self, object: Object) -> None: ...
+
+class BlendDataCollections(bpy_prop_collection[Collection]):
+    def new(self, name: str) -> Collection: ...
+    def remove(
+        self, collection: Collection, do_unlink=True, do_id_user=True, do_ui_user=True
+    ) -> None: ...
 
 class BlendDataImage(bpy_prop_collection[Image]):
     def new(
@@ -125,11 +157,17 @@ class BlendDataTextures(bpy_prop_collection[Texture]):
     @overload
     def new(self, name: str, type: str) -> Texture: ...
 
+class BlendDataObjects(bpy_prop_collection[Object]):
+    def remove(
+        self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
+    ) -> None: ...
+
 class BlendData(bpy_struct):
+    collections: BlendDataCollections
     images: BlendDataImage
     materials: bpy_prop_collection[Material]
     meshes: bpy_prop_collection[Mesh]
-    objects: bpy_prop_collection[Object]
+    objects: BlendDataObjects
     scenes: bpy_prop_collection[Scene]
     textures: BlendDataTextures
     version: tuple[int, int, int]

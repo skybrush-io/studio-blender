@@ -1,12 +1,15 @@
-from typing import Tuple
+from typing import Sequence
 
-from .types import BlendData, Context
+from .types import BlendData, Context, Object
 
 class _App:
-    version: Tuple[int, int, int]
-    version_file: Tuple[int, int, int]
+    version: tuple[int, int, int]
+    version_file: tuple[int, int, int]
     version_string: str
 
+class _Context(Context):
+    selected_objects: Sequence[Object]
+
 app: _App
-context: Context
+context: _Context
 data: BlendData

@@ -1,14 +1,30 @@
 """Utility functions directly related to the Blender API."""
 
+from __future__ import annotations
+
 import bpy
 
 from bpy.types import Collection, Object
 
 from inspect import signature
 from itertools import count
-from typing import Any, Callable, List, Optional, Tuple, Sequence
+from typing import (
+    Any,
+    Callable,
+    List,
+    Optional,
+    Tuple,
+    Sequence,
+    TypeVar,
+    TYPE_CHECKING,
+    Union,
+    overload,
+)
 
 from .identifiers import create_internal_id
+
+if TYPE_CHECKING:
+    from bpy.types import bpy_prop_collection, ID
 
 __all__ = (
     "create_object_in_collection",
@@ -18,12 +34,15 @@ __all__ = (
     "sort_collection",
 )
 
+T = TypeVar("T", bound="ID")
+D = TypeVar("D")
+
 
 def create_object_in_collection(
-    collection: Collection,
+    collection: bpy_prop_collection[T],
     name: str,
-    factory: Optional[Callable[[], Any]] = None,
-    remover: Optional[Callable[[Object], None]] = None,
+    factory: Optional[Callable[[], T]] = None,
+    remover: Optional[Callable[[T], None]] = None,
     internal: bool = False,
     *args,
     **kwds,
@@ -58,13 +77,13 @@ def create_object_in_collection(
         if callable(remover):
             sig = signature(remover)
             if len(sig.parameters) > 1:
-                remover(existing, collection)
+                remover(existing, collection)  # type: ignore
             else:
                 remover(existing)
         elif hasattr(collection, "remove"):
-            collection.remove(existing)
+            collection.remove(existing)  # type: ignore
         elif hasattr(collection, "unlink"):
-            collection.unlink(existing)
+            collection.unlink(existing)  # type: ignore
             if not existing.use_fake_user and existing.users == 0:
                 if isinstance(existing, Collection):
                     bpy.data.collections.remove(existing)
@@ -88,13 +107,13 @@ def create_object_in_collection(
 
 
 def ensure_object_exists_in_collection(
-    collection: Collection,
+    collection: bpy_prop_collection[T],
     name: str,
-    factory: Optional[Callable[[], Any]] = None,
+    factory: Optional[Callable[[], T]] = None,
     internal: bool = False,
     *args,
     **kwds,
-) -> Tuple[Any, bool]:
+) -> Tuple[T, bool]:
     """Ensures that a Blender object with the given name exists in the given
     collection.
 
@@ -139,7 +158,7 @@ def ensure_object_exists_in_collection(
         )
 
 
-def find_empty_slot_in(collection: Collection, start_from: int = 0):
+def find_empty_slot_in(collection: bpy_prop_collection, start_from: int = 0) -> int:
     """Finds the first empty slot in the given indexable Blender collection.
 
     Parameters:
@@ -153,9 +172,23 @@ def find_empty_slot_in(collection: Collection, start_from: int = 0):
         if collection[index] is None:
             return index
 
+    raise RuntimeError("should never reach this point")
+
+
+@overload
+def get_object_in_collection(
+    collection: bpy_prop_collection[T], name: str, internal: bool = False, **kwds
+) -> T: ...
+
+
+@overload
+def get_object_in_collection(
+    collection: bpy_prop_collection[T], name: str, internal: bool = False, *, default: D
+) -> Union[T, D]: ...
+
 
 def get_object_in_collection(
-    collection: Collection, name: str, internal: bool = False, **kwds
+    collection: bpy_prop_collection[T], name: str, internal: bool = False, **kwds
 ):
     """Returns a Blender object from a given Blender collection with the
     given name.
@@ -175,9 +208,9 @@ def get_object_in_collection(
             default object instead
 
     Returns:
-        object: the Blender object from the collection with the given name,
-            or the default object if the Blender object does not exist but
-            a default was provided
+        the Blender object from the collection with the given name,
+        or the default object if the Blender object does not exist but
+        a default was provided
 
     Throws:
         KeyError: if the Blender object does not exist in the collection and
@@ -268,7 +301,9 @@ def sort_collection(collection: Collection, key: Callable[[Any], int]) -> None:
     the limited set of reordering methods provided by Blender.
 
     The collection needs to have a method named ``move()`` that takes two
-    indices and moves the item at the source index to the given target index.
+    indices and moves the item at the source index to the given target index,
+    or a ``link()`` and an ``unlink()`` method where ``unlink()`` removes an
+    item and ``link()`` adds the item at the end of the collection.
     """
     if hasattr(collection, "move"):
         # Collection has a move() method so we sort using that. This branch is
@@ -277,7 +312,7 @@ def sort_collection(collection: Collection, key: Callable[[Any], int]) -> None:
             collection, key
         )
         for source, target in moves:
-            collection.move(source, target)
+            collection.move(source, target)  # type: ignore
     elif hasattr(collection, "link") and hasattr(collection, "unlink"):
         # Collection has no move() method but it has link() and unlink(). We
         # assume that link() adds an object at the end of the collection.
