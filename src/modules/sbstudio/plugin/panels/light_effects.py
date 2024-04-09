@@ -2,6 +2,7 @@ import bpy
 from bpy.types import Panel
 
 from sbstudio.plugin.model.light_effects import (
+    effect_type_supports_randomization,
     output_type_supports_mapping_mode,
 )
 from sbstudio.plugin.operators import (
