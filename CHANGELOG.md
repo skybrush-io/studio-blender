@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Spatial constraints on light effects can now be inverted.
 
+- "Inside the mesh" light effects now take mesh deformations into account. This
+  may have a minor performance impact; if you experience slower-than-usual
+  performance with scenes that have lots of "Inside the mesh" light effects,
+  let us know.
+
 ## [3.3.3] - 2024-03-19
 
 ### Fixed
