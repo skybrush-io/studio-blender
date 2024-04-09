@@ -106,6 +106,7 @@ def update_light_effects(scene, depsgraph):
             changed = True
 
     if changed:
+        assert drones is not None
         for drone, color in zip(drones, colors):
             set_led_light_color(drone, color)
 

@@ -89,6 +89,13 @@ OUTPUT_ITEMS = [
 of drones to a given axis of the light effect color space"""
 
 
+def effect_type_supports_randomization(type: str) -> bool:
+    """Returns whether the light effect type given in the argument supports
+    randomization.
+    """
+    return type == "COLOR_RAMP" or type == "IMAGE"
+
+
 def output_type_supports_mapping_mode(type: str) -> bool:
     """Returns whether the light effect output type given in the argument may
     have a mapping mode that defines how the output values are mapped to the

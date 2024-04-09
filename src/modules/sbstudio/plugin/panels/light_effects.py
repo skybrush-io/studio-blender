@@ -121,4 +121,6 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "invert_target")
             col.prop(entry, "blend_mode")
             col.prop(entry, "influence", slider=True)
-            col.prop(entry, "randomness", slider=True)
+
+            if effect_type_supports_randomization(entry.type):
+                col.prop(entry, "randomness", slider=True)
