@@ -1,11 +1,11 @@
 import types
 import bpy
-import bmesh
 
 from functools import partial
 from operator import itemgetter
 from typing import cast, Callable, Iterable, List, Optional, Sequence, Tuple
 
+from bpy.path import abspath
 from bpy.props import (
     BoolProperty,
     CollectionProperty,
@@ -140,7 +140,7 @@ def get_color_function_names(self, context: Context) -> List[Tuple[str, str, str
     names: List[str]
 
     if self.path:
-        absolute_path = bpy.path.abspath(self.path)
+        absolute_path = abspath(self.path)
         module = load_module(absolute_path)
         names = [
             name
@@ -374,13 +374,11 @@ class LightEffect(PropertyGroup):
                 randomization is turned on
         """
 
-        time_fraction = (frame - self.frame_start) / self.duration
-
         def get_output_based_on_output_type(
             output_type: str,
             mapping_mode: str,
             output_function,
-        ) -> Tuple[Optional[List[float]], Optional[float]]:
+        ) -> Tuple[Optional[List[Optional[float]]], Optional[float]]:
             """Get the float output(s) for color ramp or image indexing based on the output type.
 
             Args:
@@ -390,7 +388,7 @@ class LightEffect(PropertyGroup):
             Returns:
                 individual and common outputs
             """
-            outputs: Optional[List[float]] = None
+            outputs: Optional[List[Optional[float]]] = None
             common_output: Optional[float] = None
             order: Optional[List[int]] = None
 
@@ -437,7 +435,7 @@ class LightEffect(PropertyGroup):
                         # axes
                         sort_key = lambda index: query_axes(positions[index])
 
-                outputs = [1.0] * num_positions
+                outputs = [1.0] * num_positions  # type: ignore
                 order = list(range(num_positions))
                 if num_positions > 1:
                     if proportional and sort_key is not None:
@@ -459,6 +457,7 @@ class LightEffect(PropertyGroup):
                         if sort_key is not None:
                             order.sort(key=sort_key)
 
+                        assert outputs is not None
                         for u, v in enumerate(order):
                             outputs[v] = u / (num_positions - 1)
 
@@ -496,9 +495,9 @@ class LightEffect(PropertyGroup):
                         outputs = [None if x is None else x / np_m1 for x in mapping]
                 else:
                     # if there is no mapping at all, we do not change color of drones
-                    outputs = [None] * num_positions
+                    outputs = [None] * num_positions  # type: ignore
             elif output_type == "CUSTOM":
-                absolute_path = bpy.path.abspath(output_function.path)
+                absolute_path = abspath(output_function.path)
                 module = load_module(absolute_path)
                 if self.output_function.name:
                     fn = getattr(module, self.output_function.name)
@@ -507,7 +506,9 @@ class LightEffect(PropertyGroup):
                             frame=frame,
                             time_fraction=time_fraction,
                             drone_index=index,
-                            formation_index=mapping[index],
+                            formation_index=(
+                                mapping[index] if mapping is not None else None
+                            ),
                             position=positions[index],
                             drone_count=num_positions,
                         )
@@ -525,6 +526,7 @@ class LightEffect(PropertyGroup):
         if not self.enabled or not self.contains_frame(frame):
             return
 
+        time_fraction = (frame - self.frame_start) / self.duration
         num_positions = len(positions)
 
         color_ramp = self.color_ramp
@@ -559,6 +561,8 @@ class LightEffect(PropertyGroup):
                 if outputs_x[index] is None:
                     continue
                 output_x = outputs_x[index]
+            assert isinstance(output_x, float)
+
             if color_image is not None:
                 if common_output_y is not None:
                     output_y = common_output_y
@@ -569,6 +573,7 @@ class LightEffect(PropertyGroup):
                     if outputs_y[index] is None:
                         continue
                     output_y = outputs_y[index]
+                assert isinstance(output_y, float)
 
             # Randomize the output value if needed
             if self.randomness != 0:
@@ -590,7 +595,9 @@ class LightEffect(PropertyGroup):
                         frame=frame,
                         time_fraction=time_fraction,
                         drone_index=index,
-                        formation_index=mapping[index],
+                        formation_index=(
+                            mapping[index] if mapping is not None else None
+                        ),
                         position=position,
                         drone_count=num_positions,
                     )
@@ -655,7 +662,7 @@ class LightEffect(PropertyGroup):
     def color_function_ref(self) -> Optional[Callable]:
         if self.type != "FUNCTION" or not self.color_function:
             return None
-        absolute_path = bpy.path.abspath(self.color_function.path)
+        absolute_path = abspath(self.color_function.path)
         module = load_module(absolute_path)
         return getattr(module, self.color_function.name, None)
 
@@ -717,6 +724,7 @@ class LightEffect(PropertyGroup):
         self.output_function_y.copy_to(other.output_function_y)
 
         if self.color_ramp is not None:
+            assert other.color_ramp is not None  # because we copied the type
             update_color_ramp_from(self.color_ramp, other.color_ramp)
 
     def _evaluate_influence_at(
@@ -881,6 +889,8 @@ class LightEffectCollection(PropertyGroup, ListMixin):
                 sensible default
             select: whether to select the newly added entry after it was created
         """
+        assert context is not None
+
         scene = context.scene
 
         fps = scene.render.fps

@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from .types import Context
+from .types import BlendData, Context
 
 class _App:
     version: Tuple[int, int, int]
@@ -9,3 +9,4 @@ class _App:
 
 app: _App
 context: Context
+data: BlendData
