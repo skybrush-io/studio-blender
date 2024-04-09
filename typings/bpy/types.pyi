@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import (
-    Generic,
     Literal,
     MutableSequence,
     Optional,
@@ -20,7 +19,7 @@ U = TypeVar("U")
 RGBAColor = MutableSequence[float]
 Vector3 = tuple[float, float, float]
 
-class bpy_prop_collection(Generic[T], Sequence[T]):
+class bpy_prop_collection(Sequence[T]):
     def find(self, key: str) -> int: ...
     @overload
     def get(self, key: str) -> Optional[T]: ...

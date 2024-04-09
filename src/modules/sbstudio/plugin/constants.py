@@ -4,7 +4,15 @@ import bpy
 
 from bpy.types import Collection
 from functools import partial
-from typing import Callable, ClassVar, Optional, TYPE_CHECKING
+from typing import (
+    Callable,
+    ClassVar,
+    Literal,
+    Optional,
+    TypeVar,
+    TYPE_CHECKING,
+    overload,
+)
 
 from .materials import create_glowing_material
 from .meshes import create_icosphere, create_cone
@@ -14,6 +22,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
+    from bpy.types import bpy_prop_collection, ID
     from .model import DroneShowAddonProperties
 
 __all__ = ("Collections", "Templates")
@@ -39,6 +48,8 @@ RANDOM_SEED_MAX = 0x7FFFFFFF
 integer properties larger than a 32-bit signed int, hence the limit.
 """
 
+T = TypeVar("T", covariant=True, bound="ID")
+
 
 class Collections:
     DRONES: ClassVar[str] = "Drones"
@@ -49,6 +60,14 @@ class Collections:
 
     TEMPLATES: ClassVar[str] = "Templates"
     """Name of the collection that holds the object templates"""
+
+    @classmethod
+    @overload
+    def find_drones(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_drones(cls, *, create: bool) -> Optional[Collection]: ...
 
     @classmethod
     def find_drones(cls, *, create: bool = True):
@@ -67,12 +86,48 @@ class Collections:
         )
 
     @classmethod
+    @overload
+    def find_formations(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_formations(cls, *, create: bool) -> Optional[Collection]: ...
+
+    @classmethod
     def find_formations(cls, *, create: bool = True):
         return cls._find(cls.FORMATIONS, create=create)
 
     @classmethod
+    @overload
+    def find_templates(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_templates(cls, *, create: bool) -> Optional[Collection]: ...
+
+    @classmethod
     def find_templates(cls, *, create: bool = True):
         return cls._find(cls.TEMPLATES, create=create)
+
+    @classmethod
+    @overload
+    def _find(
+        cls,
+        key: str,
+        *,
+        create: Literal[True] = True,
+        on_created: Optional[Callable[[Collection], None]] = None,
+    ) -> Collection: ...
+
+    @classmethod
+    @overload
+    def _find(
+        cls,
+        key: str,
+        *,
+        create: bool,
+        on_created: Optional[Callable[[Collection], None]] = None,
+    ) -> Optional[Collection]: ...
 
     @classmethod
     def _find(
@@ -80,7 +135,7 @@ class Collections:
         key: str,
         *,
         create: bool = True,
-        on_created: Optional[Callable[[bpy.types.Object], None]] = None,
+        on_created: Optional[Callable[[Collection], None]] = None,
     ):
         """Returns the Blender collection with the given name, and optionally
         creates it if it does not exist yet.
@@ -92,12 +147,12 @@ class Collections:
     @classmethod
     def _find_in(
         cls,
-        coll: Collection,
+        coll: bpy_prop_collection[T],
         key: str,
         *,
         create: bool = True,
-        on_created: Optional[Callable[[bpy.types.Object], None]] = None,
-    ):
+        on_created: Optional[Callable[[T], None]] = None,
+    ) -> Optional[T]:
         """Returns an object from a Blender collection given its name, and
         optionally creates it if it does not exist yet.
         """
@@ -117,6 +172,14 @@ class Collections:
 class Formations:
     TAKEOFF_GRID: ClassVar[str] = "Takeoff grid"
     """Name of the takeoff grid formation"""
+
+    @classmethod
+    @overload
+    def find_takeoff_grid(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_takeoff_grid(cls, *, create: bool) -> Optional[Collection]: ...
 
     @classmethod
     def find_takeoff_grid(cls, *, create: bool = True) -> Optional[Collection]:
