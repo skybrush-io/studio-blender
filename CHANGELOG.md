@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   performance with scenes that have lots of "Inside the mesh" light effects,
   let us know.
 
+- Light effects panel now shows which effects are active in the current frame.
+
 ## [3.3.3] - 2024-03-19
 
 ### Fixed
