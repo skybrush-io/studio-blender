@@ -109,8 +109,9 @@ def parse_static_csv_zip(filename: str) -> Dict[str, Item]:
                 raise RuntimeError(f"Duplicate object name in input CSV file: {name}")
 
             # store position and color entry
-            result[name] = array((x, y, z), dtype=float), array(
-                (r, g, b, 255), dtype=int
+            result[name] = (
+                array((x, y, z), dtype=float),
+                array((r, g, b, 255), dtype=int),
             )
 
     return result

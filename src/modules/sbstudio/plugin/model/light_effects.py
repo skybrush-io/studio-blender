@@ -451,8 +451,9 @@ class LightEffect(PropertyGroup):
                         # to the differences between the numeric values of the sort
                         # keys
                         evaluated_sort_keys = [sort_key(i) for i in order]
-                        min_value, max_value = min(evaluated_sort_keys), max(
-                            evaluated_sort_keys
+                        min_value, max_value = (
+                            min(evaluated_sort_keys),
+                            max(evaluated_sort_keys),
                         )
                         diff = max_value - min_value
                         if diff > 0:

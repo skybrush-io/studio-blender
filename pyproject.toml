@@ -39,9 +39,9 @@ standalone = ["skybrush-studio", "svgpathtools"]
 pyclean = "^2.0.0"
 
 [tool.ruff]
-ignore = ["B027", "B905", "C901", "E402", "E501", "E731"]
-line-length = 80
-select = ["B", "C", "E", "F", "W"]
+lint.ignore = ["B027", "B905", "C901", "E402", "E501", "E731"]
+lint.select = ["B", "C", "E", "F", "W"]
+extend-exclude = ["src/modules/sbstudio/vendor"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -37,7 +37,7 @@ class RandomSequence(Sequence[int]):
         *,
         seed: Optional[int] = None,
         max: int = 0xFFFFFFFF,
-        rng_factory: Callable[[Optional[int]], Random] = Random
+        rng_factory: Callable[[Optional[int]], Random] = Random,
     ):
         """Constructor.
 

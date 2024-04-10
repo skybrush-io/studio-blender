@@ -13,5 +13,5 @@ def batch_for_shader(
     ],
     content: Dict[str, Any],
     *,
-    indices=None
+    indices=None,
 ) -> GPUBatch: ...

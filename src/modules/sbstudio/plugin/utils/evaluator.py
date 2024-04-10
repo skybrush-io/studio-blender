@@ -37,7 +37,7 @@ def _evaluate_positions_of_objects(
     objects: Sequence[Object],
     *,
     seek_to: Optional[Callable[[int], None]] = None,
-    frame: Optional[int] = None
+    frame: Optional[int] = None,
 ) -> Sequence[Coordinate3D]:
     if frame is not None:
         seek_to(frame)
