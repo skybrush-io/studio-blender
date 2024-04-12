@@ -62,8 +62,6 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     frame = scene.frame_current
     drones = None
 
-    mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
-
     if _last_frame != frame:
         # Frame changed, clear the base color cache
         _last_frame = frame
@@ -76,6 +74,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
             positions = [get_position_of_object(drone) for drone in drones]
+            mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
                 # the base color cache in parallel to the colors list
