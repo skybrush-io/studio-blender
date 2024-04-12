@@ -3,14 +3,20 @@ responsible for updating the colors of the drones according to the active
 light effects.
 """
 
+from __future__ import annotations
+
 from contextlib import contextmanager
-from typing import Iterator, Optional
+from typing import Iterator, Optional, TYPE_CHECKING
 
 from .base import Task
 
+from sbstudio.model.types import RGBAColor
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.materials import get_led_light_color, set_led_light_color
 from sbstudio.plugin.utils.evaluator import get_position_of_object
+
+if TYPE_CHECKING:
+    from bpy.types import Depsgraph, Scene
 
 __all__ = ("UpdateLightEffectsTask",)
 
@@ -20,7 +26,7 @@ __all__ = ("UpdateLightEffectsTask",)
 #: mapping is keyed by the _ids_ of the drones so we do not hang on to a
 #: reference of a drone if the user deletes it and Blender decides to free the
 #: associated memory area
-_base_color_cache = {}
+_base_color_cache: dict[int, RGBAColor] = {}
 
 _last_frame: Optional[int] = None
 """Number of the last frame that was evaluated with `update_light_effects()`"""
@@ -30,13 +36,13 @@ _suspension_counter: int = 0
 counter is positive.
 """
 
-WHITE = (1, 1, 1, 1)
+WHITE: RGBAColor = (1, 1, 1, 1)
 """White color, used as a base color when no info is available for a newly added
 drone.
 """
 
 
-def update_light_effects(scene, depsgraph):
+def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     global _last_frame, _base_color_cache, _suspension_counter, WHITE
 
     # This function is going to be evaluated in every frame, so we should walk
@@ -101,7 +107,7 @@ def update_light_effects(scene, depsgraph):
     if not changed:
         if _base_color_cache:
             drones = Collections.find_drones().objects
-            colors = [list(_base_color_cache.get(id(drone), WHITE)) for drone in drones]
+            colors = [_base_color_cache.get(id(drone), WHITE) for drone in drones]
             _base_color_cache.clear()
             changed = True
 
