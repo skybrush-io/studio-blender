@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import bpy
 import json
 
@@ -84,6 +86,9 @@ def _handle_formation_change(self: StoryboardEntry, context: Optional[Context] =
     if not self.is_name_customized:
         self.name = self.formation.name if self.formation else ""
 
+
+def _handle_mapping_change(self: StoryboardEntry, context: Optional[Context] = None):
+    self._invalidate_decoded_mapping()
 
 
 class StoryboardEntry(PropertyGroup):
@@ -209,10 +214,14 @@ class StoryboardEntry(PropertyGroup):
         ),
         default="",
         options={"HIDDEN"},
+        update=_handle_mapping_change,
     )
 
     #: Sorting key for storyboard entries
     sort_key = attrgetter("frame_start", "frame_end")
+
+    _decoded_mapping: Optional[List[int]] = None
+    """Decoded mapping of the storyboard entry."""
 
     @property
     def active_schedule_override_entry(self) -> Optional[ScheduleOverride]:
@@ -309,16 +318,19 @@ class StoryboardEntry(PropertyGroup):
         """Returns the mapping of the markers in the storyboard entry to drone
         indices, or ``None`` if there is no mapping yet.
         """
-        encoded_mapping = self.mapping.strip()
-        if (
-            not encoded_mapping
-            or len(encoded_mapping) < 2
-            or encoded_mapping[0] != "["
-            or encoded_mapping[-1] != "]"
-        ):
-            return None
-        else:
-            return json.loads(encoded_mapping)
+        if self._decoded_mapping is None:
+            encoded_mapping = self.mapping.strip()
+            if (
+                not encoded_mapping
+                or len(encoded_mapping) < 2
+                or encoded_mapping[0] != "["
+                or encoded_mapping[-1] != "]"
+            ):
+                return None
+            else:
+                self._decoded_mapping = json.loads(encoded_mapping)
+
+        return self._decoded_mapping
 
     def remove_active_schedule_override_entry(self) -> None:
         """Removes the active schedule override entry from the collection and
@@ -347,6 +359,10 @@ class StoryboardEntry(PropertyGroup):
             self.mapping = ""
         else:
             self.mapping = json.dumps(mapping)
+        assert self._decoded_mapping is None
+
+    def _invalidate_decoded_mapping(self) -> None:
+        self._decoded_mapping = None
 
 
 class Storyboard(PropertyGroup, ListMixin):
