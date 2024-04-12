@@ -80,9 +80,10 @@ class ScheduleOverride(PropertyGroup):
         return " | ".join(parts)
 
 
-def _handle_formation_change(operator, context):
-    if not operator.is_name_customized:
-        operator.name = operator.formation.name if operator.formation else ""
+def _handle_formation_change(self: StoryboardEntry, context: Optional[Context] = None):
+    if not self.is_name_customized:
+        self.name = self.formation.name if self.formation else ""
+
 
 
 class StoryboardEntry(PropertyGroup):
