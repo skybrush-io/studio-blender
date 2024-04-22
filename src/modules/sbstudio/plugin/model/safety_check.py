@@ -267,6 +267,14 @@ class SafetyCheckProperties(PropertyGroup):
         return self.min_distance > 0 and self.min_distance < 100000
 
     @property
+    def min_navigation_altitude_is_valid(self) -> bool:
+        """Retuns whether the minimum navigation altitude property can be
+        considered valid. Right now we use zero to denote cases when there are
+        no drones in the scene at all.
+        """
+        return self.min_navigation_altitude > 0
+
+    @property
     def max_altitude_is_valid(self) -> bool:
         """Retuns whether the maximum altitude property can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
@@ -294,7 +302,11 @@ class SafetyCheckProperties(PropertyGroup):
         return (
             self.altitude_warning_enabled
             and self.max_altitude_is_valid
-            and self.max_altitude > self.altitude_warning_threshold
+            and self.min_navigation_altitude_is_valid
+            and (
+                self.max_altitude > self.altitude_warning_threshold
+                or self.min_altitude < self.min_navigation_altitude
+            )
         )
 
     @property
