@@ -208,7 +208,7 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
         [
             pos
             for name, vel in velocity_snapshot.items()
-            if (vel[0] != 0 or vel[1] != 0)
+            if hypot(vel[0], vel[1]) > 1e-2
             and (pos := snapshot.get(name, _ZERO))[2] < min_altitude
         ]
         if min_altitude is not None and min_altitude_found < min_altitude

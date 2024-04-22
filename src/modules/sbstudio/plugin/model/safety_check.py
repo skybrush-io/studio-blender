@@ -314,10 +314,13 @@ class SafetyCheckProperties(PropertyGroup):
         """Returns whether the proximity warning should be drawn in the 3D view
         _right now_, given the current values of the properties.
         """
+        # self.min_distance has to be extended a bit (by about 1cm) because of
+        # numerical inaccuracies that yield false warnings during takeoff when
+        # the grid spacing is equal to the safety distance
         return (
             self.proximity_warning_enabled
             and self.min_distance_is_valid
-            and self.min_distance < self.proximity_warning_threshold
+            and self.min_distance + 1e-2 < self.proximity_warning_threshold
         )
 
     @property
