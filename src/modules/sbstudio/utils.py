@@ -4,7 +4,7 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, List, Sequence, TypeVar
+from typing import Any, Callable, Generic, List, Sequence, TypeVar
 
 from sbstudio.model.types import Coordinate3D
 
@@ -17,6 +17,8 @@ __all__ = (
 )
 
 T = TypeVar("T")
+K = TypeVar("K")
+V = TypeVar("V")
 
 
 def constant(value: Any) -> Callable[..., Any]:
@@ -119,8 +121,10 @@ def load_module(path: str) -> Any:
     return module
 
 
-class LRUCache(MutableMapping):
+class LRUCache(Generic[K, V], MutableMapping[K, V]):
     """Size-limited cache with least-recently-used eviction policy."""
+
+    _items: OrderedDict[K, V]
 
     def __init__(self, capacity: int):
         """Constructor.
@@ -131,7 +135,7 @@ class LRUCache(MutableMapping):
         self._items = OrderedDict()
         self._capacity = max(int(capacity), 1)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: K) -> None:
         del self._items[key]
 
     def __iter__(self):
@@ -140,13 +144,13 @@ class LRUCache(MutableMapping):
     def __len__(self) -> int:
         return len(self._items)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: K, value: V):
         self._items[key] = value
         self._items.move_to_end(key)
         if len(self._items) > self._capacity:
             self._items.popitem(last=False)
 
-    def get(self, key):
+    def get(self, key: K) -> V:
         """Returns the value corresponding to the given key, marking the key as
         recently accessed.
         """
@@ -154,7 +158,7 @@ class LRUCache(MutableMapping):
         self._items.move_to_end(key)
         return value
 
-    def peek(self, key):
+    def peek(self, key: K) -> V:
         """Returns the value corresponding to the given key, _without_ marking
         the key as recently accessed.
         """
