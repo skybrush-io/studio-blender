@@ -48,6 +48,8 @@ class ID(bpy_struct):
 
     def copy(self: Self) -> Self: ...
 
+class MeshVertex(bpy_struct): ...
+
 class PropertyGroup(bpy_struct):
     name: str
 
@@ -68,6 +70,8 @@ class Image(ID):
 class Material(ID): ...
 
 class Mesh(ID):
+    vertices: bpy_prop_collection[MeshVertex]
+
     def transform(self, matrix: Matrix, shape_keys: bool = False) -> None: ...
 
 class Texture(ID):

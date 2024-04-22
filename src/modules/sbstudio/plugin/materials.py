@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Material
 from typing import Optional, Tuple, Union
 
-from sbstudio.model.types import RGBAColor
+from sbstudio.model.types import RGBAColor, RGBAColorLike
 from sbstudio.plugin.actions import ensure_action_exists_for_object
 from sbstudio.plugin.keyframes import set_keyframes
 
@@ -236,7 +236,7 @@ def get_led_light_color(drone) -> RGBAColor:
         return (0.0, 0.0, 0.0, 0.0)
 
 
-def set_led_light_color(drone, color: RGBAColor):
+def set_led_light_color(drone, color: RGBAColorLike):
     """Sets the color of the LED light on the given drone.
 
     Parameters:

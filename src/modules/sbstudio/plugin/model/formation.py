@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import bpy
 
-from bpy.types import Collection, MeshVertex, Object
 from functools import partial
 from itertools import count
 from mathutils import Vector
 from numpy import array, c_, dot, ones, zeros
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union, TYPE_CHECKING
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import (
@@ -14,6 +15,9 @@ from sbstudio.plugin.objects import (
 )
 from sbstudio.plugin.utils import create_object_in_collection
 from sbstudio.plugin.utils.evaluator import get_position_of_object
+
+if TYPE_CHECKING:
+    from bpy.types import Collection, MeshVertex, Object
 
 __all__ = (
     "add_objects_to_formation",
@@ -196,6 +200,12 @@ def get_markers_and_related_objects_from_formation(
     (obtained after applying the modifiers) but the _original_ vertices that are
     actually part of the base mesh.
     """
+
+    # WARNING: When refactoring, do _not_ change the order in which this
+    # function returns the markers because that would mess up the stored
+    # mappings of the StoryboardEntry_ objects. Doing so would be a breaking
+    # change that messes up the mappings in already-saved scenes.
+
     result = []
 
     for obj in formation.objects:

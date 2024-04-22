@@ -102,7 +102,7 @@ class TransitionPlan:
     target point.
     """
 
-    mapping: Optional[list[Optional[int]]] = None
+    mapping: Optional[Mapping] = None
     """The computed matching where the i-th item of the list contains the
     index of the source point that the i-th target point is mapped to, or
     ``None`` if the given target point is left unmatched. Omitted if the

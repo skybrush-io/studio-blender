@@ -19,9 +19,15 @@ class DroneShowAddonProperties(PropertyGroup):
     of this property.
     """
 
-    formations = PointerProperty(type=FormationsPanelProperties)
-    led_control = PointerProperty(type=LEDControlPanelProperties)
-    light_effects = PointerProperty(type=LightEffectCollection)
-    safety_check = PointerProperty(type=SafetyCheckProperties)
-    settings = PointerProperty(type=DroneShowAddonFileSpecificSettings)
-    storyboard = PointerProperty(type=Storyboard)
+    formations: FormationsPanelProperties = PointerProperty(
+        type=FormationsPanelProperties
+    )
+    led_control: LEDControlPanelProperties = PointerProperty(
+        type=LEDControlPanelProperties
+    )
+    light_effects: LightEffectCollection = PointerProperty(type=LightEffectCollection)
+    safety_check: SafetyCheckProperties = PointerProperty(type=SafetyCheckProperties)
+    settings: DroneShowAddonFileSpecificSettings = PointerProperty(
+        type=DroneShowAddonFileSpecificSettings
+    )
+    storyboard: Storyboard = PointerProperty(type=Storyboard)
