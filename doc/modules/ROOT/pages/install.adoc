@@ -45,12 +45,22 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 == Installing updates
 
-If you have already installed *Skybrush Studio for Blender* and you receive an update for it, simply follow the same installation procedure as before to overwrite old files with new ones.
+*Skybrush Studio for Blender* consists of multiple modules that are interpreted by the Python interpreter built into Blender. In order to perform an upgrade of the add-on, the previous version needs to be unloaded completely before the new version is installed. Due to how Python's module system works, this is very hard to do without unloading the plugin manually. Therefore, the preferred sequence to update the add-on is as follows:
 
-NOTE: It might happen that the structure of the software also changes which might result in update failure. If you experience any error in the update process, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
+1. Deactivate the add-on in Edit -> Preferences -> Add-ons by unticking the checkbox in front of the btn:[Skybrush Studio] add-on.
+
+2. Install the new version of the add-on using the same procedure as outlined above.
+
+3. Exit Blender.
+
+4. Restart Blender.
+
+5. Activate the add-on again in Edit -> Preferences -> Add-ons.
+
+NOTE: If the update still fails after following the steps outlined above, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
 
 == Uninstallation
-
+ 
 If you decide to uninstall *Skybrush Studio for Blender* for any reasons, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
 
 1. Deactivate the add-on first in Blender's add-on manager.
