@@ -251,7 +251,6 @@ class ReturnToHomeOperator(StoryboardOperator):
                         ),
                     )
                 )
-                print(len(path_points))
                 for point in path_points:
                     frame = int(self.start_frame + point[0] * fps)
                     keyframes = (
