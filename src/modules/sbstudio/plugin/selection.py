@@ -58,7 +58,7 @@ def get_selected_objects(*, context: Optional[Context] = None):
         the list of selected objects, taking into account the current mode
     """
     if context.mode == "OBJECT":
-        return context.selected_objects
+        return sorted(context.selected_objects, key=lambda obj: obj.name) # sort for light effects order
     else:
         active_object = context.active_object
         return [active_object] if active_object else []
