@@ -80,12 +80,14 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
                 # the base color cache in parallel to the colors list
                 colors: list[RGBAColor] = []
                 for drone in drones:
-                    color = get_led_light_color(drone)
+                    color = list(get_led_light_color(drone))
                     colors.append(color)
                     _base_color_cache[id(drone)] = color
             else:
                 # Initialize the colors list from the cached base colors
-                colors = [_base_color_cache.get(id(drone), WHITE) for drone in drones]
+                colors = [
+                    _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
+                ]
             changed = True
 
         effect.apply_on_colors(
