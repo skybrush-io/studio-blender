@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import bpy
 
+from bpy.types import Collection
 from functools import partial
 from itertools import count
 from mathutils import Vector
@@ -17,7 +18,7 @@ from sbstudio.plugin.utils import create_object_in_collection
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 if TYPE_CHECKING:
-    from bpy.types import Collection, MeshVertex, Object
+    from bpy.types import MeshVertex, Object
 
 __all__ = (
     "add_objects_to_formation",
