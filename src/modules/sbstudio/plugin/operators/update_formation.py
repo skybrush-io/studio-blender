@@ -105,9 +105,9 @@ def collect_objects_and_points_for_formation_update(selection, name):
             obj: [Vector()] for obj in Collections.find_drones().objects
         }
     elif selection == "SELECTED_OBJECTS":
-        objects.extend(get_selected_objects())
+        objects.extend(get_selected_objects(sort = True))
     elif selection == "POSITIONS_OF_SELECTED_OBJECTS":
-        points_in_local_coords = {obj: [Vector()] for obj in get_selected_objects()}
+        points_in_local_coords = {obj: [Vector()] for obj in get_selected_objects(sort = True)}
     elif selection == "POSITIONS_OF_SELECTED_VERTICES":
         points_in_local_coords = {
             obj: [point.co for point in points]
