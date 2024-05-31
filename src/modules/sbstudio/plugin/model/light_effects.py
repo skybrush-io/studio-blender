@@ -782,7 +782,7 @@ class LightEffect(PropertyGroup):
                 # from there
                 ev_mesh = cast(Mesh, obj.data)
                 ev_mesh.transform(mesh.matrix_world)
-                tree = BVHTree.FromObject(ev_mesh, depsgraph, deform=True)
+                tree = BVHTree.FromObject(obj, depsgraph, deform=True)
                 ev_mesh.transform(mesh.matrix_world.inverted())
             else:
                 # Object is not in the evaluated depsgraph -- maybe it is
@@ -791,7 +791,7 @@ class LightEffect(PropertyGroup):
                     b_mesh.from_mesh(mesh.data)
                     b_mesh.transform(mesh.matrix_world)
                     tree = BVHTree.FromBMesh(b_mesh)
-                return tree
+            return tree
 
     def _get_plane_from_mesh(self) -> Optional[Plane]:
         """Returns a plane that is an infinite expansion of the first face of the
