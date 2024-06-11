@@ -16,7 +16,7 @@ An additional requirement is that you need to have active Internet connection on
 
 === 2. Install Blender
 
-There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 2.93.x.
+There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 3.6.x.
 
 === 3. Install Skybrush Studio for Blender
 
@@ -60,7 +60,7 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 NOTE: If the update still fails after following the steps outlined above, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
 
 == Uninstallation
- 
+
 If you decide to uninstall *Skybrush Studio for Blender* for any reasons, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
 
 1. Deactivate the add-on first in Blender's add-on manager.
