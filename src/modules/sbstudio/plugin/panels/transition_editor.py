@@ -59,6 +59,7 @@ class TransitionEditorBase(Panel):
             return
 
         layout = self.layout
+
         for label in self._get_info_labels(storyboard, entry):
             layout.label(text=label)
 

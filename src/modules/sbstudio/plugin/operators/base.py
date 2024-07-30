@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import bpy
 import os
 
@@ -8,7 +10,7 @@ from numpy.typing import NDArray
 from typing import Any, Dict, Optional
 
 from bpy.props import BoolProperty
-from bpy.types import Collection, Operator
+from bpy.types import Collection, Context, Object, Operator
 from bpy_extras.io_utils import ExportHelper
 
 from sbstudio.model.file_formats import FileFormat
@@ -29,7 +31,7 @@ class FormationOperator(Operator):
     """
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: Context):
         return (
             context.scene.skybrush
             and context.scene.skybrush.formations
@@ -39,14 +41,14 @@ class FormationOperator(Operator):
             )
         )
 
-    def execute(self, context):
+    def execute(self, context: Context):
         return self.execute_on_formation(self.get_formation(context), context)
 
-    def get_formation(self, context) -> Collection:
+    def get_formation(self, context: Context) -> Collection:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
     @staticmethod
-    def select_formation(formation, context) -> None:
+    def select_formation(formation: Object, context: Context) -> None:
         """Selects the given formation, both in the scene and in the formations
         panel.
         """
@@ -61,10 +63,10 @@ class LightEffectOperator(Operator):
     """
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: Context):
         return context.scene.skybrush and context.scene.skybrush.light_effects
 
-    def execute(self, context):
+    def execute(self, context: Context):
         light_effects = context.scene.skybrush.light_effects
         return self.execute_on_light_effect_collection(light_effects, context)
 
@@ -75,10 +77,10 @@ class StoryboardOperator(Operator):
     """
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: Context):
         return context.scene.skybrush and context.scene.skybrush.storyboard
 
-    def execute(self, context):
+    def execute(self, context: Context):
         storyboard = get_storyboard(context=context)
 
         validate = getattr(self.__class__, "only_with_valid_storyboard", False)
@@ -101,14 +103,14 @@ class StoryboardEntryOperator(Operator):
     """
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: Context):
         return (
             context.scene.skybrush
             and context.scene.skybrush.storyboard
             and context.scene.skybrush.storyboard.active_entry
         )
 
-    def execute(self, context):
+    def execute(self, context: Context):
         entry = get_storyboard(context=context).active_entry
         return self.execute_on_storyboard_entry(entry, context)
 
@@ -131,7 +133,7 @@ class ExportOperator(Operator, ExportHelper):
     # frame range
     frame_range = FrameRangeProperty(default="RENDER")
 
-    def execute(self, context):
+    def execute(self, context: Context):
         from sbstudio.plugin.api import call_api_from_blender_operator
         from .utils import export_show_to_file_using_api
 
@@ -177,7 +179,7 @@ class ExportOperator(Operator, ExportHelper):
         """
         return {}
 
-    def invoke(self, context, event):
+    def invoke(self, context: Context, event):
         if not hasattr(self, "filename_ext") or not self.filename_ext:
             raise RuntimeError("filename_ext not defined in exporter class")
 
@@ -209,7 +211,7 @@ class StaticMarkerCreationOperator(FormationOperator):
     optionally extended with a list of colors corresponding to the points.
     """
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Object, context: Context):
         # Construct the point set
         try:
             points_and_colors = self._create_points(context)
@@ -276,11 +278,11 @@ class StaticMarkerCreationOperator(FormationOperator):
         return {"FINISHED"}
 
     @abstractmethod
-    def _create_points(self, context) -> PointsAndColors:
+    def _create_points(self, context: Context) -> PointsAndColors:
         """Creates the points where the markers should be placed."""
         raise NotImplementedError
 
-    def _propose_marker_count(self, context) -> int:
+    def _propose_marker_count(self, context: Context) -> int:
         """Calculates how many markers we need to add to the currently selected
         formation in order to make it have exactly the same number of markers
         as the number of drones in the project.

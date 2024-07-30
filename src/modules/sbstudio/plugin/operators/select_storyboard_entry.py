@@ -1,6 +1,14 @@
-from sbstudio.plugin.model.storyboard import get_storyboard
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard
 
 from .base import StoryboardOperator
+
+if TYPE_CHECKING:
+    from bpy.types import Context
+
 
 __all__ = ("SelectStoryboardEntryForCurrentFrameOperator",)
 
@@ -23,12 +31,12 @@ class SelectStoryboardEntryForCurrentFrameOperator(StoryboardOperator):
     )
 
     @classmethod
-    def poll(cls, context):
-        return (
+    def poll(cls, context: Context) -> bool:
+        return bool(
             StoryboardOperator.poll(context) and get_storyboard(context=context).entries
         )
 
-    def execute_on_storyboard(self, storyboard, context):
+    def execute_on_storyboard(self, storyboard: Storyboard, context: Context):
         frame = context.scene.frame_current
         index = storyboard.get_index_of_entry_containing_frame(frame)
         if index < 0:

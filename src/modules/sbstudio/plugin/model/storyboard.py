@@ -11,11 +11,12 @@ from bpy.props import (
     IntProperty,
     StringProperty,
 )
-from bpy.types import Collection, Context, PropertyGroup
+from bpy.types import PropertyGroup
 from operator import attrgetter
 from uuid import uuid4
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
+from sbstudio.api.types import Mapping
 from sbstudio.plugin.constants import (
     Collections,
     DEFAULT_STORYBOARD_ENTRY_DURATION,
@@ -27,6 +28,9 @@ from sbstudio.plugin.utils import sort_collection, with_context
 
 from .formation import count_markers_in_formation
 from .mixins import ListMixin
+
+if TYPE_CHECKING:
+    from bpy.types import bpy_prop_collection, Collection, Context, MeshVertex, Object
 
 __all__ = ("ScheduleOverride", "StoryboardEntry", "Storyboard")
 
@@ -220,7 +224,7 @@ class StoryboardEntry(PropertyGroup):
     #: Sorting key for storyboard entries
     sort_key = attrgetter("frame_start", "frame_end")
 
-    _decoded_mapping: Optional[List[int]] = None
+    _decoded_mapping: Optional[Mapping] = None
     """Decoded mapping of the storyboard entry."""
 
     @property
@@ -314,7 +318,7 @@ class StoryboardEntry(PropertyGroup):
 
         return result
 
-    def get_mapping(self) -> Optional[List[int]]:
+    def get_mapping(self) -> Optional[Mapping]:
         """Returns the mapping of the markers in the storyboard entry to drone
         indices, or ``None`` if there is no mapping yet.
         """
@@ -346,7 +350,7 @@ class StoryboardEntry(PropertyGroup):
             max(0, index), len(self.schedule_overrides)
         )
 
-    def update_mapping(self, mapping: Optional[List[int]]) -> None:
+    def update_mapping(self, mapping: Optional[Mapping]) -> None:
         """Updates the mapping of the markers in the storyboard entry to drone
         indices.
 
@@ -370,10 +374,12 @@ class Storyboard(PropertyGroup, ListMixin):
     drone show.
     """
 
-    entries = CollectionProperty(type=StoryboardEntry)
+    entries: bpy_prop_collection[StoryboardEntry] = CollectionProperty(
+        type=StoryboardEntry
+    )
     """The entries in this storyboard"""
 
-    active_entry_index = IntProperty(
+    active_entry_index: int = IntProperty(
         name="Selected index",
         description="Index of the storyboard entry currently being edited",
     )
@@ -430,6 +436,8 @@ class Storyboard(PropertyGroup, ListMixin):
         Returns:
             the new entry created or None if it cannot be found after creation
         """
+        assert context is not None
+
         if name is None:
             if formation is None:
                 raise ValueError(
@@ -575,8 +583,12 @@ class Storyboard(PropertyGroup, ListMixin):
         """Returns the index of the storyboard entry that comes after the given
         frame.
 
+        Only those storyboard entries are considered that start _after_ the
+        given frame. Therefore, if the specified frame is in the middle of a
+        storyboard entry, that entry is excluded from consideration.
+
         Returns:
-            the index of the storyboard entry closest after the given frame, or
+            the index of the closest storyboard entry after the given frame, or
             -1 if the current frame is after the end of the storyboard
         """
         best_distance, closest = float("inf"), -1
@@ -593,8 +605,12 @@ class Storyboard(PropertyGroup, ListMixin):
         """Returns the index of the storyboard entry that comes before the given
         frame.
 
+        Only those storyboard entries are considered that end _before_ the
+        given frame. Therefore, if the specified frame is in the middle of a
+        storyboard entry, that entry is excluded from consideration.
+
         Returns:
-            the index of the storyboard entry closest before the given frame, or
+            the index of the closest storyboard entry before the given frame, or
             -1 if the current frame is before the start of the storyboard
         """
         best_distance, closest = float("inf"), -1
