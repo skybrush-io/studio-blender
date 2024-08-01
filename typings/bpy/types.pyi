@@ -102,7 +102,9 @@ class Scene:
     skybrush: DroneShowAddonProperties
 
 class Context(bpy_struct):
+    area: Area
     scene: Scene
+    space_data: Space
 
     def evaluated_depsgraph_get(self) -> Depsgraph: ...
 
@@ -174,3 +176,45 @@ class BlendData(bpy_struct):
     scenes: bpy_prop_collection[Scene]
     textures: BlendDataTextures
     version: tuple[int, int, int]
+
+class Space(bpy_struct):
+    show_locked_time: bool
+    show_region_header: bool
+    type: Literal[
+        "EMPTY",
+        "VIEW_3D",
+        "IMAGE_EDITOR",
+        "NODE_EDITOR",
+        "SEQUENCE_EDITOR",
+        "CLIP_EDITOR",
+        "DOPESHEET_EDITOR",
+        "GRAPH_EDITOR",
+        "NLA_EDITOR",
+        "TEXT_EDITOR",
+        "CONSOLE",
+        "INFO",
+        "TOPBAR",
+        "STATUSBAR",
+        "OUTLINER",
+        "PROPERTIES",
+        "FILE_BROWSER",
+        "SPREADSHEET",
+        "PREFERENCES",
+    ]
+
+class Area(bpy_struct):
+    regions: bpy_prop_collection[Region]
+    height: int
+    width: int
+
+class Region(bpy_struct):
+    x: int
+    y: int
+    width: int
+    height: int
+
+class SpaceView3D(Space):
+    overlay: View3DOverlay
+
+class View3DOverlay(bpy_struct):
+    show_overlays: bool
