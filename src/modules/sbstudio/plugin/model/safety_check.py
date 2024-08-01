@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 from bpy.props import BoolProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional, List, Sequence, Tuple, overload
+from typing import Optional, List, Tuple, overload, TYPE_CHECKING
 
 from sbstudio.model.safety_check import SafetyCheckResult
 from sbstudio.model.types import Coordinate3D
-from sbstudio.plugin.overlays import SafetyCheckOverlay
+
+if TYPE_CHECKING:
+    from sbstudio.plugin.overlays.safety_check import SafetyCheckOverlay, Marker
 
 __all__ = ("SafetyCheckProperties",)
 
@@ -31,6 +35,8 @@ def get_overlay(create: bool = True):
 
     if _overlay is None and create:
         # Lazy construction, this is intentional
+        from sbstudio.plugin.overlays.safety_check import SafetyCheckOverlay
+
         _overlay = SafetyCheckOverlay()
 
     return _overlay
@@ -481,30 +487,32 @@ class SafetyCheckProperties(PropertyGroup):
         overlay = get_overlay(create=False)
 
         if overlay:
-            markers: List[Sequence[Coordinate3D]] = []
+            markers: List[Marker] = []
 
             if self.should_show_proximity_warning:
                 if _safety_check_result.closest_pair is not None:
-                    markers.append(_safety_check_result.closest_pair)
+                    markers.append((_safety_check_result.closest_pair, "proximity"))
 
             if self.should_show_altitude_warning:
                 markers.extend(
-                    [point] for point in _safety_check_result.drones_over_max_altitude
+                    ([point], "altitude")
+                    for point in _safety_check_result.drones_over_max_altitude
                 )
                 markers.extend(
-                    [point]
+                    ([point], "altitude")
                     for point in _safety_check_result.drones_below_min_nav_altitude
                 )
 
             if self.should_show_velocity_xy_warning:
                 markers.extend(
-                    [point]
+                    ([point], "velocity")
                     for point in _safety_check_result.drones_over_max_velocity_xy
                 )
 
             if self.should_show_velocity_z_warning:
                 markers.extend(
-                    [point] for point in _safety_check_result.drones_over_max_velocity_z
+                    ([point], "velocity")
+                    for point in _safety_check_result.drones_over_max_velocity_z
                 )
 
             overlay.markers = markers

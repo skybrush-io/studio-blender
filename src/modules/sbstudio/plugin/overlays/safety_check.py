@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 import blf
 import bpy
+from bpy.types import SpaceView3D
 import gpu
 
 from gpu_extras.batch import batch_for_shader
-from typing import Any, List, Optional, Sequence
+from typing import List, Literal, Optional, Sequence, Tuple, TYPE_CHECKING, cast
 
 from sbstudio.model.types import Coordinate3D
 
 from .base import ShaderOverlay
+
+if TYPE_CHECKING:
+    from gpu.types import GPUBatch
 
 try:
     import gpu.state
@@ -20,14 +26,38 @@ except ImportError:
 
 __all__ = ("SafetyCheckOverlay",)
 
-#: Type specification for markers on the overlay. Each marker is a sequence of
-#: coordinates that are interconnected with lines.
-MarkerList = List[Sequence[Coordinate3D]]
+
+Color = Tuple[float, float, float]
+"""Type alias for RGB colors in this module."""
+
+MarkerGroup = Literal["altitude", "proximity", "velocity", "generic"]
+"""Currently supported marker groups."""
+
+Marker = Tuple[Sequence[Coordinate3D], MarkerGroup]
+"""Type specification for a single marker on the overlay. A marker is a sequence
+of coordinates that are interconnected with lines and have an optional
+group name. Markers in the same group are colored with the same color.
+"""
+
+ALTITUDE_WARNING_COLOR: Color = (0.47, 0.65, 1.0)  # "Blender blue"
+GENERIC_WARNING_COLOR: Color = (1, 0, 0)  # red
+PROXIMITY_WARNING_COLOR: Color = (1, 0, 0)  # red
+VELOCITY_WARNING_COLOR: Color = (1, 1, 0)  # yellow
+
+_group_to_color_map: dict[str, Color] = {
+    "generic": GENERIC_WARNING_COLOR,
+    "altitude": ALTITUDE_WARNING_COLOR,
+    "proximity": PROXIMITY_WARNING_COLOR,
+    "velocity": VELOCITY_WARNING_COLOR,
+}
+"""Mapping from marker group names to the corresponding colors on the overlay."""
 
 
-def set_warning_color_iff(condition: bool, font_id: int) -> None:
+def set_warning_color_iff(
+    condition: bool, font_id: int, color: Tuple[float, float, float]
+) -> None:
     if condition:
-        blf.color(font_id, 1, 1, 0, 1)
+        blf.color(font_id, *color, 1)
     else:
         blf.color(font_id, 1, 1, 1, 1)
 
@@ -37,27 +67,24 @@ class SafetyCheckOverlay(ShaderOverlay):
     altitude threshold in the 3D view.
     """
 
-    _markers: Optional[MarkerList] = None
-    _shader_batches: Any
+    shader_type = "FLAT_COLOR"
 
-    def __init__(self):
-        super().__init__()
-
-        self._shader_batches = None
+    _markers: Optional[List[Marker]] = None
+    _shader_batches: Optional[List[GPUBatch]] = None
 
     @property
-    def markers(self) -> Optional[MarkerList]:
+    def markers(self) -> Optional[List[Marker]]:
         return self._markers
 
     @markers.setter
-    def markers(self, value):
+    def markers(self, value: Optional[List[Marker]]):
         if value is not None:
             self._markers = []
-            for marker_points in value:
+            for marker_points, group in value:
                 marker_points = tuple(
                     tuple(float(coord) for coord in point) for point in marker_points
                 )
-                self._markers.append(marker_points)
+                self._markers.append((marker_points, group))  # type: ignore
 
         else:
             self._markers = None
@@ -74,6 +101,10 @@ class SafetyCheckOverlay(ShaderOverlay):
 
         context = bpy.context
         space_data = context.space_data
+        if space_data.type != "VIEW_3D":
+            return
+
+        space_data = cast(SpaceView3D, space_data)
         if not hasattr(space_data, "overlay") or not bool(
             getattr(space_data.overlay, "show_overlays", False)
         ):
@@ -94,7 +125,8 @@ class SafetyCheckOverlay(ShaderOverlay):
             left_margin = left_panel_width + 10 * ui_scale
 
         y = total_height - 72 * ui_scale
-        if hasattr(space_data, "overlay"):
+        if space_data.type == "VIEW_3D":
+            space_data = cast(SpaceView3D, space_data)
             if getattr(space_data.overlay, "show_text", False):
                 y -= 36 * ui_scale
             if getattr(space_data.overlay, "show_stats", False):
@@ -118,13 +150,21 @@ class SafetyCheckOverlay(ShaderOverlay):
             safety_check.proximity_warning_enabled
             and safety_check.min_distance_is_valid
         ):
-            set_warning_color_iff(safety_check.should_show_proximity_warning, font_id)
+            set_warning_color_iff(
+                safety_check.should_show_proximity_warning,
+                font_id,
+                PROXIMITY_WARNING_COLOR,
+            )
             blf.position(font_id, left_margin, y, 0)
             blf.draw(font_id, f"Min distance: {safety_check.min_distance:.1f} m")
             y -= line_height
 
         if safety_check.altitude_warning_enabled and safety_check.max_altitude_is_valid:
-            set_warning_color_iff(safety_check.should_show_altitude_warning, font_id)
+            set_warning_color_iff(
+                safety_check.should_show_altitude_warning,
+                font_id,
+                ALTITUDE_WARNING_COLOR,
+            )
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
@@ -136,7 +176,11 @@ class SafetyCheckOverlay(ShaderOverlay):
             safety_check.velocity_warning_enabled
             and safety_check.max_velocities_are_valid
         ):
-            set_warning_color_iff(safety_check.should_show_velocity_warning, font_id)
+            set_warning_color_iff(
+                safety_check.should_show_velocity_warning,
+                font_id,
+                VELOCITY_WARNING_COLOR,
+            )
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
@@ -153,12 +197,13 @@ class SafetyCheckOverlay(ShaderOverlay):
             bgl.glEnable(bgl.GL_BLEND)
 
         if self._markers is not None:
+            assert self._shader is not None
+
             if self._shader_batches is None:
                 self._shader_batches = self._create_shader_batches()
 
             if self._shader_batches:
                 self._shader.bind()
-                self._shader.uniform_float("color", (1, 0, 0, 1))
                 if has_gpu_state_module:
                     gpu.state.line_width_set(5)
                     gpu.state.point_size_set(20)
@@ -172,11 +217,21 @@ class SafetyCheckOverlay(ShaderOverlay):
         super().dispose()
         self._shader_batches = None
 
-    def _create_shader_batches(self):
-        batches, points, lines = [], [], []
+    def _create_shader_batches(self) -> List[GPUBatch]:
+        assert self._shader is not None
 
-        for marker_points in self._markers or ():
+        batches: List[GPUBatch] = []
+        points: List[Coordinate3D] = []
+        lines: List[Coordinate3D] = []
+        point_colors: List[Tuple[float, ...]] = []
+        line_colors: List[Tuple[float, ...]] = []
+
+        RED = _group_to_color_map["generic"]
+
+        for marker_points, group in self._markers or ():
+            color = _group_to_color_map.get(group, RED)
             points.extend(marker_points)
+            point_colors.extend([color] * len(marker_points))
 
             if marker_points:
                 if len(marker_points) > 2:
@@ -184,14 +239,20 @@ class SafetyCheckOverlay(ShaderOverlay):
                     for curr in marker_points:
                         lines.extend((prev, curr))
                         prev = curr
+                    line_colors.extend([color] * len(marker_points))
                 elif len(marker_points) == 2:
                     lines.extend(marker_points)
+                    line_colors.extend([color, color])
 
         # Construct the shader batch to draw the lines on the UI
         batches.extend(
             [
-                batch_for_shader(self._shader, "LINES", {"pos": lines}),
-                batch_for_shader(self._shader, "POINTS", {"pos": points}),
+                batch_for_shader(
+                    self._shader, "LINES", {"pos": lines, "color": line_colors}
+                ),
+                batch_for_shader(
+                    self._shader, "POINTS", {"pos": points, "color": point_colors}
+                ),
             ]
         )
 
