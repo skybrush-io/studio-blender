@@ -16,7 +16,7 @@ An additional requirement is that you need to have active Internet connection on
 
 === 2. Install Blender
 
-There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is currently version 3.6.x.
+There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is version 4.2 at the time of writing. if you are unsure, check the version number of the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release] on the Blender site.
 
 === 3. Install Skybrush Studio for Blender
 
