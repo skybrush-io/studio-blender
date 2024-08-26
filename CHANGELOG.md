@@ -28,6 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distances in the safety overlay are now shown with two decimal digits to
   cater for the needs of indoor shows.
 
+### Fixed
+
+- The constraints on the first storyboard entry now start at an influence of
+  1.0 when the start of the scene coincides with the first storyboard entry
+  (which is the typical case). This makes it slightly harder to mess up the
+  takeoff procedure by moving drones around manually before the first storyboard
+  entry.
+
 ## [3.3.3] - 2024-03-19
 
 ### Fixed
