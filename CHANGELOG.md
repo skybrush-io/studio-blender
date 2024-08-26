@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.4.1] - 2024-08-26
+
+### Changed
+
+- Distances in the safety overlay are now shown with two decimal digits to
+  cater for the needs of indoor shows.
+
+### Fixed
+
+- The add-on is now compatible with Blender 4.2 LTS.
+
+- The constraints on the first storyboard entry now start at an influence of
+  1.0 when the start of the scene coincides with the first storyboard entry
+  (which is the typical case). This makes it slightly harder to mess up the
+  takeoff procedure by moving drones around manually before the first storyboard
+  entry.
+
+## [3.4.0] - 2024-08-01
 
 ### Added
 
@@ -17,24 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   let us know.
 
 - Light effects panel now shows which effects are active in the current frame.
-
-- Safety warning overlays now use different colors for different types of
-  safety warnings: red for proximity alerts (drones being too close),
-  yellow for velocity alerts (drones moving too fast) and blue for altitude
-  alerts (drones being too high or too low).
-
-### Changed
-
-- Distances in the safety overlay are now shown with two decimal digits to
-  cater for the needs of indoor shows.
-
-### Fixed
-
-- The constraints on the first storyboard entry now start at an influence of
-  1.0 when the start of the scene coincides with the first storyboard entry
-  (which is the typical case). This makes it slightly harder to mess up the
-  takeoff procedure by moving drones around manually before the first storyboard
-  entry.
 
 ## [3.3.3] - 2024-03-19
 
