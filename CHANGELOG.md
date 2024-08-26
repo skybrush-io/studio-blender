@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   yellow for velocity alerts (drones moving too fast) and blue for altitude
   alerts (drones being too high or too low).
 
+### Changed
+
+- Distances in the safety overlay are now shown with two decimal digits to
+  cater for the needs of indoor shows.
+
 ## [3.3.3] - 2024-03-19
 
 ### Fixed

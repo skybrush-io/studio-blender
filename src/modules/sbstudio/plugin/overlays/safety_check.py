@@ -156,7 +156,7 @@ class SafetyCheckOverlay(ShaderOverlay):
                 PROXIMITY_WARNING_COLOR,
             )
             blf.position(font_id, left_margin, y, 0)
-            blf.draw(font_id, f"Min distance: {safety_check.min_distance:.1f} m")
+            blf.draw(font_id, f"Min distance: {safety_check.min_distance:.2f} m")
             y -= line_height
 
         if safety_check.altitude_warning_enabled and safety_check.max_altitude_is_valid:
@@ -168,7 +168,7 @@ class SafetyCheckOverlay(ShaderOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Altitude: {safety_check.min_altitude:.1f} - {safety_check.max_altitude:.1f} m",
+                f"Altitude: {safety_check.min_altitude:.2f} - {safety_check.max_altitude:.2f} m",
             )
             y -= line_height
 
