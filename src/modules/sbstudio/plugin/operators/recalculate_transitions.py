@@ -135,7 +135,7 @@ class InfluenceCurveDescriptor:
             and self.windup_start_frame is not None
             and self.windup_start_frame > self.scene_start_frame
         ):
-            keyframes.append((self.windup_start_frame, keyframes[-1][0]))
+            keyframes.append((self.windup_start_frame, keyframes[-1][1]))
 
         # Ramp up to 1 at the start frame
         frame = max(self.start_frame, keyframes[-1][0] + 1)
