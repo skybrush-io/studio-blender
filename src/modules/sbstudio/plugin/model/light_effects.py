@@ -44,6 +44,7 @@ from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.utils import remove_if_unused, with_context
+from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import get_pixel
@@ -187,6 +188,7 @@ class ColorFunctionProperties(PropertyGroup):
         name="Color Function Name",
         description="Name of the custom color function",
         items=get_color_function_names,
+        default=0,
     )
 
     def copy_to(self, other):
@@ -521,7 +523,7 @@ class LightEffect(PropertyGroup):
 
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
-                module = load_module(absolute_path)
+                module = load_module(absolute_path) if absolute_path else None
                 if self.output_function.name:
                     fn = getattr(module, self.output_function.name)
                     outputs = [
@@ -976,7 +978,9 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         index = self.active_entry_index
         assert index is not None
 
-        entry = self.append_new_entry(name=f"Copy of {active_entry.name}")
+        entry = self.append_new_entry(
+            name=pick_unique_name(active_entry.name, self.entries)
+        )
 
         # For some reason this invalidates `active_entry` or at least the
         # texture on it, at least in Blender 4.x, so it is best to query the

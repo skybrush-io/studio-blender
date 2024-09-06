@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a bug that was accidentally introduced in the transition calculation in
   version 3.4.1.
 
+- Duplicating a light effect now uses numeric suffixes added to the original
+  name, similarly to how Blender does it in its own code.
+
 ## [3.4.1] - 2024-08-26
 
 ### Changed

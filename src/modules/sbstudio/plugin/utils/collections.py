@@ -1,8 +1,10 @@
 """Utility functions directly related to the Blender API."""
 
 from __future__ import annotations
+from operator import attrgetter
 
 import bpy
+import re
 
 from bpy.types import Collection, Object
 
@@ -11,6 +13,7 @@ from itertools import count
 from typing import (
     Any,
     Callable,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -31,6 +34,7 @@ __all__ = (
     "filter_collection",
     "find_empty_slot_in",
     "get_object_in_collection",
+    "pick_unique_name",
     "sort_collection",
 )
 
@@ -337,3 +341,45 @@ def filter_collection(collection: Collection, filter: Callable[[Any], bool]) -> 
     to_remove.reverse()
     for item in to_remove:
         collection.remove(item)
+
+
+def pick_unique_name(
+    proposal: str,
+    collection: Iterable[T],
+    *,
+    getter: Callable[[T], str] = attrgetter("name"),
+) -> str:
+    """Returns a name for a new item in the collection, starting from the given
+    proposal.
+
+    When the collection has no item with the given name, the proposal is returned
+    as is. Otherwise, the longest numeric suffix of the name is incremented by
+    1 until a unique name is obtained.
+
+    Args:
+        proposal: the proposed name of the new item
+        collection: the collection of items
+        getter: function that can be used to return the name of an item in
+            the collection
+    """
+    existing_names = {getter(item) for item in collection}
+    if proposal not in existing_names:
+        return proposal
+
+    proposal = proposal.rstrip()
+    suffix = re.search("[0-9]*$", proposal)
+    if suffix is None:
+        return f"{proposal}.001"
+
+    suffix = suffix.group()
+    if not suffix:
+        return f"{proposal}.001"
+
+    prefix = proposal[: len(proposal) - len(suffix)]
+
+    value = int(suffix)
+    while True:
+        value += 1
+        new_proposal = prefix + (str(value).rjust(len(suffix), "0"))
+        if new_proposal not in existing_names:
+            return new_proposal
