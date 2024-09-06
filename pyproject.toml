@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skybrush-studio-for-blender"
-version = "3.4.1"
+version = "3.4.2"
 description = "Skybrush Studio for Blender is a professional drone show designer framework integrated into Blender"
 license = "GPL-3.0-or-later"
 authors = ["CollMot Robotics Ltd. <hello@skybrush.io>"]
