@@ -49,6 +49,9 @@ class SafetyCheckPanel(Panel):
         row = col.row()
         row.prop(safety_check, "proximity_warning_threshold", text="", slider=True)
         row.enabled = safety_check.proximity_warning_enabled
+        row = col.row()
+        row.prop(safety_check, "proximity_warning_target", text="")
+        row.enabled = safety_check.proximity_warning_enabled
 
         col.prop(safety_check, "altitude_warning_enabled")
 

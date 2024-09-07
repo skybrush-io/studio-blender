@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bpy.props import BoolProperty, FloatProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
 from typing import Optional, List, Tuple, overload, TYPE_CHECKING
 
@@ -58,6 +58,10 @@ def altitude_warning_threshold_updated(self, context: Optional[Context] = None):
 def proximity_warning_enabled_updated(self, context: Optional[Context] = None):
     """Called when the proximity warning is enabled or disabled by the user."""
     self.ensure_overlays_enabled_if_needed()
+    self._refresh_overlay()
+
+
+def proximity_warning_target_updated(self, context: Optional[Context] = None):
     self._refresh_overlay()
 
 
@@ -247,6 +251,22 @@ class SafetyCheckProperties(PropertyGroup):
         soft_min=0.0,
         soft_max=1000.0,
         update=altitude_warning_threshold_updated,
+    )
+
+    proximity_warning_target = EnumProperty(
+        items=[
+            ("ALL", "All drones", "All drones", 1),
+            (
+                "ABOVE_MIN_NAV_ALT",
+                "Drones above min altitude",
+                "Drones above minimum navigation altitude only",
+                2,
+            ),
+        ],
+        default="ABOVE_MIN_NAV_ALT",
+        name="Check distances for",
+        description="Selects the set of drones to calculate distances for in a single frame",
+        update=proximity_warning_target_updated,
     )
 
     @property
