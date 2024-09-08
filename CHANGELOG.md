@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only by default. You can switch back to the old behaviour in the safety
   settings panel if needed.
 
+- Proximity warnings can now be executed manually on all pairs of drones in the
+  current frame by pressing a button in the Safety panel.
+
 ## [3.4.2] - 2024-09-06
 
 ### Fixed
