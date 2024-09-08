@@ -140,6 +140,10 @@ def find_nearest_neighbors(points):
         the coordinates of the first and the second point in the closest point
         pair, and their distance
     """
+    if not points:
+        # we have no points
+        return None, None, inf
+
     points = array(points, dtype=float)
     if points.shape[0] < 2:
         # we have less than two points
@@ -163,6 +167,12 @@ def find_all_point_pairs_closer_than(points, threshold):
         than the given threshold
     """
     result = []
+    if not points:
+        # we have no points
+        return result
+
+    points = array(points, dtype=float)
+
     num_points, _ = points.shape
     if num_points < 2:
         return result
