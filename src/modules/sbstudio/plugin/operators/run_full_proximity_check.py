@@ -8,6 +8,7 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.tasks.safety_check import (
     create_position_snapshot_for_drones_in_collection,
 )
+from sbstudio.plugin.views import find_all_3d_views_and_their_areas
 
 
 __all__: tuple[Literal["RunFullProximityCheckOperator"]] = (
@@ -42,13 +43,19 @@ class RunFullProximityCheckOperator(Operator):
         snapshot = create_position_snapshot_for_drones_in_collection(
             drones, frame=frame
         )
-        positions = array(list(snapshot.values()), dtype=float32)
+        positions = safety_check.get_positions_for_proximity_check(
+            list(snapshot.values())
+        )
 
         threshold = max(safety_check.proximity_warning_threshold, 0)
 
         safety_check.set_safety_check_result(
             all_close_pairs=find_all_point_pairs_closer_than(positions, threshold)
         )
+
+        # Mark all the 3D views to be redrawn
+        for _, area in find_all_3d_views_and_their_areas():
+            area.tag_redraw()
 
         self.report({"INFO"}, "Calculation completed")
         return {"FINISHED"}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional, List, Tuple, overload, TYPE_CHECKING
+from typing import Optional, List, Sequence, Tuple, overload, TYPE_CHECKING
 
 from sbstudio.model.safety_check import SafetyCheckResult
 from sbstudio.model.types import Coordinate3D
@@ -423,6 +423,25 @@ class SafetyCheckProperties(PropertyGroup):
             or self.proximity_warning_enabled
             or self.velocity_warning_enabled
         )
+
+    def get_positions_for_proximity_check(
+        self, positions: Sequence[Coordinate3D]
+    ) -> Sequence[Coordinate3D]:
+        """Helper function that takes a list of points and filters them down
+        to another list that contains only those points that should be considered
+        for safety checks, based on the settings in this instance.
+        """
+        min_altitude: Optional[float] = None
+        if self.min_navigation_altitude_is_valid:
+            min_altitude = self.min_navigation_altitude
+
+        if (
+            self.proximity_warning_target == "ABOVE_MIN_NAV_ALT"
+            and min_altitude is not None
+        ):
+            return [p for p in positions if p[2] >= min_altitude]
+        else:
+            return positions
 
     def set_safety_check_result(
         self,
