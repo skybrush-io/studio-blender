@@ -1,6 +1,9 @@
 from bpy.types import Panel
 
-from sbstudio.plugin.operators import ValidateTrajectoriesOperator
+from sbstudio.plugin.operators import (
+    RunFullProximityCheckOperator,
+    ValidateTrajectoriesOperator,
+)
 
 __all__ = ("SafetyCheckPanel",)
 
@@ -86,4 +89,5 @@ class SafetyCheckPanel(Panel):
 
         layout.separator()
 
+        layout.operator(RunFullProximityCheckOperator.bl_idname)
         layout.operator(ValidateTrajectoriesOperator.bl_idname)

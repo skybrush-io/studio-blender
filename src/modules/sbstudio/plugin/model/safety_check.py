@@ -437,6 +437,7 @@ class SafetyCheckProperties(PropertyGroup):
         max_velocity_z_down: Optional[float] = None,
         drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
         drones_below_min_nav_altitude: Optional[List[Coordinate3D]] = None,
+        all_close_pairs: Optional[List[Tuple[Coordinate3D, Coordinate3D]]] = None,
     ) -> None:
         """Updates general safety check results."""
         global _safety_check_result
@@ -496,6 +497,10 @@ class SafetyCheckProperties(PropertyGroup):
             )
             refresh = True
 
+        if all_close_pairs is not None:
+            _safety_check_result.all_close_pairs = all_close_pairs
+            refresh = True
+
         if refresh:
             self.ensure_overlays_enabled_if_needed()
             self._refresh_overlay()
@@ -509,8 +514,25 @@ class SafetyCheckProperties(PropertyGroup):
         if overlay:
             markers: List[Marker] = []
 
-            if self.should_show_proximity_warning:
-                if _safety_check_result.closest_pair is not None:
+            # The conditions for showing the proximity warning are:
+            # - it should be explicitly enabled, OR
+            # - the current frame should have an explicit list of closest pairs,
+            #   which indicates that the user has triggered the closest pairs
+            #   calculation manually
+            if (
+                self.should_show_proximity_warning
+                or _safety_check_result.all_close_pairs
+            ):
+                # If we have a full list of close pairs, mark all of them,
+                # Otherwise, just mark the closest pair.
+                if _safety_check_result.all_close_pairs:
+                    markers.extend(
+                        (
+                            (pair, "proximity")
+                            for pair in _safety_check_result.all_close_pairs
+                        )
+                    )
+                elif _safety_check_result.closest_pair is not None:
                     markers.append((_safety_check_result.closest_pair, "proximity"))
 
             if self.should_show_altitude_warning:

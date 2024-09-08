@@ -40,6 +40,7 @@ from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .reorder_formation_markers import ReorderFormationMarkersOperator
 from .return_to_home import ReturnToHomeOperator
+from .run_full_proximity_check import RunFullProximityCheckOperator
 from .select_formation import SelectFormationOperator, DeselectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
 from .set_server_url import SetServerURLOperator
@@ -84,6 +85,7 @@ __all__ = (
     "RemoveStoryboardEntryOperator",
     "ReorderFormationMarkersOperator",
     "ReturnToHomeOperator",
+    "RunFullProximityCheckOperator",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",
     "SetServerURLOperator",

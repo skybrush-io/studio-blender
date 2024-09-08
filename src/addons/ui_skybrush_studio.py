@@ -100,6 +100,7 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     ReorderFormationMarkersOperator,
     ReturnToHomeOperator,
+    RunFullProximityCheckOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     SetServerURLOperator,
@@ -219,6 +220,7 @@ operators = (
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromQRCodeOperator,
     RefreshFileFormatsOperator,
+    RunFullProximityCheckOperator,
 )
 
 #: List widgets in this addon.

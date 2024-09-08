@@ -234,6 +234,7 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
         max_velocity_z_down=abs(lower),
         drones_over_max_velocity_z=drones_over_max_velocity_z,
         drones_below_min_nav_altitude=drones_below_min_nav_altitude,
+        all_close_pairs=[],
     )
 
 
