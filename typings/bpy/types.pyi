@@ -209,6 +209,8 @@ class Area(bpy_struct):
     height: int
     width: int
 
+    def tag_redraw(self) -> None: ...
+
 class Region(bpy_struct):
     x: int
     y: int
