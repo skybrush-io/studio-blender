@@ -28,7 +28,7 @@ def find_all_3d_views(screen: Optional[str] = None) -> Iterable[SpaceView3D]:
     Yields:
         the 3D views that we find in the given Blender screen
     """
-    for space, _area in find_all_3d_views_and_their_areas(screen):
+    for space, _area in _find_all_3d_views_and_their_areas(screen):
         yield space
 
 
@@ -47,6 +47,13 @@ def find_all_3d_views_and_their_areas(
         all 3D views that we find in the given Blender screen, and their
         corresponding areas, in tuples
     """
+    # Now that the decorator resolved the screen name, we can pass it on
+    return _find_all_3d_views_and_their_areas(screen)
+
+
+def _find_all_3d_views_and_their_areas(
+    screen: Optional[str] = None,
+) -> Iterable[Tuple[SpaceView3D, Area]]:
     for area in screen.areas:  # type: ignore
         if area.type == "VIEW_3D":
             for space in area.spaces:
