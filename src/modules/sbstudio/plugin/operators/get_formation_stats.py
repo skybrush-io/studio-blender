@@ -2,6 +2,7 @@ from bpy.props import FloatProperty, FloatVectorProperty, IntProperty
 from bpy.types import MeshVertex
 
 from math import inf
+from numpy import ptp
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.model.formation import (
@@ -79,7 +80,7 @@ class GetFormationStatisticsOperator(FormationOperator):
                 and getattr(marker, "type", None) == "EMPTY"
             )
 
-            self.size = tuple(coords.ptp(axis=0))
+            self.size = tuple(ptp(coords, axis=0))
             _, _, self.min_distance = find_nearest_neighbors(coords)
         else:
             self.marker_count = 0
