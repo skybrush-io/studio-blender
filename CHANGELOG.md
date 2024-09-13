@@ -56,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Light effects panel now shows which effects are active in the current frame.
 
+- Safety warning overlays now use different colors for different types of
+  safety warnings: red for proximity alerts (drones being too close),
+  yellow for velocity alerts (drones moving too fast) and blue for altitude
+  alerts (drones being too high or too low).
+
 ## [3.3.3] - 2024-03-19
 
 ### Fixed
