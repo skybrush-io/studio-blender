@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Proximity warnings are now restricted to above the minimum navigation threshold
+  only by default. You can switch back to the old behaviour in the safety
+  settings panel if needed.
+
+- Proximity warnings can now be executed manually on all pairs of drones in the
+  current frame by pressing a button in the Safety panel.
+
+## [3.4.2] - 2024-09-06
+
+### Fixed
+
+- Fixed a bug that was accidentally introduced in the transition calculation in
+  version 3.4.1.
+
+- Duplicating a light effect now uses numeric suffixes added to the original
+  name, similarly to how Blender does it in its own code.
+
+## [3.4.1] - 2024-08-26
+
+### Changed
+
+- Distances in the safety overlay are now shown with two decimal digits to
+  cater for the needs of indoor shows.
+
+### Fixed
+
+- The add-on is now compatible with Blender 4.2 LTS.
+
+- The constraints on the first storyboard entry now start at an influence of
+  1.0 when the start of the scene coincides with the first storyboard entry
+  (which is the typical case). This makes it slightly harder to mess up the
+  takeoff procedure by moving drones around manually before the first storyboard
+  entry.
+
+## [3.4.0] - 2024-08-01
+
+### Added
+
 - Spatial constraints on light effects can now be inverted.
 
 - "Inside the mesh" light effects now take mesh deformations into account. This
@@ -17,6 +55,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   let us know.
 
 - Light effects panel now shows which effects are active in the current frame.
+
+- Safety warning overlays now use different colors for different types of
+  safety warnings: red for proximity alerts (drones being too close),
+  yellow for velocity alerts (drones moving too fast) and blue for altitude
+  alerts (drones being too high or too low).
 
 ## [3.3.3] - 2024-03-19
 

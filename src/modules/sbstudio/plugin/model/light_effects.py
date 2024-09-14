@@ -3,7 +3,16 @@ import bpy
 
 from functools import partial
 from operator import itemgetter
-from typing import cast, Callable, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    cast,
+    Callable,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TYPE_CHECKING,
+)
 
 from bpy.path import abspath
 from bpy.props import (
@@ -31,16 +40,21 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.math.colors import blend_in_place, BlendMode
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, RGBAColor
+from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.utils import remove_if_unused, with_context
+from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import get_pixel
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
+
+if TYPE_CHECKING:
+    from sbstudio.api.types import Mapping
+    from sbstudio.plugin.model import StoryboardEntry
 
 __all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
 
@@ -174,6 +188,7 @@ class ColorFunctionProperties(PropertyGroup):
         name="Color Function Name",
         description="Name of the custom color function",
         items=get_color_function_names,
+        default=0,
     )
 
     def copy_to(self, other):
@@ -359,7 +374,7 @@ class LightEffect(PropertyGroup):
 
     def apply_on_colors(
         self,
-        colors: Sequence[RGBAColor],
+        colors: Sequence[MutableRGBAColor],
         positions: Sequence[Coordinate3D],
         mapping: Optional[List[int]],
         *,
@@ -476,6 +491,7 @@ class LightEffect(PropertyGroup):
                     outputs = [index / np_m1 for index in range(num_positions)]
                 else:
                     common_output = 1.0
+
             elif output_type == "INDEXED_BY_FORMATION":
                 # Gradient based on formation index
                 if mapping is not None:
@@ -504,9 +520,10 @@ class LightEffect(PropertyGroup):
                 else:
                     # if there is no mapping at all, we do not change color of drones
                     outputs = [None] * num_positions  # type: ignore
+
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
-                module = load_module(absolute_path)
+                module = load_module(absolute_path) if absolute_path else None
                 if self.output_function.name:
                     fn = getattr(module, self.output_function.name)
                     outputs = [
@@ -524,6 +541,7 @@ class LightEffect(PropertyGroup):
                     ]
                 else:
                     common_output = 1.0
+
             else:
                 # Should not get here
                 common_output = 1.0
@@ -782,7 +800,7 @@ class LightEffect(PropertyGroup):
                 # from there
                 ev_mesh = cast(Mesh, obj.data)
                 ev_mesh.transform(mesh.matrix_world)
-                tree = BVHTree.FromObject(ev_mesh, depsgraph, deform=True)
+                tree = BVHTree.FromObject(obj, depsgraph, deform=True)
                 ev_mesh.transform(mesh.matrix_world.inverted())
             else:
                 # Object is not in the evaluated depsgraph -- maybe it is
@@ -791,7 +809,7 @@ class LightEffect(PropertyGroup):
                     b_mesh.from_mesh(mesh.data)
                     b_mesh.transform(mesh.matrix_world)
                     tree = BVHTree.FromBMesh(b_mesh)
-                return tree
+            return tree
 
     def _get_plane_from_mesh(self) -> Optional[Plane]:
         """Returns a plane that is an infinite expansion of the first face of the
@@ -960,7 +978,9 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         index = self.active_entry_index
         assert index is not None
 
-        entry = self.append_new_entry(name=f"Copy of {active_entry.name}")
+        entry = self.append_new_entry(
+            name=pick_unique_name(active_entry.name, self.entries)
+        )
 
         # For some reason this invalidates `active_entry` or at least the
         # texture on it, at least in Blender 4.x, so it is best to query the

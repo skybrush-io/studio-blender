@@ -295,4 +295,6 @@ def set_specular_reflection_intensity_of_material(material, intensity):
     """
     material.specular_intensity = intensity
     nodes = material.node_tree.nodes
-    nodes["Principled BSDF"].inputs["Specular"].default_value = intensity
+    nodes["Principled BSDF"].inputs[
+        "Specular IOR Level" if is_blender_4 else "Specular"
+    ].default_value = intensity

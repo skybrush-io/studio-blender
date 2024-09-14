@@ -2,7 +2,7 @@ bl_info = {
     "name": "Skybrush Studio",
     "author": "CollMot Robotics Ltd.",
     "description": "Extends Blender with UI components for drone show design",
-    "version": (3, 3, 3),
+    "version": (3, 4, 2),
     "blender": (3, 3, 0),
     "category": "Interface",
     "doc_url": "https://doc.collmot.com/public/skybrush-studio-for-blender/latest/",
@@ -100,6 +100,7 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     ReorderFormationMarkersOperator,
     ReturnToHomeOperator,
+    RunFullProximityCheckOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     SetServerURLOperator,
@@ -219,6 +220,7 @@ operators = (
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromQRCodeOperator,
     RefreshFileFormatsOperator,
+    RunFullProximityCheckOperator,
 )
 
 #: List widgets in this addon.

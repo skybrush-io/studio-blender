@@ -53,12 +53,16 @@ class SafetyCheckResult:
     closest_pair: Optional[Tuple[Coordinate3D, Coordinate3D]] = None
     min_distance: Optional[float] = None
     min_altitude: Optional[float] = None
+    all_close_pairs: List[Tuple[Coordinate3D, Coordinate3D]] = field(
+        default_factory=list
+    )
 
     def clear(self) -> None:
         self.drones_over_max_altitude.clear()
         self.drones_over_max_velocity_xy.clear()
         self.drones_over_max_velocity_z.clear()
         self.drones_below_min_nav_altitude.clear()
+        self.all_close_pairs.clear()
         self.closest_pair = None
         self.min_distance = None
         self.min_altitude = None

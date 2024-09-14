@@ -56,8 +56,7 @@ class InfluenceCurveDescriptor:
     a _windup start frame_, then transitions to 1 until (and including) a
     _start frame_. The transition can be linear, smooth from the left,
     smooth from the right or completely smooth. The curve will then either stay
-    1 indefinitely, or stay 1 until a designated _end frame_, and then jump
-    straight back to zero.
+    1 indefinitely, or stay 1 until a designated _end frame_.
 
     The key points of the influence curve are described by this data class. It
     also provides a method to apply these points to an existing constraint.
@@ -118,17 +117,32 @@ class InfluenceCurveDescriptor:
             object: the object on which the keyframes are to be set
             data_path: the data path to use
         """
-        keyframes: List[Tuple[int, float]] = [(self.scene_start_frame, 0.0)]
+        # Special case: if the start frame is the start of the scene, it means
+        # that this is the first transition in the timeline. In this case we
+        # need to start with an influence of 1 to ensure that the drone do not
+        # jump around in the first frame of the show if their associated
+        # takeoff marker is at a different position from the position of the
+        # drone itself
+
+        is_first = self.scene_start_frame == self.start_frame
+        keyframes: List[Tuple[int, float]] = [
+            (self.scene_start_frame - (1 if is_first else 0), 0.0)
+        ]
+
+        # Hold current influence value until the start of the windup
         if (
-            self.windup_start_frame is not None
+            not is_first
+            and self.windup_start_frame is not None
             and self.windup_start_frame > self.scene_start_frame
         ):
-            keyframes.append((self.windup_start_frame, 0.0))
+            keyframes.append((self.windup_start_frame, keyframes[-1][1]))
 
+        # Ramp up to 1 at the start frame
         frame = max(self.start_frame, keyframes[-1][0] + 1)
         start_of_transition = len(keyframes) - 1
         keyframes.append((frame, 1.0))
 
+        # Add a keyframe at the end frame
         if self.end_frame is not None:
             end_frame = max(self.end_frame, frame)
             if end_frame > frame:
@@ -461,7 +475,16 @@ def update_transition_for_storyboard_entry(
     num_markers = len(markers_and_objects)
     end_of_previous = previous_entry.frame_end if previous_entry else start_of_scene
 
-    start_points = get_positions_of(drones, frame=end_of_previous)
+    # Calculate the positions to start the transition from. For most formations
+    # this will be the current positions of the drones at the end of the previous
+    # formation. However, the _first_ formation needs to be treated in a special
+    # manner -- it has no preceding formation so we simply need to map each drone
+    # to the marker with the same index, and we need to ensure that we have at
+    # least as many markers as the number of drones
+    if previous_entry:
+        start_points = get_positions_of(drones, frame=end_of_previous)
+    else:
+        start_points = get_positions_of((marker for marker, _ in markers_and_objects))
     mapping = calculate_mapping_for_transition_into_storyboard_entry(
         entry,
         start_points,

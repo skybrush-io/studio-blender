@@ -18,6 +18,8 @@ The checkbox at the top left corner of the panel allows you to disable the safet
 
 This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.
 
+By default, the proximity warning is limited to drones above the minimum navigation altitude only (see below in the section about altitude warnings). This is to prevent spurious warnings about drones being too close in the takeoff grid. You can change this in the panel by choosing between the "All drones" and "Drones abouve min altitude" setting.
+
 The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone pairs on the current frame. This drone pair is also highlighted with red, along with a red line connecting them.
 
 To enable or disable proximity warnings, use the btn:[Show proximity warnings] checkbox.
@@ -26,9 +28,9 @@ NOTE: Distances are measured between the centers of the drones, not between thei
 
 == Altitude warnings
 
-This option lets you define a maximum altitude for your drone show. If there are drones above this altitude (measured along the `Z` axis), you get real-time altitude warnings.
+This option lets you define a minimum and a maximum altitude for your drone show. If there are drones above the maximum altitude (measured along the `Z` axis), or drones moving _horizontally_ below the minimum altitude, you get real-time altitude warnings.
 
-The text-based altitude warning on the left side of the 3D Viewport editor always shows you the overall altitude range of drones on the current frame. Drones above the altitude threshold at a given frame are highlighted in red.
+The text-based altitude warning on the left side of the 3D Viewport editor always shows you the overall altitude range of drones on the current frame. Drones above the altitude threshold at a given frame are highlighted in yellow.
 
 To enable or disable altitude warnings, use the btn:[Show altitude warnings] checkbox.
 
@@ -36,7 +38,7 @@ To enable or disable altitude warnings, use the btn:[Show altitude warnings] che
 
 This option lets you define a maximum horizontal and vertical speed for your drone show (vertical speed can be further differentiated into maximum up and down speed). If there are drones above these velocity limits, you get real-time velocity warnings.
 
-The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal (XY), upwards (U) and downwards (D) velocity of drones on the current frame. Drones above the velocity thresholds at a given frame are highlighted in red.
+The text-based velocity warning on the left side of the 3D Viewport editor always shows you the maximum horizontal (XY), upwards (U) and downwards (D) velocity of drones on the current frame. Drones above the velocity thresholds at a given frame and drones moving horizontally below the minimum navigation altitude threshold are highlighted in blue.
 
 To enable or disable velocity warnings, use the btn:[Show velocity warnings] checkbox.
 
@@ -48,6 +50,10 @@ The rules are as follows. If the cache contains information about the positions 
 
 The safest way to perform the real-time velocity validation is to start playing the show in the 3D Viewport because then Blender will visit the frames one by one. Another option is to scrub through the video by dragging the current frame marker in the Timeline panel of Blender, _slowly_. The definition of "slow" depends on the zoom level of the timeline - if the timeline is zoomed out to cover a ten-minute show, even a few pixels on the timeline may represent a jump that is large enough so that *Skybrush Studio* will not attempt an estimation.
 ****
+
+== Finding all drone pairs closer than the proximity warning threshold
+
+Real-time proximity warnings that are running during playback must be fast, therefore we cannot afford finding _all_ pairs of drones in a frame that are closer than the proximity threshold by default; only one such pair will be marked in the 3D view. However, if you see a proximity warning marker and you suspect that there might be more pairs of drones that violate the proximity threshold in the current frame, you can ask for a full, exhaustive scan of all pairs of drones by pressing the btn:[Calculate All Proximity Warnings] button. This will refresh the current frame and mark all pairs of drones that are too close to each other.
 
 == Validating full or partial trajectories
 

@@ -3,7 +3,7 @@ import sys
 from typing import Union
 
 from bmesh.types import BMesh
-from bpy.types import Depsgraph, Mesh
+from bpy.types import Depsgraph, Object
 from mathutils import Vector
 
 class BVHTree:
@@ -12,7 +12,7 @@ class BVHTree:
     @classmethod
     def FromObject(
         cls,
-        object: Mesh,
+        object: Object,
         depsgraph: Depsgraph,
         deform: bool = True,
         render: bool = False,

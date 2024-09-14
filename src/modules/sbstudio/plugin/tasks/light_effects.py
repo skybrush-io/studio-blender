@@ -10,13 +10,14 @@ from typing import Iterator, Optional, TYPE_CHECKING
 
 from .base import Task
 
-from sbstudio.model.types import RGBAColor
+from sbstudio.model.types import MutableRGBAColor, RGBAColor
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.materials import get_led_light_color, set_led_light_color
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 if TYPE_CHECKING:
     from bpy.types import Depsgraph, Scene
+    from sbstudio.api.types import Mapping
 
 __all__ = ("UpdateLightEffectsTask",)
 
@@ -78,14 +79,17 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
                 # the base color cache in parallel to the colors list
-                colors: list[RGBAColor] = []
+                colors: list[MutableRGBAColor] = []
                 for drone in drones:
-                    color = get_led_light_color(drone)
+                    color = list(get_led_light_color(drone))
                     colors.append(color)
                     _base_color_cache[id(drone)] = color
             else:
                 # Initialize the colors list from the cached base colors
-                colors = [_base_color_cache.get(id(drone), WHITE) for drone in drones]
+                colors = [
+                    _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
+                ]
+
             changed = True
 
         effect.apply_on_colors(
@@ -104,7 +108,9 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     if not changed:
         if _base_color_cache:
             drones = Collections.find_drones().objects
-            colors = [_base_color_cache.get(id(drone), WHITE) for drone in drones]
+            colors = [
+                _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
+            ]
             _base_color_cache.clear()
             changed = True
 

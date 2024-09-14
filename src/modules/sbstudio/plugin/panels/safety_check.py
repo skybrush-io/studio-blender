@@ -1,6 +1,9 @@
 from bpy.types import Panel
 
-from sbstudio.plugin.operators import ValidateTrajectoriesOperator
+from sbstudio.plugin.operators import (
+    RunFullProximityCheckOperator,
+    ValidateTrajectoriesOperator,
+)
 
 __all__ = ("SafetyCheckPanel",)
 
@@ -49,6 +52,9 @@ class SafetyCheckPanel(Panel):
         row = col.row()
         row.prop(safety_check, "proximity_warning_threshold", text="", slider=True)
         row.enabled = safety_check.proximity_warning_enabled
+        row = col.row()
+        row.prop(safety_check, "proximity_warning_target", text="")
+        row.enabled = safety_check.proximity_warning_enabled
 
         col.prop(safety_check, "altitude_warning_enabled")
 
@@ -83,4 +89,5 @@ class SafetyCheckPanel(Panel):
 
         layout.separator()
 
+        layout.operator(RunFullProximityCheckOperator.bl_idname)
         layout.operator(ValidateTrajectoriesOperator.bl_idname)
