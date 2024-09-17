@@ -367,15 +367,12 @@ def pick_unique_name(
         return proposal
 
     proposal = proposal.rstrip()
-    suffix = re.search("[0-9]*$", proposal)
-    if suffix is None:
-        return f"{proposal}.001"
-
-    suffix = suffix.group()
-    if not suffix:
-        return f"{proposal}.001"
-
-    prefix = proposal[: len(proposal) - len(suffix)]
+    match = re.search("[0-9]*$", proposal)
+    suffix = match.group() if match is not None else ""
+    if suffix:
+        prefix = proposal[: len(proposal) - len(suffix)]
+    else:
+        prefix, suffix = f"{proposal}.", "000"
 
     value = int(suffix)
     while True:
