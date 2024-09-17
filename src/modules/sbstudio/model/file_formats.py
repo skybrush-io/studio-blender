@@ -19,6 +19,7 @@ class FileFormat(Enum):
     DSS3 = "dss3"
     DAC = "dac"
     DROTEK = "drotek"
+    EVSKY = "evsky"
     LITEBEE = "litebee"
 
 
@@ -48,6 +49,8 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
             formats.append(FileFormat.DSS3)
         elif feature == "export:drotek":
             formats.append(FileFormat.DROTEK)
+        elif feature == "export:evsky":
+            formats.append(FileFormat.EVSKY)
         elif feature == "export:litebee":
             formats.append(FileFormat.LITEBEE)
         elif feature == "export:plot":

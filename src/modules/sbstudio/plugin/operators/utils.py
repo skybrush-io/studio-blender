@@ -379,6 +379,14 @@ def export_show_to_file_using_api(
                 "fps": settings["output_fps"],
                 "light_fps": settings["light_output_fps"],
             }
+        elif format is FileFormat.EVSKY:
+            log.info("Exporting show to EVSKY format")
+            renderer = "evsky"
+            renderer_params = {
+                **renderer_params,
+                "fps": settings["output_fps"],
+                "light_fps": settings["light_output_fps"],
+            }
         elif format is FileFormat.LITEBEE:
             log.info("Exporting show to Litebee format")
             renderer = "litebee"
