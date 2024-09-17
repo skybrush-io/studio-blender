@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Proximity warnings can now be executed manually on all pairs of drones in the
   current frame by pressing a button in the Safety panel.
 
+### Fixed
+
+- The name of the custom function file and the name of the selected function are
+  now copied correctly when duplicating a light effect with a custom function.
+
 ## [3.4.2] - 2024-09-06
 
 ### Fixed
