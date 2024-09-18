@@ -14,6 +14,7 @@ __all__ = (
     "find_f_curve_for_data_path_and_index",
     "get_action_for_object",
     "get_name_of_action_for_object",
+    "cleanup_actions_for_object",
 )
 
 
@@ -143,3 +144,24 @@ def find_all_f_curves_for_data_path(
     # TODO(ntamas): sort by array index!
     result = [curve for curve in action.fcurves if curve.data_path == data_path]
     return result
+
+
+def cleanup_actions_for_object(object):
+    """Iterates over all F-curves in the animation data of the object and
+    removes those that refer to a data path that does not exist.
+
+    Useful for cleaning up F-curves referring to old formations and constraints
+    that are not valid any more.
+    """
+    action = get_action_for_object(object)
+
+    to_delete = []
+    for curve in action.fcurves:
+        if curve.data_path:
+            try:
+                object.path_resolve(curve.data_path)
+            except ValueError:
+                to_delete.append(curve)
+
+    while to_delete:
+        action.fcurves.remove(to_delete.pop())

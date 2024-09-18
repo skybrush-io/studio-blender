@@ -12,6 +12,7 @@ from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.api.types import Mapping
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
+    cleanup_actions_for_object,
     ensure_action_exists_for_object,
 )
 from sbstudio.plugin.api import get_api
@@ -668,6 +669,13 @@ def recalculate_transitions(
                 start_of_scene=start_of_scene,
                 start_of_next=task.start_frame_of_next_entry,
             )
+
+    # Remove F-curves with data paths that refer to nonexistent constraints
+    for drone in drones:
+        try:
+            cleanup_actions_for_object(drone)
+        except Exception:
+            pass
 
     bpy.ops.skybrush.fix_constraint_ordering()
     invalidate_caches(clear_result=True)
