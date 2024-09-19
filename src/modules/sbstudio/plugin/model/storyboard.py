@@ -14,7 +14,7 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 from operator import attrgetter
 from uuid import uuid4
-from typing import Dict, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from sbstudio.api.types import Mapping
 from sbstudio.plugin.constants import (
@@ -30,7 +30,7 @@ from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
 if TYPE_CHECKING:
-    from bpy.types import bpy_prop_collection, Collection, Context, MeshVertex, Object
+    from bpy.types import bpy_prop_collection, Collection, Context
 
 __all__ = ("ScheduleOverride", "StoryboardEntry", "Storyboard")
 
@@ -95,6 +95,19 @@ def _handle_mapping_change(self: StoryboardEntry, context: Optional[Context] = N
     self._invalidate_decoded_mapping()
 
 
+def _get_frame_end(self: StoryboardEntry) -> int:
+    return self.frame_start + self.duration
+
+
+def _set_frame_end(self: StoryboardEntry, value: int) -> None:
+    # We prefer to keep the start frame the same and adjust the duration
+    if value < self.frame_start:
+        self.frame_start = value
+        self.duration = 0
+    else:
+        self.duration = value - self.frame_start
+
+
 class StoryboardEntry(PropertyGroup):
     """Blender property group representing a single entry in the storyboard
     of the drone show.
@@ -137,6 +150,13 @@ class StoryboardEntry(PropertyGroup):
         name="Duration",
         description="Duration of this formation",
         default=0,
+        options=set(),
+    )
+    frame_end = IntProperty(
+        name="End Frame",
+        description="Frame when this formation should end in the show",
+        get=_get_frame_end,
+        set=_set_frame_end,
         options=set(),
     )
     transition_type = EnumProperty(
@@ -284,11 +304,6 @@ class StoryboardEntry(PropertyGroup):
         diff = int(frame) - self.frame_end
         if diff > 0:
             self.duration += diff
-
-    @property
-    def frame_end(self) -> int:
-        """Returns the index of the last (open ended) frame of the storyboard entry."""
-        return self.frame_start + self.duration
 
     @property
     def id(self) -> str:
