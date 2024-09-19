@@ -152,7 +152,7 @@ class TakeoffOperator(StoryboardOperator):
 
         # Add a new storyboard entry with the given formation
         entry = storyboard.add_new_entry(
-            formation=create_formation("Takeoff", target),
+            formation=create_formation(Formations.TAKEOFF, target),
             frame_start=end_of_takeoff,
             duration=0,
             select=True,

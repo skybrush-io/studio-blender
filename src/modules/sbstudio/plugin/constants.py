@@ -173,6 +173,9 @@ class Formations:
     TAKEOFF_GRID: ClassVar[str] = "Takeoff grid"
     """Name of the takeoff grid formation"""
 
+    TAKEOFF: ClassVar[str] = "Takeoff"
+    """Name of the takeoff formation (hovering above the takeoff grid)"""
+
     @classmethod
     @overload
     def find_takeoff_grid(cls, *, create: Literal[True] = True) -> Collection: ...

@@ -329,7 +329,7 @@ class CreateTakeoffGridOperator(Operator):
         if not takeoff_grid:
             storyboard = get_storyboard(context=context)
             entry = storyboard.add_new_entry(
-                formation=create_formation("Takeoff grid", points),
+                formation=create_formation(Formations.TAKEOFF_GRID, points),
                 frame_start=context.scene.frame_start,
                 duration=0,
                 select=True,
