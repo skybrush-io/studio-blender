@@ -4,12 +4,20 @@ from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context
 from math import ceil, inf
 
+from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.api import get_api
-from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.constants import Collections, Formations
+from sbstudio.plugin.model.formation import (
+    create_formation,
+    ensure_formation_consists_of_points,
+)
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard
+from sbstudio.plugin.operators.recalculate_transitions import (
+    RecalculationTask,
+    recalculate_transitions,
+)
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 
 from .base import StoryboardOperator
@@ -87,13 +95,11 @@ class TakeoffOperator(StoryboardOperator):
         return drones is not None and len(drones.objects) > 0
 
     def invoke(self, context: Context, event):
-        self.start_frame = context.scene.frame_current
-
         # The start frame cannot be earlier than the start time of the first
         # formation and must be earlier than the start time of the second
         # formation. Constrain it to the valid range.
         start, end = self._get_valid_range_for_start_frame(context)
-        self.start_frame = int(max(min(self.start_frame, end), start))
+        self.start_frame = int(max(min(context.scene.frame_current, end), start))
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard, entries, context: Context):
@@ -140,6 +146,7 @@ class TakeoffOperator(StoryboardOperator):
         # Calculate when the takeoff should end
         end_of_takeoff = self.start_frame + takeoff_duration
         if len(storyboard.entries) > 1:
+            assert storyboard.second_entry is not None
             first_frame = storyboard.second_entry.frame_start
             if first_frame < end_of_takeoff:
                 self.report(
@@ -150,7 +157,31 @@ class TakeoffOperator(StoryboardOperator):
                 )
                 return False
 
-        # Add a new storyboard entry with the given formation
+        # If there are no storyboard entries yet, add a new entry with the
+        # sources of the takeoff. If there is at least one entry, ensure that
+        # the markers in that entry are at the positions that we designed the
+        # takeoff from. (This may be necessary if the user picks a frame
+        # between the first and the second formation and there are keyframes
+        # or other mechanisms that move the drones between the two.
+        entry = storyboard.first_entry
+        if entry is None:
+            entry = storyboard.add_new_entry(
+                formation=create_formation(Formations.TAKEOFF_GRID, source),
+                frame_start=self.start_frame,
+                duration=0,
+                select=False,
+                context=context,
+            )
+        else:
+            formation = entry.formation
+            if formation is None:
+                self.report(
+                    {"ERROR"},
+                    "First storyboard entry must have an associated formation",
+                )
+            ensure_formation_consists_of_points(formation, source)
+
+        # Add a new storyboard entry with the targets of the takeoff
         entry = storyboard.add_new_entry(
             formation=create_formation(Formations.TAKEOFF, target),
             frame_start=end_of_takeoff,
@@ -171,9 +202,26 @@ class TakeoffOperator(StoryboardOperator):
                     override.pre_delay = delay
 
         # Recalculate the transitions leading from and to the target formation
-        bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
+        # as well as the constraint holding the drones at the takeoff grid
+        tasks = [
+            RecalculationTask.for_entry_by_index(storyboard.entries, 0),
+            RecalculationTask.for_entry_by_index(storyboard.entries, 1),
+        ]
         if len(storyboard.entries) > 2:
-            bpy.ops.skybrush.recalculate_transitions(scope="FROM_SELECTED")
+            tasks.append(RecalculationTask.for_entry_by_index(storyboard.entries, 2))
+
+        start_of_scene = min(context.scene.frame_start, storyboard.frame_start)
+        try:
+            recalculate_transitions(tasks, start_of_scene=start_of_scene)
+        except SkybrushStudioAPIError:
+            self.report(
+                {"ERROR"},
+                (
+                    "Error while invoking transition planner on the Skybrush "
+                    "Studio server"
+                ),
+            )
+            return False
 
         return True
 
