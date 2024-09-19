@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added "End Frame" fields in the Storyboard and Light effects panels; these are
+  editable and implicitly adjust the duration of the storyboard entry or light
+  effect.
+
 ### Fixed
 
 - When selecting a start frame for the takeoff operation, the operator chooses
