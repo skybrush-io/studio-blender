@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import types
 import bpy
 
@@ -197,6 +199,19 @@ class ColorFunctionProperties(PropertyGroup):
             self.name = other.name
 
 
+def _get_frame_end(self: LightEffect) -> int:
+    return self.frame_start + self.duration
+
+
+def _set_frame_end(self: LightEffect, value: int) -> None:
+    # We prefer to keep the start frame the same and adjust the duration
+    if value < self.frame_start:
+        self.frame_start = value
+        self.duration = 0
+    else:
+        self.duration = value - self.frame_start
+
+
 class LightEffect(PropertyGroup):
     """Blender property group representing a single, time- and possibly space-limited
     light effect in the drone show.
@@ -232,6 +247,13 @@ class LightEffect(PropertyGroup):
         name="Duration",
         description="Duration of this light effect",
         default=0,
+        options=set(),
+    )
+    frame_end = IntProperty(
+        name="End Frame",
+        description="Frame when this light effect should end in the show",
+        get=_get_frame_end,
+        set=_set_frame_end,
         options=set(),
     )
     fade_in_duration = IntProperty(
@@ -717,11 +739,6 @@ class LightEffect(PropertyGroup):
         """
         self.color_image = bpy.data.images.new(name=name, width=width, height=height)
         return self.color_image
-
-    @property
-    def frame_end(self) -> int:
-        """Returns the index of the last (open ended) frame of the light effect."""
-        return self.frame_start + self.duration
 
     def update_from(self, other: "LightEffect") -> None:
         """Updates the properties of this light effect from another one,

@@ -98,6 +98,7 @@ class LightEffectsPanel(Panel):
             col = layout.column()
             col.prop(entry, "frame_start")
             col.prop(entry, "duration")
+            col.prop(entry, "frame_end")
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")
