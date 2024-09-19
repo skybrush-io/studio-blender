@@ -7,7 +7,7 @@ from functools import partial
 from itertools import count
 from mathutils import Vector
 from numpy import array, c_, dot, ones, zeros
-from typing import Iterable, List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Iterable, List, Optional, Sequence, Tuple, Union, TYPE_CHECKING
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import (
@@ -255,6 +255,38 @@ def get_markers_from_formation(
             result.append(obj)
 
     return result
+
+
+def ensure_formation_consists_of_points(
+    formation: Collection, points: Sequence[Vector]
+) -> None:
+    """Ensures that the given formation consists of only empty meshes placed
+    at the given points in world coordinates.
+
+    If the formation contains non-empty meshes, these will be removed. The
+    remaining empties will be moved to the given points. If there are more
+    points than empties in the formation, new empties will be added as needed.
+    """
+    # Remove all children
+    for child in formation.children:
+        formation.children.unlink(child)  # type: ignore
+
+    # Remove all objects that are not empties
+    for obj in formation.objects:
+        if getattr(obj, "type", None) != "EMPTY":
+            if obj.users <= 1:
+                bpy.data.objects.remove(obj)
+            else:
+                formation.objects.unlink(obj)
+
+    # Move the empties to the points
+    num_empties = len(formation.objects)
+    for obj, point in zip(formation.objects, points):
+        obj.location = point  # type: ignore
+
+    # Add any remaining empties if needed
+    if num_empties < len(points):
+        add_points_to_formation(formation, points[num_empties:])
 
 
 def get_world_coordinates_of_markers_from_formation(
