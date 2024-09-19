@@ -45,6 +45,7 @@ Self = TypeVar("Self", bound="ID")
 
 class ID(bpy_struct):
     name: str
+    users: int
 
     def copy(self: Self) -> Self: ...
 
