@@ -95,6 +95,11 @@ def register_panel(cls):
     bpy.utils.register_class(cls)
 
 
+def register_translations(translations_dict):
+    """Registers the given translations dictionary."""
+    bpy.app.translations.register(__name__, translations_dict)
+
+
 def register_type(cls):
     """Registers the given Blender custom type."""
     _make_annotations(cls)
@@ -128,6 +133,11 @@ def unregister_operator(cls):
 def unregister_panel(cls):
     """Unregisters the given Blender panel."""
     bpy.utils.unregister_class(cls)
+
+
+def unregister_translations():
+    """Unregisters the given translations dictionary."""
+    bpy.app.translations.unregister(__name__)
 
 
 def unregister_type(cls):

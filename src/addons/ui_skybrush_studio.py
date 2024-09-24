@@ -42,6 +42,7 @@ for candidate in candidates:
 #############################################################################
 # imports needed by the addon
 
+from sbstudio.i18n.translations import translations_dict
 from sbstudio.plugin.lists import (
     SKYBRUSH_UL_lightfxlist,
     SKYBRUSH_UL_scheduleoverridelist,
@@ -133,12 +134,14 @@ from sbstudio.plugin.plugin_helpers import (
     register_menu,
     register_operator,
     register_panel,
+    register_translations,
     register_type,
     unregister_header,
     unregister_list,
     unregister_menu,
     unregister_operator,
     unregister_panel,
+    unregister_translations,
     unregister_type,
 )
 from sbstudio.plugin.state import (
@@ -258,6 +261,7 @@ overlay_getters = (
 
 
 def register():
+    register_translations(translations_dict)
     register_state()
     for custom_type in types:
         register_type(custom_type)
@@ -298,3 +302,4 @@ def unregister():
     for custom_type in reversed(types):
         unregister_type(custom_type)
     unregister_state()
+    unregister_translations()
