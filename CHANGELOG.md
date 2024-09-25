@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   editable and implicitly adjust the duration of the storyboard entry or light
   effect.
 
+- Added basic support for translating the plugin into other languages.
+
+- Added Chinese translation. Huge thanks to PeiYi on our Discord server for
+  providing the translation!
+
+### Changed
+
+- The add-on now respects the "Allow Online Access" setting from Blender when
+  running on Blender 4.2 and later. You need to enable online access explicitly
+  when using this add-on on Blender 4.2 and later.
+
 ### Fixed
 
 - When selecting a start frame for the takeoff operation, the operator chooses
