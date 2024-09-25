@@ -5,8 +5,9 @@ from bpy.types import Context
 from math import ceil, inf
 
 from sbstudio.api.errors import SkybrushStudioAPIError
+from sbstudio.errors import SkybrushStudioError
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections, Formations
 from sbstudio.plugin.model.formation import (
     create_formation,
@@ -103,7 +104,12 @@ class TakeoffOperator(StoryboardOperator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard, entries, context: Context):
-        return {"FINISHED"} if self._run(storyboard, context=context) else {"CANCELLED"}
+        try:
+            success = self._run(storyboard, context=context)
+        except SkybrushStudioError:
+            # These are handled nicely
+            success = False
+        return {"FINISHED"} if success else {"CANCELLED"}
 
     def _run(self, storyboard: Storyboard, *, context: Context) -> bool:
         bpy.ops.skybrush.prepare()
@@ -121,6 +127,7 @@ class TakeoffOperator(StoryboardOperator):
             base_altitude=self.altitude,
             layer_height=self.altitude_shift,
             min_distance=get_proximity_warning_threshold(context),
+            operator=self,
         )
 
         # Calculate the Z distance to travel for each drone
@@ -280,6 +287,7 @@ def create_helper_formation_for_takeoff_and_landing(
     base_altitude: float,
     layer_height: float,
     min_distance: float,
+    operator=None,
 ):
     """Creates a layer helper formation for takeoff and landing where the drones
     are placed directly above their positions at the given frame, at the given
@@ -298,9 +306,15 @@ def create_helper_formation_for_takeoff_and_landing(
     # threshold and the arrangement of the drones
     _, _, dist = find_nearest_neighbors(source)
     if dist < min_distance:
-        groups = get_api().decompose_points(
-            source, min_distance=min_distance, method="balanced"
-        )
+        if operator is not None:
+            with call_api_from_blender_operator(operator, "point decomposition") as api:
+                groups = api.decompose_points(
+                    source, min_distance=min_distance, method="balanced"
+                )
+        else:
+            groups = get_api().decompose_points(
+                source, min_distance=min_distance, method="balanced"
+            )
     else:
         # We can save an API call here
         groups = [0] * len(source)

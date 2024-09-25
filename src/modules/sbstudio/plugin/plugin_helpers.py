@@ -153,6 +153,15 @@ def enter_edit_mode(obj=None, *, context=None):
     bpy.ops.object.mode_set(mode="EDIT", toggle=False)
 
 
+def is_online_access_allowed() -> bool:
+    """Returns whether the settings of the user allow add-ons to access online
+    resources.
+    """
+    # bpy.app.online_access was added in Blender 4.2; earlier versions default
+    # to True
+    return bool(getattr(bpy.app, "online_access", True))
+
+
 @contextmanager
 def temporarily_exit_edit_mode(context=None) -> ContextManager[None]:
     """Context manager that temporarily exits edit mode if the context is in

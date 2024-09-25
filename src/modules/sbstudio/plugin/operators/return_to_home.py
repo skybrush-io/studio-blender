@@ -5,7 +5,8 @@ from bpy.types import Context
 from functools import partial
 from math import ceil, sqrt
 
-from sbstudio.plugin.api import get_api
+from sbstudio.errors import SkybrushStudioError
+from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.actions import (
     ensure_action_exists_for_object,
@@ -135,7 +136,12 @@ class ReturnToHomeOperator(StoryboardOperator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard, entries, context):
-        return {"FINISHED"} if self._run(storyboard, context=context) else {"CANCELLED"}
+        try:
+            success = self._run(storyboard, context=context)
+        except SkybrushStudioError:
+            # These are handled nicely
+            success = False
+        return {"FINISHED"} if success else {"CANCELLED"}
 
     def _should_use_smart_rth(self) -> bool:
         return self.use_smart_rth and is_smart_rth_enabled_globally()
@@ -165,6 +171,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             base_altitude=self.altitude,
             layer_height=self.altitude_shift if not use_smart_rth else 0,
             min_distance=get_proximity_warning_threshold(context),
+            operator=self,
         )
         fps = context.scene.render.fps
 
@@ -177,15 +184,16 @@ class ReturnToHomeOperator(StoryboardOperator):
             land_speed = min(self.velocity_z, 0.5)
 
             # call API to create smart RTH plan
-            plan = get_api().plan_smart_rth(
-                source,
-                target,
-                max_velocity_xy=self.velocity,
-                max_velocity_z=self.velocity_z,
-                max_acceleration=max_acceleration,
-                min_distance=min_distance,
-                rth_model="straight_line_with_neck",
-            )
+            with call_api_from_blender_operator(self) as api:
+                plan = api.plan_smart_rth(
+                    source,
+                    target,
+                    max_velocity_xy=self.velocity,
+                    max_velocity_z=self.velocity_z,
+                    max_acceleration=max_acceleration,
+                    min_distance=min_distance,
+                    rth_model="straight_line_with_neck",
+                )
             if not plan.start_times or not plan.durations:
                 return False
 

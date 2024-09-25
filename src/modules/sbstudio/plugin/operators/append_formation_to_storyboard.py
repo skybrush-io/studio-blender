@@ -2,7 +2,7 @@ from math import ceil
 
 from .base import FormationOperator
 
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import (
     get_world_coordinates_of_markers_from_formation,
@@ -87,14 +87,11 @@ class AppendFormationToStoryboardOperator(FormationOperator):
                 formation, frame=entry.frame_start
             )
             target = [tuple(coord) for coord in target]
+
         try:
-            plan = get_api().plan_transition(source, target, **safety_kwds)
+            with call_api_from_blender_operator(self, "transition planner") as api:
+                plan = api.plan_transition(source, target, **safety_kwds)
         except Exception:
-            raise
-            self.report(
-                {"ERROR"},
-                "Error while invoking transition planner on the Skybrush Studio server",
-            )
             return {"CANCELLED"}
 
         # To get nicer-looking frame counts, we round the end of the

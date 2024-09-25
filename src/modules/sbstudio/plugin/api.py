@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Iterator, Optional, TypeVar
 
 from sbstudio.api import SkybrushStudioAPI
-from sbstudio.api.errors import SkybrushStudioAPIError
+from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
 
 __all__ = ("get_api",)
@@ -40,7 +40,11 @@ def _get_api_from_url_and_key(url: str, key: str):
 
 def get_api() -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object."""
+    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences
+
+    if not is_online_access_allowed():
+        raise NoOnlineAccessAllowedError()
 
     api_key: str
     server_url: str
@@ -66,6 +70,13 @@ def call_api_from_blender_operator(
     default_message = f"Error while invoking {what} on the Skybrush Studio server"
     try:
         yield get_api()
+    except NoOnlineAccessAllowedError:
+        operator.report(
+            {"ERROR"},
+            "Access of online resources is disabled in the Blender "
+            + "preferences. Please enable online access and then try again.",
+        )
+        raise
     except SkybrushStudioExportWarning as ex:
         operator.report({"WARNING"}, str(ex))
         raise

@@ -7,6 +7,9 @@ class _App:
     version_file: tuple[int, int, int]
     version_string: str
 
+    online_access: bool
+    online_access_override: bool
+
 class _Context(Context):
     selected_objects: Sequence[Object]
 

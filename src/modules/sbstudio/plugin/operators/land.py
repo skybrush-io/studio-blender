@@ -5,8 +5,9 @@ import bpy
 from bpy.props import FloatProperty, IntProperty
 from bpy.types import Context
 
+from sbstudio.errors import SkybrushStudioError
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
@@ -81,7 +82,12 @@ class LandOperator(StoryboardOperator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard, entries, context):
-        return {"FINISHED"} if self._run(storyboard, context=context) else {"CANCELLED"}
+        try:
+            success = self._run(storyboard, context=context)
+        except SkybrushStudioError:
+            # These are handled nicely
+            success = False
+        return {"FINISHED"} if success else {"CANCELLED"}
 
     def _run(self, storyboard, *, context) -> bool:
         bpy.ops.skybrush.prepare()
@@ -117,13 +123,14 @@ class LandOperator(StoryboardOperator):
         min_distance = get_proximity_warning_threshold(context)
         _, _, dist = find_nearest_neighbors(target)
         if dist < min_distance:
-            delays, durations = get_api().plan_landing(
-                source,
-                min_distance=min_distance,
-                velocity=self.velocity,
-                target_altitude=self.altitude,
-                spindown_time=self.spindown_time,
-            )
+            with call_api_from_blender_operator(self, "landing planner") as api:
+                delays, durations = api.plan_landing(
+                    source,
+                    min_distance=min_distance,
+                    velocity=self.velocity,
+                    target_altitude=self.altitude,
+                    spindown_time=self.spindown_time,
+                )
         else:
             # We can save an API call here
             delays = [0] * len(source)
