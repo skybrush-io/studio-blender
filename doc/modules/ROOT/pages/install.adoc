@@ -42,6 +42,11 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
     Server URL:: Enter the URL of a dedicated Skybrush Studio server if you are using a dedicated server.
 
+=== 4. Enable Online Access in Blender
+
+Starting from Blender 4.2, the preferences dialog in Blender provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Skybrush Studio for Blender* uses an online resource (either a https://studio.skybrush.io[community server] or a locally hosted instance of that server) to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. If you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
+
+To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
 
 == Installing updates
 
