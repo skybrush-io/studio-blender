@@ -51,4 +51,4 @@ class SkybrushCSVExportOperator(ExportOperator):
         return "CSV exporter"
 
     def get_settings(self):
-        return {"output_fps": self.output_fps}
+        return {"output_fps": self.output_fps, "light_output_fps": self.output_fps}

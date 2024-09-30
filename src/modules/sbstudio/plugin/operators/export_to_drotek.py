@@ -51,5 +51,6 @@ class DrotekExportOperator(ExportOperator):
             "spacing": self.spacing,
             "output_fps": 5,
             "light_fps": 5,
+            "light_output_fps": 5,  # TODO(ntamas): figure out which one is needed!
             "use_rgbw": self.use_rgbw,
         }
