@@ -34,7 +34,12 @@ image::panels/swarm/create_takeoff_grid.jpg[Create takeoff grid]
 
 For a regular takeoff grid you can define the number of rows and columns, the exact number of drones and the spacing between them. Once you press btn:[OK], a rectangular grid is created with the specified parameters.
 
-If you wish to takeoff (and land) in layers, you can also define a more complex takeoff grid with slots, where each slot contains more than one drone with typically, but not necessarily smaller spacing (see the *Drones per slot* and *Intra-slot spacing* parameters). With such a takeoff grid it will be guaranteed that only one drone will takeoff from (and land to) every slot at a time, using layered takeoff and land operations automatically.
+For advanced settings enable the btn:[Advanced] checkbox.
+
+If you wish to have a separate column and row spacing for your basic takeoff grid, enable the btn:[Use separate column spacing] checkbox and
+setup a separate column spacing.
+
+If you wish to takeoff (and land) in layers, you can also define a more complex takeoff grid with slots, where each slot contains more than one drone with typically, but not necessarily smaller spacing (see the *Intra-slot* parameters). With such a takeoff grid it will be guaranteed that only one drone will takeoff from (and land to) every slot at a time, using layered takeoff and land operations automatically.
 
 The *Create takeoff grid* operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, it adds the first "Takeoff grid" entry to the storyboard and also initializes your drones in the 3D Viewport editor.
 

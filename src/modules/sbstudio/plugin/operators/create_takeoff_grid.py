@@ -1,6 +1,6 @@
 import bpy
 
-from bpy.props import FloatProperty, IntProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Operator
 
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
@@ -60,7 +60,8 @@ def create_points_of_takeoff_grid(
     columns: int = 1,
     num_drones_per_slot_row: int = 1,
     num_drones_per_slot_col: int = 1,
-    spacing: float = 1,
+    spacing_row: float = 1,
+    spacing_col: float = 1,
     intra_slot_spacing_row: float = 0.5,
     intra_slot_spacing_col: float = 0.5,
 ) -> List[Coordinate3D]:
@@ -68,11 +69,14 @@ def create_points_of_takeoff_grid(
 
     Parameters:
         center: the center of the takeoff grid
-        spacing: the spacing of points within each row and column of the grid
         rows: the number of rows in the grid
         columns: the number of columns in the grid
-        num_drones_per_slot: the number of drones in a single grid slot
-        intra_slot_spacing: spacing within a single slot of the grid
+        num_drones_per_slot_row: the number of drones in a single grid slot row
+        num_drones_per_slot_col: the number of drones in a single grid slot column
+        spacing_row: the row spacing of points in the grid
+        spacing_col: the column spacing of points in the grid
+        intra_slot_spacing_row: the row spacing within a single slot of the grid
+        intra_slot_spacing_col: the column spacing within a single slot of the grid
 
     Returns:
         the list of points in the grid
@@ -84,8 +88,8 @@ def create_points_of_takeoff_grid(
 
     xs, ys = mgrid[0:columns, 0:rows]
 
-    xs = (xs.ravel() - (columns - 1) / 2) * spacing + cx
-    ys = (ys.ravel() - (rows - 1) / 2) * spacing + cy
+    xs = (xs.ravel() - (columns - 1) / 2) * spacing_col + cx
+    ys = (ys.ravel() - (rows - 1) / 2) * spacing_row + cy
     zs = cz + zeros(columns * rows)
 
     # At this point we have the coordinates of the cells in the grid. Replace
@@ -198,24 +202,6 @@ class CreateTakeoffGridOperator(Operator):
         update=_ensure_rows_columns_and_counts_consistent,
     )
 
-    drones_per_slot_row = IntProperty(
-        name="Intra-slot drones per row",
-        description=("Number of drones that can be placed within a single slot row"),
-        default=1,
-        soft_min=1,
-        soft_max=10,
-        update=_handle_drones_per_slot_change,
-    )
-
-    drones_per_slot_col = IntProperty(
-        name="Intra-slot drones per column",
-        description=("Number of drones that can be placed within a single slot column"),
-        default=1,
-        soft_min=1,
-        soft_max=10,
-        update=_handle_drones_per_slot_change,
-    )
-
     drones = IntProperty(
         name="Drone count",
         description="Number of drones in the grid",
@@ -242,6 +228,47 @@ class CreateTakeoffGridOperator(Operator):
         unit="LENGTH",
     )
 
+    use_advanced_settings = BoolProperty(
+        name="Advanced",
+        default=False,
+        description="Advanced settings for creating the takeoff grid",
+    )
+
+    # advanced parameters below
+
+    use_separate_column_spacing = BoolProperty(
+        name="Use seperate column spacing",
+        default=False,
+        description="When checked, a separate column spacing will be used for the takeoff grid",
+    )
+
+    spacing_col = FloatProperty(
+        name="Column spacing",
+        description="Spacing between the columns of the slots in the grid",
+        default=3,
+        soft_min=0,
+        soft_max=50,
+        unit="LENGTH",
+    )
+
+    drones_per_slot_row = IntProperty(
+        name="Intra-slot rows",
+        description=("Number of rows in a single slot"),
+        default=1,
+        soft_min=1,
+        soft_max=10,
+        update=_handle_drones_per_slot_change,
+    )
+
+    drones_per_slot_col = IntProperty(
+        name="Intra-slot columns",
+        description=("Number of columns in a single slot"),
+        default=1,
+        soft_min=1,
+        soft_max=10,
+        update=_handle_drones_per_slot_change,
+    )
+
     intra_slot_spacing_row = FloatProperty(
         name="Intra-slot row spacing",
         description="Row spacing between drones within each slot",
@@ -259,6 +286,30 @@ class CreateTakeoffGridOperator(Operator):
         soft_max=5,
         unit="LENGTH",
     )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        # general settings
+        layout.prop(self, "rows")
+        layout.prop(self, "columns")
+        layout.prop(self, "drones")
+        layout.prop(self, "spacing")
+        layout.prop(self, "use_advanced_settings")
+        # advanced settings
+        if self.use_advanced_settings:
+            # separate column spacing
+            row = layout.row(heading="Column spacing")
+            row.prop(self, "use_separate_column_spacing", text="")
+            row = row.row()
+            row.prop(self, "spacing_col", text="")
+            row.enabled = self.use_separate_column_spacing
+            # intra-slot parameters
+            layout.prop(self, "drones_per_slot_row")
+            layout.prop(self, "drones_per_slot_col")
+            layout.prop(self, "intra_slot_spacing_row")
+            layout.prop(self, "intra_slot_spacing_col")
 
     def execute(self, context):
         # This code path is invoked after an undo-redo
@@ -288,7 +339,10 @@ class CreateTakeoffGridOperator(Operator):
             columns=self.columns,
             num_drones_per_slot_row=_get_num_drones_per_slot_row(self),
             num_drones_per_slot_col=_get_num_drones_per_slot_col(self),
-            spacing=self.spacing,
+            spacing_row=self.spacing,
+            spacing_col=self.spacing_col
+            if self.use_separate_column_spacing
+            else self.spacing,
             intra_slot_spacing_row=self.intra_slot_spacing_row,
             intra_slot_spacing_col=self.intra_slot_spacing_col,
         )[: self.drones]
