@@ -219,15 +219,9 @@ class TakeoffOperator(StoryboardOperator):
 
         start_of_scene = min(context.scene.frame_start, storyboard.frame_start)
         try:
-            recalculate_transitions(tasks, start_of_scene=start_of_scene)
-        except SkybrushStudioAPIError:
-            self.report(
-                {"ERROR"},
-                (
-                    "Error while invoking transition planner on the Skybrush "
-                    "Studio server"
-                ),
-            )
+            with call_api_from_blender_operator(self, "transition planner"):
+                recalculate_transitions(tasks, start_of_scene=start_of_scene)
+        except Exception:
             return False
 
         return True
