@@ -1,6 +1,16 @@
 """Algorithm to find the nearest neighbors in a set of points."""
 
-from numpy import array, fill_diagonal, inf, newaxis, nonzero, ptp, searchsorted, sum
+from numpy import (
+    array,
+    fill_diagonal,
+    inf,
+    ndarray,
+    newaxis,
+    nonzero,
+    ptp,
+    searchsorted,
+    sum,
+)
 
 __all__ = ("find_nearest_neighbors",)
 
@@ -140,7 +150,7 @@ def find_nearest_neighbors(points):
         the coordinates of the first and the second point in the closest point
         pair, and their distance
     """
-    if not points:
+    if not isinstance(points, ndarray) and not points:
         # we have no points
         return None, None, inf
 

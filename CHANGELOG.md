@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the "Stats" button in the formation panel so it does not throw an
+  error any more.
+
 - Improved the error message that appeared when trying to create a takeoff
   transition while online access is disabled in Blender.
 
