@@ -34,7 +34,7 @@ class PrepareSceneOperator(Operator):
         link_object_to_scene(formations, allow_nested=True)
         link_object_to_scene(templates, allow_nested=True)
 
-        # Create the drone template as well
-        Templates.find_drone(template=context.scene.skybrush.settings.drone_template)
+        # Note that we do not create the drone template here yet as
+        # its size might depend on later takeoff grid parameters
 
         return {"FINISHED"}

@@ -347,7 +347,11 @@ class CreateTakeoffGridOperator(Operator):
             intra_slot_spacing_col=self.intra_slot_spacing_col,
         )[: self.drones]
 
-        drone_template = Templates.find_drone()
+        settings = context.scene.skybrush.settings
+        drone_template = Templates.find_drone(
+            template=settings.drone_template,
+            drone_radius=settings.drone_radius,
+        )
         drone_collection = Collections.find_drones()
 
         template_material = get_material_for_led_light_color(drone_template)

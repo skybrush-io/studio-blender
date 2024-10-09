@@ -9,7 +9,12 @@ from bpy.props import (
 from bpy.types import Collection, PropertyGroup
 
 from sbstudio.math.rng import RandomSequence
-from sbstudio.plugin.constants import DEFAULT_EMISSION_STRENGTH, RANDOM_SEED_MAX
+from sbstudio.plugin.constants import (
+    DEFAULT_INDOOR_DRONE_RADIUS,
+    DEFAULT_OUTDOOR_DRONE_RADIUS,
+    DEFAULT_EMISSION_STRENGTH,
+    RANDOM_SEED_MAX,
+)
 from sbstudio.plugin.utils.bloom import (
     set_bloom_effect_enabled,
     update_emission_strength,
@@ -18,6 +23,9 @@ from sbstudio.plugin.utils.bloom import (
 
 __all__ = ("DroneShowAddonFileSpecificSettings",)
 
+_drone_radius_updated_by_user: bool = False
+"""Shows whether the drone radius has been updated by the user already."""
+
 
 def use_bloom_effect_updated(self, context):
     set_bloom_effect_enabled(self.use_bloom_effect)
@@ -25,6 +33,26 @@ def use_bloom_effect_updated(self, context):
 
 def emission_strength_updated(self, context):
     update_emission_strength(self.emission_strength)
+
+
+def show_type_updated(self, context):
+    """Called when the show type is updated by the user."""
+    global _drone_radius_updated_by_user
+
+    if not _drone_radius_updated_by_user:
+        if self.show_type == "INDOOR":
+            self.drone_radius = DEFAULT_INDOOR_DRONE_RADIUS
+        else:
+            self.drone_radius = DEFAULT_OUTDOOR_DRONE_RADIUS
+        # need to set it back to False after previous updates
+        _drone_radius_updated_by_user = False
+
+
+def drone_radius_updated(self, context):
+    """Called when the drone radius is updated by the user."""
+    global _drone_radius_updated_by_user
+
+    _drone_radius_updated_by_user = True
 
 
 class DroneShowAddonFileSpecificSettings(PropertyGroup):
@@ -36,6 +64,16 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         type=Collection,
         name="Drone collection",
         description="The collection that contains all the objects that are to be treated as drones",
+    )
+
+    drone_radius = FloatProperty(
+        name="Drone radius",
+        description="The radius of the drone template to create.",
+        default=DEFAULT_OUTDOOR_DRONE_RADIUS,
+        unit="LENGTH",
+        soft_min=0.1,
+        soft_max=1,
+        update=drone_radius_updated,
     )
 
     drone_template = EnumProperty(
@@ -92,6 +130,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
                 2,
             ),
         ],
+        update=show_type_updated,
     )
 
     use_bloom_effect = BoolProperty(

@@ -35,14 +35,20 @@ class SwarmPanel(Panel):
 
         layout = self.layout
 
+        layout.prop(settings, "show_type", text="Show")
         layout.prop(settings, "drone_collection", text="Drones")
-
-        if Collections.find_templates(create=False) is None:
-            layout.prop(settings, "drone_template", text="Drone")
-
         layout.prop(settings, "max_acceleration", slider=True)
 
         layout.separator()
+
+        if Collections.find_templates(create=False) is None:
+            layout.prop(settings, "drone_template", text="Drone")
+            row = layout.row(heading="Drone radius")
+            row.prop(settings, "drone_radius", text="")
+            if settings.drone_template not in ["SPHERE", "CONE"]:
+                row.enabled = False
+
+            layout.separator()
 
         layout.operator(CreateTakeoffGridOperator.bl_idname, icon="ADD")
 

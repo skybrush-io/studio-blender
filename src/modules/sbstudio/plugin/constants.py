@@ -40,8 +40,11 @@ DEFAULT_STORYBOARD_TRANSITION_DURATION = 20
 DEFAULT_LIGHT_EFFECT_DURATION = 10
 """Default duration of newly created light effects, in seconds"""
 
-DRONE_RADIUS = 0.5
-"""Drone radius"""
+DEFAULT_INDOOR_DRONE_RADIUS = 0.1
+"""Default outdoor drone radius"""
+
+DEFAULT_OUTDOOR_DRONE_RADIUS = 0.5
+"""Default outdoor drone radius"""
 
 RANDOM_SEED_MAX = 0x7FFFFFFF
 """Maximum allowed value of the random seed. Note that Blender does not support
@@ -203,15 +206,21 @@ class Templates:
     """Name of the drone template object"""
 
     @classmethod
-    def find_drone(cls, *, create: bool = True, template: str = "SPHERE"):
+    def find_drone(
+        cls,
+        *,
+        create: bool = True,
+        template: str = "SPHERE",
+        drone_radius: float = DEFAULT_OUTDOOR_DRONE_RADIUS,
+    ):
         """Returns the Blender object that serves as a template for newly
         created drones.
 
         Args:
+            create: whether to create the template if it does not exist yet
             template: the drone template to use.
                 Possible values: SPHERE, CONE, SELECTED
-            create: whether to create the template if it does not exist yet
-
+            drone_radius: the radius of the newly created drone object
         """
         templates = Collections.find_templates()
         coll = templates.objects
@@ -219,22 +228,28 @@ class Templates:
             drone, _ = ensure_object_exists_in_collection(
                 coll,
                 cls.DRONE,
-                factory=partial(cls._create_drone_template, template=template),
+                factory=partial(
+                    cls._create_drone_template,
+                    template=template,
+                    drone_radius=drone_radius,
+                ),
             )
             return drone
         else:
             return get_object_in_collection(coll, cls.DRONE)
 
     @staticmethod
-    def _create_drone_template(template: str = "SPHERE"):
+    def _create_drone_template(
+        template: str = "SPHERE", drone_radius: float = DEFAULT_OUTDOOR_DRONE_RADIUS
+    ):
         if template == "SPHERE":
-            object = create_icosphere(radius=DRONE_RADIUS)
+            object = create_icosphere(radius=drone_radius)
         elif template == "CONE":
-            object = create_cone(radius=DRONE_RADIUS)
+            object = create_cone(radius=drone_radius)
         elif template == "SELECTED":
             objects = bpy.context.selected_objects
             if not objects:
-                object = create_icosphere(radius=DRONE_RADIUS)
+                object = create_icosphere(radius=drone_radius)
             else:
                 object = objects[0]
         else:

@@ -60,7 +60,7 @@ def update_emission_strength(value: float) -> None:
         material = get_material_for_led_light_color(drone)
         set_emission_strength_of_material(material, value)
 
-    template = Templates.find_drone()
+    template = Templates.find_drone(create=False)
     if template:
         material = get_material_for_led_light_color(template)
         set_emission_strength_of_material(material, value)
