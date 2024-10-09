@@ -4,11 +4,11 @@
 
 Once you are finished with your drone show, use the Export panel to export it from Blender to different formats for further processing or direct upload to the drones.
 
+The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/formations/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased. 
+
 image::panels/export/export.jpg[Export panel]
 
-== Show type
-
-Please specify whether you designed a show for outdoor or indoor settings. This will help setup exporters adaptively.
+The following options are available in general...
 
 == Export to .skyc
 
@@ -81,3 +81,7 @@ WARNING: Creating this plot might take a longer time, depending on the number of
 Create individual drone plots:: Include validation plots for each drone individually on separate pages in the final output.
 +
 WARNING: Creating these plots might take a long time, depending on the number of drones, frames and output frame rate.
+
+== Export to third-party show formats
+
+Upon purchasing a professional license, we provide additional exporters to various external drone show formats. mailto:support@collmot.com[Contact us] for details.

@@ -6,11 +6,19 @@ The swarm panel helps you setup your drone show with all technical parts that ar
 
 image::panels/swarm/swarm.jpg[Swarm panel]
 
+== Show type
+
+Please specify whether you designed a show for outdoor or indoor settings. This will help setup drone size, exporters and possibly other parameters adaptively.
+
 == Drone collection
 
 Click on the btn:[Drones] button to select the collection that is your primary source of your drone objects. By default you do not have to change this setting, the btn:[Create Takeoff Grid] button below will create a "Drones" collection and set it as your primary source automatically.
 
 IMPORTANT: Any mesh that is placed in the collection selected here will be treated as a drone by *Skybrush Studio*, and it may adjust the constraints and other properties of the mesh as needed when performing certain operations. Make sure that there are no other objects in the collection that you select here, only the ones that you want to consider drones.
+
+== Max acceleration
+
+The btn:[Max acceleration] button sets up a maximal acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
 
 == Drone template
 
@@ -22,9 +30,11 @@ The default option is an isotropic *Sphere*. Select *Cone* to have a simple anis
 
 If *Selected Object* is chosen, make sure you have your template object selected before pressing the btn:[Create takeoff grid] button. Note that this object will disappear after the creation of the swarm as it shall be used for the template only.
 
-== Max acceleration
+== Drone radius
 
-The btn:[Max acceleration] button sets up a maximal acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
+If you select a "Sphere" or "Cone" type drone template, you can also setup a radius for your template object before creating your first takeoff grid. Similarly to the btn:[Drone template] option, this setting will also disappear after creating the takeoff grid. 
+
+If you wish to change your drone size at a later stage, you can use standard Blender tools for this. First select all your drone objects you wish to resize, then set the "Transform Pivot Point" to "Individual Origins" and the simply scale up all objects around their own origins with kbd:[s].
 
 == Create Takeoff Grid
 
