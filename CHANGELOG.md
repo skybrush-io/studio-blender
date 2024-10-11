@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The radius of the drone template object can be setup with the new "Drone radius"
+  parameter before creating the first takeoff grid.
+
+- Takeoff grid column spacing can be setup separately from row spacing, if needed.
+  Takeoff grid parameters also got reorganized into basic and advanced groups.
+
 ### Fixed
 
 - Fixed the "Stats" button in the formation panel so it does not throw an
