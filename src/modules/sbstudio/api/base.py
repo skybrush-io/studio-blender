@@ -245,6 +245,13 @@ class SkybrushStudioAPI:
                     raise SkybrushStudioAPIError(
                         str(decoded_body.get("detail"))
                     ) from None
+            elif ex.status == 413:
+                # Content too large
+                raise SkybrushStudioAPIError(
+                    "You have reached the limits of the community server. "
+                    "Consider purchasing a license for a local instance of "
+                    "Skybrush Studio Server."
+                ) from None
 
             # No detailed information about the error so use a generic message
             raise SkybrushStudioAPIError(
