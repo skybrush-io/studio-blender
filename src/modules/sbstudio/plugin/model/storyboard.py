@@ -149,6 +149,7 @@ class StoryboardEntry(PropertyGroup):
     duration = IntProperty(
         name="Duration",
         description="Duration of this formation",
+        min=0,
         default=0,
         options=set(),
     )
