@@ -48,6 +48,18 @@ Starting from Blender 4.2, the preferences dialog in Blender provides an option 
 
 To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
 
+=== 5. Install Skybrush Studio Server
+
+If you are a community user, you do _not_ need to install the *Skybrush Studio Server* as you can rely on our cloud-based community server.
+
+If you are using a paid, professional version of *Skybrush Studio*, you will receive a precompiled copy of *Skybrush Studio Server* and a corresponding license file upon purchase of the software.
+
+After successful installation of *Skybrush Studio Server*, your licence file named `skybrush-studio-server.cml` has to be copied to the folder where you installed the server itself. You might need system administrator privileges to write into this folder.
+
+The terminal log of *Skybrush Studio Server* will give you instant feedback about the presence and content of your currently used license file upon execution of the server.
+
+If you wish to use your new local server, do not forget to press the btn:[Use local server] button in the *Skybrush Studio for Blender* add-on preferences.
+
 == Installing updates
 
 *Skybrush Studio for Blender* consists of multiple modules that are interpreted by the Python interpreter built into Blender. In order to perform an upgrade of the add-on, the previous version needs to be unloaded completely before the new version is installed. Due to how Python's module system works, this is very hard to do without unloading the plugin manually. Therefore, the preferred sequence to update the add-on is as follows:
