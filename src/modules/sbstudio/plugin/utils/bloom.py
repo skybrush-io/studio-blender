@@ -40,6 +40,11 @@ def disable_bloom_effect() -> None:
 
 def set_bloom_effect_enabled(value: bool) -> None:
     """Enables or disables the bloom effect on the 3D view."""
+    if not hasattr(bpy.context.scene.eevee, "use_bloom"):
+        # Blender 4.3 and later
+        # TODO(ntamas): set up the bloom effect with compositor somehow
+        return
+
     if value:
         bpy.context.scene.eevee.use_bloom = True
         bpy.context.scene.eevee.bloom_radius = 4
