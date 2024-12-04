@@ -144,6 +144,11 @@ def sample_positions_and_yaw_of_objects(
                 YawSetpoint(time, get_xyz_euler_rotation_of_object(obj)[2])
             )
 
+    # Ensure that the yaw curve makes sense even if the extracted yaw angles
+    # "wrap around" the boundary between -180 and 180 degrees
+    for yaw in yaw_setpoints.values():
+        yaw.unwrap()
+
     if simplify:
         return {
             key: (
@@ -314,6 +319,11 @@ def sample_positions_colors_and_yaw_of_objects(
                 )
             )
             yaw_setpoints[key].append(YawSetpoint(time, rotation[2]))
+
+    # Ensure that the yaw curve makes sense even if the extracted yaw angles
+    # "wrap around" the boundary between -180 and 180 degrees
+    for yaw in yaw_setpoints.values():
+        yaw.unwrap()
 
     if simplify:
         return {
