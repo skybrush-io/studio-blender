@@ -3,6 +3,7 @@ from bpy.types import Panel
 from sbstudio.plugin.operators import (
     ApplyColorsToSelectedDronesOperator as ApplyColors,
 )
+from sbstudio.plugin.utils.bloom import bloom_effect_supported
 
 
 class LEDControlPanel(Panel):
@@ -57,8 +58,9 @@ class LEDControlPanel(Panel):
         params.color = "SECONDARY"
         params.fade = True
 
-        layout.separator()
+        if bloom_effect_supported():
+            layout.separator()
 
-        row = layout.row()
-        row.prop(scene.skybrush.settings, "use_bloom_effect")
-        row.prop(scene.skybrush.settings, "emission_strength")
+            row = layout.row()
+            row.prop(scene.skybrush.settings, "use_bloom_effect")
+            row.prop(scene.skybrush.settings, "emission_strength")

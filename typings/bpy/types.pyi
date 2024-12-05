@@ -99,10 +99,16 @@ class Scene:
     frame_subframe: float
 
     collection: Collection
+    eevee: SceneEEVEE
     render: RenderSettings
     skybrush: DroneShowAddonProperties
 
     def frame_set(self, frame: int, subframe: float = 0.0) -> None: ...
+
+class SceneEEVEE(bpy_struct):
+    bloom_radius: float  # only for Blender <4.3
+    bloom_intensity: float  # only for Blender <4.3
+    use_bloom: bool  # only for Blender <4.3
 
 class Context(bpy_struct):
     area: Area
@@ -220,6 +226,10 @@ class Region(bpy_struct):
 
 class SpaceView3D(Space):
     overlay: View3DOverlay
+    shading: View3DShading
 
 class View3DOverlay(bpy_struct):
     show_overlays: bool
+
+class View3DShading(bpy_struct):
+    type: Literal["WIREFRAME", "SOLID", "MATERIAL", "RENDERED"]

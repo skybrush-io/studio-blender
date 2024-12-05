@@ -79,6 +79,11 @@ Ties are broken according to the order of the drones in the `Drones` collection.
 
 == Enabling or disabling the bloom effect
 
+NOTE: Blender 4.3 removed support for the bloom effect built into the EEVEE
+renderer, therefore this option is not available on Blender 4.3 and later.
+Use the https://docs.blender.org/manual/en/latest/compositing/index.html[Compositor]
+in Blender 4.3 or later to achieve a similar effect.
+
 The btn:[Use bloom effect] checkbox allows you to enable or disable the bloom
 effect that is applied to the 3D view. The bloom effect adds a not-so-subtle
 glow around the drones (and all other bright meshes), but it comes with a caveat:
