@@ -22,7 +22,7 @@ class YawSetpoint:
     """The timestamp associated to the yaw setpoint, in seconds."""
 
     angle: float
-    """The yaw angle associated to the yaw setpoint, in degrees."""
+    """The yaw angle associated to the yaw setpoint, in degrees, CW."""
 
 
 class YawSetpointList:

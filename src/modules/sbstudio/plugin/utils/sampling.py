@@ -140,9 +140,9 @@ def sample_positions_and_yaw_of_objects(
         for obj in objects:
             key = obj.name if by_name else obj
             trajectories[key].append(Point4D(time, *get_position_of_object(obj)))
-            yaw_setpoints[key].append(
-                YawSetpoint(time, get_xyz_euler_rotation_of_object(obj)[2])
-            )
+            rotation = get_xyz_euler_rotation_of_object(obj)
+            # note the conversion from Blender CCW to Skybrush CW representation
+            yaw_setpoints[key].append(YawSetpoint(time, -rotation[2]))
 
     # Ensure that the yaw curve makes sense even if the extracted yaw angles
     # "wrap around" the boundary between -180 and 180 degrees
@@ -318,7 +318,8 @@ def sample_positions_colors_and_yaw_of_objects(
                     _to_int_255(color[2]),
                 )
             )
-            yaw_setpoints[key].append(YawSetpoint(time, rotation[2]))
+            # note the conversion from Blender CCW to Skybrush CW representation
+            yaw_setpoints[key].append(YawSetpoint(time, -rotation[2]))
 
     # Ensure that the yaw curve makes sense even if the extracted yaw angles
     # "wrap around" the boundary between -180 and 180 degrees
