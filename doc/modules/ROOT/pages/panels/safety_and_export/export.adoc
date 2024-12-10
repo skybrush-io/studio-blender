@@ -55,7 +55,7 @@ The validation report starts with a summary of flight statistics and safety test
 
 .IMPORTANT
 ****
-The validation .pdf is created by a local or remote instance of *Skybrush Studio Server* running in the background. As creating the validation report is resource intensive, access to this feature might be disabled on our public server and might be only available through a paid license option. If you need but do not have access, mailto:support@collmot.com[contact us] for obtaining the proper *Skybrush Studio Server* licence.
+The validation .pdf is created by a local or remote instance of *Skybrush Studio Server* running in the background. As creating the validation report is resource intensive, access to this feature might be disabled on our public server and might be only available through a paid license option. If you need but do not have access, mailto:support@collmot.com[contact us] for obtaining the proper *Skybrush Studio Server* license.
 ****
 
 If you press the btn:[Export to validation .pdf] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:

@@ -1,6 +1,7 @@
 import json
 import re
 
+from base64 import b64encode
 from contextlib import contextmanager
 from gzip import compress
 from http.client import HTTPResponse
@@ -106,6 +107,9 @@ class Response:
 
 
 _API_KEY_REGEXP = re.compile(r"^[a-zA-Z0-9-_.]*$")
+_LICENSE_API_KEY_REGEXP = re.compile(
+    r"^License [A-Za-z0-9+/=]{4,}([A-Za-z0-9+/=]{2})*$"
+)
 
 
 class SkybrushStudioAPI:
@@ -126,14 +130,19 @@ class SkybrushStudioAPI:
         Raises:
             ValueError: if the key cannot be a valid API key
         """
-        if not _API_KEY_REGEXP.match(key):
-            raise ValueError("Invalid API key")
+        if key.startswith("License"):
+            if not _LICENSE_API_KEY_REGEXP.match(key):
+                raise ValueError("Invalid license-type API key")
+        else:
+            if not _API_KEY_REGEXP.match(key):
+                raise ValueError("Invalid API key")
         return key
 
     def __init__(
         self,
         url: str = COMMUNITY_SERVER_URL,
         api_key: Optional[str] = None,
+        license_file: Optional[str] = None,
     ):
         """Constructor.
 
@@ -141,12 +150,22 @@ class SkybrushStudioAPI:
             url: the root URL of the Skybrush Studio API; defaults to the public
                 online service
             api_key: the API key used to authenticate with the server
+            license_file: the path to a license file to be used as the API Key
         """
         self._api_key = None
         self._root = None  # type: ignore
         self._request_context = create_default_context()
 
-        self.api_key = api_key
+        if api_key and license_file:
+            raise SkybrushStudioAPIError(
+                "Cannot use API key and license file at the same time"
+            )
+
+        if license_file:
+            self.api_key = self._convert_license_file_to_api_key(license_file)
+        else:
+            self.api_key = api_key
+
         self.url = url
 
     @property
@@ -157,6 +176,26 @@ class SkybrushStudioAPI:
     @api_key.setter
     def api_key(self, value: Optional[str]) -> None:
         self._api_key = self.validate_api_key(value) if value else None
+
+    def _convert_license_file_to_api_key(self, file: str) -> str:
+        """Parses a license file and transforms it to an API key.
+
+        Returns:
+            the license file parsed as an API key
+
+        Raises:
+            ValueError: if the file cannot be read as an API key
+        """
+        if not Path(file).exists():
+            raise ValueError("License file does not exist")
+
+        try:
+            with open(file, "rb") as fp:
+                api_key = f"License {b64encode(fp.read()).decode('ascii')}"
+        except Exception:
+            raise ValueError("Could not read license file") from None
+
+        return api_key
 
     @property
     def url(self) -> str:

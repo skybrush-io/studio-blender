@@ -1,3 +1,5 @@
+import logging
+
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Iterator, Optional, TypeVar
@@ -13,21 +15,35 @@ _fallback_api_key: str = "trial"
 
 T = TypeVar("T")
 
+#############################################################################
+# configure logger
+
+log = logging.getLogger(__name__)
+
 
 @lru_cache(maxsize=1)
-def _get_api_from_url_and_key(url: str, key: str):
-    """Constructs a Skybrush Studio API object from a root URL and an API key.
+def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
+    """Constructs a Skybrush Studio API object from a root URL and an API key
+    or a license file.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
     """
     global _fallback_api_key
 
-    result = SkybrushStudioAPI()
-
-    result.api_key = key or _fallback_api_key
-    if url:
-        result.url = url
+    try:
+        result = SkybrushStudioAPI(
+            api_key=key or (None if license_file else _fallback_api_key),
+            license_file=license_file or None,
+        )
+        if url:
+            result.url = url
+    except ValueError as ex:
+        log.error(f"Could not initialize Skybrush Studio API: {str(ex)}")
+        raise
+    except Exception as ex:
+        log.error(f"Unhandled exception in Skybrush Studio API initialization: {ex!r}")
+        raise
 
     # This is bad practice, but the default installation of Blender does not find
     # the SSL certificates on macOS and there are reports about similar problems
@@ -48,12 +64,14 @@ def get_api() -> SkybrushStudioAPI:
 
     api_key: str
     server_url: str
+    license_file: str
 
     prefs = get_preferences()
     api_key = str(prefs.api_key).strip()
+    license_file = str(prefs.license_file).strip()
     server_url = str(prefs.server_url).strip()
 
-    return _get_api_from_url_and_key(server_url, api_key)
+    return _get_api_from_url_and_key_or_license(server_url, api_key, license_file)
 
 
 @contextmanager

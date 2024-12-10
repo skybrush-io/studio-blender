@@ -17,6 +17,12 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
     bl_idname = "ui_skybrush_studio"
 
+    license_file = StringProperty(
+        name="License file",
+        description="Full path to the license file to be used as the API Key",
+        subtype="FILE_PATH",
+    )
+
     api_key = StringProperty(
         name="API Key",
         description="API Key that is used when communicating with the Skybrush Studio server",
@@ -45,6 +51,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         layout = self.layout
 
         layout.prop(self, "api_key")
+        layout.prop(self, "license_file")
         layout.prop(self, "server_url")
 
         row = layout.row()
