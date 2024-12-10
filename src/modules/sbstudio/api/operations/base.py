@@ -103,7 +103,7 @@ class SkybrushAPIOperationBase(metaclass=ABCMeta):
         ctx.check_hostname = False
         ctx.verify_mode = CERT_NONE
         # create request
-        url = COMMUNITY_SERVER_URL + "/operations/{operation}"
+        url = COMMUNITY_SERVER_URL + f"/operations/{operation}"
         req = Request(url, data=data, headers=headers, method="POST")
         # send it and wait for response
         log.info(
