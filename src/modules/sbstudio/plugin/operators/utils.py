@@ -31,6 +31,7 @@ from sbstudio.plugin.utils.sampling import (
     sample_positions_colors_and_yaw_of_objects,
 )
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
+from sbstudio.plugin.utils.cameras import get_cameras_from_context
 
 
 __all__ = ("get_drones_to_export", "export_show_to_file_using_api")
@@ -311,6 +312,13 @@ def export_show_to_file_using_api(
     # get time markers (cues)
     time_markers = get_time_markers_from_context(context)
 
+    # get cameras
+    export_cameras = settings.get("export_cameras", False)
+    if export_cameras:
+        cameras = get_cameras_from_context(context)
+    else:
+        cameras = None
+
     # get validation parameters
     safety_check = getattr(context.scene.skybrush, "safety_check", None)
     validation = SafetyCheckParams(
@@ -402,6 +410,7 @@ def export_show_to_file_using_api(
             yaw_setpoints=yaw_setpoints,
             output=filepath,
             time_markers=time_markers,
+            cameras=cameras,
             renderer=renderer,
             renderer_params=renderer_params,
         )

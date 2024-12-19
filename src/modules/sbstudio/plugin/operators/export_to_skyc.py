@@ -44,6 +44,13 @@ class SkybrushExportOperator(ExportOperator):
         default=False,
     )
 
+    # yaw control enable/disable
+    export_cameras = BoolProperty(
+        name="Export cameras",
+        description="Specifies whether cameras defined in Blender should be exported into the show file",
+        default=False,
+    )
+
     def get_format(self) -> FileFormat:
         """Returns the file format that the operator uses. Must be overridden
         in subclasses.
@@ -58,4 +65,5 @@ class SkybrushExportOperator(ExportOperator):
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "use_yaw_control": self.use_yaw_control,
+            "export_cameras": self.export_cameras,
         }

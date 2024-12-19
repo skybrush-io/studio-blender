@@ -15,6 +15,7 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+from sbstudio.model.cameras import Camera
 from sbstudio.model.color import Color3D
 from sbstudio.model.point import Point3D
 from sbstudio.model.light_program import LightProgram
@@ -347,6 +348,7 @@ class SkybrushStudioAPI:
         ndigits: int = 3,
         timestamp_offset: Optional[float] = None,
         time_markers: Optional[TimeMarkers] = None,
+        cameras: Optional[list[Camera]] = None,
         renderer: str = "skyc",
         renderer_params: Optional[Dict[str, Any]] = None,
     ) -> Optional[bytes]:
@@ -367,6 +369,7 @@ class SkybrushStudioAPI:
                 purposes in Skybrush Viewer
             time_markers: when specified, time markers will be exported to the
                 .skyc file as temporal cues
+            cameras: when specified, list of cameras to include in the environment
 
         Note: drone names must match in trajectories and lights
 
@@ -385,12 +388,16 @@ class SkybrushStudioAPI:
         if lights is None:
             lights = {name: LightProgram() for name in trajectories.keys()}
 
-        environment = {"type": show_type}
+        environment: dict[str, Any] = {"type": show_type}
+
+        if cameras:
+            environment["cameras"] = [
+                camera.as_dict(ndigits=ndigits) for camera in cameras
+            ]
 
         if time_markers is None:
             time_markers = TimeMarkers()
 
-        # TODO(ntamas): add cameras to environment in the "environment" key
         # TODO: add music to the "media" key
 
         def format_drone(name: str):
