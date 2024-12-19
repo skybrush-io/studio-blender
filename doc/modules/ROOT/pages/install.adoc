@@ -38,11 +38,11 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 6. Setup add-on preferences if you are using a version of *Skybrush Studio for Blender* other than the free community edition:
 
-    API Key:: If you have received an API Key for communicating with the Skybrush Studio server, paste it here.
+    API key:: If you have received an API key for communicating with the Skybrush Studio server, paste it here.
 
-    License file:: If you have received a License file for communicating with the Skybrush Studio server, give its full path here to use it as your API Key.
+    License file:: If you have received a license file for communicating with the Skybrush Studio server, give its full path here to use it as your API Key.
 
-    Server URL:: Enter the URL of a dedicated Skybrush Studio server if you are using a dedicated server.
+    Server URL:: Enter the URL of a dedicated Skybrush Studio server if you are using a dedicated server. You can also click on the btn:[Use local server] button to use a server that is running on your own machine.
 
 === 4. Enable Online Access in Blender
 
@@ -58,7 +58,7 @@ If you are a community user, you do _not_ need to install the *Skybrush Studio S
 
 ==== 5.2 Cloud server for pro users
 
-If you are using a paid, professional version of *Skybrush Studio*, you will receive a license file upon purchase of the software. This license file shall be used as an API key that enables your pro features while using the cloud-based *Skybrush Studio Server* (see setup instructions above on how to use your License file as your API Key).
+If you are using a paid, professional version of *Skybrush Studio*, you will receive a license file upon purchase of the software. This license file shall be used as an API key that enables your pro features while using the cloud-based *Skybrush Studio Server* (see setup instructions above on how to use your license file as your API Key).
 
 ==== 5.3 Local server for VIP users
 

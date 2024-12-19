@@ -18,7 +18,7 @@ The Skybrush compiled show format is a single-file descriptor of your complete d
 
 * If you want to execute your drone show on your real drones, use *Skybrush Live*.
 
-If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+If you press the btn:[Export Skybrush SKYC] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
 
@@ -30,13 +30,13 @@ Light FPS:: Set the output frame rate for light programs (make sure it is a subm
 
 Export yaw:: Enable this checkbox to output rotations around the yaw (vertical) axis of your drone objects into the .skyc file
 
-== Export to .csv
+== Export to CSV
 
 The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range.
 
 TIP: We recommend using Skybrush Live for drone show control, together with the official Skybrush Compiled Format (.skyc), as it contains a lot more information about your show in a more optimized way than this simple CSV representation.
 
-If you press the btn:[Export to .skyc] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+If you press the btn:[Export Skybrush CSV] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
 
@@ -47,9 +47,9 @@ Frame rate:: Set output frame rate of drone trajectories and light programs (mak
 NOTE: Special characters in drone names are converted to standard characters in the exported filenames.
 
 
-== Export to validation .pdf
+== Export validation report
 
-The btn:[Export to validation .pdf] button creates a unique safety report of your show in .pdf format for standalone self-checking, validated reporting or as a supplement for flight permissions or other administration purposes.
+The btn:[Export validation report] button creates a unique safety report of your show in .pdf format for standalone self-checking, validated reporting or as a supplement for flight permissions or other administration purposes.
 
 The validation report starts with a summary of flight statistics and safety test results, and continues with detailed plots on all aspects of the implemented safety checks.
 
@@ -58,7 +58,7 @@ The validation report starts with a summary of flight statistics and safety test
 The validation .pdf is created by a local or remote instance of *Skybrush Studio Server* running in the background. As creating the validation report is resource intensive, access to this feature might be disabled on our public server and might be only available through a paid license option. If you need but do not have access, mailto:support@collmot.com[contact us] for obtaining the proper *Skybrush Studio Server* license.
 ****
 
-If you press the btn:[Export to validation .pdf] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+If you press the btn:[Export validation report] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
 

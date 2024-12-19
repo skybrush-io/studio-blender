@@ -118,6 +118,11 @@ class SkybrushStudioAPI:
     server.
     """
 
+    _api_key: Optional[str] = None
+    """The API key that will be submitted with each request. For license-type
+    API keys, the key must start with the string "License ".
+    """
+
     _root: str
     """The root URL of the API, with a trailing slash"""
 
@@ -153,7 +158,6 @@ class SkybrushStudioAPI:
             api_key: the API key used to authenticate with the server
             license_file: the path to a license file to be used as the API Key
         """
-        self._api_key = None
         self._root = None  # type: ignore
         self._request_context = create_default_context()
 
