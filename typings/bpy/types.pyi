@@ -25,6 +25,8 @@ class bpy_prop_collection(Sequence[T]):
     def get(self, key: str) -> Optional[T]: ...
     @overload
     def get(self, key: str, default: U) -> Union[T, U]: ...
+    def __getitem__(self, key: Union[int, str]) -> T: ...
+    def __len__(self) -> int: ...
 
 class bpy_struct: ...
 
@@ -41,6 +43,44 @@ class ColorRamp(bpy_struct):
 
     def evaluate(self, position: float) -> RGBAColor: ...
 
+class Constraint(bpy_struct):
+    name: str
+    influence: float
+    type: Literal[
+        "CAMERA_SOLVER",
+        "FOLLOW_TRACK",
+        "OBJECT_SOLVER",
+        "COPY_LOCATION",
+        "COPY_ROTATION",
+        "COPY_SCALE",
+        "COPY_TRANSFORMS",
+        "LIMIT_DISTANCE",
+        "LIMIT_LOCATION",
+        "LIMIT_ROTATION",
+        "LIMIT_SCALE",
+        "MAINTAIN_VOLUME",
+        "TRANSFORM",
+        "TRANSFORM_CACHE",
+        "TRACK_TO",
+        "DAMPED_TRACK",
+        "IK",
+        "LOCKED_TRACK",
+        "SPLINE_IK",
+        "STRETCH_TO",
+        "TRACK_TO",
+        "ACTION",
+        "ARMATURE",
+        "CHILD_OF",
+        "FLOOR",
+        "FOLLOW_PATH",
+        "PIVOT",
+        "SHRINKWRAP",
+    ]
+
+class CopyLocationConstraint(Constraint):
+    target: Object
+    subtarget: str
+
 Self = TypeVar("Self", bound="ID")
 
 class ID(bpy_struct):
@@ -49,7 +89,10 @@ class ID(bpy_struct):
 
     def copy(self: Self) -> Self: ...
 
-class MeshVertex(bpy_struct): ...
+class MeshVertex(bpy_struct):
+    groups: bpy_prop_collection[VertexGroupElement]
+    index: int
+    select: bool
 
 class PropertyGroup(bpy_struct):
     name: str
@@ -58,6 +101,15 @@ class RenderSettings(bpy_struct):
     fps: int
     fps_base: float
 
+class VertexGroup(bpy_struct):
+    index: int
+    name: str
+
+class VertexGroupElement(bpy_struct):
+    group: int
+    weight: float
+
+class VertexGroups(bpy_prop_collection[VertexGroup]): ...
 class ViewLayer(bpy_struct): ...
 
 class Collection(ID):
@@ -119,6 +171,8 @@ class Context(bpy_struct):
 
 class Object(ID):
     active_material: Material
+    constraints: ObjectConstraints
+    vertex_groups: VertexGroups
 
     data: ID
     location: Vector3
@@ -145,6 +199,9 @@ class CollectionChildren(bpy_prop_collection[Collection]):
 class CollectionObjects(bpy_prop_collection[Object]):
     def link(self, object: Object) -> None: ...
     def unlink(self, object: Object) -> None: ...
+
+class ObjectConstraints(bpy_prop_collection[Constraint]):
+    def new(self, type: str) -> Constraint: ...
 
 class BlendDataCollections(bpy_prop_collection[Collection]):
     def new(self, name: str) -> Collection: ...

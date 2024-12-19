@@ -1,8 +1,8 @@
 import bpy
 
-from bpy.types import Collection, Context, MeshVertex, Object, Scene, VertexGroup
+from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
 from mathutils import Vector
-from typing import Any, Iterable, List, Optional, Union, Tuple
+from typing import Any, Iterable, List, Optional, Union, Tuple, cast
 
 from sbstudio.model.types import Coordinate3D
 
@@ -80,9 +80,10 @@ def get_vertices_of_object_in_vertex_group(
         object: the object to query
         name: the name of the vertex group
     """
-    result = []
+    result: list[MeshVertex] = []
     mesh = object.data if object else None
     if mesh is not None:
+        mesh = cast(Mesh, mesh)
         index = group.index
         for vertex in mesh.vertices:
             if any(g.group == index for g in vertex.groups):
