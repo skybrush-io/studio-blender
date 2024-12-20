@@ -12,6 +12,7 @@ __all__ = (
     "create_position_evaluator",
     "get_position_of_object",
     "get_xyz_euler_rotation_of_object",
+    "get_quaternion_rotation_of_object",
 )
 
 
@@ -68,3 +69,17 @@ def get_xyz_euler_rotation_of_object(object: Object) -> Rotation3D:
     """
 
     return tuple(degrees(angle) for angle in object.matrix_world.to_euler("XYZ"))
+
+
+def get_quaternion_rotation_of_object(object: Object) -> Rotation3D:
+    """Returns the global rotation of an object at the current frame
+    in quaternions.
+
+    Parameters:
+        object: a Blender object
+
+    Returns:
+        rotation of object in the world frame, in quaternions.
+    """
+
+    return tuple(object.matrix_world.to_quaternion())
