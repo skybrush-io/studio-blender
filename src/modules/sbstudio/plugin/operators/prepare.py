@@ -1,6 +1,6 @@
 from bpy.types import Operator
 
-from sbstudio.plugin.constants import Collections, Templates
+from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import link_object_to_scene
 from sbstudio.plugin.state import get_file_specific_state
 

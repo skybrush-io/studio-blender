@@ -42,7 +42,10 @@ pyclean = "^2.0.0"
 [tool.ruff]
 lint.ignore = ["B027", "B905", "C901", "E402", "E501", "E731"]
 lint.select = ["B", "C", "E", "F", "W"]
-extend-exclude = ["src/modules/sbstudio/vendor"]
+extend-exclude = [
+    "src/modules/sbstudio/vendor",
+    "src/modules/sbstudio/i18n/translations.py"
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

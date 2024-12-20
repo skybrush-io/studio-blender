@@ -17,7 +17,6 @@ from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 if TYPE_CHECKING:
     from bpy.types import Depsgraph, Scene
-    from sbstudio.api.types import Mapping
 
 __all__ = ("UpdateLightEffectsTask",)
 

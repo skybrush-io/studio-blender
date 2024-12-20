@@ -3,18 +3,10 @@ from __future__ import annotations
 import types
 import bpy
 
+from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import (
-    cast,
-    Callable,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    TYPE_CHECKING,
-)
+from typing import cast, Optional
 
 from bpy.path import abspath
 from bpy.props import (
@@ -54,9 +46,6 @@ from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
 
-if TYPE_CHECKING:
-    from sbstudio.api.types import Mapping
-    from sbstudio.plugin.model import StoryboardEntry
 
 __all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
 
@@ -159,8 +148,8 @@ def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
 _always_true = constant(True)
 
 
-def get_color_function_names(self, context: Context) -> List[Tuple[str, str, str]]:
-    names: List[str]
+def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
+    names: list[str]
 
     if self.path:
         absolute_path = abspath(self.path)
@@ -398,7 +387,7 @@ class LightEffect(PropertyGroup):
         self,
         colors: Sequence[MutableRGBAColor],
         positions: Sequence[Coordinate3D],
-        mapping: Optional[List[int]],
+        mapping: Optional[list[int]],
         *,
         frame: int,
         random_seq: RandomSequence,
@@ -422,7 +411,7 @@ class LightEffect(PropertyGroup):
             output_type: str,
             mapping_mode: str,
             output_function,
-        ) -> Tuple[Optional[List[Optional[float]]], Optional[float]]:
+        ) -> tuple[Optional[list[Optional[float]]], Optional[float]]:
             """Get the float output(s) for color ramp or image indexing based on the output type.
 
             Args:
@@ -432,9 +421,9 @@ class LightEffect(PropertyGroup):
             Returns:
                 individual and common outputs
             """
-            outputs: Optional[List[Optional[float]]] = None
+            outputs: Optional[list[Optional[float]]] = None
             common_output: Optional[float] = None
-            order: Optional[List[int]] = None
+            order: Optional[list[int]] = None
 
             if output_type == "FIRST_COLOR":
                 common_output = 0.0

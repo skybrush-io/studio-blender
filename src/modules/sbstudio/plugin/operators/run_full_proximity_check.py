@@ -1,4 +1,3 @@
-from numpy import array, float32
 from typing import Literal
 
 from bpy.types import Context, Operator
