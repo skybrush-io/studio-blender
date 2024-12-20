@@ -77,6 +77,7 @@ class StoryboardEditor(Panel):
             col.prop(entry, "duration")
             col.prop(entry, "frame_end")
             col.prop(entry, "is_name_customized")
+            col.prop(entry, "purpose")
             col.popover(
                 "OBJECT_PT_skybrush_transition_editor_pre",
                 icon="TRACKING_CLEAR_BACKWARDS",

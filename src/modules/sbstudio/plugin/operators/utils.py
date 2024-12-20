@@ -5,16 +5,22 @@ import logging
 from bpy.path import basename
 from bpy.types import Context
 
+from itertools import groupby
 from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Optional, cast
 
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.yaw import YawSetpointList
+from sbstudio.plugin.model.storyboard import (
+    StoryboardEntry,
+    StoryboardEntryPurpose,
+    get_storyboard,
+)
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.model.file_formats import FileFormat
@@ -22,6 +28,7 @@ from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
+from sbstudio.plugin.utils.cameras import get_cameras_from_context
 from sbstudio.plugin.utils.sampling import (
     frame_range,
     sample_colors_of_objects,
@@ -31,13 +38,17 @@ from sbstudio.plugin.utils.sampling import (
     sample_positions_colors_and_yaw_of_objects,
 )
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
-from sbstudio.plugin.utils.cameras import get_cameras_from_context
-
+from sbstudio.utils import get_ends
 
 __all__ = ("get_drones_to_export", "export_show_to_file_using_api")
 
 
 log = logging.getLogger(__name__)
+
+
+class _default_settings:
+    output_fps = 4
+    light_output_fps = 4
 
 
 ################################################################################
@@ -70,7 +81,7 @@ def get_drones_to_export(selected_only: bool = False):
 @with_context
 def _get_frame_range_from_export_settings(
     settings, *, context: Optional[Context] = None
-) -> Optional[Tuple[int, int]]:
+) -> Optional[tuple[int, int]]:
     """Returns the range of frames to export, based on the chosen export settings
     of the user.
 
@@ -85,13 +96,58 @@ def _get_frame_range_from_export_settings(
 
 
 @with_context
+def _get_segments(context: Optional[Context] = None) -> dict[str, tuple[float, float]]:
+    """
+    Returns dictionary that maps show segment IDs to start (inclusive) and end (exclusive) timestamps.
+
+    If invalid configuration is found for a segment, then the segment will be omitted
+    from the result.
+    """
+    result: dict[str, tuple[float, float]] = {}
+    storyboard = get_storyboard(context=context)
+    fps = context.scene.render.fps
+
+    entry_purpose_groups = groupby(storyboard.entries, lambda e: cast(str, e.purpose))
+
+    takeoff_entries: list[StoryboardEntry] | None = None
+    show_entries: list[StoryboardEntry] | None = None
+    landing_entries: list[StoryboardEntry] | None = None
+    show_valid = True
+    for purpose, entries in entry_purpose_groups:
+        if purpose == StoryboardEntryPurpose.TAKEOFF.name:
+            if not (show_entries is None and landing_entries is None):
+                show_valid = False
+                break
+
+            takeoff_entries = list(entries)
+        elif purpose == StoryboardEntryPurpose.SHOW.name:
+            if landing_entries is not None:
+                show_valid = False
+                break
+
+            show_entries = list(entries)
+        elif purpose == StoryboardEntryPurpose.LANDING.name:
+            landing_entries = list(entries)
+
+    if show_valid:
+        if ends := get_ends(takeoff_entries):
+            result["takeoff"] = (ends[0].frame_start * fps, ends[1].frame_end * fps)
+        if ends := get_ends(show_entries):
+            result["show"] = (ends[0].frame_start * fps, ends[1].frame_end * fps)
+        if ends := get_ends(landing_entries):
+            result["landing"] = (ends[0].frame_start * fps, ends[1].frame_end * fps)
+
+    return result
+
+
+@with_context
 def _get_trajectories_and_lights(
     drones,
-    settings: Dict,
-    bounds: Tuple[int, int],
+    settings: dict[str, Any],
+    bounds: tuple[int, int],
     *,
     context: Optional[Context] = None,
-) -> Tuple[Dict[str, Trajectory], Dict[str, LightProgram]]:
+) -> tuple[dict[str, Trajectory], dict[str, LightProgram]]:
     """Get trajectories and LED lights of all selected/picked objects.
 
     Parameters:
@@ -103,11 +159,11 @@ def _get_trajectories_and_lights(
     Returns:
         dictionary of Trajectory and LightProgram objects indexed by object names
     """
-    trajectory_fps = settings.get("output_fps", 4)
-    light_fps = settings.get("light_output_fps", 4)
+    trajectory_fps = settings.get("output_fps", _default_settings.output_fps)
+    light_fps = settings.get("light_output_fps", _default_settings.light_output_fps)
 
-    trajectories: Dict[str, Trajectory]
-    lights: Dict[str, LightProgram]
+    trajectories: dict[str, Trajectory]
+    lights: dict[str, LightProgram]
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
@@ -156,11 +212,11 @@ def _get_trajectories_and_lights(
 @with_context
 def _get_trajectories_lights_and_yaw_setpoints(
     drones,
-    settings: Dict,
-    bounds: Tuple[int, int],
+    settings: dict[str, Any],
+    bounds: tuple[int, int],
     *,
     context: Optional[Context] = None,
-) -> Tuple[Dict[str, Trajectory], Dict[str, LightProgram], Dict[str, YawSetpointList]]:
+) -> tuple[dict[str, Trajectory], dict[str, LightProgram], dict[str, YawSetpointList]]:
     """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
 
     Parameters:
@@ -172,12 +228,12 @@ def _get_trajectories_lights_and_yaw_setpoints(
     Returns:
         dictionary of Trajectory, LightProgram and YawSetpointList objects indexed by object names
     """
-    trajectory_fps = settings.get("output_fps", 4)
-    light_fps = settings.get("light_output_fps", 4)
+    trajectory_fps = settings.get("output_fps", _default_settings.output_fps)
+    light_fps = settings.get("light_output_fps", _default_settings.light_output_fps)
 
-    trajectories: Dict[str, Trajectory]
-    lights: Dict[str, LightProgram]
-    yaw_setpoints: Dict[str, YawSetpointList]
+    trajectories: dict[str, Trajectory]
+    lights: dict[str, LightProgram]
+    yaw_setpoints: dict[str, YawSetpointList]
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
@@ -236,7 +292,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
 def export_show_to_file_using_api(
     api: SkybrushStudioAPI,
     context: Context,
-    settings: Dict,
+    settings: dict[str, Any],
     filepath: Path,
     format: FileFormat,
 ) -> None:
@@ -269,7 +325,7 @@ def export_show_to_file_using_api(
         raise SkybrushStudioExportWarning("Selected frame range is empty")
 
     # determine list of drones to export
-    export_selected_only = settings.get("export_selected", False)
+    export_selected_only: bool = settings.get("export_selected", False)
     drones = list(get_drones_to_export(selected_only=export_selected_only))
     if not drones:
         if export_selected_only:
@@ -282,7 +338,7 @@ def export_show_to_file_using_api(
             )
 
     # get yaw control enabled state
-    use_yaw_control = settings.get("use_yaw_control", False)
+    use_yaw_control: bool = settings.get("use_yaw_control", False)
 
     # get trajectories, light programs and yaw setpoints
     if use_yaw_control:
@@ -335,6 +391,9 @@ def export_show_to_file_using_api(
         min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
     )
 
+    # get show segments
+    show_segments = _get_segments(context=context)
+
     renderer_params = {}
     if "min_nav_altitude" in settings:
         renderer_params = {"min_nav_altitude": settings["min_nav_altitude"]}
@@ -343,7 +402,7 @@ def export_show_to_file_using_api(
     if format is FileFormat.PDF:
         log.info("Exporting validation plots to .pdf")
         plots = settings.get("plots", ["pos", "vel", "nn"])
-        fps = settings.get("output_fps", 4)
+        fps = settings.get("output_fps", _default_settings.output_fps)
         api.generate_plots(
             trajectories=trajectories,
             output=filepath,
@@ -404,6 +463,7 @@ def export_show_to_file_using_api(
         api.export(
             show_title=show_title,
             show_type=show_type,
+            show_segments=show_segments,
             validation=validation,
             trajectories=trajectories,
             lights=lights,

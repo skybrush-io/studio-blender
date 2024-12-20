@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-import bpy
+import enum
 import json
+from dataclasses import dataclass
+from operator import attrgetter
+from uuid import uuid4
+from typing import TYPE_CHECKING, Optional
 
+import bpy
 from bpy.props import (
     BoolProperty,
     CollectionProperty,
@@ -12,9 +17,6 @@ from bpy.props import (
     StringProperty,
 )
 from bpy.types import PropertyGroup
-from operator import attrgetter
-from uuid import uuid4
-from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from sbstudio.api.types import Mapping
 from sbstudio.plugin.constants import (
@@ -32,7 +34,12 @@ from .mixins import ListMixin
 if TYPE_CHECKING:
     from bpy.types import bpy_prop_collection, Collection, Context
 
-__all__ = ("ScheduleOverride", "StoryboardEntry", "Storyboard")
+__all__ = (
+    "ScheduleOverride",
+    "StoryboardEntry",
+    "Storyboard",
+    "StoryboardEntryPurpose",
+)
 
 
 class ScheduleOverride(PropertyGroup):
@@ -78,7 +85,7 @@ class ScheduleOverride(PropertyGroup):
 
     @property
     def label(self) -> str:
-        parts: List[str] = [f"@{self.index}"]
+        parts: list[str] = [f"@{self.index}"]
         if self.pre_delay != 0:
             parts.append(f"dep {self.pre_delay}")
         if self.post_delay != 0:
@@ -106,6 +113,28 @@ def _set_frame_end(self: StoryboardEntry, value: int) -> None:
         self.duration = 0
     else:
         self.duration = value - self.frame_start
+
+
+@dataclass(frozen=True)
+class _StoryboardEntryPurposeMixin:
+    ui_name: str
+    order: int
+
+
+class StoryboardEntryPurpose(_StoryboardEntryPurposeMixin, enum.Enum):
+    """
+    Storyboard entry purposes in the order in which they can follow each-other.
+
+    The `name` of the enum is used to identify values in/for Blender.
+    """
+
+    TAKEOFF = "Takeoff", 1
+    SHOW = "Show", 2
+    LANDING = "Landing", 3
+
+    @property
+    def bpy_enum_item(self) -> tuple[str, str, str, int]:
+        return (self.name, self.ui_name, "", self.order)
 
 
 class StoryboardEntry(PropertyGroup):
@@ -187,6 +216,22 @@ class StoryboardEntry(PropertyGroup):
         default="SYNCHRONIZED",
         options=set(),
     )
+
+    purpose = EnumProperty(
+        items=[
+            StoryboardEntryPurpose.TAKEOFF.bpy_enum_item,
+            StoryboardEntryPurpose.SHOW.bpy_enum_item,
+            StoryboardEntryPurpose.LANDING.bpy_enum_item,
+        ],
+        name="Purpose",
+        description=(
+            "The purpose of the entry in the show. A valid show must start with 0 or more "
+            "takeoff entries, followed by any number of show entries, and end with 0 or more "
+            "landing entries."
+        ),
+        default=StoryboardEntryPurpose.SHOW.name,
+    )
+
     pre_delay_per_drone_in_frames = FloatProperty(
         name="Departure delay",
         description=(
@@ -319,13 +364,13 @@ class StoryboardEntry(PropertyGroup):
         """Whether the transition is staggered."""
         return self.transition_schedule == "STAGGERED"
 
-    def get_enabled_schedule_override_map(self) -> Dict[int, ScheduleOverride]:
+    def get_enabled_schedule_override_map(self) -> dict[int, ScheduleOverride]:
         """Returns a dictionary mapping indices of markers in the source
         formation to the corresponding transition schedule overrides.
 
         Only enabled schedule overrides are considered.
         """
-        result: Dict[int, ScheduleOverride] = {}
+        result: dict[int, ScheduleOverride] = {}
 
         if self.schedule_overrides_enabled:
             for override in self.schedule_overrides:
@@ -432,6 +477,7 @@ class Storyboard(PropertyGroup, ListMixin):
         frame_start: Optional[int] = None,
         duration: Optional[int] = None,
         *,
+        purpose: StoryboardEntryPurpose = StoryboardEntryPurpose.SHOW,
         formation: Optional[Collection] = None,
         select: bool = False,
         context: Optional[Context] = None,
@@ -446,6 +492,7 @@ class Storyboard(PropertyGroup, ListMixin):
                 sensible default
             duration: the duration of the new entry; `None` chooses a sensible
                 default
+            purpose: The purpose of the entry.
             formation: the formation that the newly added entry should refer to
             select: whether to select the newly added entry after it was created
 
@@ -473,10 +520,11 @@ class Storyboard(PropertyGroup, ListMixin):
         if duration is None or duration < 0:
             duration = fps * DEFAULT_STORYBOARD_ENTRY_DURATION
 
-        entry = self.entries.add()
+        entry: StoryboardEntry = self.entries.add()
         entry.frame_start = frame_start
         entry.duration = duration
         entry.name = name
+        entry.purpose = purpose.name
 
         if (
             formation is None
@@ -686,7 +734,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
     def get_frame_range_of_formation_or_transition_at_frame(
         self, frame: int
-    ) -> Optional[Tuple[int, int]]:
+    ) -> Optional[tuple[int, int]]:
         """Returns the start and end frame of the current formation or transition
         that contains the given frame.
 
@@ -760,7 +808,7 @@ class Storyboard(PropertyGroup, ListMixin):
         else:
             return None
 
-    def validate_and_sort_entries(self) -> List[StoryboardEntry]:
+    def validate_and_sort_entries(self) -> list[StoryboardEntry]:
         """Validates the entries in the storyboard and sorts them by start time,
         keeping the active entry index point at the same entry as before.
 
@@ -774,8 +822,36 @@ class Storyboard(PropertyGroup, ListMixin):
         entries = list(self.entries)
         entries.sort(key=StoryboardEntry.sort_key)
 
-        # Check that entries do not overlap
-        for index, (entry, next_entry) in enumerate(zip(entries, entries[1:])):
+        for validator in (
+            self._validate_entry_sequence,
+            self._validate_formation_size_contraints,
+        ):
+            validator(entries)
+
+        active_entry = self.active_entry
+        self._sort_entries()
+        self.active_entry = active_entry
+
+        # Retrieve the entries again because _sort_entries() might have changed
+        # the ordering
+        return sorted(self.entries, key=StoryboardEntry.sort_key)
+
+    def _validate_entry_sequence(self, sorted_entries: list[StoryboardEntry]) -> None:
+        """
+        Validates the given entry sequence by ensuring consecutive items can follow each-other.
+
+        Validation rules:
+
+        - Entries must not overlap.
+        - Entry purposes are in the correct order.
+
+        Raises:
+            StoryboardValidationError: If validation fails.
+        """
+        for index, (entry, next_entry) in enumerate(
+            zip(sorted_entries, sorted_entries[1:])
+        ):
+            # -- No overlap.
             if entry.frame_end >= next_entry.frame_start:
                 raise StoryboardValidationError(
                     f"Storyboard entry {entry.name!r} at index {index + 1} and "
@@ -783,10 +859,30 @@ class Storyboard(PropertyGroup, ListMixin):
                     f"{next_entry.name!r}"
                 )
 
-        # Check sizes of constraints
+            # -- Purposes are in the correct order.
+            entry_purpose, next_purpose = (
+                StoryboardEntryPurpose[entry.purpose],
+                StoryboardEntryPurpose[next_entry.purpose],
+            )
+            if entry_purpose.order > next_purpose.order:
+                raise StoryboardValidationError(
+                    f"Storyboard entry {entry_purpose.name!r} has purpose "
+                    f"{StoryboardEntryPurpose[entry_purpose].ui_name}, which can not be followed by "
+                    f"a {StoryboardEntryPurpose[ next_purpose].ui_name} entry."
+                )
+
+    def _validate_formation_size_contraints(
+        self, sorted_entries: list[StoryboardEntry]
+    ) -> None:
+        """
+        Validates that the given entries satisfy formation size constraints.
+
+        Raises:
+            StoryboardValidationError: If validation fails.
+        """
         drones = Collections.find_drones(create=False)
         num_drones = len(drones.objects) if drones else 0
-        for entry in entries:
+        for entry in sorted_entries:
             formation = entry.formation
             if formation is None:
                 continue
@@ -802,14 +898,6 @@ class Storyboard(PropertyGroup, ListMixin):
                 raise StoryboardValidationError(
                     f"Storyboard entry {entry.name!r} contains a formation with {num_markers} drones but {msg}"
                 )
-
-        active_entry = self.active_entry
-        self._sort_entries()
-        self.active_entry = active_entry
-
-        # Retrieve the entries again because _sort_entries() might have changed
-        # the ordering
-        return sorted(self.entries, key=StoryboardEntry.sort_key)
 
     def _on_active_entry_moving_down(self, this_entry, next_entry) -> bool:
         pad = next_entry.frame_start - this_entry.frame_end
@@ -838,7 +926,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
 
 @with_context
-def get_storyboard(context: Optional[Context] = None) -> Storyboard:
+def get_storyboard(*, context: Optional[Context] = None) -> Storyboard:
     """Helper function to retrieve the storyboard of the add-on from the
     given context object.
     """

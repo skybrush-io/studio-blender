@@ -4,7 +4,6 @@ from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Operator
 
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
-from typing import List
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections, Formations, Templates
@@ -13,7 +12,7 @@ from sbstudio.plugin.materials import (
     create_keyframe_for_diffuse_color_of_material,
 )
 from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
-from sbstudio.plugin.model.storyboard import get_storyboard
+from sbstudio.plugin.model.storyboard import StoryboardEntryPurpose, get_storyboard
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_material_from_drone_template,
 )
@@ -64,7 +63,7 @@ def create_points_of_takeoff_grid(
     spacing_col: float = 1,
     intra_slot_spacing_row: float = 0.5,
     intra_slot_spacing_col: float = 0.5,
-) -> List[Coordinate3D]:
+) -> list[Coordinate3D]:
     """Creates the points of a takeoff grid centered at the given coordinate.
 
     Parameters:
@@ -390,6 +389,7 @@ class CreateTakeoffGridOperator(Operator):
                 formation=create_formation(Formations.TAKEOFF_GRID, points),
                 frame_start=context.scene.frame_start,
                 duration=0,
+                purpose=StoryboardEntryPurpose.TAKEOFF,
                 select=True,
                 context=context,
             )

@@ -11,7 +11,11 @@ from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
-from sbstudio.plugin.model.storyboard import get_storyboard
+from sbstudio.plugin.model.storyboard import (
+    Storyboard,
+    StoryboardEntryPurpose,
+    get_storyboard,
+)
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
 from sbstudio.plugin.utils.transition import find_transition_constraint_between
 
@@ -68,14 +72,14 @@ class LandOperator(StoryboardOperator):
     )
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: Context):
         if not super().poll(context):
             return False
 
         drones = Collections.find_drones(create=False)
         return drones is not None and len(drones.objects) > 0
 
-    def invoke(self, context, event):
+    def invoke(self, context: Context, event):
         self.start_frame = max(
             context.scene.frame_current, get_storyboard(context=context).frame_end
         )
@@ -89,7 +93,7 @@ class LandOperator(StoryboardOperator):
             success = False
         return {"FINISHED"} if success else {"CANCELLED"}
 
-    def _run(self, storyboard, *, context) -> bool:
+    def _run(self, storyboard: Storyboard, *, context: Context) -> bool:
         bpy.ops.skybrush.prepare()
 
         if not self._validate_start_frame(context):
@@ -166,6 +170,7 @@ class LandOperator(StoryboardOperator):
             frame_start=end_of_landing,
             duration=0,
             select=True,
+            purpose=StoryboardEntryPurpose.LANDING,
             context=context,
         )
         assert entry is not None
