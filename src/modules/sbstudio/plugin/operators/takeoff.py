@@ -4,7 +4,6 @@ from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context
 from math import ceil, inf
 
-from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
@@ -14,7 +13,11 @@ from sbstudio.plugin.model.formation import (
     ensure_formation_consists_of_points,
 )
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
-from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard
+from sbstudio.plugin.model.storyboard import (
+    Storyboard,
+    StoryboardEntryPurpose,
+    get_storyboard,
+)
 from sbstudio.plugin.operators.recalculate_transitions import (
     RecalculationTask,
     recalculate_transitions,
@@ -103,7 +106,7 @@ class TakeoffOperator(StoryboardOperator):
         self.start_frame = int(max(min(context.scene.frame_current, end), start))
         return context.window_manager.invoke_props_dialog(self)
 
-    def execute_on_storyboard(self, storyboard, entries, context: Context):
+    def execute_on_storyboard(self, storyboard: Storyboard, entries, context: Context):
         try:
             success = self._run(storyboard, context=context)
         except SkybrushStudioError:
@@ -176,6 +179,7 @@ class TakeoffOperator(StoryboardOperator):
                 formation=create_formation(Formations.TAKEOFF_GRID, source),
                 frame_start=self.start_frame,
                 duration=0,
+                purpose=StoryboardEntryPurpose.TAKEOFF,
                 select=False,
                 context=context,
             )
@@ -193,6 +197,7 @@ class TakeoffOperator(StoryboardOperator):
             formation=create_formation(Formations.TAKEOFF, target),
             frame_start=end_of_takeoff,
             duration=0,
+            purpose=StoryboardEntryPurpose.TAKEOFF,
             select=True,
             context=context,
         )

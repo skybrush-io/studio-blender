@@ -1,10 +1,10 @@
 import importlib.util
 
 from collections import OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Generic, List, Sequence, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from sbstudio.model.types import Coordinate3D
 
@@ -46,6 +46,28 @@ def distance_sq_of(p: Coordinate3D, q: Coordinate3D) -> float:
     return (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2
 
 
+def get_ends(items: Optional[Iterable[T]]) -> tuple[T, T] | None:
+    """
+    Returns the first and last item from the given iterable as a tuple if the
+    iterable is not empty, otherwise returns `None`.
+
+    If the iterable contains only one item, then first and last will be that one item.
+    """
+    if items is None:
+        return None
+
+    iterator = iter(items)
+    try:
+        first = last = next(iterator)
+    except StopIteration:
+        return None
+
+    for item in iterator:
+        last = item
+
+    return (first, last)
+
+
 def negate(func: Callable[..., bool]) -> Callable[..., bool]:
     """Decorator that takes a function that returns a Boolean value and returns
     another function that returns the negation of the result of the original
@@ -60,7 +82,7 @@ def negate(func: Callable[..., bool]) -> Callable[..., bool]:
 
 
 def simplify_path(
-    points: Sequence[T], *, eps: float, distance_func: Callable[[List[T], T, T], float]
+    points: Sequence[T], *, eps: float, distance_func: Callable[[list[T], T, T], float]
 ) -> Sequence[T]:
     """Simplifies a sequence of points to a similar sequence with fewer
     points, using a distance function and an acceptable error term.
