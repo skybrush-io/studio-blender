@@ -103,7 +103,14 @@ class RenderSettings(bpy_struct):
 
 class VertexGroup(bpy_struct):
     index: int
+    lock_weight: bool
     name: str
+
+    def add(
+        self, index: int, weight: float, type: Literal["ADD", "REPLACE", "SUBTRACT"]
+    ) -> None: ...
+    def remove(self, index: int) -> None: ...
+    def weight(self, index: int) -> float: ...
 
 class VertexGroupElement(bpy_struct):
     group: int

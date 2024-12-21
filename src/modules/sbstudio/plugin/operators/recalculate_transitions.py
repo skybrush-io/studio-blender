@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from math import inf
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Union, cast
 
 import bpy
+from bpy.types import Collection, Mesh, MeshVertex, Object
 
 from bpy.props import EnumProperty
 
@@ -176,14 +177,17 @@ class InfluenceCurveDescriptor:
                 kf.handle_left_type = "AUTO_CLAMPED"
 
 
-class _LazyFormationObjectList:
+class _LazyFormationTargetList:
     """Helper object that takes a reference to a storyboard entry, and provides
     a ``find()`` method for it to look up the index of an object within the
     formation, falling back to a default value when the object is not in the
     collection.
     """
 
-    _items: Optional[list] = None
+    _formation: Optional[Collection] = None
+    """The formation of the storyboard entry."""
+
+    _items: Optional[List[Union[Object, MeshVertex]]] = None
 
     def __init__(self, entry: Optional[StoryboardEntry]):
         self._formation = entry.formation if entry else None
@@ -191,15 +195,25 @@ class _LazyFormationObjectList:
     def find(self, item, *, default: int = 0) -> int:
         if item is None:
             return default
+
         if self._items is None:
             self._items = self._validate_items()
+
         try:
             return self._items.index(item)
         except ValueError:
             return default
 
-    def _validate_items(self) -> list:
-        return list(self._formation.objects) if self._formation else []
+    def _validate_items(self) -> List[Union[Object, MeshVertex]]:
+        if self._formation is None:
+            return []
+        else:
+            return [
+                v
+                for v, _ in get_markers_and_related_objects_from_formation(
+                    self._formation
+                )
+            ]
 
 
 def get_coordinates_of_formation(formation, *, frame: int) -> List[Tuple[float, ...]]:
@@ -280,13 +294,37 @@ def calculate_mapping_for_transition_into_storyboard_entry(
     return result
 
 
+def _vertex_index_to_vertex_group_name(index: int) -> str:
+    """Converts a vertex index to the preferred name of a vertex group that holds
+    this vertex only.
+
+    Vertex groups holding a single vertex are required to make a single vertex
+    become a transition target in a mesh-based formation.
+    """
+    return create_internal_id(f"Vertex {index}")
+
+
+def _vertex_group_name_to_vertex_index(name: str) -> Optional[int]:
+    """Extracts the index of a vertex from a vertex group name if it was
+    created earlier with `_vertex_index_to_vertex_group_name()`.
+    """
+    if (
+        name.startswith("Skybrush[Vertex ")
+        and name.endswith("]")
+        and name[16:-1].isdigit()
+    ):
+        return int(name[16:-1])
+    else:
+        return None
+
+
 def calculate_departure_index_of_drone(
     drone,
     drone_index: int,
     previous_entry: Optional[StoryboardEntry],
     previous_entry_index: int,
     previous_mapping: Optional[Mapping],
-    objects_in_previous_formation,
+    targets_in_previous_formation: _LazyFormationTargetList,
 ) -> int:
     """Calculates the departure index of a drone (i.e. the index of the source
     marker that a drone is associated to) in a transition.
@@ -301,32 +339,69 @@ def calculate_departure_index_of_drone(
             return 0
         else:
             return previous_target_index
-    else:
-        # Previous mapping not known. All is not lost, however; we
-        # can find which point in the previous formation the drone
-        # must have belonged to by finding the constraint that binds
-        # the drone to the previous storyboard entry
-        if previous_entry is not None:
-            previous_constraint = find_transition_constraint_between(
-                drone=drone, storyboard_entry=previous_entry
-            )
-            if previous_constraint is not None:
-                previous_obj = previous_constraint.target
-            else:
-                # Either the drone did not participate in the previous formation,
-                # or the previous storyboard entry is the first one in the
-                # storyboard, in which case there are no constraints
-                if previous_entry_index == 0:
-                    return drone_index
 
-                previous_obj = None
-            return objects_in_previous_formation.find(previous_obj)
+    # Previous mapping not known. All is not lost, however; we
+    # can find which point in the previous formation the drone
+    # must have belonged to by finding the constraint that binds
+    # the drone to the previous storyboard entry
+
+    if previous_entry is None:
+        # This is the first entry. If we are calculating a
+        # transition _into_ the first entry, the drones are
+        # simply ordered according to how they are placed in the
+        # Drones collection
+        return drone_index
+
+    previous_constraint = find_transition_constraint_between(
+        drone=drone, storyboard_entry=previous_entry
+    )
+    if previous_constraint is None:
+        # Either the drone did not participate in the previous formation,
+        # or the previous storyboard entry is the first one in the
+        # storyboard, in which case there are no constraints
+        return drone_index if previous_entry_index == 0 else 0
+
+    previous_obj = previous_constraint.target
+    previous_mesh = cast(Mesh, previous_obj.data)
+
+    if previous_constraint.subtarget:
+        # The constraint targets a vertex group of the object and the
+        # subtarget property specifies which vertex to target within the
+        # vertex group
+        try:
+            vertex_group = previous_obj.vertex_groups[previous_constraint.subtarget]
+        except KeyError:
+            # No such vertex group; something is wrong
+            return 0
+
+        # Blender's data structures are weird; we need to find the only vertex
+        # in the vertex group, but we cannot get it directly fron the group.
+        # The group only provides a weight() method that returns the weight of
+        # a vertex if it is in the group, and throws an exception otherwise.
+        #
+        # We are going to use the subtarget name as a hint as it should contain
+        # the vertex index if the user did not rename the subtarget. If this
+        # fails, we will iterate over all vertices in the mesh to find the one
+        # that is in the vertex group.
+        vertex_index = _vertex_group_name_to_vertex_index(previous_constraint.subtarget)
+        if vertex_index is not None:
+            previous_target = previous_mesh.vertices[vertex_index]
         else:
-            # This is the first entry. If we are calculating a
-            # transition _into_ the first entry, the drones are
-            # simply ordered according to how they are placed in the
-            # Drones collection
-            return drone_index
+            for vertex in previous_mesh.vertices:
+                try:
+                    if vertex_group.weight(vertex.index) > 0:
+                        previous_target = vertex
+                        break
+                except Exception:
+                    pass
+            else:
+                # No vertex in the group; something is wrong
+                return 0
+
+    else:
+        previous_target = previous_mesh
+
+    return targets_in_previous_formation.find(previous_target)
 
 
 def update_transition_constraint_properties(drone, entry: StoryboardEntry, marker, obj):
@@ -383,7 +458,7 @@ def update_transition_constraint_properties(drone, entry: StoryboardEntry, marke
         # find a vertex group that contains the vertex only, and
         # use the vertex group as a subtarget
         index = marker.index
-        vertex_group_name = create_internal_id(f"Vertex {index}")
+        vertex_group_name = _vertex_index_to_vertex_group_name(index)
         vertex_groups = obj.vertex_groups
         try:
             vertex_group = vertex_groups[vertex_group_name]
@@ -504,8 +579,8 @@ def update_transition_for_storyboard_entry(
 
     # Placeholder for the list of objects in the current and previous formations;
     # will be calculated on-demand for staggered transitions if needed
-    objects_in_formation = _LazyFormationObjectList(entry)
-    objects_in_previous_formation = _LazyFormationObjectList(previous_entry)
+    objects_in_formation = _LazyFormationTargetList(entry)
+    objects_in_previous_formation = _LazyFormationTargetList(previous_entry)
 
     # Create a mapping that maps indices of points in the source formation to
     # the corresponding schedule overrides (if any)
@@ -545,7 +620,7 @@ def update_transition_for_storyboard_entry(
                     previous_mapping,
                     objects_in_previous_formation,
                 )
-                arrival_index = objects_in_formation.find(obj)
+                arrival_index = objects_in_formation.find(marker)
 
                 departure_delay = entry.pre_delay_per_drone_in_frames * departure_index
                 arrival_delay = -entry.post_delay_per_drone_in_frames * (
