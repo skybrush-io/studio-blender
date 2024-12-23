@@ -362,7 +362,6 @@ def calculate_departure_index_of_drone(
         return drone_index if previous_entry_index == 0 else 0
 
     previous_obj = previous_constraint.target
-    previous_mesh = cast(Mesh, previous_obj.data)
 
     if previous_constraint.subtarget:
         # The constraint targets a vertex group of the object and the
@@ -384,6 +383,7 @@ def calculate_departure_index_of_drone(
         # fails, we will iterate over all vertices in the mesh to find the one
         # that is in the vertex group.
         vertex_index = _vertex_group_name_to_vertex_index(previous_constraint.subtarget)
+        previous_mesh = cast(Mesh, previous_obj.data)
         if vertex_index is not None:
             previous_target = previous_mesh.vertices[vertex_index]
         else:
@@ -399,7 +399,7 @@ def calculate_departure_index_of_drone(
                 return 0
 
     else:
-        previous_target = previous_mesh
+        previous_target = previous_constraint.target
 
     return targets_in_previous_formation.find(previous_target)
 
