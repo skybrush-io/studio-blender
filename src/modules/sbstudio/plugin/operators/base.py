@@ -146,7 +146,6 @@ class ExportOperator(Operator, ExportHelper):
         settings = {
             "export_selected": self.export_selected,
             "frame_range": self.frame_range,
-            "min_nav_altitude": 0.1,  # TODO(ntamas): should be configurable
             **self.get_settings(),
         }
 

@@ -395,8 +395,6 @@ def export_show_to_file_using_api(
     show_segments = _get_segments(context=context)
 
     renderer_params = {}
-    if "min_nav_altitude" in settings:
-        renderer_params = {"min_nav_altitude": settings["min_nav_altitude"]}
 
     # create Skybrush converter object
     if format is FileFormat.PDF:
