@@ -41,16 +41,21 @@ class SkybrushPDFExportOperator(ExportOperator):
         name="Plot positions",
         default=True,
         description=(
-            "Include position plot. "
-            "Uncheck to exclude position plot from the output."
+            "Include position plot. Uncheck to exclude position plot from the output."
         ),
     )
     plot_vel = BoolProperty(
         name="Plot velocities",
         default=True,
         description=(
-            "Include velocity plot. "
-            "Uncheck to exclude velocity plot from the output."
+            "Include velocity plot. Uncheck to exclude velocity plot from the output."
+        ),
+    )
+    plot_drift = BoolProperty(
+        name="Plot projected drift",
+        default=True,
+        description=(
+            "Include projected drift plot. Uncheck to exclude projected drift plot from the output."
         ),
     )
     plot_nn = BoolProperty(
@@ -91,6 +96,7 @@ class SkybrushPDFExportOperator(ExportOperator):
         plots = {
             "pos": self.plot_pos,
             "vel": self.plot_vel,
+            "drift": self.plot_drift,
             "nn": self.plot_nn,
             "nnall": self.plot_nnall,
             "indiv": self.plot_indiv,

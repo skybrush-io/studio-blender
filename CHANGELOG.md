@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Pro feature: new validation plot type added for predicting drift thoughout 
+  the entire show. This is a very important validation check to avoid situations 
+  when too high acceleration is expected from the drones and they will surely lag 
+  behind their expected trajectory and thus possibly crash with others.
+
 ### Removed
 
 - Renderer parameter `min_nav_altitude` got removed as the new release of 

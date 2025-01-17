@@ -399,7 +399,7 @@ def export_show_to_file_using_api(
     # create Skybrush converter object
     if format is FileFormat.PDF:
         log.info("Exporting validation plots to .pdf")
-        plots = settings.get("plots", ["pos", "vel", "nn"])
+        plots = settings.get("plots", ["pos", "vel", "drift", "nn"])
         fps = settings.get("output_fps", _default_settings.output_fps)
         api.generate_plots(
             trajectories=trajectories,

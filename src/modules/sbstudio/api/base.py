@@ -504,7 +504,7 @@ class SkybrushStudioAPI:
         trajectories: dict[str, Trajectory],
         output: Path,
         validation: SafetyCheckParams,
-        plots: Sequence[str] = ("pos", "vel", "nn"),
+        plots: Sequence[str] = ("pos", "vel", "drift", "nn"),
         fps: float = 4,
         ndigits: int = 3,
         time_markers: Optional[TimeMarkers] = None,
