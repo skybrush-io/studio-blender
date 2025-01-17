@@ -18,6 +18,8 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
+      - name: Setup Poetry plugins
+        run: poetry self add poetry-plugin-export
       - name: Build add-on
         run: etc/scripts/create_blender_dist.sh
       - uses: actions/upload-artifact@v4
