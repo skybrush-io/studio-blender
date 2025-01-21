@@ -100,7 +100,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         unit="ACCELERATION",
         min=0.1,
         soft_min=0.1,
-        soft_max=20,
+        soft_max=10,
     )
 
     random_seed = IntProperty(
