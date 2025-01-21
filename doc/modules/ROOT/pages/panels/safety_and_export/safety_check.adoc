@@ -42,13 +42,22 @@ The text-based velocity warning on the left side of the 3D Viewport editor alway
 
 To enable or disable velocity warnings, use the btn:[Show velocity warnings] checkbox.
 
+== Acceleration warnings
+
+This option lets you define a maximum acceleration for drones in your drone show. If there are drones above the acceleration limit, you get real-time acceleration warnings.
+
+The text-based acceleration warning on the left side of the 3D Viewport editor always shows you the maximum acceleration of drones on the current frame, irrespectively of the direction (horizontal or vertical). Note that acceleration is treated as an unsigned quantity: accelerations and decelerations are not distinguished. Drones above the acceleration threshold at a given frame are highlighted in magenta.
+
+To enable or disable acceleration warnings, use the btn:[Show acceleration warnings] checkbox.
+
+
 .Technical details
 ****
-Velocity warnings are special in the sense that in order to accurately estimate the velocity of a drone in any given frame, you need to know the position of the drone in the _previous_ and in the _next_ frame as well. However, Blender does not allow its add-ons to query the position of an object in a specific frame without explicitly switching to that frame, and switching frames all the time automatically for sake of the velocity validation would render the UI useless. Therefore, *Skybrush Studio* will manage a cache of positions instead, for all the drones in a limited set of previously visited frames, and will attempt to estimate the velocity from the current frame and the information in the cache instead.
+Velocity warnings are special in the sense that in order to accurately estimate the velocity of a drone in any given frame, you need to know the position of the drone in the _previous_ and in the _next_ frame as well. However, Blender does not allow its add-ons to query the position of an object in a specific frame without explicitly switching to that frame, and switching frames all the time automatically for sake of the velocity validation would render the UI useless. Therefore, *Skybrush Studio* will manage a cache of positions instead, for all the drones in a limited set of previously visited frames, and will attempt to estimate the velocity from the current frame and the information in the cache instead. A similar policy is applied for acceleration estimates -- these are estimated from the velocities if there are cached velocities for surrounding frames.
 
-The rules are as follows. If the cache contains information about the positions of the drones in nearby frames (because you have visited these frames before), *Skybrush Studio* will show the maximum velocities in the 3D Viewport and perform the validation accordingly. If there is not enough information about nearby frames, the validation will _not_ take place.
+The rules are as follows. If the cache contains information about the positions of the drones in nearby frames (because you have visited these frames before), *Skybrush Studio* will show the maximum velocities in the 3D Viewport and perform the validation accordingly. If there is not enough information about nearby frames, the validation will _not_ take place. Similarly, if the cache contains information about the accelerations of the drones in nearby frames, the acceleration warnings will be shown. If there is not enough information about nearby frames, the validation will _not_ take place.
 
-The safest way to perform the real-time velocity validation is to start playing the show in the 3D Viewport because then Blender will visit the frames one by one. Another option is to scrub through the video by dragging the current frame marker in the Timeline panel of Blender, _slowly_. The definition of "slow" depends on the zoom level of the timeline - if the timeline is zoomed out to cover a ten-minute show, even a few pixels on the timeline may represent a jump that is large enough so that *Skybrush Studio* will not attempt an estimation.
+The safest way to perform the real-time velocity and acceleration validation is to start playing the show in the 3D Viewport because then Blender will visit the frames one by one. Another option is to scrub through the video by dragging the current frame marker in the Timeline panel of Blender, _slowly_. The definition of "slow" depends on the zoom level of the timeline - if the timeline is zoomed out to cover a ten-minute show, even a few pixels on the timeline may represent a jump that is large enough so that *Skybrush Studio* will not attempt an estimation.
 ****
 
 == Finding all drone pairs closer than the proximity warning threshold

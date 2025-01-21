@@ -9,6 +9,7 @@ from gpu_extras.batch import batch_for_shader
 from typing import List, Literal, Optional, Sequence, Tuple, TYPE_CHECKING, cast
 
 from sbstudio.model.types import Coordinate3D
+from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
 from .base import ShaderOverlay
 
@@ -30,7 +31,7 @@ __all__ = ("SafetyCheckOverlay",)
 Color = Tuple[float, float, float]
 """Type alias for RGB colors in this module."""
 
-MarkerGroup = Literal["altitude", "proximity", "velocity", "generic"]
+MarkerGroup = Literal["altitude", "proximity", "velocity", "acceleration", "generic"]
 """Currently supported marker groups."""
 
 Marker = Tuple[Sequence[Coordinate3D], MarkerGroup]
@@ -43,12 +44,14 @@ ALTITUDE_WARNING_COLOR: Color = (0.47, 0.65, 1.0)  # "Blender blue"
 GENERIC_WARNING_COLOR: Color = (1, 0, 0)  # red
 PROXIMITY_WARNING_COLOR: Color = (1, 0, 0)  # red
 VELOCITY_WARNING_COLOR: Color = (1, 1, 0)  # yellow
+ACCELERATION_WARNING_COLOR: Color = (1, 0, 1)  # magenta
 
 _group_to_color_map: dict[str, Color] = {
     "generic": GENERIC_WARNING_COLOR,
     "altitude": ALTITUDE_WARNING_COLOR,
     "proximity": PROXIMITY_WARNING_COLOR,
     "velocity": VELOCITY_WARNING_COLOR,
+    "acceleration": ACCELERATION_WARNING_COLOR,
 }
 """Mapping from marker group names to the corresponding colors on the overlay."""
 
@@ -93,7 +96,9 @@ class SafetyCheckOverlay(ShaderOverlay):
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
-        safety_check = getattr(skybrush, "safety_check", None)
+        safety_check: Optional[SafetyCheckProperties] = getattr(
+            skybrush, "safety_check", None
+        )
         if not safety_check:
             return
 
@@ -187,6 +192,21 @@ class SafetyCheckOverlay(ShaderOverlay):
                 f"Max velocity XY: {safety_check.max_velocity_xy:.1f} m/s | "
                 f"U: {safety_check.max_velocity_z_up:.1f} m/s | "
                 f"D: {safety_check.max_velocity_z_down:.1f} m/s",
+            )
+            y -= line_height
+
+        if (
+            safety_check.acceleration_warning_enabled
+            and safety_check.max_acceleration_is_valid
+        ):
+            set_warning_color_iff(
+                safety_check.should_show_acceleration_warning,
+                font_id,
+                ACCELERATION_WARNING_COLOR,
+            )
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(
+                font_id, f"Max acceleration: {safety_check.max_acceleration:.1f} m/s/s"
             )
             y -= line_height
 

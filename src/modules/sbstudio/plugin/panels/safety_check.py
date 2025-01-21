@@ -1,4 +1,4 @@
-from bpy.types import Panel
+from bpy.types import Context, Panel
 
 from sbstudio.plugin.operators import (
     RunFullProximityCheckOperator,
@@ -24,17 +24,17 @@ class SafetyCheckPanel(Panel):
     bl_category = "Safety & Export"
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: Context):
         return context.scene.skybrush.safety_check
 
-    def draw_header(self, context):
+    def draw_header(self, context: Context):
         scene = context.scene
         safety_check = scene.skybrush.safety_check
 
         if safety_check:
             self.layout.prop(safety_check, "enabled", text="")
 
-    def draw(self, context):
+    def draw(self, context: Context):
         scene = context.scene
         safety_check = scene.skybrush.safety_check
         settings = scene.skybrush.settings
@@ -47,6 +47,8 @@ class SafetyCheckPanel(Panel):
         row = layout.row()
         row.enabled = safety_check.enabled
 
+        # Proximity warning widgets
+
         col = row.column()
         col.prop(safety_check, "proximity_warning_enabled")
         row = col.row()
@@ -56,12 +58,16 @@ class SafetyCheckPanel(Panel):
         row.prop(safety_check, "proximity_warning_target", text="")
         row.enabled = safety_check.proximity_warning_enabled
 
+        # Altitude warning widgets
+
         col.prop(safety_check, "altitude_warning_enabled")
 
         row = col.row()
         row.prop(safety_check, "min_navigation_altitude", text="Low", slider=True)
         row.prop(safety_check, "altitude_warning_threshold", text="High", slider=True)
         row.enabled = safety_check.altitude_warning_enabled
+
+        # Velocity warning widgets
 
         col.prop(safety_check, "velocity_warning_enabled")
 
@@ -87,6 +93,14 @@ class SafetyCheckPanel(Panel):
         col2.enabled = safety_check.velocity_z_warning_different_up
         row.enabled = safety_check.velocity_warning_enabled
 
+        # Aceleration warning widgets
+
+        col.prop(safety_check, "acceleration_warning_enabled")
+        row = col.row()
+        row.prop(safety_check, "acceleration_warning_threshold", text="", slider=True)
+        row.enabled = safety_check.proximity_warning_enabled
+
+        # Miscellaneous
         layout.separator()
 
         layout.operator(RunFullProximityCheckOperator.bl_idname)

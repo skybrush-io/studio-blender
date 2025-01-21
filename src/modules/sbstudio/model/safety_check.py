@@ -16,6 +16,7 @@ class SafetyCheckParams:
     max_altitude: float = 150
     max_velocity_xy: float = 8
     max_velocity_z: float = 3
+    max_acceleration: float = 4
     min_distance: float = 3
     max_velocity_z_up: Optional[float] = None
     min_nav_altitude: float = 2.5
@@ -34,6 +35,7 @@ class SafetyCheckParams:
             "maxAltitude": round(self.max_altitude, ndigits=ndigits),
             "maxVelocityXY": round(self.max_velocity_xy, ndigits=ndigits),
             "maxVelocityZ": round(self.max_velocity_z, ndigits=ndigits),
+            "maxAcceleration": round(self.max_acceleration, ndigits=ndigits),
             "minDistance": round(self.min_distance, ndigits=ndigits),
             "minNavAltitude": round(self.min_nav_altitude, ndigits=ndigits),
         }
@@ -49,6 +51,7 @@ class SafetyCheckResult:
     drones_over_max_altitude: List[Coordinate3D] = field(default_factory=list)
     drones_over_max_velocity_xy: List[Coordinate3D] = field(default_factory=list)
     drones_over_max_velocity_z: List[Coordinate3D] = field(default_factory=list)
+    drones_over_max_acceleration: List[Coordinate3D] = field(default_factory=list)
     drones_below_min_nav_altitude: List[Coordinate3D] = field(default_factory=list)
     closest_pair: Optional[Tuple[Coordinate3D, Coordinate3D]] = None
     min_distance: Optional[float] = None
@@ -61,6 +64,7 @@ class SafetyCheckResult:
         self.drones_over_max_altitude.clear()
         self.drones_over_max_velocity_xy.clear()
         self.drones_over_max_velocity_z.clear()
+        self.drones_over_max_acceleration.clear()
         self.drones_below_min_nav_altitude.clear()
         self.all_close_pairs.clear()
         self.closest_pair = None

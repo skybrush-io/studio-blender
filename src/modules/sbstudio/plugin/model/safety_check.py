@@ -79,6 +79,15 @@ def velocity_warning_threshold_updated(self, context: Optional[Context] = None):
     self._refresh_overlay()
 
 
+def acceleration_warning_enabled_updated(self, context: Optional[Context] = None):
+    self.ensure_overlays_enabled_if_needed()
+    self._refresh_overlay()
+
+
+def acceleration_warning_threshold_updated(self, context: Optional[Context] = None):
+    self._refresh_overlay()
+
+
 class SafetyCheckProperties(PropertyGroup):
     """Property group that stores the parameters and calculated values of the
     real-time flight safety checks.
@@ -134,16 +143,23 @@ class SafetyCheckProperties(PropertyGroup):
     )
 
     max_velocity_z_up = FloatProperty(
-        name="Max Z velocity",
+        name="Max Z velocity up",
         description="Maximum vertical velocity of all drones in the current frame upwards",
         unit="VELOCITY",
         default=0.0,
     )
 
     max_velocity_z_down = FloatProperty(
-        name="Max Z velocity",
+        name="Max Z velocity down",
         description="Maximum vertical velocity of all drones in the current frame downwards",
         unit="VELOCITY",
+        default=0.0,
+    )
+
+    max_acceleration = FloatProperty(
+        name="Max acceleration",
+        description="Maximum acceleration of all drones in the current frame",
+        unit="ACCELERATION",
         default=0.0,
     )
 
@@ -199,6 +215,16 @@ class SafetyCheckProperties(PropertyGroup):
         default=True,
     )
 
+    acceleration_warning_enabled = BoolProperty(
+        name="Show acceleration warnings",
+        description=(
+            "Specifies whether Blender should show a warning when the acceleration of a "
+            "drone is larger than the acceleration warning threshold"
+        ),
+        update=acceleration_warning_enabled_updated,
+        default=True,
+    )
+
     velocity_xy_warning_threshold = FloatProperty(
         name="Maximum XY velocity",
         description="Maximum velocity allowed in the horizontal plane",
@@ -240,6 +266,17 @@ class SafetyCheckProperties(PropertyGroup):
         soft_max=5,
         unit="VELOCITY",
         update=velocity_warning_threshold_updated,
+    )
+
+    acceleration_warning_threshold = FloatProperty(
+        name="Maximum acceleration",
+        description="Maximum acceleration allowed",
+        default=4,
+        min=1,
+        soft_min=1,
+        soft_max=10,
+        unit="ACCELERATION",
+        update=acceleration_warning_threshold_updated,
     )
 
     min_navigation_altitude = FloatProperty(
@@ -321,6 +358,14 @@ class SafetyCheckProperties(PropertyGroup):
         )
 
     @property
+    def max_acceleration_is_valid(self) -> bool:
+        """Retuns whether the maximum acceleration property can be considered valid.
+        Right now we use zero to denote cases when there are no drones in the
+        scene at all.
+        """
+        return self.max_acceleration > 0
+
+    @property
     def should_show_altitude_warning(self) -> bool:
         """Returns whether the altitude warning should be drawn in the 3D view
         _right now_, given the current values of the properties.
@@ -390,6 +435,17 @@ class SafetyCheckProperties(PropertyGroup):
         )
 
     @property
+    def should_show_acceleration_warning(self) -> bool:
+        """Returns whether the acceleration warning should be drawn in the 3D view
+        _right now_, given the current values of the properties.
+        """
+        return (
+            self.acceleration_warning_enabled
+            and self.max_acceleration_is_valid
+            and self.max_acceleration > self.acceleration_warning_threshold
+        )
+
+    @property
     def velocity_z_warning_threshold_up_or_none(self) -> Optional[float]:
         """Returns the velocity warning threshold in the Z direction upwards
         if there is one, or ``None`` if it is the same as the warning threshold
@@ -412,6 +468,7 @@ class SafetyCheckProperties(PropertyGroup):
         self.max_velocity_xy = 0
         self.max_velocity_z_down = 0
         self.max_velocity_z_up = 0
+        self.max_acceleration = 0
 
         _safety_check_result.clear()
 
@@ -422,6 +479,7 @@ class SafetyCheckProperties(PropertyGroup):
             self.altitude_warning_enabled
             or self.proximity_warning_enabled
             or self.velocity_warning_enabled
+            or self.acceleration_warning_enabled
         )
 
     def get_positions_for_proximity_check(
@@ -455,6 +513,8 @@ class SafetyCheckProperties(PropertyGroup):
         max_velocity_z_up: Optional[float] = None,
         max_velocity_z_down: Optional[float] = None,
         drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
+        max_acceleration: Optional[float] = None,
+        drones_over_max_acceleration: Optional[List[Coordinate3D]] = None,
         drones_below_min_nav_altitude: Optional[List[Coordinate3D]] = None,
         all_close_pairs: Optional[List[Tuple[Coordinate3D, Coordinate3D]]] = None,
     ) -> None:
@@ -508,6 +568,16 @@ class SafetyCheckProperties(PropertyGroup):
 
         if drones_over_max_velocity_z is not None:
             _safety_check_result.drones_over_max_velocity_z = drones_over_max_velocity_z
+            refresh = True
+
+        if max_acceleration is not None:
+            self.max_acceleration = max_acceleration
+            refresh = True
+
+        if drones_over_max_acceleration is not None:
+            _safety_check_result.drones_over_max_acceleration = (
+                drones_over_max_acceleration
+            )
             refresh = True
 
         if drones_below_min_nav_altitude is not None:
@@ -574,6 +644,12 @@ class SafetyCheckProperties(PropertyGroup):
                 markers.extend(
                     ([point], "velocity")
                     for point in _safety_check_result.drones_over_max_velocity_z
+                )
+
+            if self.should_show_acceleration_warning:
+                markers.extend(
+                    ([point], "acceleration")
+                    for point in _safety_check_result.drones_over_max_acceleration
                 )
 
             overlay.markers = markers
