@@ -35,7 +35,8 @@ class SafetyCheckParams:
             "maxAltitude": round(self.max_altitude, ndigits=ndigits),
             "maxVelocityXY": round(self.max_velocity_xy, ndigits=ndigits),
             "maxVelocityZ": round(self.max_velocity_z, ndigits=ndigits),
-            "maxAcceleration": round(self.max_acceleration, ndigits=ndigits),
+            "maxAccelerationXY": round(self.max_acceleration, ndigits=ndigits),
+            "maxAccelerationZ": round(self.max_acceleration, ndigits=ndigits),
             "minDistance": round(self.min_distance, ndigits=ndigits),
             "minNavAltitude": round(self.min_nav_altitude, ndigits=ndigits),
         }

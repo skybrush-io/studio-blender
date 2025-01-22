@@ -166,8 +166,10 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
         max_velocity_xy, max_velocity_z_up, max_velocity_z_down = None, None, None
 
     # Get the acceleration threshold
-    # TODO(ntamas): make this configurable
-    max_acceleration = 4
+    if safety_check.acceleration_warning_enabled:
+        max_acceleration = safety_check.acceleration_warning_threshold
+    else:
+        max_acceleration = None
 
     # Create a position snapshot for the current frame and cache it
     frame = scene.frame_current
