@@ -563,6 +563,13 @@ def update_transition_for_storyboard_entry(
         start_points = get_positions_of(
             (marker for marker, _ in markers_and_objects), frame=end_of_previous
         )
+        if len(drones) != len(start_points):
+            raise SkybrushStudioError(
+                f"First formation has {len(start_points)} markers but the scene "
+                f'contains {len(drones)} drones. Check the "Drones" collection '
+                f"and the first formation for consistency."
+            )
+
     mapping = calculate_mapping_for_transition_into_storyboard_entry(
         entry,
         start_points,
@@ -659,7 +666,7 @@ def update_transition_for_storyboard_entry(
                 if windup_start_frame >= start_frame:
                     raise SkybrushStudioError(
                         f"Not enough time to plan staggered transition to "
-                        f"formation {entry.name!r} at drone index {drone_index+1} "
+                        f"formation {entry.name!r} at drone index {drone_index + 1} "
                         f"(1-based). Try decreasing departure or arrival delay "
                         f"or allow more time for the transition."
                     )
@@ -803,8 +810,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         ],
         name="Scope",
         description=(
-            "Scope of the operator that defines which transitions must be "
-            "recalculated"
+            "Scope of the operator that defines which transitions must be recalculated"
         ),
         default="ALL",
     )
@@ -849,6 +855,9 @@ class RecalculateTransitionsOperator(StoryboardOperator):
                     "Studio server"
                 ),
             )
+            return {"CANCELLED"}
+        except SkybrushStudioError as ex:
+            self.report({"ERROR"}, str(ex))
             return {"CANCELLED"}
 
         return {"FINISHED"}
