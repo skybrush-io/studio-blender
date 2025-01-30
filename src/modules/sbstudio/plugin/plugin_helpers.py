@@ -201,19 +201,18 @@ def use_mode_for_object(mode) -> ContextManager[str]:
     Yields:
         the original mode that was active _before_ entering the given mode
     """
-    original_mode = bpy.context.object.mode
+    context = bpy.context
+
+    original_mode = context.object.mode
     if original_mode == mode:
         yield original_mode
     else:
-        context = bpy.context.copy()
-        bpy.ops.object.mode_set(context, mode=mode)
+        bpy.ops.object.mode_set(mode=mode)
         try:
-            yield original_mode
+            with context.temp_override():
+                yield original_mode
         finally:
-            # Make sure that we switch the mode back for the _original_ object;
-            # that's why we've made a copy. This allows the user to change the
-            # selection in the context without messing up what we do here.
-            bpy.ops.object.mode_set(context, mode=original_mode)
+            bpy.ops.object.mode_set(mode=original_mode)
 
 
 @contextmanager
