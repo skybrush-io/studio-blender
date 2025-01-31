@@ -127,6 +127,7 @@ class Collection(ID):
 class Image(ID):
     depth: int
     size: tuple[int, int]
+    pixels: Sequence[float]
 
 class Material(ID): ...
 

@@ -41,7 +41,6 @@ from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
-from sbstudio.plugin.utils.image import get_pixel
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
@@ -201,6 +200,10 @@ def _set_frame_end(self: LightEffect, value: int) -> None:
         self.duration = value - self.frame_start
 
 
+def texture_updated(self: LightEffect, context):
+    self.invalidate_color_image()
+
+
 class LightEffect(PropertyGroup):
     """Blender property group representing a single, time- and possibly space-limited
     light effect in the drone show.
@@ -313,6 +316,7 @@ class LightEffect(PropertyGroup):
             "image that controls how the colors of the drones are determined"
         ),
         options={"HIDDEN"},
+        update=texture_updated,
     )
 
     color_function = PointerProperty(
@@ -382,6 +386,16 @@ class LightEffect(PropertyGroup):
     )
 
     # If you add new properties above, make sure to update update_from()
+
+    _image_pixels: Optional[Sequence[float]] = None
+    """Cached pixels of the image texture, if it exists.
+
+    This is needed because direct pixel access with `bpy.types.Image.pixels`
+    is terribly slow. The downside is that our cached pixels may become stale
+    if the texture itself is updated. The user is expected to call
+    `invalidate_color_image()` on the light effect if the underlying image is
+    changed in a way that we cannot detect ourselves.
+    """
 
     def apply_on_colors(
         self,
@@ -642,15 +656,16 @@ class LightEffect(PropertyGroup):
                     raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
             elif color_image is not None:
                 width, height = color_image.size
-                pixel_color = get_pixel(
-                    color_image,
-                    int((width - 1) * output_x),
-                    int((height - 1) * output_y),
-                )
+                pixels = self.get_image_pixels()
+
+                x = int((width - 1) * output_x)
+                y = int((height - 1) * output_y)
+                offset = (x + y * width) * 4
+                pixel_color = pixels[offset : offset + 4]
 
                 # This check is needed to cater for the cases when the calculated
                 # pixel coordinate is out of the bounds of the image, in which
-                # case get_pixel() returns an empty list
+                # case get_pixel() returns an empty list or a short list
                 if len(pixel_color) == len(new_color):
                     new_color[:] = pixel_color
             elif color_ramp:
@@ -683,7 +698,7 @@ class LightEffect(PropertyGroup):
         )
 
     @color_image.setter
-    def color_image(self, image):
+    def color_image(self, image: Optional[Image]):
         # If we have an old, legacy Texture instance, replace it with an
         # ImageTexture
         if not isinstance(self.texture, ImageTexture):
@@ -694,6 +709,8 @@ class LightEffect(PropertyGroup):
         if tex.image is not None:
             remove_if_unused(tex.image, from_=bpy.data.images)
         tex.image = image
+
+        self.invalidate_color_image()
 
     @property
     def color_function_ref(self) -> Optional[Callable]:
@@ -728,6 +745,24 @@ class LightEffect(PropertyGroup):
         """
         self.color_image = bpy.data.images.new(name=name, width=width, height=height)
         return self.color_image
+
+    def get_image_pixels(self) -> Sequence[float]:
+        """Returns the pixel-level representation of the color image of the light
+        effect, caching the result for future use.
+        """
+        if self._image_pixels is not None and self.color_image is not None:
+            self._image_pixels = self.color_image.pixels[:]
+        return self._image_pixels or ()
+
+    def invalidate_color_image(self) -> None:
+        """Invalidates the cached pixel-level representation of the color image
+        of the light effect.
+
+        You should call this function if you change the _pixel buffer_ of the
+        underlying image. You do not need to call this function if you replace
+        the image by calling the setter of `color_image`.
+        """
+        self._image_pixels = None
 
     def update_from(self, other: "LightEffect") -> None:
         """Updates the properties of this light effect from another one,

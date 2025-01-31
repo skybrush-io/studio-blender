@@ -1,9 +1,10 @@
 """Utility functions related to Blender images."""
 
+from bpy.types import Image
 from sbstudio.model.types import RGBAColor
 
 
-def get_pixel(image, x: int, y: int) -> RGBAColor:
+def get_pixel(image: Image, x: int, y: int) -> RGBAColor:
     """Gets the color of a given pixel of an image.
 
     Note that this function is very slow, if possible,
@@ -13,4 +14,4 @@ def get_pixel(image, x: int, y: int) -> RGBAColor:
     width = image.size[0]
     offs = (x + y * width) * 4
 
-    return image.pixels[offs : offs + 4]
+    return image.pixels[offs : offs + 4]  # type: ignore
