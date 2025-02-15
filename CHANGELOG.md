@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Temporarily removed option to use license files as API key. It will be
+  only available for pro users at a later stage.
+
 - Fixed an issue with creating new formations from selected vertices, due to
   changes in Blender's Python API in Blender 4.x.
 
