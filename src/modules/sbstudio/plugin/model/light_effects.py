@@ -750,7 +750,7 @@ class LightEffect(PropertyGroup):
         """Returns the pixel-level representation of the color image of the light
         effect, caching the result for future use.
         """
-        if self._image_pixels is not None and self.color_image is not None:
+        if self._image_pixels is None and self.color_image is not None:
             self._image_pixels = self.color_image.pixels[:]
         return self._image_pixels or ()
 
