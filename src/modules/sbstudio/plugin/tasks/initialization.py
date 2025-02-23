@@ -1,12 +1,13 @@
-"""Background task that is called every time a new file is loaded, and that
-turns on the bloom effect on the scene if needed.
-"""
+"""Background task that is called every time a new file is loaded."""
 
 import bpy
 
 from random import randint
 
 from sbstudio.plugin.constants import Collections, RANDOM_SEED_MAX
+from sbstudio.plugin.model.light_effects import (
+    invalidate_pixel_cache as invalidate_light_effect_pixel_cache_really,
+)
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 
 from .base import Task
@@ -62,6 +63,11 @@ def update_bloom_effect(*args):
     enable_bloom_effect_if_needed()
 
 
+def invalidate_light_effect_pixel_cache(*args):
+    # Used to ignore the positional arguments
+    invalidate_light_effect_pixel_cache_really()
+
+
 class InitializationTask(Task):
     """Background task that is called every time a new file is loaded."""
 
@@ -71,5 +77,6 @@ class InitializationTask(Task):
             setup_drone_collection,
             remove_legacy_formation_constraints,
             setup_random_seed,
+            invalidate_light_effect_pixel_cache,
         ]
     }

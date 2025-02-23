@@ -1,3 +1,7 @@
+from sbstudio.plugin.model.light_effects import (
+    invalidate_pixel_cache as invalidate_light_effect_pixel_cache,
+)
+
 from .base import LightEffectOperator
 
 __all__ = ("RemoveLightEffectOperator",)
@@ -19,4 +23,5 @@ class RemoveLightEffectOperator(LightEffectOperator):
 
     def execute_on_light_effect_collection(self, light_effects, context):
         light_effects.remove_active_entry()
+        invalidate_light_effect_pixel_cache()
         return {"FINISHED"}

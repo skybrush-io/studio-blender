@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
 from typing import cast, Optional
+from uuid import uuid4
 
 from bpy.path import abspath
 from bpy.props import (
@@ -37,6 +38,7 @@ from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
+from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -204,12 +206,34 @@ def texture_updated(self: LightEffect, context):
     self.invalidate_color_image()
 
 
+_pixel_cache = PixelCache()
+"""Global cache for the pixels of images in image-based light effects."""
+
+
+def invalidate_pixel_cache():
+    """Invalidates the cached pixel-based representations. Called when a new
+    file is opened in Blender.
+    """
+    global _pixel_cache
+    _pixel_cache.clear()
+
+
 class LightEffect(PropertyGroup):
     """Blender property group representing a single, time- and possibly space-limited
     light effect in the drone show.
     """
 
     # If you add new properties below, make sure to update update_from()
+
+    maybe_uuid_do_not_use = StringProperty(
+        name="Identifier",
+        description=(
+            "Unique identifier for this storyboard entry; must not change "
+            "throughout the lifetime of the entry."
+        ),
+        default="",
+        options={"HIDDEN"},
+    )
 
     enabled = BoolProperty(
         name="Enabled",
@@ -386,16 +410,6 @@ class LightEffect(PropertyGroup):
     )
 
     # If you add new properties above, make sure to update update_from()
-
-    _image_pixels: Optional[Sequence[float]] = None
-    """Cached pixels of the image texture, if it exists.
-
-    This is needed because direct pixel access with `bpy.types.Image.pixels`
-    is terribly slow. The downside is that our cached pixels may become stale
-    if the texture itself is updated. The user is expected to call
-    `invalidate_color_image()` on the light effect if the underlying image is
-    changed in a way that we cannot detect ourselves.
-    """
 
     def apply_on_colors(
         self,
@@ -750,9 +764,19 @@ class LightEffect(PropertyGroup):
         """Returns the pixel-level representation of the color image of the light
         effect, caching the result for future use.
         """
-        if self._image_pixels is None and self.color_image is not None:
-            self._image_pixels = self.color_image.pixels[:]
-        return self._image_pixels or ()
+        global _pixel_cache
+        pixels = _pixel_cache.get(self.id)
+        if pixels is None and self.color_image is not None:
+            pixels = _pixel_cache[self.id] = self.color_image.pixels[:]
+        return pixels or ()
+
+    @property
+    def id(self) -> str:
+        """Unique identifier of this light effect."""
+        if not self.maybe_uuid_do_not_use:
+            # Chance of a collision is minimal so just use random numbers
+            self.maybe_uuid_do_not_use = uuid4().hex
+        return self.maybe_uuid_do_not_use
 
     def invalidate_color_image(self) -> None:
         """Invalidates the cached pixel-level representation of the color image
@@ -762,12 +786,17 @@ class LightEffect(PropertyGroup):
         underlying image. You do not need to call this function if you replace
         the image by calling the setter of `color_image`.
         """
-        self._image_pixels = None
+        global _pixel_cache
+        try:
+            del _pixel_cache[self.id]
+        except KeyError:
+            pass  # this is OK
 
     def update_from(self, other: "LightEffect") -> None:
         """Updates the properties of this light effect from another one,
         _except_ its name.
         """
+        # UUID not copied, this is intentional
         self.enabled = other.enabled
         self.frame_start = other.frame_start
         self.duration = other.duration
