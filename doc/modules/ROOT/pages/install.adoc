@@ -28,19 +28,24 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 1. Open Blender and go to Edit -> Preferences -> Add-ons.
 
-2. (optional) Activate the "User" filter for the add-ons.
+2. Select btn:[Install from Disk...] from the dropdown menu in the top right corner.
 
-3. Press the btn:[Install...] button on the top right.
+3. In the popup window select the *Skybrush Studio for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
 
-4. In the popup window select the *Skybrush Studio for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
+4. Once installed, activate the "Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list (you may need to scroll down to find the "Skybrush Studio" item).
 
-5. Activate the "Interface: Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list.
+5. Setup add-on preferences by pressing the btn:[>] button on the left side of the "Skybrush Studio" add-on item. Note that generally you need to change settings only if you are using a version of *Skybrush Studio for Blender* other than the free community edition:
 
-6. Setup add-on preferences if you are using a version of *Skybrush Studio for Blender* other than the free community edition:
+    API key:: If you have received an API key for communicating with the Skybrush Studio server, paste it here (by default you do not have to touch this setting).
 
-    API key:: If you have received an API key for communicating with the Skybrush Studio server, paste it here.
+    Server URL:: Enter the URL of a dedicated *Skybrush Studio Server* if you are using a dedicated server (by default you do not have to touch this setting, change only if you know what you are doing). 
+    
+    Use local server:: Press this button if you have purchased 
+    a professional local copy of *Skybrush Studio Server* that is running on your own machine. This action will fill the btn:[Server URL] field automatically.
 
-    Server URL:: Enter the URL of a dedicated Skybrush Studio server if you are using a dedicated server. You can also click on the btn:[Use local server] button to use a server that is running on your own machine.
+    Use community server:: Press this button to use the online community server. This action will clear the btn:[Server URL] field automatically. Our community server is a free service but it might be limited in drone number, execution time or available features. Purchase a professional server from https://shop.skybrush.io[Skybrush Store] if you need to use *Skybrush Studio for Blender* without limits.
+
+    Enable experimental features:: Enable this checkbox if you are open to experiment with the latest features of *Skybrush Studio for Blender*.
 
 === 4. Enable Online Access in Blender
 
@@ -65,7 +70,7 @@ After purchasing a professional license for *Skybrush Studio for Blender*, follo
 
 The terminal log of *Skybrush Studio Server* will give you instant feedback about the presence and content of your currently used license file upon execution of the server.
 
-If you wish to use your new local server, do not forget to press the btn:[Use local server] button in the *Skybrush Studio for Blender* add-on preferences.
+NOTE: If you wish to use your new local server, do not forget to press the btn:[Use local server] button in the "Skybrush Studio" add-on preferences (to open preferences, press btn:[>] on the left from the "Skybrush Studio" add-on item).
 
 == Installing updates
 
