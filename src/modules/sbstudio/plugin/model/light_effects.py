@@ -210,12 +210,15 @@ _pixel_cache = PixelCache()
 """Global cache for the pixels of images in image-based light effects."""
 
 
-def invalidate_pixel_cache():
+def invalidate_pixel_cache(static: bool = True, dynamic: bool = True) -> None:
     """Invalidates the cached pixel-based representations. Called when a new
     file is opened in Blender.
     """
     global _pixel_cache
-    _pixel_cache.clear()
+    if static:
+        _pixel_cache.clear()
+    elif dynamic:
+        _pixel_cache.clear_dynamic()
 
 
 class LightEffect(PropertyGroup):
@@ -768,7 +771,11 @@ class LightEffect(PropertyGroup):
         global _pixel_cache
         pixels = _pixel_cache.get(self.id)
         if pixels is None and self.color_image is not None:
-            pixels = _pixel_cache[self.id] = self.color_image.pixels[:]
+            pixels = self.color_image.pixels[:]
+            _pixel_cache.add(
+                self.id, pixels, is_static=self.color_image.frame_duration <= 1
+            )
+
         return pixels or ()
 
     @property
@@ -789,7 +796,7 @@ class LightEffect(PropertyGroup):
         """
         global _pixel_cache
         try:
-            del _pixel_cache[self.id]
+            _pixel_cache.remove(self.id)
         except KeyError:
             pass  # this is OK
 

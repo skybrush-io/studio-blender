@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   zero at the start frame and reaches 1 at the end frame. In previous versions
   1 was never reached as the end frame was not part of the light effect.
 
+### Fixed
+
+- Disabled the caching of pixel data of image-based light effects between
+  frames when the underlying image is a video file or an image sequence.
+
 ## [3.9.1] - 2025-02-24
 
 ### Fixed

@@ -151,6 +151,7 @@ from sbstudio.plugin.state import (
 )
 from sbstudio.plugin.tasks import (
     InitializationTask,
+    InvalidatePixelCacheTask,
     SafetyCheckTask,
     UpdateLightEffectsTask,
 )
@@ -253,7 +254,12 @@ panels = (
 headers = ()
 
 #: Background tasks in this addon
-tasks = (InitializationTask(), SafetyCheckTask(), UpdateLightEffectsTask())
+tasks = (
+    InitializationTask(),
+    InvalidatePixelCacheTask(),
+    SafetyCheckTask(),
+    UpdateLightEffectsTask(),
+)
 
 #: Getters for the overlays in this addon, used to disable them before unloading
 overlay_getters = (

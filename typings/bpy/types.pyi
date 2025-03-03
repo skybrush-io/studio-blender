@@ -126,6 +126,7 @@ class Collection(ID):
 
 class Image(ID):
     depth: int
+    frame_duration: int
     size: tuple[int, int]
     pixels: Sequence[float]
 

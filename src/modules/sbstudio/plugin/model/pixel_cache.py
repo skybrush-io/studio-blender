@@ -26,27 +26,56 @@ class PixelCache(Mapping[str, list[float]]):
     _items: dict[str, tuple[float, ...]]
     """The cached pixels, keyed by the UUIDs of the light effects."""
 
+    _dynamic_keys: set[str]
+    """Set of keys that are not static (i.e. they are invalidated when the
+    current frame changes).
+    """
+
     def __init__(self):
         """Constructor."""
+        self._dynamic_keys = set()
         self._items = {}
 
-    def __delitem__(self, key: str) -> None:
+    def add(self, key: str, value: Sequence[float], *, is_static: bool = False):
+        """Adds a cached pixel-level representation of an image to the cache
+        with the given key.
+
+        Args:
+            key: the key of the entry to add
+            value: the cached pixel-level representation
+            is_static: whether the image is assumed to be static (i.e. the same
+                in every frame). Images not marked as static are invalidated
+                when Blender changes its current frame.
+        """
+        self._items[key] = tuple(value)
+        if is_static:
+            self._dynamic_keys.discard(key)
+        else:
+            self._dynamic_keys.add(key)
+
+    def clear(self):
+        """Clears all cached pixel-level representations of images."""
+        self._items.clear()
+
+    def clear_dynamic(self):
+        """Removes all cached pixel-level representations of images that are
+        not static (i.e. they change when the current frame changes).
+        """
+        for key in self._dynamic_keys:
+            del self._items[key]
+        self._dynamic_keys.clear()
+
+    def remove(self, key: str) -> None:
         del self._items[key]
+        self._dynamic_keys.discard(key)
 
     def __getitem__(self, key: str) -> Sequence[float]:
         return self._items[key]
-
-    def __setitem__(self, key: str, value: Sequence[float]):
-        self._items[key] = tuple(value)
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._items)
 
     def __len__(self) -> int:
         return len(self._items)
-
-    def clear(self):
-        """Clears all cached pixel-level representations of images."""
-        self._items.clear()
 
     # TODO(ntamas): periodical cleanup!
