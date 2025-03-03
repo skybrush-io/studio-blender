@@ -190,16 +190,16 @@ class ColorFunctionProperties(PropertyGroup):
 
 
 def _get_frame_end(self: LightEffect) -> int:
-    return self.frame_start + self.duration
+    return self.frame_start + self.duration - 1
 
 
 def _set_frame_end(self: LightEffect, value: int) -> None:
     # We prefer to keep the start frame the same and adjust the duration
-    if value < self.frame_start:
+    if value <= self.frame_start:
         self.frame_start = value
-        self.duration = 0
+        self.duration = 1
     else:
-        self.duration = value - self.frame_start
+        self.duration = value - self.frame_start + 1
 
 
 def texture_updated(self: LightEffect, context):
@@ -262,7 +262,8 @@ class LightEffect(PropertyGroup):
     duration = IntProperty(
         name="Duration",
         description="Duration of this light effect",
-        default=0,
+        min=1,
+        default=1,
         options=set(),
     )
     frame_end = IntProperty(
@@ -591,7 +592,7 @@ class LightEffect(PropertyGroup):
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        time_fraction = (frame - self.frame_start) / self.duration
+        time_fraction = (frame - self.frame_start) / max(self.duration - 1, 1)
         num_positions = len(positions)
 
         color_ramp = self.color_ramp
@@ -737,9 +738,9 @@ class LightEffect(PropertyGroup):
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
 
-        Light effect entries are closed from the left and open from the right;
-        in other words, they always contain their start frames but they do not
-        contain their end frames.
+        Light effect entries are closed from the left and right as well to
+        remain consistent with how Blender is handling frame intervals.
+        in other words, they always contain their start frames and end frames.
         """
         return 0 <= (frame - self.frame_start) < self.duration
 

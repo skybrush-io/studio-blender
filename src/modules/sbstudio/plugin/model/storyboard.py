@@ -103,16 +103,16 @@ def _handle_mapping_change(self: StoryboardEntry, context: Optional[Context] = N
 
 
 def _get_frame_end(self: StoryboardEntry) -> int:
-    return self.frame_start + self.duration
+    return self.frame_start + self.duration - 1
 
 
 def _set_frame_end(self: StoryboardEntry, value: int) -> None:
     # We prefer to keep the start frame the same and adjust the duration
-    if value < self.frame_start:
+    if value <= self.frame_start:
         self.frame_start = value
-        self.duration = 0
+        self.duration = 1
     else:
-        self.duration = value - self.frame_start
+        self.duration = value - self.frame_start + 1
 
 
 @dataclass(frozen=True)
@@ -178,8 +178,8 @@ class StoryboardEntry(PropertyGroup):
     duration = IntProperty(
         name="Duration",
         description="Duration of this formation",
-        min=0,
-        default=0,
+        min=1,
+        default=1,
         options=set(),
     )
     frame_end = IntProperty(
@@ -256,8 +256,7 @@ class StoryboardEntry(PropertyGroup):
     schedule_overrides_enabled = BoolProperty(
         name="Schedule overrides enabled",
         description=(
-            "Whether the schedule overrides associated to the current entry "
-            "are enabled"
+            "Whether the schedule overrides associated to the current entry are enabled"
         ),
     )
     active_schedule_override_entry_index = IntProperty(
@@ -337,9 +336,9 @@ class StoryboardEntry(PropertyGroup):
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the storyboard entry contains the given frame.
 
-        Storyboard entries are closed from the left and open from the right;
-        in other words, they always contain their start frames but they do not
-        contain their end frames.
+        Storyboard entries are closed from the left and right as well to
+        remain consistent with how Blender is handling frame intervals.
+        in other words, they always contain their start frames and end frames.
         """
         return 0 <= (frame - self.frame_start) < self.duration
 
@@ -868,7 +867,7 @@ class Storyboard(PropertyGroup, ListMixin):
                 raise StoryboardValidationError(
                     f"Storyboard entry {entry_purpose.name!r} has purpose "
                     f"{StoryboardEntryPurpose[entry_purpose].ui_name}, which can not be followed by "
-                    f"a {StoryboardEntryPurpose[ next_purpose].ui_name} entry."
+                    f"a {StoryboardEntryPurpose[next_purpose].ui_name} entry."
                 )
 
     def _validate_formation_size_contraints(
