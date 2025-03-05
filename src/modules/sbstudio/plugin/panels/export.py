@@ -12,6 +12,7 @@ from sbstudio.plugin.operators import (
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
+    VVIZExportOperator,
 )
 
 __all__ = ("ExportPanel",)
@@ -36,40 +37,44 @@ class ExportPanel(Panel):
 
         formats = get_supported_file_formats()
 
-        for format in formats:
-            if format is FileFormat.SKYC:
-                layout.operator(
-                    SkybrushExportOperator.bl_idname, text="Export to .skyc"
-                )
-            elif format is FileFormat.CSV:
-                layout.operator(
-                    SkybrushCSVExportOperator.bl_idname, text="Export to .csv"
-                )
-            elif format is FileFormat.DAC:
-                layout.operator(DACExportOperator.bl_idname, text="Export to .dac")
-            elif format is FileFormat.DROTEK:
-                layout.operator(
-                    DrotekExportOperator.bl_idname, text="Export to Drotek format"
-                )
-            elif format is FileFormat.DSS:
-                layout.operator(
-                    DSSPathExportOperator.bl_idname, text="Export to DSS PATH format"
-                )
-                layout.operator(
-                    DSSPath3ExportOperator.bl_idname, text="Export to DSS PATH3 format"
-                )
-            elif format is FileFormat.EVSKY:
-                layout.operator(
-                    EVSKYExportOperator.bl_idname, text="Export to EVSKY format"
-                )
-            elif format is FileFormat.LITEBEE:
-                layout.operator(
-                    LitebeeExportOperator.bl_idname, text="Export to Litebee format"
-                )
-            elif format is FileFormat.PDF:
-                layout.operator(
-                    SkybrushPDFExportOperator.bl_idname, text="Export validation report"
-                )
+        # in-house formats
+        if FileFormat.SKYC in formats:
+            layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
+        if FileFormat.CSV in formats:
+            layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
+        if FileFormat.PDF in formats:
+            layout.operator(
+                SkybrushPDFExportOperator.bl_idname, text="Export validation report"
+            )
+
+        layout.separator()
+
+        # external formats
+        if FileFormat.DAC in formats:
+            layout.operator(DACExportOperator.bl_idname, text="Export to .dac")
+        if FileFormat.DROTEK in formats:
+            layout.operator(
+                DrotekExportOperator.bl_idname, text="Export to Drotek format"
+            )
+        if FileFormat.DSS in formats:
+            layout.operator(
+                DSSPathExportOperator.bl_idname, text="Export to DSS PATH format"
+            )
+            layout.operator(
+                DSSPath3ExportOperator.bl_idname, text="Export to DSS PATH3 format"
+            )
+        if FileFormat.EVSKY in formats:
+            layout.operator(
+                EVSKYExportOperator.bl_idname, text="Export to EVSKY format"
+            )
+        if FileFormat.LITEBEE in formats:
+            layout.operator(
+                LitebeeExportOperator.bl_idname, text="Export to Litebee format"
+            )
+        if FileFormat.VVIZ in formats:
+            layout.operator(
+                VVIZExportOperator.bl_idname, text="Export to Finale 3D .vviz"
+            )
 
         layout.separator()
 

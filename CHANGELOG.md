@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Added
+
+- Added support for exporting drone shows into the Finale 3D VVIZ format 
+  for integration with fireworks. Fireworks launched from drones are
+  not yet supported, but trajectories, light animation and yaw setpoints
+  are all saved.
+
 ### Changed
 
 - The semantics of the "End frame" and "Duration" fields in the Storyboard and

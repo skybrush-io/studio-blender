@@ -48,7 +48,6 @@ Frame rate:: Set output frame rate of drone trajectories and light programs (mak
 
 NOTE: Special characters in drone names are converted to standard characters in the exported filenames.
 
-
 == Export validation report
 
 The btn:[Export validation report] button creates a unique safety report of your show in .pdf format for standalone self-checking, validated reporting or as a supplement for flight permissions or other administration purposes.
@@ -70,13 +69,13 @@ Trajectory FPS:: Set output sampling frame rate for drone trajectories (make sur
 
 Light FPS:: Set the output sample frame rate for light programs (make sure it is a submultiple of your render FPS)
 
-Plot positions:: Include position-related plots in the safety report
+Plot positions:: Include position-related plots in the safety report, such as an elevation profile or horizontal extent of the trajectories.
 
-Plot velocities:: Include velocity-related plots in the safety report
+Plot velocities:: Include velocity-related plots in the safety report including horizontal and vertical velocity timelines focusing on maximum velocity breach warnings.
 
-Plot projected drift:: Include projected drift plots in the safety report
+Plot projected drift:: Include projected drift plots in the safety report. The drift plot is a complex output for checking integral predicted deviations from show trajectories due to maximum velocity or maximum acceleration threshold breach events.
 
-Plot nearest neighbor:: Include a unified nearest neighbor plot in the safety report
+Plot nearest neighbor:: Include a unified nearest neighbor plot in the safety report to check for minimum distance between drones throughout the entire show.
 
 Plot all nearest neighbors:: Include nearest neighbor curves on a per-drone basis on a separate page of the safety report.
 +
@@ -86,6 +85,16 @@ Create individual drone plots:: Include validation plots for each drone individu
 +
 WARNING: Creating these plots might take a long time, depending on the number of drones, frames and output frame rate.
 
-== Export to third-party show formats
+== Export to Finale 3D VVIZ format
 
-Upon purchasing a professional license, we provide additional exporters to various external drone show formats. mailto:support@collmot.com[Contact us] for details.
+If you are preparing your drone show as part of a larger event with fireworks, you can export to Finale 3D VVIZ format directly. Note that this export option requires a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
+
+If you press the btn:[Export to Finale 3D VVIZ] button, you have to choose the path and filename of your output file. The 
+btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for this export type as well.
+
+== Export to various third-party show formats
+
+Upon purchasing a professional license, we provide additional exporters to various external drone show formats,
+including DSS PATH, DSS PATH3, Drotek, EVSKY, LiteBee, etc.
+
+Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:support@collmot.com[Contact us] if you need any additional exporters that are not on the list yet.

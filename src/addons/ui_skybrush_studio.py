@@ -116,6 +116,7 @@ from sbstudio.plugin.operators import (
     UpdateTimeMarkersFromStoryboardOperator,
     UseSelectedVertexGroupForFormationOperator,
     ValidateTrajectoriesOperator,
+    VVIZExportOperator,
 )
 from sbstudio.plugin.panels import (
     DroneShowAddonObjectPropertiesPanel,
@@ -216,6 +217,7 @@ operators = (
     DSSPath3ExportOperator,
     EVSKYExportOperator,
     LitebeeExportOperator,
+    VVIZExportOperator,
     UseSelectedVertexGroupForFormationOperator,
     GetFormationStatisticsOperator,
     TakeoffOperator,

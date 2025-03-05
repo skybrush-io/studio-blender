@@ -458,6 +458,14 @@ def export_show_to_file_using_api(
         elif format is FileFormat.LITEBEE:
             log.info("Exporting show to Litebee format")
             renderer = "litebee"
+        elif format is FileFormat.VVIZ:
+            log.info("Exporting show to Finale 3D .vviz format")
+            renderer = "vviz"
+            renderer_params = {
+                **renderer_params,
+                "fps": settings["output_fps"],
+                "light_fps": settings["light_output_fps"],
+            }
         else:
             raise RuntimeError(f"Unhandled format: {format!r}")
 

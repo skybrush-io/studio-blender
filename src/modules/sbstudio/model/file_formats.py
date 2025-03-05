@@ -10,7 +10,7 @@ __all__ = (
 
 
 class FileFormat(Enum):
-    """List of file formats that we can potentially in export panels."""
+    """List of file formats that we can potentially use in export panels."""
 
     SKYC = "skyc"
     CSV = "csv"
@@ -21,6 +21,7 @@ class FileFormat(Enum):
     DROTEK = "drotek"
     EVSKY = "evsky"
     LITEBEE = "litebee"
+    VVIZ = "vviz"
 
 
 _file_formats: Tuple[FileFormat, ...] = ()
@@ -55,6 +56,8 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
             formats.append(FileFormat.LITEBEE)
         elif feature == "export:plot":
             formats.append(FileFormat.PDF)
+        elif feature == "export:vviz":
+            formats.append(FileFormat.VVIZ)
 
     _file_formats = tuple(formats)
 
