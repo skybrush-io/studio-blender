@@ -186,7 +186,7 @@ class CreateTakeoffGridOperator(Operator):
     rows = IntProperty(
         name="Rows",
         description="Number of rows in the takeoff grid",
-        default=10,
+        default=8,
         soft_min=1,
         soft_max=100,
         update=_ensure_rows_columns_and_counts_consistent,
@@ -195,7 +195,7 @@ class CreateTakeoffGridOperator(Operator):
     columns = IntProperty(
         name="Columns",
         description="Number of columns in the takeoff grid",
-        default=10,
+        default=8,
         soft_min=1,
         soft_max=100,
         update=_ensure_rows_columns_and_counts_consistent,
@@ -204,7 +204,7 @@ class CreateTakeoffGridOperator(Operator):
     drones = IntProperty(
         name="Drone count",
         description="Number of drones in the grid",
-        default=100,
+        default=64,
         soft_min=1,
         soft_max=10000,
         update=_handle_drone_count_change,
