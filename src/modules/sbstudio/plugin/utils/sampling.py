@@ -1,7 +1,7 @@
 from bpy.types import Context, Object
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, Iterable, Iterator, Optional, Sequence, Tuple
+from typing import Callable, Dict, Iterable, Iterator, Optional, Sequence, Tuple
 
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
@@ -13,6 +13,7 @@ from sbstudio.plugin.utils.evaluator import (
     get_position_of_object,
     get_xyz_euler_rotation_of_object,
 )
+from sbstudio.plugin.utils.progress import FrameIterator, FrameProgressReport
 
 from .decorators import with_context
 
@@ -35,7 +36,13 @@ def _to_int_255(value: float) -> int:
 
 @with_context
 def frame_range(
-    start: int, end: int, *, fps: int, context: Optional[Context] = None
+    start: int,
+    end: int,
+    *,
+    fps: int,
+    context: Optional[Context] = None,
+    operation: Optional[str] = None,
+    progress: Optional[Callable[[FrameProgressReport], None]] = None,
 ) -> Iterator[int]:
     """Generator that iterates from the given start frame to the given end frame
     with the given number of frames per second.
@@ -44,7 +51,7 @@ def frame_range(
 
     scene_fps = context.scene.render.fps
     frame_step = max(1, int(scene_fps // fps))
-    return chain(range(start, end, frame_step), [end])
+    return FrameIterator(start, end, frame_step, operation=operation, progress=progress)
 
 
 @with_context

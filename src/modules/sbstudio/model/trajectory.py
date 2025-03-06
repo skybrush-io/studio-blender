@@ -13,7 +13,6 @@ class Trajectory:
 
     Positions between given Point4D elements are assumed to be
     linearly interpolated both in space and time.
-
     """
 
     def __init__(self, points: Sequence[Point4D] = []):
@@ -118,11 +117,14 @@ class Trajectory:
         return self
 
     def simplify_in_place(self: C) -> C:
-        new_points: List[Point4D] = []
+        """Simplifies the trajectory in-place by removing points that are
+        identical to their predecessors and successors.
+        """
         if not self.points:
             return self
 
         first_point = self.points[0]
+        new_points: List[Point4D] = []
 
         # Make up a fake last point that is different from the first one
         last_point = Point4D(

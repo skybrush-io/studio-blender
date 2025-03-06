@@ -1,4 +1,5 @@
 import importlib.util
+import numpy as np
 
 from collections import OrderedDict
 from collections.abc import Callable, Iterable, MutableMapping, Sequence
@@ -10,6 +11,7 @@ from sbstudio.model.types import Coordinate3D
 
 
 __all__ = (
+    "consecutive_pairs",
     "constant",
     "create_path_and_open",
     "distance_sq_of",
@@ -19,6 +21,39 @@ __all__ = (
 T = TypeVar("T")
 K = TypeVar("K")
 V = TypeVar("V")
+
+
+def consecutive_pairs(
+    iterable: Iterable[T], cyclic: bool = False
+) -> Iterable[tuple[T, T]]:
+    """Given an iterable, returns a generator that generates consecutive pairs
+    of objects from the iterable.
+
+    Args:
+        iterable (Iterable[object]): the iterable to process
+        cyclic (bool): whether the iterable should be considered "cyclic".
+            If this argument is ``True``, the function will yield a pair
+            consisting of the last element of the iterable paired with
+            the first one at the end.
+    """
+    it = iter(iterable)
+    try:
+        prev = next(it)
+    except StopIteration:
+        return
+
+    first = prev if cyclic else None
+    try:
+        while True:
+            curr = next(it)
+            yield prev, curr
+            prev = curr
+    except StopIteration:
+        pass
+
+    if cyclic:
+        assert first is not None  # to help the type inference
+        yield prev, first
 
 
 def constant(value: Any) -> Callable[..., Any]:
@@ -81,8 +116,15 @@ def negate(func: Callable[..., bool]) -> Callable[..., bool]:
     return new_func
 
 
+DistanceFunc = Callable[[Iterable[T], T, T], Sequence[float]]
+"""Type of a distance function used by `simplify_path`."""
+
+EqFunc = Callable[[T, T], bool]
+"""Type of an equality function used by `simplify_path`."""
+
+
 def simplify_path(
-    points: Sequence[T], *, eps: float, distance_func: Callable[[list[T], T, T], float]
+    points: Sequence[T], *, eps: float, distance_func: DistanceFunc, eq_func: EqFunc
 ) -> Sequence[T]:
     """Simplifies a sequence of points to a similar sequence with fewer
     points, using a distance function and an acceptable error term.
@@ -99,33 +141,71 @@ def simplify_path(
         distance_func: a callable that receives a _list_ of points and two
             additional points, and returns the distance of _each_ point in the
             list from the line formed by the two additional points.
+        eq_func: a callable that decides whether two points can be considered
+            identical. This is used only in the early stage of the algorithm to
+            identify constant segments.
 
     Returns:
         the simplified sequence of points. This will be of the same class as the
         input sequence. It is assumed that an instance of the sequence may be
         constructed from a list of items.
     """
-    if not points:
-        result = []
-    else:
-        # TODO(ntamas): find constant segments and keep those first
-        result = _simplify_line(points, eps=eps, distance_func=distance_func)
+    factory = points.__class__  # type: ignore
 
-    return points.__class__(result)
+    if len(points) < 2:
+        return factory(points)  # type: ignore
+
+    assert eq_func is not None
+
+    eq_with_next = np.array(
+        [eq_func(u, v) for u, v in consecutive_pairs(points)], dtype=bool
+    )
+
+    to_keep = np.full(len(points), False)
+    to_keep[0] = True
+    to_keep[-1] = True
+    to_keep[np.diff(eq_with_next).nonzero()[0] + 1] = True  # type: ignore
+
+    result = []
+
+    for start, end in consecutive_pairs(to_keep.nonzero()[0]):
+        if not result:
+            result.append(points[start])
+
+        if not eq_with_next[start]:
+            if eps > 0:
+                _simplify_line(points, start, end, eps, distance_func, result)
+            else:
+                result.extend(points[(start + 1) : (end - 1)])
+
+        result.append(points[end])
+
+    return factory(result)  # type: ignore
 
 
-def _simplify_line(points, *, eps, distance_func):
-    start, end = points[0], points[-1]
-    dists = distance_func(points, start, end)
+def _simplify_line(
+    points: Sequence[T],
+    start: int,
+    end: int,
+    eps: float,
+    distance_func: DistanceFunc,
+    result: list[T],
+) -> None:
+    if end - start < 2:
+        return
+
+    dists = distance_func(points[start : (end + 1)], points[start], points[end])
     index = max(range(len(dists)), key=dists.__getitem__)
     dmax = dists[index]
 
     if dmax <= eps:
-        return [start, end]
-    else:
-        pre = _simplify_line(points[: index + 1], eps=eps, distance_func=distance_func)
-        post = _simplify_line(points[index:], eps=eps, distance_func=distance_func)
-        return pre[:-1] + post
+        return
+
+    index += start
+
+    result.append(points[index])
+    _simplify_line(points, start, index, eps, distance_func, result)
+    _simplify_line(points, index, end, eps, distance_func, result)
 
 
 def load_module(path: str) -> Any:

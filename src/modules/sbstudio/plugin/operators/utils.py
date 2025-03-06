@@ -9,9 +9,10 @@ from itertools import groupby
 from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, Callable, Optional, cast
 
 from sbstudio.api.base import SkybrushStudioAPI
+from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
@@ -23,12 +24,12 @@ from sbstudio.plugin.model.storyboard import (
 )
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
-from sbstudio.model.file_formats import FileFormat
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
+from sbstudio.plugin.utils.progress import FrameProgressReport
 from sbstudio.plugin.utils.sampling import (
     frame_range,
     sample_colors_of_objects,
@@ -147,6 +148,7 @@ def _get_trajectories_and_lights(
     bounds: tuple[int, int],
     *,
     context: Optional[Context] = None,
+    progress: Optional[Callable[[FrameProgressReport], None]] = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram]]:
     """Get trajectories and LED lights of all selected/picked objects.
 
@@ -167,10 +169,18 @@ def _get_trajectories_and_lights(
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
+        range = frame_range(
+            bounds[0],
+            bounds[1],
+            fps=trajectory_fps,
+            context=context,
+            operation="Sampling trajectories and lights",
+            progress=progress,
+        )
         with suspended_safety_checks():
             result = sample_positions_and_colors_of_objects(
                 drones,
-                frame_range(bounds[0], bounds[1], fps=trajectory_fps, context=context),
+                range,
                 context=context,
                 by_name=True,
                 simplify=True,
@@ -187,20 +197,34 @@ def _get_trajectories_and_lights(
         # We need to iterate over the show twice, once for the trajectories,
         # once for the lights
         with suspended_safety_checks():
+            range = frame_range(
+                bounds[0],
+                bounds[1],
+                fps=trajectory_fps,
+                context=context,
+                operation="Sampling trajectories",
+                progress=progress,
+            )
             with suspended_light_effects():
                 trajectories = sample_positions_of_objects(
                     drones,
-                    frame_range(
-                        bounds[0], bounds[1], fps=trajectory_fps, context=context
-                    ),
+                    range,
                     context=context,
                     by_name=True,
                     simplify=True,
                 )
 
+            range = frame_range(
+                bounds[0],
+                bounds[1],
+                fps=light_fps,
+                context=context,
+                operation="Sampling lights",
+                progress=progress,
+            )
             lights = sample_colors_of_objects(
                 drones,
-                frame_range(bounds[0], bounds[1], fps=light_fps, context=context),
+                range,
                 context=context,
                 by_name=True,
                 simplify=True,
@@ -216,6 +240,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
     bounds: tuple[int, int],
     *,
     context: Optional[Context] = None,
+    progress: Optional[Callable[[FrameProgressReport], None]] = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram], dict[str, YawSetpointList]]:
     """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
 
@@ -238,9 +263,17 @@ def _get_trajectories_lights_and_yaw_setpoints(
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
         with suspended_safety_checks():
+            range = frame_range(
+                bounds[0],
+                bounds[1],
+                fps=trajectory_fps,
+                context=context,
+                operation="Sampling trajectories, lights and yaw setpoints",
+                progress=progress,
+            )
             result = sample_positions_colors_and_yaw_of_objects(
                 drones,
-                frame_range(bounds[0], bounds[1], fps=trajectory_fps, context=context),
+                range,
                 context=context,
                 by_name=True,
                 simplify=True,
@@ -259,12 +292,18 @@ def _get_trajectories_lights_and_yaw_setpoints(
         # We need to iterate over the show twice, once for the trajectories
         # and yaw setpoints, once for the lights
         with suspended_safety_checks():
+            range = frame_range(
+                bounds[0],
+                bounds[1],
+                fps=trajectory_fps,
+                context=context,
+                operation="Sampling trajectories and yaw setpoints",
+                progress=progress,
+            )
             with suspended_light_effects():
                 result = sample_positions_and_yaw_of_objects(
                     drones,
-                    frame_range(
-                        bounds[0], bounds[1], fps=trajectory_fps, context=context
-                    ),
+                    range,
                     context=context,
                     by_name=True,
                     simplify=True,
@@ -277,15 +316,27 @@ def _get_trajectories_lights_and_yaw_setpoints(
                     trajectories[key] = trajectory
                     yaw_setpoints[key] = yaw_curve
 
+            range = frame_range(
+                bounds[0],
+                bounds[1],
+                fps=light_fps,
+                context=context,
+                operation="Sampling lights",
+                progress=progress,
+            )
             lights = sample_colors_of_objects(
                 drones,
-                frame_range(bounds[0], bounds[1], fps=light_fps, context=context),
+                range,
                 context=context,
                 by_name=True,
                 simplify=True,
             )
 
     return trajectories, lights, yaw_setpoints
+
+
+def _show_progress_during_export(progress: FrameProgressReport) -> None:
+    print(progress.format())
 
 
 def export_show_to_file_using_api(
@@ -347,14 +398,24 @@ def export_show_to_file_using_api(
             lights,
             yaw_setpoints,
         ) = _get_trajectories_lights_and_yaw_setpoints(
-            drones, settings, frame_range, context=context
+            drones,
+            settings,
+            frame_range,
+            context=context,
+            progress=_show_progress_during_export,
         )
     else:
         log.info("Getting object trajectories and light programs")
         (
             trajectories,
             lights,
-        ) = _get_trajectories_and_lights(drones, settings, frame_range, context=context)
+        ) = _get_trajectories_and_lights(
+            drones,
+            settings,
+            frame_range,
+            context=context,
+            progress=_show_progress_during_export,
+        )
         yaw_setpoints = None
 
     # get automatic show title
