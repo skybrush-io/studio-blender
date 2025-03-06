@@ -66,7 +66,7 @@ After purchasing a professional license for *Skybrush Studio for Blender*, follo
 1. Download a precompiled copy of *Skybrush Studio Server* from your https://account.skybrush.io[Skybrush Account].
 2. Run your server instance to get the hardware ID of your machine. It will be displayed in the terminal log of the server (look for the `Hardware ID: ...` log entry issued by the `license` extension).
 3. Use this hardware ID for activating your license in the https://shop.skybrush.io[Skybrush Store].
-4. Download your license file named `skybrush-studio-server.cml` and copy it to the folder where you installed the server itself. You might need system administrator privileges to write into this folder.
+4. Download your license file named `skybrush-studio-server.cml` and copy it to the folder where you installed the server itself (If you cannot determine this path, run the server and it will display the expected location of the license file). You might need system administrator privileges to write into this folder.
 
 The terminal log of *Skybrush Studio Server* will give you instant feedback about the presence and content of your currently used license file upon execution of the server.
 
