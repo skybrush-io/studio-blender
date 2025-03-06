@@ -181,7 +181,7 @@ def _get_trajectories_and_lights(
 
         for key, (trajectory, light_program) in result.items():
             trajectories[key] = trajectory
-            lights[key] = light_program.simplify()
+            lights[key] = light_program
 
     else:
         # We need to iterate over the show twice, once for the trajectories,
@@ -252,8 +252,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
 
         for key, (trajectory, light_program, yaw_curve) in result.items():
             trajectories[key] = trajectory
-            # TODO(ntamas): why are we simplifying here once again?
-            lights[key] = light_program.simplify()
+            lights[key] = light_program
             yaw_setpoints[key] = yaw_curve
 
     else:
