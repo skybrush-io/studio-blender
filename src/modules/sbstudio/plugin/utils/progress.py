@@ -165,7 +165,7 @@ class FrameIterator(Iterator[int]):
                 self._progress.start_time = now
             self._progress.current_time = now
 
-            if now - self._callback_called_at >= 1:
+            if now - self._callback_called_at >= 1 or frame == self.end:
                 self._callback(self._progress)
                 self._callback_called_at = now
 
