@@ -51,7 +51,7 @@ class ProgressReport:
     @property
     def percentage(self) -> Optional[float]:
         """Percentage of the operation that has been completed."""
-        if self.total_steps is None:
+        if self.total_steps is None or self.total_steps < 1:
             return None
         return self.steps_done / self.total_steps * 100
 
@@ -145,6 +145,9 @@ class FrameIterator(Iterator[int]):
 
     def __next__(self) -> int:
         if self.current > self.end:
+            self._progress.total_steps = self._progress.steps_done
+            if self._callback:
+                self._callback(self._progress)
             raise StopIteration
 
         if self.current == self.end:
