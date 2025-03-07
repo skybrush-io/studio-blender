@@ -29,7 +29,12 @@ class ProgressReport:
     @property
     def remaining_time(self) -> float | None:
         """Calculates remaining time in seconds or None if not known."""
-        if not self.percentage or self.current_time is None or self.start_time is None:
+        if (
+            not self.percentage
+            or self.current_time is None
+            or self.start_time is None
+            or self.current_time == self.start_time
+        ):
             return None
 
         return (
