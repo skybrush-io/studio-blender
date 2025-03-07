@@ -20,6 +20,34 @@ class ProgressReport:
     operation: Optional[str] = None
     """Optional string that describes the operation being executed."""
 
+    start_time: float | None = None
+    """Optional user updated start time of the progress procedure."""
+
+    current_time: float | None = None
+    """Optional user updated current time of the progress procedure."""
+
+    @property
+    def remaining_time(self) -> float | None:
+        """Calculates remaining time in seconds or None if not known."""
+        if not self.percentage or self.current_time is None or self.start_time is None:
+            return None
+
+        return (
+            (self.current_time - self.start_time)
+            * (100 - self.percentage)
+            / self.percentage
+        )
+
+    @property
+    def remaining_time_str(self) -> str | None:
+        """Shows the remaining time as a mm:ss formatted string
+        or None if not known"""
+        if self.remaining_time is None:
+            return None
+        return (
+            f"{int(self.remaining_time / 60):02d}:{int(self.remaining_time % 60):02d}"
+        )
+
     @property
     def percentage(self) -> Optional[float]:
         """Percentage of the operation that has been completed."""
@@ -28,7 +56,15 @@ class ProgressReport:
         return self.steps_done / self.total_steps * 100
 
     def format(self) -> str:
-        return f"{self.operation}: {self.steps_done}/{self.total_steps}, {self.percentage:.1f}%"
+        time_left = (
+            ""
+            if self.remaining_time_str is None
+            else f", {self.remaining_time_str} mins left"
+        )
+        return (
+            f"{self.operation}: {self.steps_done}/{self.total_steps}, "
+            f"{self.percentage:.1f}%{time_left}"
+        )
 
 
 @dataclass
@@ -44,7 +80,15 @@ class FrameProgressReport(ProgressReport):
     """Current frame that the operation is being executed on."""
 
     def format(self) -> str:
-        return f"{self.operation}: frame {self.current_frame} in range {self.frame_range!r}, {self.percentage:.1f}%"
+        time_left = (
+            ""
+            if self.remaining_time_str is None
+            else f", {self.remaining_time_str} mins left"
+        )
+        return (
+            f"{self.operation}: frame {self.current_frame} in range {self.frame_range!r}, "
+            f"{self.percentage:.1f}%{time_left}"
+        )
 
 
 class FrameIterator(Iterator[int]):
@@ -116,6 +160,11 @@ class FrameIterator(Iterator[int]):
 
         if self._callback:
             now = time()
+
+            if not self._progress.start_time:
+                self._progress.start_time = now
+            self._progress.current_time = now
+
             if now - self._callback_called_at >= 1:
                 self._callback(self._progress)
                 self._callback_called_at = now
