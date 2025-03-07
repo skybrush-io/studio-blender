@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Optional, Sequence
+from typing import Iterable, Optional, Sequence
 
 from sbstudio.utils import simplify_path
 
@@ -8,11 +8,13 @@ from .color import Color4D
 __all__ = ("LightProgram",)
 
 
-def _simplify_color_distance_func(keypoints, start, end):
+def _simplify_color_distance_func(
+    keypoints: Iterable[Color4D], start: Color4D, end: Color4D
+):
     """Distance function for LightProgram.simplify()"""
     timespan = end.t - start.t
 
-    result = []
+    result: list[float] = []
 
     for point in keypoints:
         ratio = (point.t - start.t) / timespan if timespan > 0 else 0.5
@@ -30,6 +32,11 @@ def _simplify_color_distance_func(keypoints, start, end):
         result.append(diff)
 
     return result
+
+
+def _simplify_color_eq_func(p1: Color4D, p2: Color4D):
+    """Equality function for LightProgram.simplify()"""
+    return p1.r == p2.r and p1.g == p2.g and p1.b == p2.b
 
 
 class LightProgram:
@@ -79,7 +86,10 @@ class LightProgram:
 
         """
         new_items = simplify_path(
-            list(self.colors), eps=4, distance_func=_simplify_color_distance_func
+            list(self.colors),
+            eps=4,
+            distance_func=_simplify_color_distance_func,
+            eq_func=_simplify_color_eq_func,
         )
 
         return LightProgram(new_items)

@@ -124,7 +124,11 @@ EqFunc = Callable[[T, T], bool]
 
 
 def simplify_path(
-    points: Sequence[T], *, eps: float, distance_func: DistanceFunc, eq_func: EqFunc
+    points: Sequence[T],
+    *,
+    eps: float,
+    distance_func: DistanceFunc[T],
+    eq_func: EqFunc[T],
 ) -> Sequence[T]:
     """Simplifies a sequence of points to a similar sequence with fewer
     points, using a distance function and an acceptable error term.
