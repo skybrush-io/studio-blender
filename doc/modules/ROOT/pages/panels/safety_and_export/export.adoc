@@ -8,7 +8,13 @@ The available output formats depend on whether you selected the "Indoor" or "Out
 
 image::panels/export/export.jpg[Export panel]
 
-The following options are available in general...
+Press the btn:[Refresh file formats] to enable export formats according to your license.
+
+Note that export operations require Blender to sample trajectories and lights which can take a long time.
+To see the progress or predicted remaining time of the export procedure, run Blender from a terminal
+window or press "Toggle System Console" in the "Windows" menu to watch its terminal log.
+
+
 
 == Export to .skyc
 
