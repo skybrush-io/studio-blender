@@ -36,6 +36,12 @@ def is_smart_rth_enabled_globally() -> bool:
     return True
 
 
+def use_custom_spacing_updated(self, context: Context):
+    """Called when the use_custom_spacing checkbox is enabled or disabled by the user."""
+    if not self.use_custom_spacing:
+        self.spacing = get_proximity_warning_threshold(context)
+
+
 class ReturnToHomeOperator(StoryboardOperator):
     """Blender operator that adds a return-to-home transition to the show."""
 
@@ -47,11 +53,11 @@ class ReturnToHomeOperator(StoryboardOperator):
     only_with_valid_storyboard = True
 
     start_frame = IntProperty(
-        name="at frame", description="Start frame of the return-to-home maneuver"
+        name="at Frame", description="Start frame of the return-to-home maneuver"
     )
 
     velocity = FloatProperty(
-        name="with velocity",
+        name="with Velocity",
         description="Average horizontal velocity during the return-to-home maneuver",
         default=4,
         min=0.1,
@@ -61,7 +67,7 @@ class ReturnToHomeOperator(StoryboardOperator):
     )
 
     velocity_z = FloatProperty(
-        name="with velocity Z",
+        name="with Velocity Z",
         description="Average vertical velocity during the return-to-home maneuver",
         default=2,
         min=0.1,
@@ -71,10 +77,26 @@ class ReturnToHomeOperator(StoryboardOperator):
     )
 
     altitude = FloatProperty(
-        name="to altitude",
+        name="to Altitude",
         description="Altitude to return-to-home to",
         default=10,
         soft_min=-50,
+        soft_max=50,
+        unit="LENGTH",
+    )
+
+    use_custom_spacing = BoolProperty(
+        name="Use custom spacing",
+        default=False,
+        description="When checked, a custom spacing can be given instead of the default proximity warning threshold",
+        update=use_custom_spacing_updated,
+    )
+
+    spacing = FloatProperty(
+        name="Spacing",
+        description="Grid spacing for RTH or minimum distance for smart RTH",
+        default=3,
+        min=0.1,
         soft_max=50,
         unit="LENGTH",
     )
@@ -132,6 +154,11 @@ class ReturnToHomeOperator(StoryboardOperator):
         layout.prop(self, "altitude")
         if not use_smart_rth:
             layout.prop(self, "altitude_shift")
+        row = layout.row(heading="Spacing")
+        row.prop(self, "use_custom_spacing", text="")
+        row = row.row()
+        row.prop(self, "spacing", text="")
+        row.enabled = self.use_custom_spacing
 
         if is_smart_rth_enabled_globally():
             layout.prop(self, "use_smart_rth")
@@ -140,6 +167,9 @@ class ReturnToHomeOperator(StoryboardOperator):
         self.start_frame = max(
             context.scene.frame_current, get_storyboard(context=context).frame_end
         )
+        if not self.use_custom_spacing:
+            self.spacing = get_proximity_warning_threshold(context)
+
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard: Storyboard, entries, context: Context):
@@ -176,8 +206,8 @@ class ReturnToHomeOperator(StoryboardOperator):
             drones,
             frame=first_frame,
             base_altitude=self.altitude,
-            layer_height=self.altitude_shift if not use_smart_rth else 0,
-            min_distance=get_proximity_warning_threshold(context),
+            layer_height=0 if use_smart_rth else self.altitude_shift,
+            min_distance=self.spacing,
             operator=self,
         )
 
@@ -239,7 +269,6 @@ class ReturnToHomeOperator(StoryboardOperator):
         # TODO: get them as explicit parameter if needed
         settings = getattr(context.scene.skybrush, "settings", None)
         max_acceleration = settings.max_acceleration if settings else 4
-        min_distance = get_proximity_warning_threshold(context)
         land_speed = min(self.velocity_z, 0.5)
 
         # call API to create smart RTH plan
@@ -250,7 +279,7 @@ class ReturnToHomeOperator(StoryboardOperator):
                 max_velocity_xy=self.velocity,
                 max_velocity_z=self.velocity_z,
                 max_acceleration=max_acceleration,
-                min_distance=min_distance,
+                min_distance=self.spacing,
                 rth_model="straight_line_with_neck",
             )
         if not plan.start_times or not plan.durations:

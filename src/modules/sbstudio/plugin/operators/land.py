@@ -2,7 +2,7 @@ from math import ceil, floor
 
 import bpy
 
-from bpy.props import FloatProperty, IntProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context
 
 from sbstudio.errors import SkybrushStudioError
@@ -24,6 +24,12 @@ from .base import StoryboardOperator
 __all__ = ("LandOperator",)
 
 
+def use_custom_spacing_updated(self, context: Context):
+    """Called when the use_custom_spacing checkbox is enabled or disabled by the user."""
+    if not self.use_custom_spacing:
+        self.spacing = get_proximity_warning_threshold(context)
+
+
 class LandOperator(StoryboardOperator):
     """Blender operator that adds a landing transition to the show, starting at
     the current frame.
@@ -37,11 +43,11 @@ class LandOperator(StoryboardOperator):
     only_with_valid_storyboard = True
 
     start_frame = IntProperty(
-        name="at frame", description="Start frame of the landing maneuver"
+        name="at Frame", description="Start frame of the landing maneuver"
     )
 
     velocity = FloatProperty(
-        name="with velocity",
+        name="with Velocity",
         description="Average vertical velocity during the landing maneuver",
         default=1,
         min=0.1,
@@ -51,10 +57,26 @@ class LandOperator(StoryboardOperator):
     )
 
     altitude = FloatProperty(
-        name="to altitude",
+        name="to Altitude",
         description="Altitude to land to",
         default=0,
         soft_min=-50,
+        soft_max=50,
+        unit="LENGTH",
+    )
+
+    use_custom_spacing = BoolProperty(
+        name="Use custom spacing",
+        default=False,
+        description="When checked, a custom spacing can be given instead of the default proximity warning threshold",
+        update=use_custom_spacing_updated,
+    )
+
+    spacing = FloatProperty(
+        name="Spacing",
+        description="Minimum distance between drones during landing",
+        default=3,
+        min=0.1,
         soft_max=50,
         unit="LENGTH",
     )
@@ -79,10 +101,28 @@ class LandOperator(StoryboardOperator):
         drones = Collections.find_drones(create=False)
         return drones is not None and len(drones.objects) > 0
 
+    def draw(self, context: Context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        layout.prop(self, "start_frame")
+        layout.prop(self, "velocity")
+        layout.prop(self, "altitude")
+        row = layout.row(heading="Spacing")
+        row.prop(self, "use_custom_spacing", text="")
+        row = row.row()
+        row.prop(self, "spacing", text="")
+        row.enabled = self.use_custom_spacing
+        layout.prop(self, "spindown_time")
+
     def invoke(self, context: Context, event):
         self.start_frame = max(
             context.scene.frame_current, get_storyboard(context=context).frame_end
         )
+
+        if not self.use_custom_spacing:
+            self.spacing = get_proximity_warning_threshold(context)
+
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard, entries, context):
@@ -124,13 +164,12 @@ class LandOperator(StoryboardOperator):
 
         # Ask the API to figure out the start times and durations for each drone
         fps = context.scene.render.fps
-        min_distance = get_proximity_warning_threshold(context)
         _, _, dist = find_nearest_neighbors(target)
-        if dist < min_distance:
+        if dist < self.spacing:
             with call_api_from_blender_operator(self, "landing planner") as api:
                 delays, durations = api.plan_landing(
                     source,
-                    min_distance=min_distance,
+                    min_distance=self.spacing,
                     velocity=self.velocity,
                     target_altitude=self.altitude,
                     spindown_time=self.spindown_time,

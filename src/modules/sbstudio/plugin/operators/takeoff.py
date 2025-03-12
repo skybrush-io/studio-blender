@@ -29,6 +29,12 @@ from .base import StoryboardOperator
 __all__ = ("TakeoffOperator",)
 
 
+def use_custom_spacing_updated(self, context: Context):
+    """Called when the use_custom_spacing checkbox is enabled or disabled by the user."""
+    if not self.use_custom_spacing:
+        self.spacing = get_proximity_warning_threshold(context)
+
+
 class TakeoffOperator(StoryboardOperator):
     """Blender operator that adds a takeoff transition to the show, starting at
     a given frame.
@@ -42,11 +48,11 @@ class TakeoffOperator(StoryboardOperator):
     only_with_valid_storyboard = True
 
     start_frame = IntProperty(
-        name="at frame", description="Start frame of the takeoff maneuver"
+        name="at Frame", description="Start frame of the takeoff maneuver"
     )
 
     velocity = FloatProperty(
-        name="with velocity",
+        name="with Velocity",
         description="Average vertical velocity during the takeoff maneuver",
         default=1.5,
         min=0.1,
@@ -56,7 +62,7 @@ class TakeoffOperator(StoryboardOperator):
     )
 
     altitude = FloatProperty(
-        name="to altitude",
+        name="to Altitude",
         description="Altitude to take off to",
         default=6,
         soft_min=0,
@@ -75,6 +81,22 @@ class TakeoffOperator(StoryboardOperator):
         ),
         default=False,
         options={"HIDDEN"},
+    )
+
+    use_custom_spacing = BoolProperty(
+        name="Use custom spacing",
+        default=False,
+        description="When checked, a custom spacing can be given instead of the default proximity warning threshold",
+        update=use_custom_spacing_updated,
+    )
+
+    spacing = FloatProperty(
+        name="Spacing",
+        description="Minimum distance between drones during takeoff",
+        default=3,
+        min=0.1,
+        soft_max=50,
+        unit="LENGTH",
     )
 
     altitude_shift = FloatProperty(
@@ -98,12 +120,30 @@ class TakeoffOperator(StoryboardOperator):
         drones = Collections.find_drones(create=False)
         return drones is not None and len(drones.objects) > 0
 
+    def draw(self, context: Context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        layout.prop(self, "start_frame")
+        layout.prop(self, "velocity")
+        layout.prop(self, "altitude")
+        layout.prop(self, "altitude_shift")
+        row = layout.row(heading="Spacing")
+        row.prop(self, "use_custom_spacing", text="")
+        row = row.row()
+        row.prop(self, "spacing", text="")
+        row.enabled = self.use_custom_spacing
+
     def invoke(self, context: Context, event):
         # The start frame cannot be earlier than the start time of the first
         # formation and must be earlier than the start time of the second
         # formation. Constrain it to the valid range.
         start, end = self._get_valid_range_for_start_frame(context)
         self.start_frame = int(max(min(context.scene.frame_current, end), start))
+
+        if not self.use_custom_spacing:
+            self.spacing = get_proximity_warning_threshold(context)
+
         return context.window_manager.invoke_props_dialog(self)
 
     def execute_on_storyboard(self, storyboard: Storyboard, entries, context: Context):
@@ -129,7 +169,7 @@ class TakeoffOperator(StoryboardOperator):
             frame=self.start_frame,
             base_altitude=self.altitude,
             layer_height=self.altitude_shift,
-            min_distance=get_proximity_warning_threshold(context),
+            min_distance=self.spacing,
             operator=self,
         )
 
