@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   To see progress or predicted remaining time, run Blender from a terminal
   window or press "Toggle System Console" in the "Windows" menu.
 
+- Added custom spacing parameter for the takeoff, return to home and land operators.
+  Users now can override the default spacing that is taken from the proximity warning
+  threshold.
+
 ## [3.10.0] - 2025-03-05
 
 ### Added
