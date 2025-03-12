@@ -153,12 +153,19 @@ class ReturnToHomeOperator(StoryboardOperator):
             layout.prop(self, "velocity")
         layout.prop(self, "altitude")
         if not use_smart_rth:
+            row = layout.row()
             layout.prop(self, "altitude_shift")
+            if self.altitude_shift < self.spacing:
+                row.alert = True
+                row.label(text="", icon="ERROR")
         row = layout.row(heading="Spacing")
         row.prop(self, "use_custom_spacing", text="")
         row = row.row()
         row.prop(self, "spacing", text="")
         row.enabled = self.use_custom_spacing
+        if self.spacing < get_proximity_warning_threshold(context):
+            row.alert = True
+            row.label(text="", icon="ERROR")
 
         if is_smart_rth_enabled_globally():
             layout.prop(self, "use_smart_rth")

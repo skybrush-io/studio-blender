@@ -127,12 +127,19 @@ class TakeoffOperator(StoryboardOperator):
         layout.prop(self, "start_frame")
         layout.prop(self, "velocity")
         layout.prop(self, "altitude")
-        layout.prop(self, "altitude_shift")
+        row = layout.row()
+        row.prop(self, "altitude_shift")
+        if self.altitude_shift < self.spacing:
+            row.alert = True
+            row.label(text="", icon="ERROR")
         row = layout.row(heading="Spacing")
         row.prop(self, "use_custom_spacing", text="")
         row = row.row()
         row.prop(self, "spacing", text="")
         row.enabled = self.use_custom_spacing
+        if self.spacing < get_proximity_warning_threshold(context):
+            row.alert = True
+            row.label(text="", icon="ERROR")
 
     def invoke(self, context: Context, event):
         # The start frame cannot be earlier than the start time of the first

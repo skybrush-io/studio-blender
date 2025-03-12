@@ -113,6 +113,9 @@ class LandOperator(StoryboardOperator):
         row = row.row()
         row.prop(self, "spacing", text="")
         row.enabled = self.use_custom_spacing
+        if self.spacing < get_proximity_warning_threshold(context):
+            row.alert = True
+            row.label(text="", icon="ERROR")
         layout.prop(self, "spindown_time")
 
     def invoke(self, context: Context, event):
