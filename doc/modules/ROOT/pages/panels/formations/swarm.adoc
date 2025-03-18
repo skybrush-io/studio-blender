@@ -32,7 +32,7 @@ If *Selected Object* is chosen, make sure you have your template object selected
 
 == Drone radius
 
-If you select a "Sphere" or "Cone" type drone template, you can also setup a radius for your template object before creating your first takeoff grid. Similarly to the btn:[Drone template] option, this setting will also disappear after creating the takeoff grid. 
+If you select a "Sphere" or "Cone" type drone template, you can also setup a radius for your template object before creating your first takeoff grid. Similarly to the btn:[Drone template] option, this setting will also disappear after creating the takeoff grid.
 
 If you wish to change your drone size at a later stage, you can use standard Blender tools for this. First select all your drone objects you wish to resize, then set the "Transform Pivot Point" to "Individual Origins" and the simply scale up all objects around their own origins with kbd:[s].
 

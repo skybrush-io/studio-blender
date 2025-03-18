@@ -4,7 +4,7 @@
 
 Once you are finished with your drone show, use the Export panel to export it from Blender to different formats for further processing or direct upload to the drones.
 
-The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/formations/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased. 
+The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/formations/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased.
 
 image::panels/export/export.jpg[Export panel]
 
@@ -95,7 +95,7 @@ WARNING: Creating these plots might take a long time, depending on the number of
 
 If you are preparing your drone show as part of a larger event with fireworks, you can export to Finale 3D VVIZ format directly. Note that this export option requires a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
 
-If you press the btn:[Export to Finale 3D VVIZ] button, you have to choose the path and filename of your output file. The 
+If you press the btn:[Export to Finale 3D VVIZ] button, you have to choose the path and filename of your output file. The
 btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for this export type as well.
 
 == Export to various third-party show formats

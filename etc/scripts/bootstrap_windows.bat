@@ -1,4 +1,4 @@
-:: Windows bootstrap script for the repository to set up a dev/ folder 
+:: Windows bootstrap script for the repository to set up a dev/ folder
 :: inside the repo that can pose as a Blender addon path.
 ::
 :: You should run the script without any arguments, unless you are an

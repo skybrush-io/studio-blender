@@ -1,6 +1,5 @@
 from bpy.types import Context, Object
 from collections import defaultdict
-from itertools import chain
 from typing import Callable, Dict, Iterable, Iterator, Optional, Sequence, Tuple
 
 from sbstudio.model.color import Color4D

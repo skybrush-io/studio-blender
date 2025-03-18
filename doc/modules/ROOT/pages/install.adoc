@@ -38,9 +38,9 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
     API key:: If you have received an API key for communicating with the Skybrush Studio server, paste it here (by default you do not have to touch this setting).
 
-    Server URL:: Enter the URL of a dedicated *Skybrush Studio Server* if you are using a dedicated server (by default you do not have to touch this setting, change only if you know what you are doing). 
-    
-    Use local server:: Press this button if you have purchased 
+    Server URL:: Enter the URL of a dedicated *Skybrush Studio Server* if you are using a dedicated server (by default you do not have to touch this setting, change only if you know what you are doing).
+
+    Use local server:: Press this button if you have purchased
     a professional local copy of *Skybrush Studio Server* that is running on your own machine. This action will fill the btn:[Server URL] field automatically.
 
     Use community server:: Press this button to use the online community server. This action will clear the btn:[Server URL] field automatically. Our community server is a free service but it might be limited in drone number, execution time or available features. Purchase a professional server from https://shop.skybrush.io[Skybrush Store] if you need to use *Skybrush Studio for Blender* without limits.

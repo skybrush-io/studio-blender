@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added progress reporting for the time consuming export operations. 
+- Added progress reporting for the time consuming export operations.
   To see progress or predicted remaining time, run Blender from a terminal
   window or press "Toggle System Console" in the "Windows" menu.
 
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support for exporting drone shows into the Finale 3D VVIZ format 
+- Added support for exporting drone shows into the Finale 3D VVIZ format
   for integration with fireworks. Fireworks launched from drones are
   not yet supported, but trajectories, light animation and yaw setpoints
   are all saved.
