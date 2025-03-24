@@ -516,7 +516,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "许可证文件", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -569,7 +569,11 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        (
+            "zh_HANS",
+            "许可证文件的完整路径，用作API密钥（此功能目前不可用）",
+            (False, ()),
+        ),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -2757,7 +2761,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "指定Blender中定义的摄像机是否应导出到演出文件中", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -3249,7 +3253,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "绘制预计漂移", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -3302,7 +3306,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "包括速度图。取消锁定以从输出中排除速度图。", (True, ())),
+        ("zh_HANS", "包括预计漂移图。取消勾选以从输出中排除预计漂移图。", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -3879,7 +3883,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "导出Finale 3D VVIZ格式", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -3936,7 +3940,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "将对象轨迹和灯光动画导出为dac格式。", (True, ())),
+        ("zh_HANS", "将物体轨迹和灯光动画导出为Finale 3D VVIZ格式。", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -9020,7 +9024,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "到海拔高度", (True, ())),
+        ("zh_HANS", "至海拔高度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -9120,7 +9124,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "无人机降落期间的最小间距", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -9277,7 +9281,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "在帧处", (True, ())),
+        ("zh_HANS", "在此帧", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -9384,7 +9388,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "使用自定义间距", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -9444,7 +9448,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "勾选后，可以指定自定义间距，而非默认的接近警告阈值", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -9501,7 +9505,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "带速度", (True, ())),
+        ("zh_HANS", "速度为", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -11896,7 +11900,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "返航（RTH）的网格间距或智能返航的最小距离", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -12153,7 +12157,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "Z 轴速度", (True, ())),
+        ("zh_HANS", "Z 轴速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -13084,7 +13088,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "无人机起飞期间的最小间距", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -16047,7 +16051,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "首选加速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -16100,7 +16104,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "规划固定点之间过渡的持续时间时允许的最大加速度", (True, ())),
+        ("zh_HANS", "在规划固定点之间的过渡时间时，无人机的首选加速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -20395,7 +20399,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "显示高度警告", (True, ())),
+        ("zh_HANS", "显示加速度警告", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -20450,8 +20454,8 @@ translations_tuple = (
         ("vi_VN", "", (False, ())),
         (
             "zh_HANS",
-            "指定当飞机的高度大于高度警告阈值时，Blender是否应显示警告",
-            (True, ()),
+            "指定当无人机的加速度大于加速度警告阈值时，Blender是否应显示警告",
+            (False, ()),
         ),
         ("zh_HANT", "", (False, ())),
     ),
@@ -20502,7 +20506,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "最大加速度", (True, ())),
+        ("zh_HANS", "最大加速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -20552,7 +20556,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "允许的最大加速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -21069,7 +21073,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "当前帧中所有无人机的最大高度", (True, ())),
+        ("zh_HANS", "当前帧中所有无人机的最大加速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -21319,7 +21323,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "最大Z速度", (True, ())),
+        ("zh_HANS", "Z轴最大下降速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -21419,7 +21423,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "最大Z速度", (True, ())),
+        ("zh_HANS", "Z轴最大上升速度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -23928,7 +23932,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "用途", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -23981,7 +23985,11 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        (
+            "zh_HANS",
+            "该指令用于演出流程。一个有效的演出必须以0个或多个起飞指令开始，接着执行任意数量的演出指令，并以0个或多个降落指令结束。",
+            (False, ()),
+        ),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -24031,7 +24039,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "起飞", (True, ())),
+        ("zh_HANS", "起飞", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -24081,7 +24089,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "", (False, ())),
+        ("zh_HANS", "降落动作", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
