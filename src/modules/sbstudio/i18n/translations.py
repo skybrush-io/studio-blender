@@ -12877,7 +12877,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "起飞高度", (False, ())),
+        ("zh_HANS", "起飞高度。若为分层起飞，则为最底层的预定起飞高度", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
