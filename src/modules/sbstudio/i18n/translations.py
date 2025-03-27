@@ -9024,7 +9024,7 @@ translations_tuple = (
         ("tr_TR", "", (False, ())),
         ("uk_UA", "", (False, ())),
         ("vi_VN", "", (False, ())),
-        ("zh_HANS", "至海拔高度", (False, ())),
+        ("zh_HANS", "高度为", (False, ())),
         ("zh_HANT", "", (False, ())),
     ),
     (
@@ -12828,7 +12828,10 @@ translations_tuple = (
         ("zh_HANT", "", (False, ())),
     ),
     (
-        ("*", "Altitude to take off to"),
+        (
+            "*",
+            "Altitude to take off to. In case of layered takeoff the desired takeoff altitude of the lowest layer.",
+        ),
         (("bpy.types.SKYBRUSH_OT_takeoff.altitude",), ()),
         ("ab", "", (False, ())),
         ("ar_EG", "", (False, ())),
