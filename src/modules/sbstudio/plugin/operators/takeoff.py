@@ -65,7 +65,7 @@ class TakeoffOperator(StoryboardOperator):
         name="to Altitude",
         description=(
             "Altitude to take off to. In case of layered takeoff "
-            "the desired takeoff altitude of the lowest layer."
+            "the desired takeoff altitude of the lowest layer"
         ),
         default=6,
         soft_min=0,

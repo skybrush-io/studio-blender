@@ -12830,7 +12830,7 @@ translations_tuple = (
     (
         (
             "*",
-            "Altitude to take off to. In case of layered takeoff the desired takeoff altitude of the lowest layer.",
+            "Altitude to take off to. In case of layered takeoff the desired takeoff altitude of the lowest layer",
         ),
         (("bpy.types.SKYBRUSH_OT_takeoff.altitude",), ()),
         ("ab", "", (False, ())),
