@@ -9,17 +9,17 @@ __all__ = (
 def format_latitude(latitude: float) -> str:
     """Returns the string representation of a latitude value."""
     if latitude < 0:
-        return f"S{round(-latitude, ndigits=7)}"
+        return f"S {round(-latitude, ndigits=7)}\u00b0"
     else:
-        return f"N{round(latitude, ndigits=7)}"
+        return f"N {round(latitude, ndigits=7)}\u00b0"
 
 
 def format_longitude(longitude: float) -> str:
     """Returns the string representation of a longitude value."""
     if longitude < 0:
-        return f"W{round(-longitude, ndigits=7)}"
+        return f"W {round(-longitude, ndigits=7)}\u00b0"
     else:
-        return f"E{round(longitude, ndigits=7)}"
+        return f"E {round(longitude, ndigits=7)}\u00b0"
 
 
 def _parse_coordinate_from_string(input: str, positive: str, negative: str) -> float:
@@ -37,6 +37,7 @@ def _parse_coordinate_from_string(input: str, positive: str, negative: str) -> f
         sign = -1
         input = input[:-1]
 
+    input = input.strip().removesuffix("\u00b0")
     try:
         retval = float(input) * sign
     except ValueError:

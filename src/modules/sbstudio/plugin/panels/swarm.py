@@ -35,24 +35,8 @@ class SwarmPanel(Panel):
 
         layout = self.layout
 
-        layout.prop(settings, "show_type", text="Show")
         layout.prop(settings, "drone_collection", text="Drones")
-
-        row = layout.row(heading="Location:")
-        row.prop(settings, "use_show_origin_and_orientation", text="")
-        row = row.row()
-        row.prop(settings, "show_orientation", text="")
-        row.enabled = settings.use_show_origin_and_orientation
-        row = layout.row(heading="")
-        row.prop(settings, "latitude_of_show_origin", text="")
-        row.prop(settings, "longitude_of_show_origin", text="")
-        row.enabled = settings.use_show_origin_and_orientation
-
-        layout.separator()
-
         layout.prop(settings, "max_acceleration", slider=True)
-
-        layout.separator()
 
         if Collections.find_templates(create=False) is None:
             layout.prop(settings, "drone_template", text="Drone")

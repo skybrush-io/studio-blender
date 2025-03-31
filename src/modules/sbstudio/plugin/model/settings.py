@@ -129,14 +129,14 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
     latitude_of_show_origin = StringProperty(
         name="Latitude of show origin",
         description="Proposed latitude of the origin of the show coordinate system, in degrees",
-        default="N0.0",
+        default="N 0.0\u00b0",
         update=latitude_of_show_origin_updated,
     )
 
     longitude_of_show_origin = StringProperty(
         name="Longitude of show origin",
         description="Proposed longitude of the origin of the show coordinate system, in degrees",
-        default="E0.0",
+        default="E 0.0\u00b0",
         update=longitude_of_show_origin_updated,
     )
 
