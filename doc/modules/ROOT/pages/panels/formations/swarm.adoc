@@ -16,6 +16,22 @@ Click on the btn:[Drones] button to select the collection that is your primary s
 
 IMPORTANT: Any mesh that is placed in the collection selected here will be treated as a drone by *Skybrush Studio*, and it may adjust the constraints and other properties of the mesh as needed when performing certain operations. Make sure that there are no other objects in the collection that you select here, only the ones that you want to consider drones.
 
+== Show location
+
+If you know the exact location and orientation of your show in the real world, you can give this information to the add-on to include it in your exported .skyc show file for easy placement of your show in Skybrush Live later on. If you want to propose the show origin and show orientation, enable the btn:[Use show origin and orientation] checkbox.
+
+=== Show orientation
+
+You can define the orientation of your show in the real world. The given value will define the orientation of the X+ axis of the show coordinate system relative to North (towards East) in the real world.
+
+=== Latitude of show origin
+
+You can define the latitude of the show origin, i.e. the North-South position of the (0, 0) Blender coordinate in the real world. Use simple signed floats or use the "N" or "S" prefixes if that is more convenient. Values are expected to be in degrees.
+
+=== Longitude of show origin
+
+You can define the longitude of the show origin, i.e. the East-West position of the (0, 0) Blender coordinate in the real world. Use simple signed floats or use the "E" or "W" prefixes if that is more convenient. Values are expected to be in degrees.
+
 == Preferred acceleration
 
 The btn:[Preferred acceleration] button sets up a preferred acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
