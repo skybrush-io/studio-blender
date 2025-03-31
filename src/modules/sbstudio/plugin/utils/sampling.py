@@ -1,3 +1,5 @@
+import bpy
+
 from bpy.types import Context, Object
 from collections import defaultdict
 from typing import Callable, Dict, Iterable, Iterator, Optional, Sequence, Tuple
@@ -55,11 +57,16 @@ def frame_range(
 
 @with_context
 def each_frame_in(
-    frames: Iterable[int], *, context: Optional[Context] = None
+    frames: Iterable[int], *, redraw: bool = False, context: Optional[Context] = None
 ) -> Iterable[Tuple[int, float]]:
     """Generator that iterates over the given frames, sets the current frame in
     Blender to each frame one by one, and then yields a tuple consisting of
     the current frame _index_ and the current frame _timestamp_ to the caller.
+
+    Args:
+        frames: the frames to iterate over
+        redraw: whether to redraw the Blender window after each frame is set.
+            Makes the iteration significantly slower.
     """
     assert context is not None  # injected
 
@@ -68,6 +75,9 @@ def each_frame_in(
 
     for frame in frames:
         scene.frame_set(frame)
+        if redraw:
+            bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=0)
+
         time = frame / fps
         yield frame, time
 
@@ -178,6 +188,7 @@ def sample_colors_of_objects(
     *,
     by_name: bool = False,
     simplify: bool = False,
+    redraw: bool = False,
     context: Optional[Context] = None,
 ) -> Dict[Object, LightProgram]:
     """Samples the colors of the given Blender objects at the given frames,
@@ -192,6 +203,9 @@ def sample_colors_of_objects(
             enabled, the resulting light program might not contain samples
             for all the input frames; excess samples that are identical to
             previous ones will be removed.
+        redraw: whether to redraw the Blender window after each frame is set
+            (this is necessary to ensure that the light colors are updated
+            correctly for video-based light effects)
         context: the Blender execution context; `None` means the current
             Blender context
 
@@ -200,7 +214,7 @@ def sample_colors_of_objects(
     """
     lights = defaultdict(LightProgram)
 
-    for _, time in each_frame_in(frames, context=context):
+    for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
             key = obj.name if by_name else obj
             color = get_led_light_color(obj)
@@ -226,6 +240,7 @@ def sample_positions_and_colors_of_objects(
     *,
     by_name: bool = False,
     simplify: bool = False,
+    redraw: bool = False,
     context: Optional[Context] = None,
 ) -> Dict[Object, Tuple[Trajectory, LightProgram]]:
     """Samples the positions and colors of the given Blender objects at the
@@ -241,6 +256,9 @@ def sample_positions_and_colors_of_objects(
             this option is enabled, the resulting trajectories and light programs
             might not contain samples for all the input frames; excess samples
             that are identical to previous ones will be removed.
+        redraw: whether to redraw the Blender window after each frame is set
+            (this is necessary to ensure that the light colors are updated
+            correctly for video-based light effects)
         context: the Blender execution context; `None` means the current
             Blender context
 
@@ -250,7 +268,7 @@ def sample_positions_and_colors_of_objects(
     trajectories = defaultdict(Trajectory)
     lights = defaultdict(LightProgram)
 
-    for _, time in each_frame_in(frames, context=context):
+    for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
             key = obj.name if by_name else obj
             pos = get_position_of_object(obj)
@@ -283,6 +301,7 @@ def sample_positions_colors_and_yaw_of_objects(
     *,
     by_name: bool = False,
     simplify: bool = False,
+    redraw: bool = False,
     context: Optional[Context] = None,
 ) -> Dict[Object, Tuple[Trajectory, LightProgram, YawSetpointList]]:
     """Samples the positions, colors and yaw angles of the given Blender objects
@@ -299,6 +318,9 @@ def sample_positions_colors_and_yaw_of_objects(
             light programs and yaw setpoints might not contain samples for all
             the input frames; excess samples that are identical to previous
             ones will be removed.
+        redraw: whether to redraw the Blender window after each frame is set
+            (this is necessary to ensure that the light colors are updated
+            correctly for video-based light effects)
         context: the Blender execution context; `None` means the current
             Blender context
 
@@ -309,7 +331,7 @@ def sample_positions_colors_and_yaw_of_objects(
     lights = defaultdict(LightProgram)
     yaw_setpoints = defaultdict(YawSetpointList)
 
-    for _, time in each_frame_in(frames, context=context):
+    for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
             key = obj.name if by_name else obj
             pos = get_position_of_object(obj)

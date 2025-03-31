@@ -30,6 +30,8 @@ Export selected drones only:: Export all or only selected drones
 
 Frame range:: Define the frame range of the output (Storyboard / Render / Preview / Current formation or transition)
 
+Redraw frames:: Decides whether to redraw the main Blender window while iterating over the frames of the show. Redrawing can significantly increase the time needed to export the show, but it is required if you have video textures that are used to control light effects. "Auto" means to redraw the scene if it is needed to export the show correctly. "Always" means to redraw the scene even if it is not needed. "Never" means to skip redrawing the scene -- note that this might lead to incorrect light effects in the exported show if you have video based light effects.
+
 Trajectory FPS:: Set output frame rate for drone trajectories (make sure it is a submultiple of your render FPS)
 
 Light FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)

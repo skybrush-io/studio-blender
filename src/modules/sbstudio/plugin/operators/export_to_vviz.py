@@ -57,4 +57,5 @@ class VVIZExportOperator(ExportOperator):
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "use_yaw_control": self.use_yaw_control,
+            "redraw": self._get_redraw_setting(),
         }

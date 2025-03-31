@@ -772,9 +772,7 @@ class LightEffect(PropertyGroup):
         pixels = _pixel_cache.get(self.id)
         if pixels is None and self.color_image is not None:
             pixels = self.color_image.pixels[:]
-            _pixel_cache.add(
-                self.id, pixels, is_static=self.color_image.frame_duration <= 1
-            )
+            _pixel_cache.add(self.id, pixels, is_static=not self.is_animated)
 
         return pixels or ()
 
@@ -785,6 +783,13 @@ class LightEffect(PropertyGroup):
             # Chance of a collision is minimal so just use random numbers
             self.maybe_uuid_do_not_use = uuid4().hex
         return self.maybe_uuid_do_not_use
+
+    @property
+    def is_animated(self) -> bool:
+        """Returns whether this light effect is animated, i.e. whether it has
+        an associated image texture that has more than one frame.
+        """
+        return self.color_image is not None and self.color_image.frame_duration > 1
 
     def invalidate_color_image(self) -> None:
         """Invalidates the cached pixel-level representation of the color image

@@ -49,4 +49,5 @@ class EVSKYExportOperator(ExportOperator):
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
+            "redraw": self._get_redraw_setting(),
         }

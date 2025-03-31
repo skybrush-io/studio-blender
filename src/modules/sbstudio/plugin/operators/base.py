@@ -9,7 +9,7 @@ from numpy import array, floating
 from numpy.typing import NDArray
 from typing import Any, Dict, Optional
 
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Collection, Context, Object, Operator
 from bpy_extras.io_utils import ExportHelper
 
@@ -133,6 +133,30 @@ class ExportOperator(Operator, ExportHelper):
     # frame range
     frame_range = FrameRangeProperty(default="RENDER")
 
+    # whether to redraw the scene during export
+    redraw = EnumProperty(
+        name="Redraw frames",
+        items=[
+            (
+                "AUTO",
+                "Auto",
+                "Redraw the scene only if necessary for the light effects to work correctly",
+            ),
+            (
+                "ALWAYS",
+                "Always",
+                "Redraw the scene even if it would not be needed for the light effects",
+            ),
+            (
+                "NEVER",
+                "Never",
+                "Do not redraw the scene even if it would be needed for the light effects",
+            ),
+        ],
+        default="AUTO",
+        description="Whether to redraw the scene during export after every frame",
+    )
+
     def execute(self, context: Context):
         from sbstudio.plugin.api import call_api_from_blender_operator
         from .utils import export_show_to_file_using_api
@@ -189,6 +213,17 @@ class ExportOperator(Operator, ExportHelper):
 
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
+
+    def _get_redraw_setting(self) -> Optional[bool]:
+        """Returns the redraw setting for the operator. This is used to
+        determine whether to redraw the scene during export.
+        """
+        if self.redraw == "AUTO":
+            return None
+        elif self.redraw == "ALWAYS":
+            return True
+        else:
+            return False
 
 
 @dataclass

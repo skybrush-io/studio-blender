@@ -17,9 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Users now can override the default spacing that is taken from the proximity warning
   threshold.
 
-- Added support for proposing show origin and orientation for placing the show 
+- Added support for proposing show origin and orientation for placing the show
   in the real world. Show origin and orientation from now on gets exported to
   .skyc show files and aid positioning of shows in Skybrush Live.
+
+- Added an option to exporters that decides whether to keep on redrawing the
+  current frame in the Blender window during export. Redrawing may slow down
+  the export process significantly; on the other hand it provides visual
+  feedback about the progress of the export and it is actually _necessary_ for
+  video-based light effects to work properly.
+
+### Fixed
+
+- Video-based light effects now trigger a redraw for frames during export
+  unless disabled explicitly. This is needed for the frames to propagate
+  correctly to the exported .skyc file.
 
 ## [3.10.0] - 2025-03-05
 

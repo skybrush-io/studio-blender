@@ -33,4 +33,6 @@ class LitebeeExportOperator(ExportOperator):
         return "Litebee exporter"
 
     def get_settings(self):
-        return {}
+        return {
+            "redraw": self._get_redraw_setting(),
+        }

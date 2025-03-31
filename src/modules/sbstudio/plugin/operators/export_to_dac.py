@@ -33,4 +33,8 @@ class DACExportOperator(ExportOperator):
         return ".dac exporter"
 
     def get_settings(self):
-        return {"output_fps": 30, "light_output_fps": 30}
+        return {
+            "output_fps": 30,
+            "light_output_fps": 30,
+            "redraw": self._get_redraw_setting(),
+        }

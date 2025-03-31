@@ -66,4 +66,5 @@ class SkybrushExportOperator(ExportOperator):
             "light_output_fps": self.light_output_fps,
             "use_yaw_control": self.use_yaw_control,
             "export_cameras": self.export_cameras,
+            "redraw": self._get_redraw_setting(),
         }

@@ -44,15 +44,20 @@ from sbstudio.plugin.utils.sampling import (
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
 from sbstudio.utils import get_ends
 
-__all__ = ("get_drones_to_export", "export_show_to_file_using_api")
+__all__ = (
+    "get_drones_to_export",
+    "get_items_for_redraw_enum",
+    "export_show_to_file_using_api",
+)
 
 
 log = logging.getLogger(__name__)
 
 
 class _default_settings:
-    output_fps = 4
-    light_output_fps = 4
+    output_fps: int = 4
+    light_output_fps: int = 4
+    redraw: Optional[bool] = None
 
 
 ################################################################################
@@ -166,6 +171,16 @@ def _get_trajectories_and_lights(
     """
     trajectory_fps = settings.get("output_fps", _default_settings.output_fps)
     light_fps = settings.get("light_output_fps", _default_settings.light_output_fps)
+    redraw = settings.get("redraw", _default_settings.redraw)
+
+    if redraw is None:
+        # Redraw the scene if we have at least one video-based light effect but
+        # do not redraw otherwise
+        assert context is not None
+        redraw = any(
+            effect.is_animated
+            for effect in context.scene.skybrush.light_effects.entries
+        )
 
     trajectories: dict[str, Trajectory]
     lights: dict[str, LightProgram]
@@ -186,6 +201,7 @@ def _get_trajectories_and_lights(
                 range,
                 context=context,
                 by_name=True,
+                redraw=redraw,
                 simplify=True,
             )
 
@@ -230,6 +246,7 @@ def _get_trajectories_and_lights(
                 range,
                 context=context,
                 by_name=True,
+                redraw=redraw,
                 simplify=True,
             )
 
@@ -258,6 +275,16 @@ def _get_trajectories_lights_and_yaw_setpoints(
     """
     trajectory_fps = settings.get("output_fps", _default_settings.output_fps)
     light_fps = settings.get("light_output_fps", _default_settings.light_output_fps)
+    redraw = settings.get("redraw", _default_settings.redraw)
+
+    if redraw is None:
+        # Redraw the scene if we have at least one video-based light effect but
+        # do not redraw otherwise
+        assert context is not None
+        redraw = any(
+            effect.is_animated
+            for effect in context.scene.skybrush.light_effects.entries
+        )
 
     trajectories: dict[str, Trajectory]
     lights: dict[str, LightProgram]
@@ -279,6 +306,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
                 range,
                 context=context,
                 by_name=True,
+                redraw=redraw,
                 simplify=True,
             )
 
@@ -332,6 +360,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
                 range,
                 context=context,
                 by_name=True,
+                redraw=redraw,
                 simplify=True,
             )
 
