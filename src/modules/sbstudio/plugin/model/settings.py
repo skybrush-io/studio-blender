@@ -19,12 +19,24 @@ from sbstudio.plugin.utils.bloom import (
     set_bloom_effect_enabled,
     update_emission_strength,
 )
+from sbstudio.plugin.utils.gps_coordinates import (
+    format_latitude,
+    format_longitude,
+    parse_latitude,
+    parse_longitude,
+)
 
 
 __all__ = ("DroneShowAddonFileSpecificSettings",)
 
 _drone_radius_updated_by_user: bool = False
 """Shows whether the drone radius has been updated by the user already."""
+
+_latitude_updated_by_user: bool = False
+"""Shows whether the latitude property has been updated by the user."""
+
+_longitude_updated_by_user: bool = False
+"""Shows whether the longitude property has been updated by the user."""
 
 
 def use_bloom_effect_updated(self, context):
@@ -33,6 +45,24 @@ def use_bloom_effect_updated(self, context):
 
 def emission_strength_updated(self, context):
     update_emission_strength(self.emission_strength)
+
+
+def latitude_of_show_origin_updated(self, context):
+    global _latitude_updated_by_user
+
+    _latitude_updated_by_user = not _latitude_updated_by_user
+    if _latitude_updated_by_user:
+        latitude = parse_latitude(self.latitude_of_show_origin)
+        self.latitude_of_show_origin = format_latitude(latitude)
+
+
+def longitude_of_show_origin_updated(self, context):
+    global _longitude_updated_by_user
+
+    _longitude_updated_by_user = not _longitude_updated_by_user
+    if _longitude_updated_by_user:
+        longitude = parse_longitude(self.longitude_of_show_origin)
+        self.longitude_of_show_origin = format_longitude(longitude)
 
 
 def show_type_updated(self, context):
@@ -93,6 +123,23 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         options=set(),
     )
 
+    # Note that Blender does not have enough floating point precision for lat/lon,
+    # so we store them as strings and validate in a custom update function
+
+    latitude_of_show_origin = StringProperty(
+        name="Latitude of show origin",
+        description="Proposed latitude of the origin of the show coordinate system, in degrees",
+        default="N0.0",
+        update=latitude_of_show_origin_updated,
+    )
+
+    longitude_of_show_origin = StringProperty(
+        name="Longitude of show origin",
+        description="Proposed longitude of the origin of the show coordinate system, in degrees",
+        default="E0.0",
+        update=longitude_of_show_origin_updated,
+    )
+
     max_acceleration = FloatProperty(
         name="Preferred acceleration",
         description="Preferred acceleration for drones when planning the duration of transitions between fixed points",
@@ -110,6 +157,14 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         min=1,
         soft_min=1,
         soft_max=RANDOM_SEED_MAX,
+    )
+
+    show_orientation = FloatProperty(
+        name="Show orientation",
+        description="Proposed orientation of the X+ axis of the show coordinate system relative to North (towards East)",
+        default=0.0,
+        subtype="ANGLE",
+        precision=3,
     )
 
     show_type = EnumProperty(
@@ -137,6 +192,13 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         name="Use bloom effect",
         description="Specifies whether the bloom effect should automatically be enabled on the 3D View when the show is loaded",
         default=True,
+        update=use_bloom_effect_updated,
+    )
+
+    use_show_origin_and_orientation = BoolProperty(
+        name="Use show origin and orientation",
+        description="Specifies whether to have a proposed show origin and orientation, e.g., used in .skyc export",
+        default=False,
         update=use_bloom_effect_updated,
     )
 

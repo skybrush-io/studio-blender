@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Users now can override the default spacing that is taken from the proximity warning
   threshold.
 
+- Added support for proposing show origin and orientation for placing the show 
+  in the real world. Show origin and orientation from now on gets exported to
+  .skyc show files and aid positioning of shows in Skybrush Live.
+
 ## [3.10.0] - 2025-03-05
 
 ### Added

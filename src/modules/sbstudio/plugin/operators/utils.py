@@ -6,6 +6,7 @@ from bpy.path import basename
 from bpy.types import Context
 
 from itertools import groupby
+from math import degrees
 from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
@@ -14,6 +15,7 @@ from typing import Any, Callable, Optional, cast
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
+from sbstudio.model.location import ShowLocation
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.yaw import YawSetpointList
@@ -29,6 +31,7 @@ from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
+from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
 from sbstudio.plugin.utils.progress import FrameProgressReport
 from sbstudio.plugin.utils.sampling import (
     frame_range,
@@ -421,9 +424,18 @@ def export_show_to_file_using_api(
     # get automatic show title
     show_title = str(basename(filepath).split(".")[0])
 
-    # get show type
+    # get show type and location
     scene_settings = getattr(context.scene.skybrush, "settings", None)
     show_type = (scene_settings.show_type if scene_settings else "OUTDOOR").lower()
+    show_location = (
+        ShowLocation(
+            latitude=parse_latitude(scene_settings.latitude_of_show_origin),
+            longitude=parse_longitude(scene_settings.longitude_of_show_origin),
+            orientation=degrees(scene_settings.show_orientation),
+        )
+        if scene_settings and scene_settings.use_show_origin_and_orientation
+        else None
+    )
 
     # get time markers (cues)
     time_markers = get_time_markers_from_context(context)
@@ -532,6 +544,7 @@ def export_show_to_file_using_api(
         api.export(
             show_title=show_title,
             show_type=show_type,
+            show_location=show_location,
             show_segments=show_segments,
             validation=validation,
             trajectories=trajectories,

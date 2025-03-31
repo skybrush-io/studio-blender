@@ -20,6 +20,7 @@ from sbstudio.model.cameras import Camera
 from sbstudio.model.color import Color3D
 from sbstudio.model.point import Point3D
 from sbstudio.model.light_program import LightProgram
+from sbstudio.model.location import ShowLocation
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
@@ -351,6 +352,7 @@ class SkybrushStudioAPI:
         output: Optional[Path] = None,
         show_title: Optional[str] = None,
         show_type: str = "outdoor",
+        show_location: ShowLocation | None = None,
         show_segments: Optional[dict[str, tuple[float, float]]] = None,
         ndigits: int = 3,
         timestamp_offset: Optional[float] = None,
@@ -371,6 +373,8 @@ class SkybrushStudioAPI:
                 if the output must be returned instead of saving it to a file.
             show_title: Arbitrary show title; `None` if no title is needed.
             show_type: Type of the show; must be one of `outdoor` or `indoor`.
+            show_location: When specified, defines the show origin and
+                orientation in the real world.
             show_segments: Dictionary that maps show segment IDs to a start
                 (inclusive) and end (exclusive) timestamp pair.
             ndigits: Round floats to this precision.
@@ -409,6 +413,9 @@ class SkybrushStudioAPI:
             environment["cameras"] = [
                 camera.as_dict(ndigits=ndigits) for camera in cameras
             ]
+
+        if show_location:
+            environment["location"] = show_location.json
 
         if time_markers is None:
             time_markers = TimeMarkers()
