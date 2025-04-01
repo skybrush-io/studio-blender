@@ -4,11 +4,15 @@ from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.model.formation import count_markers_in_formation
 from sbstudio.plugin.operators import (
     CreateFormationOperator,
+    CreateTakeoffGridOperator,
     DeselectFormationOperator,
     GetFormationStatisticsOperator,
+    LandOperator,
     RemoveFormationOperator,
     ReorderFormationMarkersOperator,
+    ReturnToHomeOperator,
     SelectFormationOperator,
+    TakeoffOperator,
     UpdateFormationOperator,
     AppendFormationToStoryboardOperator,
 )
@@ -43,6 +47,15 @@ class FormationsPanel(Panel):
 
         selected_formation = formations.selected
         layout = self.layout
+
+        layout.operator(CreateTakeoffGridOperator.bl_idname, icon="ADD")
+
+        row = layout.row(align=True)
+        row.operator(TakeoffOperator.bl_idname, text="Takeoff", icon="TRIA_UP_BAR")
+        row.operator(ReturnToHomeOperator.bl_idname, text="RTH", icon="HOME")
+        row.operator(LandOperator.bl_idname, text="Land", icon="TRIA_DOWN_BAR")
+
+        layout.separator()
 
         row = layout.row(align=True)
         row.prop(formations, "selected", text="")

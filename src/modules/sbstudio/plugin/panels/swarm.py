@@ -2,13 +2,6 @@ from bpy.types import Panel
 
 from sbstudio.plugin.constants import Collections
 
-from sbstudio.plugin.operators import (
-    CreateTakeoffGridOperator,
-    LandOperator,
-    ReturnToHomeOperator,
-    TakeoffOperator,
-)
-
 __all__ = ("SwarmPanel",)
 
 
@@ -24,7 +17,7 @@ class SwarmPanel(Panel):
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Formations"
+    bl_category = "Skybrush"
 
     def draw(self, context):
         scene = context.scene
@@ -46,10 +39,3 @@ class SwarmPanel(Panel):
                 row.enabled = False
 
             layout.separator()
-
-        layout.operator(CreateTakeoffGridOperator.bl_idname, icon="ADD")
-
-        row = layout.row(align=True)
-        row.operator(TakeoffOperator.bl_idname, text="Takeoff", icon="TRIA_UP_BAR")
-        row.operator(ReturnToHomeOperator.bl_idname, text="RTH", icon="HOME")
-        row.operator(LandOperator.bl_idname, text="Land", icon="TRIA_DOWN_BAR")
