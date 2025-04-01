@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unless disabled explicitly. This is needed for the frames to propagate
   correctly to the exported .skyc file.
 
+### Changed
+
+- The layout of the add-on has been refactored. There is a new tab now,
+  called Skybrush, that contains configuration options for the show design 
+  workflow. This also eases and shortens the Formation tab that now focuses
+  on formations and nothing else.
+
 ## [3.10.0] - 2025-03-05
 
 ### Added
