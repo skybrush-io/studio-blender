@@ -39,44 +39,59 @@ class ExportPanel(Panel):
 
         # in-house formats
         if FileFormat.SKYC in formats:
-            layout.operator(SkybrushExportOperator.bl_idname, text="Export to .skyc")
+            layout.operator(
+                SkybrushExportOperator.bl_idname, text="Export to Skybrush .skyc"
+            )
         if FileFormat.CSV in formats:
-            layout.operator(SkybrushCSVExportOperator.bl_idname, text="Export to .csv")
+            layout.operator(
+                SkybrushCSVExportOperator.bl_idname, text="Export to Skybrush .csv"
+            )
         if FileFormat.PDF in formats:
             layout.operator(
-                SkybrushPDFExportOperator.bl_idname, text="Export validation report"
+                SkybrushPDFExportOperator.bl_idname,
+                text="Export validation report .pdf",
             )
 
         layout.separator()
+        needs_separator: bool = False
 
         # external formats
         if FileFormat.DAC in formats:
-            layout.operator(DACExportOperator.bl_idname, text="Export to .dac")
+            layout.operator(DACExportOperator.bl_idname, text="Export to HG .dac")
+            needs_separator = True
         if FileFormat.DROTEK in formats:
             layout.operator(
-                DrotekExportOperator.bl_idname, text="Export to Drotek format"
+                DrotekExportOperator.bl_idname, text="Export to Drotek .json"
             )
+            needs_separator = True
         if FileFormat.DSS in formats:
+            layout.operator(DSSPathExportOperator.bl_idname, text="Export to DSS .path")
             layout.operator(
-                DSSPathExportOperator.bl_idname, text="Export to DSS PATH format"
+                DSSPath3ExportOperator.bl_idname, text="Export to DSS .path3"
             )
-            layout.operator(
-                DSSPath3ExportOperator.bl_idname, text="Export to DSS PATH3 format"
-            )
+            needs_separator = True
         if FileFormat.EVSKY in formats:
-            layout.operator(
-                EVSKYExportOperator.bl_idname, text="Export to EVSKY format"
-            )
+            layout.operator(EVSKYExportOperator.bl_idname, text="Export to EVSKY .essp")
+            needs_separator = True
         if FileFormat.LITEBEE in formats:
             layout.operator(
-                LitebeeExportOperator.bl_idname, text="Export to Litebee format"
+                LitebeeExportOperator.bl_idname, text="Export to Litebee .bin"
             )
+            needs_separator = True
+
+        if needs_separator:
+            layout.separator()
+            needs_separator = False
+
         if FileFormat.VVIZ in formats:
             layout.operator(
                 VVIZExportOperator.bl_idname, text="Export to Finale 3D .vviz"
             )
+            needs_separator = True
 
-        layout.separator()
+        if needs_separator:
+            layout.separator()
+            needs_separator = False
 
         layout.operator(
             RefreshFileFormatsOperator.bl_idname, text="Refresh file formats"
