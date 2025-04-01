@@ -6,8 +6,7 @@ The Formations tab in the sidebar of the 3D Viewport editor helps you to organiz
 
 image::panels/formations.jpg[Formations tab]
 
-The Formations tab contains three panels:
+The Formations tab contains two panels:
 
-* xref:panels/formations/swarm.adoc[Swarm panel]
 * xref:panels/formations/formations.adoc[Formations panel]
 * xref:panels/formations/storyboard.adoc[Storyboard panel]

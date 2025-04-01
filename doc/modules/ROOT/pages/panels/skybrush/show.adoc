@@ -1,0 +1,28 @@
+= Show Panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+The show panel helps you setup general drone show configuration options.
+
+image::panels/show/show.jpg[Show panel]
+
+== Show type
+
+Please specify whether you designed a show for outdoor or indoor settings. This will help setup drone size, exporters and possibly other parameters adaptively.
+
+== Specify location
+
+If you know the exact location and orientation of your show in the real world, you can give this information to the add-on to include it in your exported .skyc show file for easy placement of your show in *Skybrush Live* later on. If you want to propose values for show origin and show orientation, enable the btn:[Specify location] checkbox.
+
+=== Latitude of show origin
+
+You can define the latitude of the show origin, i.e. the North-South position of the (0, 0) Blender coordinate in the real world. Use simple signed floats or use the "N" or "S" prefixes if that is more convenient. Values are expected to be in degrees.
+
+=== Longitude of show origin
+
+You can define the longitude of the show origin, i.e. the East-West position of the (0, 0) Blender coordinate in the real world. Use simple signed floats or use the "E" or "W" prefixes if that is more convenient. Values are expected to be in degrees.
+
+=== Show orientation
+
+You can define the orientation of your show in the real world. The given value will define the orientation of the X+ axis of the show coordinate system relative to North (towards East) in the real world.
+

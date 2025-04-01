@@ -1,0 +1,12 @@
+= Skybrush tab
+:imagesdir: ../../assets/images
+:experimental:
+
+The Skybrush tab in the sidebar of the 3D Viewport editor is the first tab you need to revise when starting to design a show in *Skybrush Studio for Blender*. This tab contains general configuration options for your show design workflow.
+
+image::panels/skybrush.jpg[Skybrush tab]
+
+The Skybrush tab contains two panels:
+
+* xref:panels/skybrush/show.adoc[Show panel]
+* xref:panels/skybrush/swarm.adoc[Swarm panel]

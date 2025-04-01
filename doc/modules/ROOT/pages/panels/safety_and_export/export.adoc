@@ -4,7 +4,7 @@
 
 Once you are finished with your drone show, use the Export panel to export it from Blender to different formats for further processing or direct upload to the drones.
 
-The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/formations/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased.
+The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/skybrush/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased at the https://shop.skybrush.io[Skybrush Store].
 
 image::panels/export/export.jpg[Export panel]
 
@@ -16,7 +16,7 @@ window or press "Toggle System Console" in the "Windows" menu to watch its termi
 
 
 
-== Export to .skyc
+== Export to Skybrush .skyc
 
 The Skybrush compiled show format is a single-file descriptor of your complete drone show. It is used as the primary drone show format throughout the entire *Skybrush* suite:
 
@@ -40,7 +40,7 @@ Export yaw:: Enable this checkbox to output rotations around the yaw (vertical) 
 
 Export cameras:: Enable this checkbox to export Blender cameras into the .skyc file (to be used by Skybrush Viewer).
 
-== Export to CSV
+== Export to Skybrush .csv
 
 The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range.
 
@@ -56,7 +56,7 @@ Frame rate:: Set output frame rate of drone trajectories and light programs (mak
 
 NOTE: Special characters in drone names are converted to standard characters in the exported filenames.
 
-== Export validation report
+== Export validation report .pdf
 
 The btn:[Export validation report] button creates a unique safety report of your show in .pdf format for standalone self-checking, validated reporting or as a supplement for flight permissions or other administration purposes.
 
@@ -93,16 +93,15 @@ Create individual drone plots:: Include validation plots for each drone individu
 +
 WARNING: Creating these plots might take a long time, depending on the number of drones, frames and output frame rate.
 
-== Export to Finale 3D VVIZ format
+== Export to various third-party show formats
+
+Upon purchasing a professional license, we provide additional exporters to various external drone show formats, including DSS PATH, DSS PATH3, Drotek, EVSKY, LiteBee, etc.
+
+Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:support@collmot.com[Contact us] if you need any additional exporters that are not on the list yet.
+
+== Export to Finale 3D .vviz
 
 If you are preparing your drone show as part of a larger event with fireworks, you can export to Finale 3D VVIZ format directly. Note that this export option requires a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
 
 If you press the btn:[Export to Finale 3D VVIZ] button, you have to choose the path and filename of your output file. The
 btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for this export type as well.
-
-== Export to various third-party show formats
-
-Upon purchasing a professional license, we provide additional exporters to various external drone show formats,
-including DSS PATH, DSS PATH3, Drotek, EVSKY, LiteBee, etc.
-
-Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:support@collmot.com[Contact us] if you need any additional exporters that are not on the list yet.

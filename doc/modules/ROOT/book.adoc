@@ -34,11 +34,19 @@ include::pages/panels/index.adoc[]
 
 :leveloffset: +1
 
-include::pages/panels/formations.adoc[]
+include::pages/panels/skybrush.adoc[]
 
 :leveloffset: +1
 
-include::pages/panels/formations/swarm.adoc[]
+include::pages/panels/skybrush/show.adoc[]
+
+include::pages/panels/skybrush/swarm.adoc[]
+
+:leveloffset: -1
+
+include::pages/panels/formations.adoc[]
+
+:leveloffset: +1
 
 include::pages/panels/formations/formations.adoc[]
 
