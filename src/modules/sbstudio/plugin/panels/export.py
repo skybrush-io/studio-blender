@@ -3,6 +3,7 @@ from bpy.types import Panel
 from sbstudio.model.file_formats import FileFormat, get_supported_file_formats
 from sbstudio.plugin.operators import (
     DACExportOperator,
+    DDSFExportOperator,
     DrotekExportOperator,
     DSSPathExportOperator,
     DSSPath3ExportOperator,
@@ -86,6 +87,11 @@ class ExportPanel(Panel):
         if FileFormat.VVIZ in formats:
             layout.operator(
                 VVIZExportOperator.bl_idname, text="Export to Finale 3D .vviz"
+            )
+            needs_separator = True
+        if FileFormat.DDSF in formats:
+            layout.operator(
+                DDSFExportOperator.bl_idname, text="Export to Depence .ddsf"
             )
             needs_separator = True
 

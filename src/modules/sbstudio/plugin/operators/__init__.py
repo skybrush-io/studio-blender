@@ -15,6 +15,7 @@ from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOper
 from .duplicate_light_effect import DuplicateLightEffectOperator
 from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_dac import DACExportOperator
+from .export_to_ddsf import DDSFExportOperator
 from .export_to_dss import DSSPathExportOperator, DSSPath3ExportOperator
 from .export_to_evsky import EVSKYExportOperator
 from .export_to_drotek import DrotekExportOperator
@@ -63,6 +64,7 @@ __all__ = (
     "CreateNewStoryboardEntryOperator",
     "CreateTakeoffGridOperator",
     "DACExportOperator",
+    "DDSFExportOperator",
     "DeselectFormationOperator",
     "DetachMaterialsFromDroneTemplateOperator",
     "DrotekExportOperator",

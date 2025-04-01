@@ -99,9 +99,10 @@ Upon purchasing a professional license, we provide additional exporters to vario
 
 Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:support@collmot.com[Contact us] if you need any additional exporters that are not on the list yet.
 
-== Export to Finale 3D .vviz
+== Export to external fireworks and show visualization formats
 
-If you are preparing your drone show as part of a larger event with fireworks, you can export to Finale 3D VVIZ format directly. Note that this export option requires a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
+If you are preparing your drone show as part of a larger event, e.g. with fireworks, use our Finale 3D / FWSim .vviz or Depence .ddsf exporter to export your drone show into formats that can be read by these external visualization softwares.
 
-If you press the btn:[Export to Finale 3D VVIZ] button, you have to choose the path and filename of your output file. The
-btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for this export type as well.
+Note that these export options require a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
+
+If you press one of the btn:[Export to Finale 3D .vviz] or btn:[Export to Depence .ddsf] buttons, you have to choose the path and filename of your output file. The btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for these export types as well.

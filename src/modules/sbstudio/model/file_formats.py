@@ -12,15 +12,21 @@ __all__ = (
 class FileFormat(Enum):
     """List of file formats that we can potentially use in export panels."""
 
+    # Skybrush formats
     SKYC = "skyc"
     CSV = "csv"
     PDF = "pdf"
+
+    # External drone show formats
     DSS = "dss"
     DSS3 = "dss3"
     DAC = "dac"
     DROTEK = "drotek"
     EVSKY = "evsky"
     LITEBEE = "litebee"
+
+    # Fireworks visualization formats
+    DDSF = "ddsf"
     VVIZ = "vviz"
 
 
@@ -45,6 +51,8 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
     for feature in limits.features:
         if feature == "export:dac":
             formats.append(FileFormat.DAC)
+        elif feature == "export:ddsf":
+            formats.append(FileFormat.DDSF)
         elif feature == "export:dss":
             formats.append(FileFormat.DSS)
             formats.append(FileFormat.DSS3)

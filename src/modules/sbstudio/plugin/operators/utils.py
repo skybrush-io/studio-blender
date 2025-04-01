@@ -515,22 +515,30 @@ def export_show_to_file_using_api(
         )
     else:
         if format is FileFormat.SKYC:
-            log.info("Exporting show to .skyc")
+            log.info("Exporting show to Skybrush .skyc format")
             renderer = "skyc"
         elif format is FileFormat.CSV:
-            log.info("Exporting show to CSV")
+            log.info("Exporting show to Skybrush .csv format")
             renderer = "csv"
             renderer_params = {**renderer_params, "fps": settings["output_fps"]}
         elif format is FileFormat.DAC:
-            log.info("Exporting show to .dac format")
+            log.info("Exporting show to HG .dac format")
             renderer = "dac"
             renderer_params = {
                 **renderer_params,
                 "show_id": 1555,
                 "title": "Skybrush show",
             }
+        elif format is FileFormat.DDSF:
+            log.info("Exporting show to Depence .ddsf format")
+            renderer = "ddsf"
+            renderer_params = {
+                **renderer_params,
+                "fps": settings["output_fps"],
+                "light_fps": settings["light_output_fps"],
+            }
         elif format is FileFormat.DROTEK:
-            log.info("Exporting show to Drotek format")
+            log.info("Exporting show to Drotek .json format")
             renderer = "drotek"
             renderer_params = {
                 **renderer_params,
@@ -538,10 +546,10 @@ def export_show_to_file_using_api(
                 # TODO(ntamas): takeoff_angle?
             }
         elif format is FileFormat.DSS:
-            log.info("Exporting show to DSS PATH format")
+            log.info("Exporting show to DSS .path format")
             renderer = "dss"
         elif format is FileFormat.DSS3:
-            log.info("Exporting show to DSS PATH3 format")
+            log.info("Exporting show to DSS .path3 format")
             renderer = "dss3"
             renderer_params = {
                 **renderer_params,
@@ -549,7 +557,7 @@ def export_show_to_file_using_api(
                 "light_fps": settings["light_output_fps"],
             }
         elif format is FileFormat.EVSKY:
-            log.info("Exporting show to EVSKY format")
+            log.info("Exporting show to EVSKY .essp format")
             renderer = "evsky"
             renderer_params = {
                 **renderer_params,
@@ -557,7 +565,7 @@ def export_show_to_file_using_api(
                 "light_fps": settings["light_output_fps"],
             }
         elif format is FileFormat.LITEBEE:
-            log.info("Exporting show to Litebee format")
+            log.info("Exporting show to Litebee .bin format")
             renderer = "litebee"
         elif format is FileFormat.VVIZ:
             log.info("Exporting show to Finale 3D .vviz format")

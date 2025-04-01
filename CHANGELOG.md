@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   feedback about the progress of the export and it is actually _necessary_ for
   video-based light effects to work properly.
 
+### Added
+
+- Added support for exporting drone shows into the Depence .ddsf format
+  for integration with fireworks/events. Fireworks launched from drones are
+  not yet supported, but trajectories, light animation and yaw setpoints
+  are all saved.
+
 ### Fixed
 
 - Video-based light effects now trigger a redraw for frames during export
