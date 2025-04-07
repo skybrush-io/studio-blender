@@ -361,11 +361,11 @@ def create_helper_formation_for_takeoff_and_landing(
         if operator is not None:
             with call_api_from_blender_operator(operator, "point decomposition") as api:
                 groups = api.decompose_points(
-                    source, min_distance=min_distance, method="balanced"
+                    source, min_distance=min_distance, method="greedy"
                 )
         else:
             groups = get_api().decompose_points(
-                source, min_distance=min_distance, method="balanced"
+                source, min_distance=min_distance, method="greedy"
             )
     else:
         # We can save an API call here
