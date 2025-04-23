@@ -33,6 +33,10 @@ class DroneShowAddonObjectPropertiesPanel(Panel):
             UseSelectedVertexGroupForFormationOperator.bl_idname, text="Use selected"
         )
 
+        layout.label(text="Pyro trigger events:")
+        row = layout.row(align=True)
+        row.prop(ob.skybrush, "pyro_markers", text="")
+
     @classmethod
     def poll(cls, context):
         return (

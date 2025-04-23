@@ -49,6 +49,7 @@ from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperato
 from .set_server_url import SetServerURLOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
 from .takeoff import TakeoffOperator
+from .trigger_pyro import TriggerPyroOnSelectedDronesOperator
 from .update_formation import UpdateFormationOperator
 from .update_time_markers_from_storyboard import UpdateTimeMarkersFromStoryboardOperator
 from .update_frame_range_from_storyboard import UpdateFrameRangeFromStoryboardOperator
@@ -96,6 +97,7 @@ __all__ = (
     "SetServerURLOperator",
     "SkybrushExportOperator",
     "SkybrushCSVExportOperator",
+    "TriggerPyroOnSelectedDronesOperator",
     "AddMarkersFromStaticCSVOperator",
     "AddMarkersFromSVGOperator",
     "AddMarkersFromZippedCSVOperator",

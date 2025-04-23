@@ -14,3 +14,9 @@ class DroneShowAddonObjectProperties(PropertyGroup):
         description="Name of the vertex group designated for containing the vertices that the drones should occupy when their parent object is placed in the storyboard",
         default="",
     )
+
+    pyro_markers = StringProperty(
+        name="Pyro markers",
+        description="Pyro trigger events associated with an object, stored as a JSON string.",
+        default="",
+    )
