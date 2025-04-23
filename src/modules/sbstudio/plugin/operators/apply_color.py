@@ -14,7 +14,8 @@ __all__ = ("ApplyColorsToSelectedDronesOperator",)
 
 
 class ApplyColorsToSelectedDronesOperator(Operator):
-    """Swaps the current primary and secondary colors in the LED control panel."""
+    """Applies the current primary or secondary color from the LED control
+    panel to the selected drones, optionally creating a gradient."""
 
     bl_idname = "skybrush.apply_colors_to_selection"
     bl_label = "Apply Colors to Selected Drones"
