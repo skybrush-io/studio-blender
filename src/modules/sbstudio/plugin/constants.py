@@ -14,7 +14,7 @@ from typing import (
     overload,
 )
 
-from .materials import create_glowing_material
+from .materials import create_colored_material, create_glowing_material
 from .meshes import create_icosphere, create_cone
 from .utils import (
     ensure_object_exists_in_collection,
@@ -275,6 +275,12 @@ class Templates:
             "Drone template material", strength=DEFAULT_EMISSION_STRENGTH
         )
         object.active_material = material
+
+        # Add a material for the possible pyro effects
+        material = create_colored_material(
+            "Drone pyro template material", color=(1.0, 1.0, 1.0, 1.0)
+        )
+        object.data.materials.append(material)
 
         # Make sure that the object is not selected
         object.select_set(False)

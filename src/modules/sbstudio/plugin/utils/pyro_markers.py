@@ -1,11 +1,21 @@
-from bpy.types import Object
+import bpy
 
+from bpy.types import Object, ParticleSystem
+
+from random import randint
+
+from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
 from sbstudio.model.pyro_markers import PyroMarker, PyroMarkers
-
+from sbstudio.plugin.materials import get_material_for_pyro
+from sbstudio.plugin.operators.detach_materials_from_template import (
+    detach_pyro_material_from_drone_template,
+)
 
 __all__ = (
     "add_pyro_marker_to_object",
+    "ensure_pyro_particle_system",
     "get_pyro_markers_of_object",
+    "update_pyro_particles_of_object",
     "set_pyro_markers_of_object",
 )
 
@@ -32,7 +42,71 @@ def get_pyro_markers_of_object(ob: Object) -> PyroMarkers:
     Returns:
         pyro markers
     """
+    # TODO: add error handling in case string representation is bad
+
     return PyroMarkers.from_str(ob.skybrush.pyro_markers)
+
+
+def ensure_pyro_particle_system(ob: Object, channel: int) -> ParticleSystem:
+    """Returns the particle system associated with a given
+    object and pyro channel. If it is not existing yet,
+    create it first.
+
+    Args:
+        ob: the object of the pyro particle system
+        channel: the 1-based pyro channel to use
+
+    Returns:
+        the particle system associated with the given object
+            and pyro channel
+    """
+    # ensure material
+    if get_material_for_pyro(ob) is None:
+        detach_pyro_material_from_drone_template(ob)
+
+    # ensure particle system
+    key = f"pyro_{channel}"
+    particle_system = next((ps for ps in ob.particle_systems if ps.name == key), None)
+    if particle_system is None:
+        particle_settings = bpy.data.particles.new(name=f"{key}_settings")
+        ob.modifiers.new(name=key, type="PARTICLE_SYSTEM")
+        particle_system = ob.particle_systems[-1]
+        particle_system.settings = particle_settings
+        particle_settings.material = 2
+
+    return particle_system
+
+
+def update_pyro_particles_of_object(ob: Object) -> None:
+    """Set or clear pyro particle systems based on pyro markers."""
+    markers = get_pyro_markers_of_object(ob)
+    for i in range(1, NUM_PYRO_CHANNELS + 1):
+        particle_system = ensure_pyro_particle_system(ob, i)
+        particle_settings = particle_system.settings
+        # add pyro particle system
+        if i in markers.markers.keys():
+            marker = markers.markers[i]
+            fps = bpy.context.scene.render.fps
+            duration = 30
+            particle_system.seed = randint(0, 10000)
+            particle_settings.type = "EMITTER"
+            particle_settings.count = duration * 50  # 50 particles/sec
+            particle_settings.frame_start = marker.frame
+            particle_settings.frame_end = (
+                marker.frame + (duration + randint(-4, 4)) * fps
+            )
+            particle_settings.lifetime = randint(1 * fps, 2 * fps)
+            particle_settings.emit_from = "VERT"
+            particle_settings.use_emit_random = True
+            particle_settings.brownian_factor = 4
+            particle_settings.render_type = "HALO"
+        # remove pyro partical system
+        else:
+            particle_settings.count = 0
+            particle_settings.lifetime = 0
+            particle_settings.frame_start = 0
+            particle_settings.frame_end = 0
+            particle_settings.render_type = "NONE"
 
 
 def set_pyro_markers_of_object(ob: Object, markers: PyroMarkers) -> None:
@@ -43,3 +117,4 @@ def set_pyro_markers_of_object(ob: Object, markers: PyroMarkers) -> None:
         markers: the markers to set
     """
     ob.skybrush.pyro_markers = markers.as_str()
+    update_pyro_particles_of_object(ob)

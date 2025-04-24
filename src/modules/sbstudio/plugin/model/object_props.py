@@ -1,7 +1,14 @@
 from bpy.props import StringProperty
-from bpy.types import PropertyGroup
+from bpy.types import Context, PropertyGroup
+
+from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 
 __all__ = ("DroneShowAddonObjectProperties",)
+
+
+def pyro_markers_updated(self, context: Context):
+    """Called when the pyro markers got updated by the user."""
+    update_pyro_particles_of_object(context.object)
 
 
 class DroneShowAddonObjectProperties(PropertyGroup):
@@ -19,4 +26,5 @@ class DroneShowAddonObjectProperties(PropertyGroup):
         name="Pyro markers",
         description="Pyro trigger events associated with an object, stored as a JSON string.",
         default="",
+        update=pyro_markers_updated,
     )

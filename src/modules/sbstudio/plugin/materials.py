@@ -12,6 +12,8 @@ from .errors import SkybrushStudioAddonError
 __all__ = (
     "create_colored_material",
     "create_glowing_material",
+    "get_material_for_led_light_color",
+    "get_material_for_pyro",
     "get_shader_node_and_input_for_diffuse_color_of_material",
     "set_diffuse_color_of_material",
     "set_led_light_color",
@@ -115,10 +117,27 @@ def get_material_for_led_light_color(drone) -> Optional[Material]:
 
     Returns:
         the material of the LED light or `None` if no such material has been
-        set up on the drone yet
+            set up on the drone yet
     """
     if len(drone.material_slots) > 0:
         return drone.material_slots[0].material
+    else:
+        return None
+
+
+def get_material_for_pyro(drone) -> Optional[Material]:
+    """Returns the material of the given drone object that is supposed to
+    correspond to the pyro.
+
+    Args:
+        drone: the drone object to get the material from
+
+    Returns:
+        the material of the pyro or `None` if no such material has been
+            set up on the drone yet
+    """
+    if len(drone.material_slots) > 1:
+        return drone.material_slots[1].material
     else:
         return None
 
