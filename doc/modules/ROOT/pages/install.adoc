@@ -53,13 +53,19 @@ Starting from Blender 4.2, the preferences dialog in Blender provides an option 
 
 To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
 
-=== 5. Install Skybrush Studio Server
+=== 5. Setup network timeout in Blender
 
-==== 5.1 Cloud server for community users
+If you use large fleets and/or long and fine-grained shows, make sure that the "Network timeout" setting right below the "Allow Online Access" checkbox is large enough to handle your requests towards your local *Skybrush Studio Server* or towards the online community server.
+
+The longest action is usually the show export. During export most time is taken by the sampling of your show within Blender to form the input of the requests towards *Skybrush Studio Server*. Even though this procedure is _not_ part of the request time, with large shows you may run into cases where you do need more processing time than the default 10 seconds. If such timeout occurs, raise the value as convenient.
+
+=== 6. Install Skybrush Studio Server
+
+==== 6.1 Cloud server for community users
 
 If you are a community user, you do _not_ need to install the *Skybrush Studio Server* as you can rely on our cloud-based community server.
 
-==== 5.2 Local server for pro users
+==== 6.2 Local server for pro users
 
 After purchasing a professional license for *Skybrush Studio for Blender*, follow the steps below for proper installation:
 
