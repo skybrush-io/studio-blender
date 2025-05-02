@@ -50,7 +50,6 @@ class YawSetpointList:
 
         Return:
             dictionary of this instance, to be converted to JSON later
-
         """
         return {
             "setpoints": [
@@ -63,7 +62,7 @@ class YawSetpointList:
             "version": 1,
         }
 
-    def shift(
+    def shift_in_place(
         self: C,
         delta: float,
     ) -> C:
@@ -74,11 +73,20 @@ class YawSetpointList:
             delta: the translation angle
 
         Returns:
-            The shifted yaw setpoint list
+            the shifted yaw setpoint list
         """
+        for setpoint in self.setpoints:
+            setpoint.angle += delta
+        return self
 
-        self.setpoints = [YawSetpoint(p.time, p.angle + delta) for p in self.setpoints]
+    def shift_time_in_place(self: C, delta: float) -> C:
+        """Shifts all timestamps of the yaw setpoints in-place.
 
+        Parameters:
+            delta: the time delta to add to the timestamp of each setpoint
+        """
+        for setpoint in self.setpoints:
+            setpoint.time += delta
         return self
 
     def simplify(self: C) -> C:
@@ -94,7 +102,7 @@ class YawSetpointList:
         angle = self.setpoints[0].angle % 360
         delta = angle - self.setpoints[0].angle
         if delta:
-            self.shift(delta)
+            self.shift_in_place(delta)
 
         # remove intermediate points on constant angular speed segments
         new_setpoints: list[YawSetpoint] = []
