@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the icons showing the status of a light effect in the current frame;
+  this broke in Blender 4.4 because the names of the icons changed.
+
 - When exporting a partial frame range, it is now ensured that the time axis of
   the exported show file always starts at 0:00.
 
