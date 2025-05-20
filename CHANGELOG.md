@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When exporting a partial frame range, it is now ensured that the time axis of
   the exported show file always starts at 0:00.
 
+- Images and videos that are being used as source material for light effects
+  are now properly converted from sRGB to linear color space, thanks to
+  @flopbuster
+
 ## [3.11.0] - 2025-04-03
 
 ### Added
