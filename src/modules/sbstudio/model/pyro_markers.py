@@ -44,6 +44,13 @@ class PyroMarker:
 
         return cls(payload=PyroPayload(**payload), frame=int(frame))
 
+    def is_active_at_frame(self, frame: int, fps: float) -> bool:
+        """Returns whether the pyro is active at the given frame"""
+        if self.frame <= frame <= self.frame + self.payload.duration * fps:
+            return True
+
+        return False
+
 
 @dataclass
 class PyroMarkers:
@@ -74,7 +81,6 @@ class PyroMarkers:
     def as_dict(self) -> dict[int, Any]:
         """Returns the pyro trigger event markers stored for a single drone
         as a dictionary."""
-        print(self.markers)
         return {
             int(channel): asdict(marker)
             for channel, marker in sorted(self.markers.items())

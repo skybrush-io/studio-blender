@@ -1,6 +1,6 @@
-"""Background task that is invoked after every frame change and that checks
-whether the nearest-neighbor constraints are satisfied in the current
-frame.
+"""Background task that is invoked after every frame change and that
+performs different safety checks, such as whether the nearest-neighbor
+constraints are satisfied in the current frame.
 """
 
 from __future__ import annotations

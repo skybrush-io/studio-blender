@@ -31,6 +31,10 @@ class PyroControlPanel(Panel):
 
         layout = self.layout
 
+        layout.prop(pyro_control, "visualization", text="Render")
+
+        layout.separator()
+
         layout.prop(pyro_control, "channel")
 
         layout.separator()

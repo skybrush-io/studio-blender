@@ -8,7 +8,11 @@ __all__ = ("DroneShowAddonObjectProperties",)
 
 def pyro_markers_updated(self, context: Context):
     """Called when the pyro markers got updated by the user."""
-    update_pyro_particles_of_object(context.object)
+    object = context.object
+    if object is None or object.skybrush is None:
+        return
+
+    update_pyro_particles_of_object(object)
 
 
 class DroneShowAddonObjectProperties(PropertyGroup):

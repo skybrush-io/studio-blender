@@ -158,6 +158,7 @@ from sbstudio.plugin.state import (
 from sbstudio.plugin.tasks import (
     InitializationTask,
     InvalidatePixelCacheTask,
+    PyroEffectsTask,
     SafetyCheckTask,
     UpdateLightEffectsTask,
 )
@@ -269,6 +270,7 @@ headers = ()
 tasks = (
     InitializationTask(),
     InvalidatePixelCacheTask(),
+    PyroEffectsTask(),
     SafetyCheckTask(),
     UpdateLightEffectsTask(),
 )

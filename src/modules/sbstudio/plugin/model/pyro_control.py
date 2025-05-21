@@ -1,12 +1,66 @@
-from bpy.props import FloatProperty, IntProperty, StringProperty
-from bpy.types import PropertyGroup
+from bpy.props import EnumProperty, FloatProperty, IntProperty, StringProperty
+from bpy.types import Context, PropertyGroup
 
-from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
+from typing import overload
+
+from sbstudio.plugin.constants import Collections, NUM_PYRO_CHANNELS
+
+from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
+from sbstudio.plugin.overlays.pyro import (
+    PyroOverlay,
+    PyroOverlayMarker,
+)
 
 __all__ = ("PyroControlPanelProperties",)
 
+#: Global pyro marker overlay. This cannot be an attribute of PyroControlPanelProperties
+#: for some reason; Blender PropertyGroup objects are weird.
+_overlay = None
+
+
+@overload
+def get_overlay() -> PyroOverlay: ...
+
+
+@overload
+def get_overlay(create: bool) -> PyroOverlay | None: ...
+
+
+def get_overlay(create: bool = True):
+    global _overlay
+
+    if _overlay is None and create:
+        _overlay = PyroOverlay()
+
+    return _overlay
+
+
+def visualization_updated(
+    self: "PyroControlPanelProperties", context: Context | None = None
+):
+    """Called when user changes the visualization type of pyro effects."""
+    drones = Collections.find_drones(create=False)
+
+    if not drones:
+        return
+
+    for drone in drones.objects:
+        update_pyro_particles_of_object(drone)
+
 
 class PyroControlPanelProperties(PropertyGroup):
+    visualization = EnumProperty(
+        items=[
+            ("NONE", "None", "No rendering is very quick but invisible", 1),
+            ("MARKERS", "Markers", "Markers are simple but quick", 2),
+            ("PARTICLES", "Particles", "Particles are spectacular but slow", 3),
+        ],
+        name="Visualization",
+        description=("The visualization method of the pyro effect."),
+        default="MARKERS",
+        update=visualization_updated,
+    )
+
     channel = IntProperty(
         name="Channel",
         description="The (1-based) channel index the pyro is attached to",
@@ -14,6 +68,8 @@ class PyroControlPanelProperties(PropertyGroup):
         min=1,
         max=NUM_PYRO_CHANNELS,
     )
+
+    # pyro payload properties
 
     name = StringProperty(
         name="Name",
@@ -39,3 +95,22 @@ class PyroControlPanelProperties(PropertyGroup):
     )
 
     # TODO: add yaw and pitch angle relative to the drone, if needed
+
+    def clear_pyro_overlay_markers(self) -> None:
+        """Clears the pyro overlay markers."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.markers = []
+
+    def ensure_overlays_enabled_if_needed(self) -> None:
+        get_overlay().enabled = self.visualization == "MARKERS"
+
+    def update_pyro_overlay_markers(self, markers: list[PyroOverlayMarker]) -> None:
+        """Updates the pyro overlay markers."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.markers = markers
