@@ -31,8 +31,13 @@ class PyroControlPanel(Panel):
 
         layout = self.layout
 
-        layout.prop(pyro_control, "name")
         layout.prop(pyro_control, "channel")
+
+        layout.separator()
+
+        layout.prop(pyro_control, "name")
+        layout.prop(pyro_control, "duration")
+        layout.prop(pyro_control, "prefire_time")
 
         layout.separator()
 

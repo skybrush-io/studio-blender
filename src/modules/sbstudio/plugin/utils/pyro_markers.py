@@ -87,13 +87,14 @@ def update_pyro_particles_of_object(ob: Object) -> None:
         if i in markers.markers.keys():
             marker = markers.markers[i]
             fps = bpy.context.scene.render.fps
-            duration = 30
             particle_system.seed = randint(0, 10000)
             particle_settings.type = "EMITTER"
-            particle_settings.count = duration * 50  # 50 particles/sec
+            particle_settings.count = int(
+                marker.payload.duration * 50
+            )  # 50 particles/sec
             particle_settings.frame_start = marker.frame
             particle_settings.frame_end = (
-                marker.frame + (duration + randint(-4, 4)) * fps
+                marker.frame + (marker.payload.duration + randint(-4, 4)) * fps
             )
             particle_settings.lifetime = randint(1 * fps, 2 * fps)
             particle_settings.emit_from = "VERT"

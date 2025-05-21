@@ -1,8 +1,8 @@
-from bpy.props import IntProperty, StringProperty
+from bpy.props import FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator
 
 from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
-from sbstudio.model.pyro_markers import PyroMarker
+from sbstudio.model.pyro_markers import PyroMarker, PyroPayload
 from sbstudio.plugin.selection import get_selected_drones
 from sbstudio.plugin.utils.pyro_markers import add_pyro_marker_to_object
 
@@ -21,16 +21,33 @@ class TriggerPyroOnSelectedDronesOperator(Operator):
     )
     bl_options = {"REGISTER", "UNDO"}
 
-    name = StringProperty(
-        name="Name",
-        description="Unique descriptor of the pyro effect to trigger, in VDL format",
-    )
-
     channel = IntProperty(
         name="Channel",
-        description="The channel index the pyro is attached to",
+        description="The (1-based) channel index the pyro is attached to",
         min=1,
         max=NUM_PYRO_CHANNELS,
+    )
+
+    name = StringProperty(
+        name="Name",
+        description="Descriptor of the pyro effect to trigger",
+    )
+
+    duration = FloatProperty(
+        name="Duration",
+        description="The duration of the pyro effect",
+        default=30,
+        min=0,
+        unit="TIME",
+        step=100,  # button step is 1/100th of step
+    )
+
+    prefire_time = FloatProperty(
+        name="Prefire time",
+        description="The time needed for the pyro effect to show up after it gets triggered",
+        min=0,
+        unit="TIME",
+        step=100,  # button step is 1/100th of step
     )
 
     def execute(self, context):
@@ -41,8 +58,10 @@ class TriggerPyroOnSelectedDronesOperator(Operator):
         # Inherit properties from the Pyro control panel
         pyro_control = context.scene.skybrush.pyro_control
 
-        self.name = pyro_control.name
         self.channel = pyro_control.channel
+        self.name = pyro_control.name
+        self.duration = pyro_control.duration
+        self.prefire_time = pyro_control.prefire_time
 
         if event.type == "LEFTMOUSE":
             # We are being invoked from a button in the Pyro control panel.
@@ -70,5 +89,12 @@ class TriggerPyroOnSelectedDronesOperator(Operator):
         add_pyro_marker_to_object(
             drone,
             channel=self.channel,
-            marker=PyroMarker(name=self.name, frame=frame),
+            marker=PyroMarker(
+                frame=frame,
+                payload=PyroPayload(
+                    name=self.name,
+                    duration=self.duration,
+                    prefire_time=self.prefire_time,
+                ),
+            ),
         )
