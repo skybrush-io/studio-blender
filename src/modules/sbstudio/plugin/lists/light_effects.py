@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import bpy
+
 from bpy.types import UIList
 
 from typing import TYPE_CHECKING
@@ -39,11 +41,11 @@ class SKYBRUSH_UL_lightfxlist(UIList):
             row.prop(item, "name", text="", emboss=False)
 
             if item.contains_frame(frame):
-                row.label(
-                    text="",
-                    translate=False,
-                    icon="SEQUENCE_COLOR_04" if item.enabled else "SEQUENCE_COLOR_03",
-                )
+                icon = "SEQUENCE_COLOR_04" if item.enabled else "SEQUENCE_COLOR_03"
+                if bpy.app.version >= (4, 4, 0):
+                    icon = icon.replace("SEQUENCE_", "STRIP_")
+
+                row.label(text="", translate=False, icon=icon)
 
         elif self.layout_type in {"GRID"}:
             layout.alignment = "CENTER"

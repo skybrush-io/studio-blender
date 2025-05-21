@@ -1,11 +1,13 @@
 from operator import attrgetter
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Optional, Sequence, TypeVar
 
 from sbstudio.utils import simplify_path
 
 from .color import Color4D
 
 __all__ = ("LightProgram",)
+
+C = TypeVar("C", bound="LightProgram")
 
 
 def _simplify_color_distance_func(
@@ -44,16 +46,17 @@ class LightProgram:
 
     The color between given points is linearly interpolated or kept constant
     from past according to the is_fade property of each Color4D element.
-
     """
 
     def __init__(self, colors: Optional[Sequence[Color4D]] = None):
         self.colors = sorted(colors, key=attrgetter("t")) if colors is not None else []
 
     def append(self, color: Color4D) -> None:
-        """Add a color to the end of the light code."""
+        """Add a color to the end of the light program."""
         if self.colors and self.colors[-1].t > color.t:
-            raise ValueError("New color must come after existing light code in time")
+            raise ValueError(
+                "New color must come after existing light keyframe in time"
+            )
         self.colors.append(color)
 
     def as_dict(self, ndigits: int = 3):
@@ -76,6 +79,17 @@ class LightProgram:
             ],
             "version": 1,
         }
+
+    def shift_time_in_place(self: C, delta: float) -> C:
+        """Shifts all timestamps of the light program in-place.
+
+        Parameters:
+            delta: the time delta to add to the timestamp of each keyframe in the
+                light program.
+        """
+        for keyframe in self.colors:
+            keyframe.t += delta
+        return self
 
     def simplify(self) -> "LightProgram":
         """Simplifies the light code by removing unnecessary keypoints

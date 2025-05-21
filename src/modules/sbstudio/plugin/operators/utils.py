@@ -46,7 +46,6 @@ from sbstudio.utils import get_ends
 
 __all__ = (
     "get_drones_to_export",
-    "get_items_for_redraw_enum",
     "export_show_to_file_using_api",
 )
 
@@ -106,8 +105,8 @@ def _get_frame_range_from_export_settings(
 
 @with_context
 def _get_segments(context: Optional[Context] = None) -> dict[str, tuple[float, float]]:
-    """
-    Returns dictionary that maps show segment IDs to start (inclusive) and end (exclusive) timestamps.
+    """Returns dictionary that maps show segment IDs to start (inclusive) and
+    end (exclusive) timestamps.
 
     If invalid configuration is found for a segment, then the segment will be omitted
     from the result.
@@ -497,6 +496,22 @@ def export_show_to_file_using_api(
 
     # get show segments
     show_segments = _get_segments(context=context)
+
+    # shift all time-dependent items so that the time axis of the exported show
+    # starts at 0
+    delta = -frame_range[0] / context.scene.render.fps
+    if delta != 0:
+        for trajectory in trajectories.values():
+            trajectory.shift_time_in_place(delta)
+        for light_program in lights.values():
+            light_program.shift_time_in_place(delta)
+        if yaw_setpoints:
+            for yaw_setpoint in yaw_setpoints.values():
+                yaw_setpoint.shift_time_in_place(delta)
+        time_markers.shift_time_in_place(delta)
+        show_segments = {
+            k: (v[0] + delta, v[1] + delta) for k, v in show_segments.items()
+        }
 
     renderer_params = {}
 

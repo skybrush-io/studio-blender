@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.2] - 2025-05-21
+
+### Fixed
+
+- Images and videos that are being used as source material for light effects
+  are now properly converted from sRGB to linear color space, thanks to
+  @flopbuster
+
+## [3.11.1] - 2025-05-06
+
+### Fixed
+
+- Fixed the icons showing the status of a light effect in the current frame;
+  this broke in Blender 4.4 because the names of the icons changed.
+
+- When exporting a partial frame range, it is now ensured that the time axis of
+  the exported show file always starts at 0:00.
+
 ## [3.11.0] - 2025-04-03
 
 ### Added

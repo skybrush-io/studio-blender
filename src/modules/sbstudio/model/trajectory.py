@@ -22,6 +22,10 @@ class Trajectory:
     def first_point(self) -> Optional[Point4D]:
         return self.points[0] if self.points else None
 
+    @property
+    def first_time(self) -> Optional[float]:
+        return self.points[0].t if self.points else None
+
     def append(self, point: Point4D) -> None:
         """Add a point to the end of the trajectory."""
         if self.points and self.points[-1].t >= point.t:
@@ -92,15 +96,10 @@ class Trajectory:
             offset: the spatial offset to add to each point in the
                 trajectory.
         """
-        self.points = [
-            Point4D(
-                t=point.t,
-                x=point.x + offset.x,
-                y=point.y + offset.y,
-                z=point.z + offset.z,
-            )
-            for point in self.points
-        ]
+        for point in self.points:
+            point.x += offset.x
+            point.y += offset.y
+            point.z += offset.z
         return self
 
     def shift_time_in_place(self: C, delta: float) -> C:
@@ -110,10 +109,8 @@ class Trajectory:
             delta: the time delta to add to the timestamp of each point in the
                 trajectory.
         """
-        self.points = [
-            Point4D(t=point.t + delta, x=point.x, y=point.y, z=point.z)
-            for point in self.points
-        ]
+        for point in self.points:
+            point.t += delta
         return self
 
     def simplify_in_place(self: C) -> C:

@@ -31,3 +31,12 @@ class TimeMarkers:
         }
 
         return result
+
+    def shift_time_in_place(self, delta: float) -> None:
+        """Shifts the time markers in place by the given amount.
+
+        Parameters:
+            delta: the amount to shift the time markers by
+        """
+        for key in self.markers.keys():
+            self.markers[key] += delta
