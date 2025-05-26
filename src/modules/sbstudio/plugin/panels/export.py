@@ -100,5 +100,5 @@ class ExportPanel(Panel):
             needs_separator = False
 
         layout.operator(
-            RefreshFileFormatsOperator.bl_idname, text="Refresh file formats"
+            RefreshFileFormatsOperator.bl_idname, text="Refresh file formats (PRO)"
         )

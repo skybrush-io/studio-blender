@@ -463,6 +463,47 @@ class SkybrushStudioAPI:
             else:
                 return response.as_bytes()
 
+    def convert_show_to_csv(
+        self,
+        filename: str,
+        importer: str,
+        *,
+        fps: int = 5,
+    ) -> bytes:
+        """
+        Convert an entire drone show or a single formation from an external file
+        into Skybrush-compatible csv format.
+
+        Parameters:
+            filename: the filename to import and convert
+            importer: the importer to use to import the show/formation
+            fps: the FPS value to use in the csv output
+
+        Returns:
+            The imported drone show data as a bytes object containing
+                zipped .csv files
+        """
+
+        with open(filename, "rb") as zip_file:
+            input_data = b64encode(zip_file.read()).decode("ascii")
+
+        data = {
+            "input": {
+                "format": importer,
+                "data": input_data,
+                "parameters": {"simplify": False},
+            },
+            "output": {
+                "format": "csv",
+                "parameters": {"fps": fps},
+            },
+        }
+
+        with self._send_request("operations/render", data) as response:
+            result = response.as_bytes()
+
+        return result
+
     def create_formation_from_svg(
         self,
         source: str,
