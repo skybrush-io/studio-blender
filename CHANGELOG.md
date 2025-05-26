@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [main]
+
+## Added
+
+- The "Generate markers" feature has a new option that imports zipped DSS 
+  PATH/PATH3 colored animations to better support modular show design
+  even using external sources.
+
+- Professional / paid features are now highlighted with a "(PRO)" tag.
+
+
 ## [3.11.2] - 2025-05-21
 
 ### Fixed
