@@ -2,9 +2,8 @@ import csv
 import logging
 
 from pathlib import Path
-from zipfile import ZipFile
-
 from typing import IO
+from zipfile import ZipFile
 
 from bpy.path import ensure_ext
 from bpy.props import BoolProperty, StringProperty
