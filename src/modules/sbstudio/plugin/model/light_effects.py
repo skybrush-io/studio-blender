@@ -43,6 +43,7 @@ from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
@@ -685,7 +686,11 @@ class LightEffect(PropertyGroup):
                 # pixel coordinate is out of the bounds of the image, in which
                 # case get_pixel() returns an empty list or a short list
                 if len(pixel_color) == len(new_color):
-                    new_color[:] = pixel_color
+                    # If the conversion to linear space ever becomes a bottleneck,
+                    # we can convert the image in advance when it is stored into
+                    # the pixel cache if we can vectorize the operation somehow
+                    # or offload it to C.
+                    new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
             elif color_ramp:
                 new_color[:] = color_ramp.evaluate(output_x)
             else:
