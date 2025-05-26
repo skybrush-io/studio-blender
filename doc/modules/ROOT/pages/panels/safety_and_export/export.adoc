@@ -36,7 +36,9 @@ Trajectory FPS:: Set output frame rate for drone trajectories (make sure it is a
 
 Light FPS:: Set the output frame rate for light programs (make sure it is a submultiple of your render FPS)
 
-Export yaw:: Enable this checkbox to output rotations around the yaw (vertical) axis of your drone objects into the .skyc file
+Export yaw (PRO):: Enable this checkbox to output rotations around the yaw (vertical) axis of your drone objects into the .skyc file
+
+NOTE: This feature is not supported by our community server. To enable it, please purchase a proper license from https://shop.skybrush.io/[Skybrush Shop].
 
 Export cameras:: Enable this checkbox to export Blender cameras into the .skyc file (to be used by Skybrush Viewer).
 

@@ -115,7 +115,7 @@ class ReturnToHomeOperator(StoryboardOperator):
     )
 
     use_smart_rth = BoolProperty(
-        name="Use smart RTH",
+        name="Use smart RTH (PRO)",
         description=(
             "Enable the smart return to home function that ensures that "
             "all drones return to their own home position with an optimal "

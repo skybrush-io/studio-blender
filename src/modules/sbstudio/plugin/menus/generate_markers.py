@@ -23,11 +23,11 @@ class GenerateMarkersMenu(Menu):
         )
         layout.operator(
             "skybrush.add_markers_from_zipped_dss",
-            text="From zipped PATH/PATH3 files",
+            text="From zipped PATH/PATH3 files (PRO)",
         )
         layout.operator(
             "skybrush.add_markers_from_svg",
-            text="From SVG file",
+            text="From SVG file (PRO)",
         )
         layout.operator("skybrush.add_markers_from_qr_code", text="From QR Code")
 
