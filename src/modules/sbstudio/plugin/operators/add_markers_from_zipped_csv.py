@@ -46,7 +46,7 @@ class AddMarkersFromZippedCSVOperator(DynamicMarkerCreationOperator, ImportHelpe
 
     def _create_trajectories(self, context) -> dict[str, TrajectoryAndLightProgram]:
         filepath = ensure_ext(self.filepath, self.filename_ext)
-        return parse_compressed_csv_zip(filepath, context)
+        return parse_compressed_csv_zip(filepath)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
