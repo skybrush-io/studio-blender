@@ -53,6 +53,23 @@ class DDSFExportOperator(ExportOperator):
         default=False,
     )
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        layout.prop(self, "export_selected")
+        layout.prop(self, "frame_range")
+        layout.prop(self, "redraw")
+        layout.prop(self, "output_fps")
+        layout.prop(self, "light_output_fps")
+
+        layout.separator()
+
+        column = layout.column(align=True)
+        column.label(text="Pro features:")
+        column.prop(self, "use_pyro_control")
+        column.prop(self, "use_yaw_control")
+
     def get_format(self) -> FileFormat:
         return FileFormat.DDSF
 
