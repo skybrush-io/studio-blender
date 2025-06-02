@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the generation of animated formation markers from CSV data in Blender
   4.4 due to the introduction of slotted actions in the Python API of Blender.
 
+- Fixed a bug that prevented a newly added storyboard entry from being selected
+  if the current formation was auto-assigned to it.
+
 ## [3.11.2] - 2025-05-21
 
 ### Fixed

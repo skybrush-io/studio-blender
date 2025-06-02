@@ -538,8 +538,10 @@ class Storyboard(PropertyGroup, ListMixin):
         if formation is not None:
             entry.formation = formation
 
-        if select:
-            self.active_entry = entry
+        # Rememober the name and start frame of the entry so that we can find
+        # it again after sorting the collection
+        name = entry.name
+        frame_start = entry.frame_start
 
         self._sort_entries()
 
