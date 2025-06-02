@@ -9,12 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 
-- The "Generate markers" feature has a new option that imports zipped DSS 
+- The "Generate markers" feature has a new option that imports zipped DSS
   PATH/PATH3 colored animations to better support modular show design
   even using external sources.
 
 - Professional / paid features are now highlighted with a "(PRO)" tag.
 
+### Fixed
+
+- Fixed the generation of animated formation markers from CSV data in Blender
+  4.4 due to the introduction of slotted actions in the Python API of Blender.
 
 ## [3.11.2] - 2025-05-21
 
