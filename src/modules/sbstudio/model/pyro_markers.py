@@ -1,9 +1,11 @@
 from dataclasses import asdict, dataclass, field
 from json import dumps, loads
 
-from typing import Any
+from typing import Any, TypeVar
 
 __all__ = ("PyroMarkers", "PyroPayload")
+
+C = TypeVar("C", bound="PyroMarkers")
 
 
 @dataclass
@@ -86,7 +88,36 @@ class PyroMarkers:
             for channel, marker in sorted(self.markers.items())
         }
 
+    def as_api_dict(self, fps: int, ndigits: int = 3) -> dict[str, Any]:
+        """Returns the pyro trigger event markers stored for a single drone
+        as a dictionary compatible with the Skybrush API."""
+        items = sorted(self.markers.items())
+        events = [
+            [round(marker.frame / fps, ndigits=ndigits), channel - 1]
+            for channel, marker in items
+        ]
+        payloads = []
+        for channel, marker in items:
+            payload = {"channel": channel - 1, "name": marker.payload.name}
+            if marker.payload.duration is not None:
+                payload["duration"] = marker.payload.duration
+            if marker.payload.prefire_time is not None:
+                payload["prefireTime"] = marker.payload.prefire_time
+            payloads.append(payload)
+
+        return {"version": 1, "events": events, "payloads": payloads}
+
     def as_str(self) -> str:
         """Returns the JSON string representation of pyro trigger event markers
         stored for a single drone."""
         return dumps(self.as_dict())
+
+    def shift_time_in_place(self: C, frame_delta: int) -> C:
+        """Shifts all timestamps of the pyro markers in-place.
+
+        Parameters:
+            frame_delta: the frame delta to add to the frame of each event
+        """
+        for marker in self.markers.values():
+            marker.frame += frame_delta
+        return self

@@ -33,6 +33,7 @@ from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
 from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
 from sbstudio.plugin.utils.progress import FrameProgressReport
+from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
 from sbstudio.plugin.utils.sampling import (
     frame_range,
     sample_colors_of_objects,
@@ -449,6 +450,16 @@ def export_show_to_file_using_api(
         )
         yaw_setpoints = None
 
+    # get pyro control enabled state
+    use_pyro_control: bool = settings.get("use_pyro_control", False)
+
+    if use_pyro_control:
+        pyro_programs = {
+            drone.name: get_pyro_markers_of_object(drone) for drone in drones
+        }
+    else:
+        pyro_programs = None
+
     # get automatic show title
     show_title = str(basename(filepath).split(".")[0])
 
@@ -505,6 +516,9 @@ def export_show_to_file_using_api(
             trajectory.shift_time_in_place(delta)
         for light_program in lights.values():
             light_program.shift_time_in_place(delta)
+        if pyro_programs:
+            for pyro_program in pyro_programs.values():
+                pyro_program.shift_time_in_place(-frame_range[0])
         if yaw_setpoints:
             for yaw_setpoint in yaw_setpoints.values():
                 yaw_setpoint.shift_time_in_place(delta)
@@ -601,6 +615,7 @@ def export_show_to_file_using_api(
             validation=validation,
             trajectories=trajectories,
             lights=lights,
+            pyro_programs=pyro_programs,
             yaw_setpoints=yaw_setpoints,
             output=filepath,
             time_markers=time_markers,

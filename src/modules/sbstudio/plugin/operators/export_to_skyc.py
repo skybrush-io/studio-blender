@@ -37,6 +37,13 @@ class SkybrushExportOperator(ExportOperator):
         description="Number of samples to take from light programs per second",
     )
 
+    # pyro control enable/disable
+    use_pyro_control = BoolProperty(
+        name="Export pyro",
+        description="Specifies whether the pyro program of each drone should be included in the show",
+        default=False,
+    )
+
     # yaw control enable/disable
     use_yaw_control = BoolProperty(
         name="Export yaw",
@@ -64,6 +71,7 @@ class SkybrushExportOperator(ExportOperator):
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
+            "use_pyro_control": self.use_pyro_control,
             "use_yaw_control": self.use_yaw_control,
             "export_cameras": self.export_cameras,
             "redraw": self._get_redraw_setting(),

@@ -21,6 +21,7 @@ from sbstudio.model.color import Color3D
 from sbstudio.model.point import Point3D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation
+from sbstudio.model.pyro_markers import PyroMarkers
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
@@ -348,6 +349,7 @@ class SkybrushStudioAPI:
         validation: SafetyCheckParams,
         trajectories: dict[str, Trajectory],
         lights: Optional[dict[str, LightProgram]] = None,
+        pyro_programs: Optional[dict[str, PyroMarkers]] = None,
         yaw_setpoints: Optional[dict[str, YawSetpointList]] = None,
         output: Optional[Path] = None,
         show_title: Optional[str] = None,
@@ -368,6 +370,7 @@ class SkybrushStudioAPI:
             validation: Safety check parameters.
             trajectories: Dictionary of trajectories indexed by drone names.
             lights: Dictionary of light programs indexed by drone names.
+            pyro_programs: Dictionary of pyro programs indexed by drone names.
             yaw_setpoints: Dictionary of yaw setpoints indexed by drone names.
             output: The file path where the output should be saved or `None`
                 if the output must be returned instead of saving it to a file.
@@ -428,8 +431,18 @@ class SkybrushStudioAPI:
                 "lights": lights[name].as_dict(ndigits=ndigits),
                 "trajectory": trajectories[name].as_dict(ndigits=ndigits, version=0),
             }
+
+            if pyro_programs is not None:
+                import bpy
+
+                fps = bpy.context.scene.render.fps
+
+                settings["pyro"] = pyro_programs[name].as_api_dict(
+                    fps=fps, ndigits=ndigits
+                )
             if yaw_setpoints is not None:
                 settings["yawControl"] = yaw_setpoints[name].as_dict(ndigits=ndigits)
+
             return {"type": "generic", "settings": settings}
 
         data = {
