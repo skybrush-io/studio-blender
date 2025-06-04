@@ -62,9 +62,6 @@ def ensure_action_exists_for_object(
     if clean:
         action.fcurves.clear()
 
-    print(repr(object))
-    print(repr(object.id_type))
-
     if has_action_slots:
         # Blender 4.4 switched to slotted actions, so we need to ensure that
         # the action has at least one slot.
@@ -74,9 +71,6 @@ def ensure_action_exists_for_object(
         action.slots.new(id_type=id_type, name=slot_name)
 
     object.animation_data.action = action
-    print("Action assigned to object:", object.name, "->", action.name)
-    print("Number of slots for action:", len(action.slots))
-    print("Current action slot:", object.animation_data.action_slot)
 
     if has_action_slots:
         # Blender 4.4 switched to slotted actions. We need to assign the first
