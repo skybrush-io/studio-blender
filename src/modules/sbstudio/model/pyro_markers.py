@@ -21,6 +21,14 @@ class PyroPayload:
     prefire_time: float = 0
     """Time needed for the pyro payload to show up after ignition, in seconds."""
 
+    def as_api_dict(self) -> dict[str, Any]:
+        """Returns the pyro payload as a dictionary compatible with the Skybrush API."""
+        return {
+            "name": self.name,
+            "duration": self.duration,
+            "prefireTime": self.prefire_time,
+        }
+
 
 @dataclass
 class PyroMarker:
@@ -93,17 +101,10 @@ class PyroMarkers:
         as a dictionary compatible with the Skybrush API."""
         items = sorted(self.markers.items())
         events = [
-            [round(marker.frame / fps, ndigits=ndigits), channel - 1]
+            [round(marker.frame / fps, ndigits=ndigits), channel - 1, channel]
             for channel, marker in items
         ]
-        payloads = []
-        for channel, marker in items:
-            payload = {"channel": channel - 1, "name": marker.payload.name}
-            if marker.payload.duration is not None:
-                payload["duration"] = marker.payload.duration
-            if marker.payload.prefire_time is not None:
-                payload["prefireTime"] = marker.payload.prefire_time
-            payloads.append(payload)
+        payloads = {channel: marker.payload.as_api_dict() for channel, marker in items}
 
         return {"version": 1, "events": events, "payloads": payloads}
 
