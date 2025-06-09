@@ -99,7 +99,9 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 
 == Light design
 
-*Skybrush Studio for Blender* also supports flawless light design for your drone light shows. In Blender we support a single RGB color to be mapped to each drone at each frame in the timeline by simple baked colors or by complex parametric light effects overlayed to the base color. The RGB color output from Blender will be transformed to the RGB or RGBW color of your led driver on your drones by the Skybrush backend and firmware. There are several smart tools dedicated in *Skybrush Studio for Blender* for light design, to see these options please checkout the description of the xref:panels/leds.adoc[LEDs tab].
+*Skybrush Studio for Blender* also supports flawless light design for your drone light shows. In Blender we support a single RGB color to be mapped to each drone at each frame in the timeline by simple baked colors or by complex parametric light effects overlayed to the base color. The RGB color output from Blender will be transformed to the RGB or RGBW color of your LED driver on your drones by the Skybrush backend and firmware. There are several smart tools dedicated in *Skybrush Studio for Blender* for light design, to see these options please checkout the description of the xref:panels/leds.adoc[LEDs tab].
+
+Internally, *Skybrush Studio for Blender* uses the linear RGB color space, just like the entire Blender pipeline. The colors are encoded in this color space when they are exported to a show file, and it is the responsibility of the show viewer application (i.e. *Skybrush Viewer*) and the LED driver of the drone to convert linear RGB colors to the color space appropriate for the end device.
 
 
 == Yaw control
