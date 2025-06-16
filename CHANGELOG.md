@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - There is a new option for the smart RTH operator to return to an aerial grid
-  above home only instead of landing to the takeoff grid at the end. The new 
+  above home only instead of landing to the takeoff grid at the end. The new
   method also uses a new algorithm in the backend that ensures that minimum
   distance requirements are not violated during the return to the aerial grid.
   This is achieved by returning to an enlarged grid first and shrinking that
@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Default formation entry purpose upon opening old non-annotated Blender files 
+- Default formation entry purpose upon opening old non-annotated Blender files
   became `UNSPECIFIED`. In these cases user needs to mark purpose of all
   entries manually to have a valid segment annotation on export.
 
