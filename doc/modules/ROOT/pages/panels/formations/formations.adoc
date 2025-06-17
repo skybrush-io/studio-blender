@@ -65,6 +65,14 @@ If you use the smart RTH option, you do not need to land your drones afterwards,
 
 CAUTION: it is not ensured that there is a smart RTH solution for each situation. If the planner fails to perform the operation, try reducing spacing parameter or change the RTH altitude setting.
 
+=== Return to aerial grid
+
+Use this option to return to a -- possibly layered, 3D -- aerial grid above home positions without landing drones afterwards.
+
+This option is mostly useful when you design into external show formats that do not contain show from ground to ground but only from and to this floating grid. However, this option works both when you start your show from the ground or when you delete the takeoff and start your show already from such a floating aerial grid.
+
+The algorithm behind returning to a 3D floating grid is slightly different from the standard smartRTH algorithm: it first brings the drones down to an enlarged grid (this is the only way minimum distance requirements can be ensured while drones sink through layers of other drones) and then shrinks this enlarged grid to its final form. So if you use this algorithm, make sure you have enough aerial space above your takeoff area at the given height for the enlarged grid.
+
 == Land
 
 The btn:[Land] button lands the drones, starting from a given frame such that they move downwards in a straight line from their current position until they reach the given target altitude (ground is assumed to be at Z = 0). As usual, the _average_ velocity of the descent can be adjusted.
