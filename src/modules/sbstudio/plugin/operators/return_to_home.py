@@ -301,12 +301,13 @@ class ReturnToHomeOperator(StoryboardOperator):
         to_aerial_grid = self._should_return_to_aerial_grid()
 
         # call API to create smart RTH plan
+        eps = 2e-3
         with call_api_from_blender_operator(self) as api:
             plan = api.plan_smart_rth(
                 source,
                 target,
-                max_velocity_xy=self.velocity,
-                max_velocity_z=self.velocity_z,
+                max_velocity_xy=self.velocity - eps,
+                max_velocity_z=self.velocity_z - eps,
                 max_acceleration=max_acceleration,
                 min_distance=self.spacing,
                 rth_model="straight_line_with_neck_to_layers"
