@@ -123,7 +123,10 @@ def _get_segments(context: Optional[Context] = None) -> dict[str, tuple[float, f
     landing_entries: list[StoryboardEntry] | None = None
     show_valid = True
     for purpose, entries in entry_purpose_groups:
-        if purpose == StoryboardEntryPurpose.TAKEOFF.name:
+        if purpose == StoryboardEntryPurpose.UNSPECIFIED.name:
+            show_valid = False
+            break
+        elif purpose == StoryboardEntryPurpose.TAKEOFF.name:
             if not (show_entries is None and landing_entries is None):
                 show_valid = False
                 break
@@ -145,6 +148,12 @@ def _get_segments(context: Optional[Context] = None) -> dict[str, tuple[float, f
             result["show"] = (ends[0].frame_start / fps, ends[1].frame_end / fps)
         if ends := get_ends(landing_entries):
             result["landing"] = (ends[0].frame_start / fps, ends[1].frame_end / fps)
+    elif (
+        takeoff_entries is not None
+        or show_entries is not None
+        or landing_entries is not None
+    ):
+        log.warning("Show segments are invalid!")
 
     return result
 

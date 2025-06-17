@@ -17,6 +17,8 @@ __all__ = (
     "cleanup_actions_for_object",
 )
 
+has_action_slots = bpy.app.version >= (4, 4, 0)
+
 
 def get_name_of_action_for_object(object) -> str:
     """Returns the name of the action that we primarily wish to use for animating
@@ -26,7 +28,11 @@ def get_name_of_action_for_object(object) -> str:
 
 
 def ensure_action_exists_for_object(
-    object, name: Optional[str] = None, *, clean: bool = False
+    object,
+    name: Optional[str] = None,
+    *,
+    clean: bool = False,
+    id_type: Optional[str] = None,
 ) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -38,6 +44,9 @@ def ensure_action_exists_for_object(
             already contain any F-curves. If this is true and an action
             already existed with the given name, the F-curves of the action
             will be cleared
+        id_type: the type of the slot that is created for the action if it does
+            not exist yet. Used only if Blender 4.4 or later is used, where
+            actions are slotted.
     """
     action = get_action_for_object(object)
     if action is not None:
@@ -53,7 +62,23 @@ def ensure_action_exists_for_object(
     if clean:
         action.fcurves.clear()
 
+    if has_action_slots:
+        # Blender 4.4 switched to slotted actions, so we need to ensure that
+        # the action has at least one slot.
+        slot_name = f"{name} / Default slot" if name else "Default slot"
+        if id_type is None:
+            id_type = object.id_type
+        action.slots.new(id_type=id_type, name=slot_name)
+
     object.animation_data.action = action
+
+    if has_action_slots:
+        # Blender 4.4 switched to slotted actions. We need to assign the first
+        # slot of the action to the animation data. See more info here:
+        #
+        # https://developer.blender.org/docs/release_notes/4.4/python_api/#breaking
+        if object.animation_data.action_slot is None and len(action.slots) > 0:
+            object.animation_data.action_slot = action.slots[0]
 
     return action
 

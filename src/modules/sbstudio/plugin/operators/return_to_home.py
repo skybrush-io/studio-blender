@@ -115,11 +115,22 @@ class ReturnToHomeOperator(StoryboardOperator):
     )
 
     use_smart_rth = BoolProperty(
-        name="Use smart RTH",
+        name="Use smart RTH (PRO)",
         description=(
             "Enable the smart return to home function that ensures that "
             "all drones return to their own home position with an optimal "
             "collision free smart transition"
+        ),
+        default=False,
+    )
+
+    to_aerial_grid = BoolProperty(
+        name="Return to aerial grid (PRO)",
+        description=(
+            "If enabled, drones will use a special planner to return to an "
+            "aerial grid above home and will not land automatically afterwards. "
+            "If disabled, drones will use the standard smart RTH algorithm and "
+            "finish the procedure with landing to the desired common altitude"
         ),
         default=False,
     )
@@ -137,6 +148,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         layout.use_property_split = True
 
         use_smart_rth = self._should_use_smart_rth()
+        to_aerial_grid = self._should_return_to_aerial_grid()
 
         layout.prop(self, "start_frame")
         if use_smart_rth:
@@ -152,9 +164,9 @@ class ReturnToHomeOperator(StoryboardOperator):
         else:
             layout.prop(self, "velocity")
         layout.prop(self, "altitude")
-        if not use_smart_rth:
+        if not use_smart_rth or to_aerial_grid:
             row = layout.row()
-            layout.prop(self, "altitude_shift")
+            row.prop(self, "altitude_shift")
             if self.altitude_shift < self.spacing:
                 row.alert = True
                 row.label(text="", icon="ERROR")
@@ -169,6 +181,8 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         if is_smart_rth_enabled_globally():
             layout.prop(self, "use_smart_rth")
+            if use_smart_rth:
+                layout.prop(self, "to_aerial_grid")
 
     def invoke(self, context, event):
         self.start_frame = max(
@@ -190,6 +204,9 @@ class ReturnToHomeOperator(StoryboardOperator):
     def _should_use_smart_rth(self) -> bool:
         return self.use_smart_rth and is_smart_rth_enabled_globally()
 
+    def _should_return_to_aerial_grid(self) -> bool:
+        return self._should_use_smart_rth() and self.to_aerial_grid
+
     def _run(self, storyboard: Storyboard, *, context: Context) -> bool:
         bpy.ops.skybrush.prepare()
 
@@ -201,6 +218,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             return False
 
         use_smart_rth = self._should_use_smart_rth()
+        to_aerial_grid = self._should_return_to_aerial_grid()
         self.start_frame = max(self.start_frame, storyboard.frame_end) + (
             1 if use_smart_rth else 0
         )
@@ -213,8 +231,11 @@ class ReturnToHomeOperator(StoryboardOperator):
             drones,
             frame=first_frame,
             base_altitude=self.altitude,
-            layer_height=0 if use_smart_rth else self.altitude_shift,
+            layer_height=0
+            if (use_smart_rth and not to_aerial_grid)
+            else self.altitude_shift,
             min_distance=self.spacing,
+            flatten_source=to_aerial_grid,
             operator=self,
         )
 
@@ -277,6 +298,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         settings = getattr(context.scene.skybrush, "settings", None)
         max_acceleration = settings.max_acceleration if settings else 4
         land_speed = min(self.velocity_z, 0.5)
+        to_aerial_grid = self._should_return_to_aerial_grid()
 
         # call API to create smart RTH plan
         with call_api_from_blender_operator(self) as api:
@@ -287,7 +309,9 @@ class ReturnToHomeOperator(StoryboardOperator):
                 max_velocity_z=self.velocity_z,
                 max_acceleration=max_acceleration,
                 min_distance=self.spacing,
-                rth_model="straight_line_with_neck",
+                rth_model="straight_line_with_neck_to_layers"
+                if to_aerial_grid
+                else "straight_line_with_neck",
             )
         if not plan.start_times or not plan.durations:
             return False
@@ -342,17 +366,18 @@ class ReturnToHomeOperator(StoryboardOperator):
                 path_points.append((0, *p))
             path_points.append((start_time, *p))
             path_points.extend(tuple(inner_points))
-            path_points.extend(
-                (
-                    (start_time + duration, *q),
+            path_points.append((start_time + duration, *q))
+            if not to_aerial_grid:
+                path_points.append(
                     (
-                        start_time + duration + self.altitude / land_speed,
-                        q[0],
-                        q[1],
-                        0,  # TODO: starting position would be better than explicit 0
-                    ),
+                        (
+                            start_time + duration + self.altitude / land_speed,
+                            q[0],
+                            q[1],
+                            0,  # TODO: starting position would be better than explicit 0
+                        ),
+                    )
                 )
-            )
             for point in path_points:
                 frame = int(self.start_frame + point[0] * fps)
                 keyframes = (

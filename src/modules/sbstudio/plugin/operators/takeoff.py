@@ -339,6 +339,7 @@ def create_helper_formation_for_takeoff_and_landing(
     base_altitude: float,
     layer_height: float,
     min_distance: float,
+    flatten_source: bool = False,
     operator=None,
 ):
     """Creates a layer helper formation for takeoff and landing where the drones
@@ -353,6 +354,11 @@ def create_helper_formation_for_takeoff_and_landing(
     # Evaluate the initial positions of the drones
     with create_position_evaluator() as get_positions_of:
         source = get_positions_of(drones, frame=frame)
+    # Flatten source if needed (e.g if called from a show
+    # starting with a floating grid and not from ground)
+    if flatten_source:
+        min_alt = min(p[2] for p in source)
+        source = [(p[0], p[1], min_alt) for p in source]
 
     # Figure out how many phases we will need, based on the current safety
     # threshold and the arrangement of the drones

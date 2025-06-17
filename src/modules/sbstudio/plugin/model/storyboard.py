@@ -123,11 +123,14 @@ class _StoryboardEntryPurposeMixin:
 
 class StoryboardEntryPurpose(_StoryboardEntryPurposeMixin, enum.Enum):
     """
-    Storyboard entry purposes in the order in which they can follow each-other.
+    Storyboard entry purposes in the order in which they can follow each-other,
+    except for "Unspecified" that is allowed everywhere temporarily.
 
     The `name` of the enum is used to identify values in/for Blender.
+
     """
 
+    UNSPECIFIED = "Unspecified", 0
     TAKEOFF = "Takeoff", 1
     SHOW = "Show", 2
     LANDING = "Landing", 3
@@ -219,6 +222,7 @@ class StoryboardEntry(PropertyGroup):
 
     purpose = EnumProperty(
         items=[
+            StoryboardEntryPurpose.UNSPECIFIED.bpy_enum_item,
             StoryboardEntryPurpose.TAKEOFF.bpy_enum_item,
             StoryboardEntryPurpose.SHOW.bpy_enum_item,
             StoryboardEntryPurpose.LANDING.bpy_enum_item,
@@ -229,7 +233,7 @@ class StoryboardEntry(PropertyGroup):
             "takeoff entries, followed by any number of show entries, and end with 0 or more "
             "landing entries."
         ),
-        default=StoryboardEntryPurpose.SHOW.name,
+        default=StoryboardEntryPurpose.UNSPECIFIED.name,
     )
 
     pre_delay_per_drone_in_frames = FloatProperty(
@@ -538,8 +542,10 @@ class Storyboard(PropertyGroup, ListMixin):
         if formation is not None:
             entry.formation = formation
 
-        if select:
-            self.active_entry = entry
+        # Remember the name and start frame of the entry so that we can find
+        # it again after sorting the collection
+        name = entry.name
+        frame_start = entry.frame_start
 
         self._sort_entries()
 
@@ -847,6 +853,7 @@ class Storyboard(PropertyGroup, ListMixin):
         Raises:
             StoryboardValidationError: If validation fails.
         """
+        current_purpose = StoryboardEntryPurpose.UNSPECIFIED
         for index, (entry, next_entry) in enumerate(
             zip(sorted_entries, sorted_entries[1:])
         ):
@@ -863,11 +870,16 @@ class Storyboard(PropertyGroup, ListMixin):
                 StoryboardEntryPurpose[entry.purpose],
                 StoryboardEntryPurpose[next_entry.purpose],
             )
-            if entry_purpose.order > next_purpose.order:
+            if entry_purpose != StoryboardEntryPurpose.UNSPECIFIED:
+                current_purpose = entry_purpose
+            if (
+                next_purpose != StoryboardEntryPurpose.UNSPECIFIED
+                and next_purpose.order < current_purpose.order
+            ):
                 raise StoryboardValidationError(
-                    f"Storyboard entry {entry_purpose.name!r} has purpose "
-                    f"{StoryboardEntryPurpose[entry_purpose].ui_name}, which can not be followed by "
-                    f"a {StoryboardEntryPurpose[next_purpose].ui_name} entry."
+                    f"Storyboard entry #{index + 1} has purpose "
+                    f"{next_purpose.ui_name!r} that cannot be after "
+                    f"previous entry with purpose {current_purpose.ui_name!r}"
                 )
 
     def _validate_formation_size_contraints(

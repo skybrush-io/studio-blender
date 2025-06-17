@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import bpy
+import logging
 import os
 
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from functools import partial
 from numpy import array, floating
 from numpy.typing import NDArray
 from typing import Any, Dict, Optional
@@ -13,7 +15,14 @@ from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Collection, Context, Object, Operator
 from bpy_extras.io_utils import ExportHelper
 
+from sbstudio.model.point import Point3D
 from sbstudio.model.file_formats import FileFormat
+from sbstudio.model.light_program import LightProgram
+from sbstudio.model.trajectory import Trajectory
+from sbstudio.plugin.actions import (
+    ensure_action_exists_for_object,
+    find_f_curve_for_data_path_and_index,
+)
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.model.formation import (
     add_points_to_formation,
@@ -23,6 +32,9 @@ from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 from sbstudio.plugin.selection import select_only
 from sbstudio.plugin.selection import Collections
+
+
+log = logging.getLogger(__name__)
 
 
 class FormationOperator(Operator):
@@ -224,6 +236,160 @@ class ExportOperator(Operator, ExportHelper):
             return True
         else:
             return False
+
+
+@dataclass
+class TrajectoryAndLightProgram:
+    timestamps: list[float] = field(default_factory=list)
+    """Timestamps corresponding to ??? TODO ???"""
+
+    trajectory: Trajectory = field(default_factory=Trajectory)
+    """The trajectory to create in a dynamic marker creation operator."""
+
+    light_program: LightProgram = field(default_factory=LightProgram)
+    """Optional light program associated with the trajectory."""
+
+
+class DynamicMarkerCreationOperator(FormationOperator):
+    """Base class for operators that create a set of dynamic markers for a
+    formation, with light animation corresponding to the formation.
+    """
+
+    def execute_on_formation(self, formation: Object, context: Context):
+        # Construct the trajectory and light program to set
+        try:
+            trajectories_and_lights = self._create_trajectories(context)
+        except RuntimeError as error:
+            self.report({"ERROR"}, str(error))
+            return {"CANCELLED"}
+
+        # determine FPS of scene
+        fps = context.scene.render.fps
+
+        # try to figure out the start frame of this formation
+        storyboard_entry = get_storyboard(
+            context=context
+        ).get_first_entry_for_formation(formation)
+        frame_start = (
+            storyboard_entry.frame_start
+            if storyboard_entry
+            else context.scene.frame_start
+        )
+
+        # create new markers for the points around cursor location
+        center = Point3D(*context.scene.cursor.location)
+        trajectories = [
+            item.trajectory.shift_in_place(center)
+            for item in trajectories_and_lights.values()
+        ]
+        first_points = [
+            trajectory.first_point.as_vector()  # type: ignore
+            for trajectory in trajectories
+        ]
+        markers = add_points_to_formation(formation, first_points)
+
+        # update storyboard duration based on animation data
+        if self.update_duration and storyboard_entry:
+            duration = (
+                int(max(trajectory.duration for trajectory in trajectories) * fps) + 1
+            )
+            storyboard_entry.duration = duration
+
+        # create animation action for each point in the formation
+        log.info("Creating trajectories...")
+        for trajectory, marker in zip(trajectories, markers):
+            trajectory.simplify_in_place()
+            if len(trajectory.points) <= 1:
+                # does not need animation so we don't create the action
+                continue
+
+            action = ensure_action_exists_for_object(
+                marker, name=f"Animation data for {marker.name}", clean=True
+            )
+
+            f_curves = []
+            for i in range(3):
+                f_curve = find_f_curve_for_data_path_and_index(action, "location", i)
+                if f_curve is None:
+                    f_curve = action.fcurves.new("location", index=i)
+                else:
+                    # We should clear the keyframes that fall within the
+                    # range of our keyframes. Currently it's not needed because
+                    # it's a freshly created marker so it can't have any
+                    # keyframes that we don't know about.
+                    pass
+                f_curves.append(f_curve)
+
+            # add keypoints to f-curves in low level mode
+            t0 = trajectory.points[0].t
+            frames = [frame_start + int((p.t - t0) * fps) for p in trajectory.points]
+            values_x = [p.x for p in trajectory.points]
+            values_y = [p.y for p in trajectory.points]
+            values_z = [p.z for p in trajectory.points]
+            for f_curve, values in zip(f_curves, [values_x, values_y, values_z]):
+                f_curve.keyframe_points.add(len(frames))
+                for i, (frame, value) in enumerate(zip(frames, values)):
+                    kp = f_curve.keyframe_points[i]
+                    kp.co = (frame, value)
+                    kp.interpolation = "LINEAR"
+                    kp.handle_left_type = "AUTO_CLAMPED"
+                    kp.handle_right_type = "AUTO_CLAMPED"
+
+            # Commit the insertions that we've made in low level mode
+            for f_curve in f_curves:
+                f_curve.update()
+
+        # store light program as a light effect with color image
+        log.info("Creating light effects...")
+        light_effects = context.scene.skybrush.light_effects
+        if light_effects:
+            light_programs = [
+                item.light_program for item in trajectories_and_lights.values()
+            ]
+            duration = (
+                int(
+                    (light_programs[0].colors[-1].t - light_programs[0].colors[0].t)
+                    * fps
+                )
+                + 1
+            )
+            light_effects.append_new_entry(
+                name=formation.name,
+                frame_start=frame_start,
+                duration=duration,
+                select=True,
+            )
+            light_effect = light_effects.active_entry
+            light_effect.type = "IMAGE"
+            light_effect.output = "TEMPORAL"
+            light_effect.output_y = "INDEXED_BY_FORMATION"
+            image = light_effect.create_color_image(
+                name="Image for light effect '{}'".format(formation.name),
+                width=duration,
+                height=len(light_programs),
+            )
+            pixels = []
+            for light_program in light_programs:
+                color = light_program.colors[0]
+                t0 = color.t
+                j_last = 0
+                for next_color in light_program.colors[1:]:
+                    j_next = int((next_color.t - t0) * fps)
+                    pixels.extend(list(color.as_vector()) * (j_next - j_last))
+                    j_last = j_next
+                    color = next_color
+                pixels.extend(list(color.as_vector()))
+            image.pixels.foreach_set(pixels)
+            image.pack()
+
+        return {"FINISHED"}
+
+    @abstractmethod
+    def _create_trajectories(
+        self, context: Context
+    ) -> dict[str, TrajectoryAndLightProgram]:
+        """Creates the trajectories and light programs where the markers should be placed."""
+        raise NotImplementedError
 
 
 @dataclass

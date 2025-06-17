@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [main]
+
+### Added
+
+- There is a new option for the smart RTH operator to return to an aerial grid
+  above home only instead of landing to the takeoff grid at the end. The new
+  method also uses a new algorithm in the backend that ensures that minimum
+  distance requirements are not violated during the return to the aerial grid.
+  This is achieved by returning to an enlarged grid first and shrinking that
+  at the end horizontally to reach the final required aerial grid.
+
+### Fixed
+
+- Default formation entry purpose upon opening old non-annotated Blender files
+  became `UNSPECIFIED`. In these cases user needs to mark purpose of all
+  entries manually to have a valid segment annotation on export.
+
+## 3.12.1 - 2025-06-04
+
+### Fixed
+
+- Removed a few debug statements that were accidentally left in the code and
+  broke things for Blender 4.2 and earlier versions.
+
+## [3.12.0] - 2025-06-02
+
+## Added
+
+- The "Generate markers" feature has a new option that imports zipped DSS
+  PATH/PATH3 colored animations to better support modular show design
+  even using external sources.
+
+- Professional / paid features are now highlighted with a "(PRO)" tag.
+
+### Fixed
+
+- Fixed the generation of animated formation markers from CSV data in Blender
+  4.4 due to the introduction of slotted actions in the Python API of Blender.
+
+- Fixed a bug that prevented a newly added storyboard entry from being selected
+  if the current formation was auto-assigned to it.
+
 ## [3.11.2] - 2025-05-21
 
 ### Fixed
