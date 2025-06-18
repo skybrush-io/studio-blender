@@ -105,8 +105,9 @@ Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional licens
 
 If you are preparing your drone show as part of a larger event, e.g. with fireworks, use our Finale 3D / FWSim .vviz or Depence .ddsf exporters to export your drone show into formats that can be read by well known visualization softwares:
 
-* External link: https://finale3d.com/documentation/vviz-file-format/[Finale 3D VVIZ format]
-* External link: https://www.fwsim.com/doc/en/drone_shows.html[FWSim VVIZ support]
+* External link: https://finale3d.com/documentation/vviz-file-format/[Finale 3D: VVIZ format]
+* External link: https://finale3d.com/documentation/skybrush-studio-blender/[Finale 3D: Import from Skybrush]
+* External link: https://www.fwsim.com/doc/en/drone_shows.html[FWSim: VVIZ support]
 * External link: https://help.depence.com/[Depence]
 
 Note that our exporters that provide compatibility with these software require a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
