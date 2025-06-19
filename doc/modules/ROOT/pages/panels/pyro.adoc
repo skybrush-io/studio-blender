@@ -1,0 +1,11 @@
+= Pyro tab
+:imagesdir: ../../assets/images
+:experimental:
+
+The Pyro tab in the sidebar of the Viewport editor helps you add pyro trigger events to your drone show.
+
+image::panels/pyro.jpg[Pyro tab]
+
+The Pyro tab so far contains only a single panel:
+
+* xref:panels/pyro/pyro_control.adoc[Pyro Control panel]

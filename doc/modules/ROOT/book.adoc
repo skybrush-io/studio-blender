@@ -64,6 +64,14 @@ include::pages/panels/leds/light_effects.adoc[]
 
 :leveloffset: -1
 
+include::pages/panels/pyro.adoc[]
+
+:leveloffset: +1
+
+include::pages/panels/pyro/pyro_control.adoc[]
+
+:leveloffset: -1
+
 include::pages/panels/safety_and_export.adoc[]
 
 :leveloffset: +1

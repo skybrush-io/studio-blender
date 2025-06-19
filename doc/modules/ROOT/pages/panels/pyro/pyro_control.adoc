@@ -1,0 +1,64 @@
+= Pyro Control panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+The Pyro Control panel provides a simple way to add pyro control of individual 
+drones by inserting pyro trigger events at the appropriate pyro channels and 
+frames.
+
+image::panels/pyro_control/pyro_control.jpg[Pyro Control panel]
+
+== Render
+
+There are three visualization types for pyro effects you can choose dynamically:
+
+* `None` means not to visualize pyro at all
+* Select `Markers` to use very simple but quick markers on drones which are supposed 
+  to have an active pyro effect at a given frame.
+* Select `Particles` to imitate gerbs falling down from the drones for visualization
+  purposes (this option slows down rendering time substantially).
+
+Particles of the pyro effect are assumed to be hosted by the _second_ material slot 
+in the material list of the drone mesh. The name of the material starts with 
+`Pyro of ...` by convention, but this is not enforced -- you can rename the material, 
+but you need to keep in mind that *Skybrush Studio for Blender* will always adjust 
+the second material.
+
+== Channel
+
+Multiple pyro channels are supported by our add-on. Channel indexing starts with 1.
+
+To trigger a pyro event on a given channel, simply set the channel to a convenient value 
+before pressing the btn:[Trigger] button.
+
+Note that only a single event is supported per channel on each drone, so consecutive
+triggering on the same channel will overwrite previous events.
+
+== Payload parameters
+
+There are several payload parameters that can be setup for each pyro trigger event. 
+The following payload parameters can be tuned:
+
+Name:: Give a descriptive name for your pyro payloads here. If you export to the VVIZ 
+format of Finale 3D, you can use VDL strings as a naming convention.
+
+Duration:: This parameter defines the length of the pyro visualization. It is not 
+affecting the trigger event itself.
+
+Prefire time:: Pyro payloads usually need some time after triggering to light up on the
+sky. Define this duration here and put your trigger events exactly at the desired moments 
+when they should start to be visible. Skybrush will make sure your pyro payloads will be 
+triggered this time earlier to have your spectacles right on time.
+
+== Trigger
+
+When you have setup the pyro channel and all your payload parameters, select the drones
+you wish to add pyro to and move your timeline to the exact frame when you wish to have 
+your pyro effect appear on the sky. Then simply press the btn:[Trigger] button to add 
+your pyro event.
+
+Already saved pyro events are stored as a JSON string in the Skybrush-specific 
+"Drone Show" section of each drone's Object Data Properties. The string can be manually 
+edited as well to allow for easy pyro scripting. Alternatively, you can call Python's
+`bpy.ops.skybrush.trigger_pyro_on_selection()` directly to add additional pyro trigger 
+events to selected drones.

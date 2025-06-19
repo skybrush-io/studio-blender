@@ -104,6 +104,11 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 Internally, *Skybrush Studio for Blender* uses the linear RGB color space, just like the entire Blender pipeline. The colors are encoded in this color space when they are exported to a show file, and it is the responsibility of the show viewer application (i.e. *Skybrush Viewer*) and the LED driver of the drone to convert linear RGB colors to the color space appropriate for the end device.
 
 
+== Pyro design
+
+*Skybrush Studio for Blender* supports pyro control as part of your drone light shows. Pyro trigger events on multiple channels can be created with convenient payload descriptors and different visualization types. Pyro control events can be exported into the main .skyc show file or into external formats supporting drone-launched pyro. For more information please checkout the description of the xref:panels/pyro.adoc[Pyro tab].
+
+
 == Yaw control
 
 *Skybrush* also supports yaw control as part of a drone show for certain drone types. The yaw angle for yaw control in *Skyrush Studio for Blender* is simply inferred from the Z component of the global rotation of objects assuming "XYZ Euler" notation. So far there are no specific tools to aid yaw control, it is the responsibility of the designer to create a yaw curve that harmonizes with the concept and spatio-temporal trajectory of the show.

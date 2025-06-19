@@ -14,6 +14,8 @@
 ** xref:panels/leds.adoc[LEDs tab]
 *** xref:panels/leds/led_control.adoc[LED Control panel]
 *** xref:panels/leds/light_effects.adoc[Light Effects panel]
+** xref:panels/pyro.adoc[Pyro tab]
+*** xref:panels/pyro/pyro_control.adoc[Pyro Control panel]
 ** xref:panels/safety_and_export.adoc[Safety & Export tab]
 *** xref:panels/safety_and_export/safety_check.adoc[Safety Check panel]
 *** xref:panels/safety_and_export/export.adoc[Export panel]

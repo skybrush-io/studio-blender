@@ -16,11 +16,12 @@ Press kbd:[N] in the 3D Viewport editor to open its sidebar.
 
 image::tutorials/easy-drone-show-design/blender_3dviewport_with_skybrush_tabs.jpg[Blender 3D Viewport with Skybrush tabs]
 
-You will see four new tabs related to *Skybrush Studio*:
+You will see five new tabs related to *Skybrush Studio*:
 
 * xref:panels/skybrush.adoc[Skybrush tab]
 * xref:panels/formations.adoc[Formations tab]
 * xref:panels/leds.adoc[LEDs tab]
+* xref:panels/pyro.adoc[Pyro tab]
 * xref:panels/safety_and_export.adoc[Safety & Export tab]
 
 These tabs contain all panels, buttons, operators and functions that are specifically needed for drone show design, in proper order.
@@ -148,7 +149,17 @@ image::panels/light_effects/light_effects.jpg[Light Effects panel]
 The effects defined in the "Light Effects" panel are calculated on-the-fly, frame by frame in Blender, based on several criteria, including the positions of the drones and an optional associated mesh, so it is possible to create light effects where the color depends on how far the drones are from a certain mesh in the scene or whether they are inside or outside an invisible "helper" mesh.
 
 
-== 9. Export your show to .skyc
+== 9. Add optional pyro or yaw control
+
+There are additional options to make your drone shows even more spectacular, such as adding drone-launched fireworks to your shows or enhancing visuals with controlling the yaw angle of drones. 
+
+For adding pyro control please checkout the description of the xref:panels/pyro/pyro_control.adoc[Pyro Control panel].
+
+For adding yaw control to your drones please use any standard Blender tools to change the orientation of your drone objects according to your needs.
+
+NOTE: Both of these options require a professional license to be supported.
+
+== 10. Export your show to .skyc
 
 Once ready with both the animations and light program, use the btn:[Export to .skyc] button of the xref:panels/safety_and_export/export.adoc[Export panel] on the "Safety & Export" tab to export your entire show into Skybrush compiled show format.
 
@@ -164,6 +175,8 @@ The btn:[Export to .csv] button of the Export panel allows you to sample the dro
 
 The btn:[Export to validation .pdf] button creates a unique safety report of your show in .pdf format for self-checking, validated reporting or as a supplement for flight permissions.
 
-== 10. Enjoy
+If you are a professional license holder, please press the btn:[Refresh file formats] to get a full list of additional third-party export formats that your license supports.
+
+== 11. Enjoy
 
 We are done. Check out your show in *Skybrush Viewer* or execute it with *Skybrush Live*. Enjoy, mailto:support@collmot.com[send us feedback or ask us] if you have any questions!

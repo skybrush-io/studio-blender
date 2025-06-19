@@ -7,6 +7,8 @@ We encourage you to exploit the standard possibilities of Blender to create your
 
 To aid your drone show design, the following tabs are available currently, each containing one or more related panels:
 
+* xref:panels/skybrush.adoc[Skybrush tab]
 * xref:panels/formations.adoc[Formations tab]
 * xref:panels/leds.adoc[LEDs tab]
+* xref:panels/pyro.adoc[Pyro tab]
 * xref:panels/safety_and_export.adoc[Safety & Export tab]
