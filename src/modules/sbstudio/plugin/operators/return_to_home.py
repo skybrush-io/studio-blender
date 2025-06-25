@@ -371,12 +371,10 @@ class ReturnToHomeOperator(StoryboardOperator):
             if not to_aerial_grid:
                 path_points.append(
                     (
-                        (
-                            start_time + duration + self.altitude / land_speed,
-                            q[0],
-                            q[1],
-                            0,  # TODO: starting position would be better than explicit 0
-                        ),
+                        start_time + duration + self.altitude / land_speed,
+                        q[0],
+                        q[1],
+                        0,  # TODO: starting position would be better than explicit 0
                     )
                 )
             for point in path_points:
