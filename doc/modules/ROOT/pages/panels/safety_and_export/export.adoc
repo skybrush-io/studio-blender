@@ -95,6 +95,13 @@ Create individual drone plots:: Include validation plots for each drone individu
 +
 WARNING: Creating these plots might take a long time, depending on the number of drones, frames and output frame rate.
 
+== Export to .skyc + .pdf
+
+To save some time on final renderings, there is an option to export shows into `.skyc` and validation report `.pdf` formats at the same time, in parallel. In this case the sampling of trajectories and light effects - which is generally responsible for most of the export time - is performed only once, not twice, and the export processes are also executed in parallel by the backend.
+
+All properties of this multi-export option are the same as the ones for the individual exporters.
+
+
 == Export to various third-party show formats
 
 Upon purchasing a professional license, we provide additional exporters to various external drone show formats, including DSS PATH, DSS PATH3, Drotek, EVSKY, LiteBee, etc.
