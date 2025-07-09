@@ -41,14 +41,14 @@ class DDSFExportOperator(ExportOperator):
 
     # pyro control enable/disable
     use_pyro_control = BoolProperty(
-        name="Export pyro",
+        name="Export pyro (PRO)",
         description="Specifies whether the pyro program of each drone should be included in the show",
         default=False,
     )
 
     # yaw control enable/disable
     use_yaw_control = BoolProperty(
-        name="Export yaw",
+        name="Export yaw (PRO)",
         description="Specifies whether the yaw angle of each drone should be controlled during the show",
         default=False,
     )
@@ -66,7 +66,6 @@ class DDSFExportOperator(ExportOperator):
         layout.separator()
 
         column = layout.column(align=True)
-        column.label(text="Pro features:")
         column.prop(self, "use_pyro_control")
         column.prop(self, "use_yaw_control")
 
