@@ -26,9 +26,6 @@ class LitebeeExportOperator(ExportOperator):
     filename_ext = ".bin"
 
     def get_format(self) -> FileFormat:
-        """Returns the file format that the operator uses. Must be overridden
-        in subclasses.
-        """
         return FileFormat.LITEBEE
 
     def get_operator_name(self) -> str:
