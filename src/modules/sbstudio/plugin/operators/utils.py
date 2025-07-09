@@ -558,7 +558,10 @@ def export_show_to_file_using_api(
         elif format is FileFormat.CSV:
             log.info("Exporting show to Skybrush .csv format")
             renderer = "csv"
-            renderer_params = {**renderer_params, "fps": settings["output_fps"]}
+            renderer_params = {
+                **renderer_params,
+                "fps": settings["output_fps"],
+            }
         elif format is FileFormat.DAC:
             log.info("Exporting show to HG .dac format")
             renderer = "dac"

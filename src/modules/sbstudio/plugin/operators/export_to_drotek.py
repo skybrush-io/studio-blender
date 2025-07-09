@@ -1,3 +1,5 @@
+from typing import Any
+
 from bpy.props import BoolProperty, StringProperty, FloatProperty
 
 from sbstudio.model.file_formats import FileFormat
@@ -46,12 +48,10 @@ class DrotekExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return "Drotek exporter"
 
-    def get_settings(self):
+    def get_settings(self) -> dict[str, Any]:
         return {
             "spacing": self.spacing,
             "output_fps": 5,
-            "light_fps": 5,
-            "light_output_fps": 5,  # TODO(ntamas): figure out which one is needed!
+            "light_output_fps": 5,
             "use_rgbw": self.use_rgbw,
-            "redraw": self._get_redraw_setting(),
         }

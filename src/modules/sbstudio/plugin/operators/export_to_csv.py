@@ -9,6 +9,8 @@ This script is created for those who want to use their own scripts or tools for
 post-processing.
 """
 
+from typing import Any
+
 from bpy.props import StringProperty, FloatProperty
 
 from sbstudio.model.file_formats import FileFormat
@@ -50,9 +52,8 @@ class SkybrushCSVExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return "CSV exporter"
 
-    def get_settings(self):
+    def get_settings(self) -> dict[str, Any]:
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.output_fps,
-            "redraw": self._get_redraw_setting(),
         }

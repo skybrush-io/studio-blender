@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from bpy.props import BoolProperty, IntProperty, StringProperty
 
@@ -76,11 +76,10 @@ class DDSFExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return "Depence .ddsf exporter"
 
-    def get_settings(self) -> Dict[str, Any]:
+    def get_settings(self) -> dict[str, Any]:
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "use_pyro_control": self.use_pyro_control,
             "use_yaw_control": self.use_yaw_control,
-            "redraw": self._get_redraw_setting(),
         }

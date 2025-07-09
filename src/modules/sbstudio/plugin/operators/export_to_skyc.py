@@ -1,3 +1,5 @@
+from typing import Any
+
 from bpy.props import BoolProperty, IntProperty, StringProperty
 
 from sbstudio.model.file_formats import FileFormat
@@ -84,12 +86,11 @@ class SkybrushExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return ".skyc exporter"
 
-    def get_settings(self):
+    def get_settings(self) -> dict[str, Any]:
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "use_pyro_control": self.use_pyro_control,
             "use_yaw_control": self.use_yaw_control,
             "export_cameras": self.export_cameras,
-            "redraw": self._get_redraw_setting(),
         }

@@ -1,3 +1,5 @@
+from typing import Any
+
 from bpy.props import BoolProperty, StringProperty, IntProperty
 
 from sbstudio.model.file_formats import FileFormat
@@ -83,6 +85,26 @@ class SkybrushPDFExportOperator(ExportOperator):
         ),
     )
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        layout.prop(self, "export_selected")
+        layout.prop(self, "frame_range")
+        layout.prop(self, "redraw")
+        layout.prop(self, "output_fps")
+        layout.prop(self, "light_output_fps")
+
+        layout.separator()
+
+        column = layout.column(align=True)
+        column.prop(self, "plot_pos")
+        column.prop(self, "plot_vel")
+        column.prop(self, "plot_drift")
+        column.prop(self, "plot_nn")
+        column.prop(self, "plot_nnall")
+        column.prop(self, "plot_indiv")
+
     def get_format(self) -> FileFormat:
         """Returns the file format that the operator uses. Must be overridden
         in subclasses.
@@ -92,7 +114,7 @@ class SkybrushPDFExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return ".pdf validation plot exporter"
 
-    def get_settings(self):
+    def get_settings(self) -> dict[str, Any]:
         plots = {
             "pos": self.plot_pos,
             "vel": self.plot_vel,
@@ -102,9 +124,9 @@ class SkybrushPDFExportOperator(ExportOperator):
             "indiv": self.plot_indiv,
         }
         plots = ["stats"] + [key for key, value in plots.items() if value]
+
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "plots": plots,
-            "redraw": self._get_redraw_setting(),
         }

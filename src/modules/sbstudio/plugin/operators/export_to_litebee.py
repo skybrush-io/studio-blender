@@ -1,3 +1,5 @@
+from typing import Any
+
 from bpy.props import StringProperty
 
 from sbstudio.model.file_formats import FileFormat
@@ -32,7 +34,5 @@ class LitebeeExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return "Litebee exporter"
 
-    def get_settings(self):
-        return {
-            "redraw": self._get_redraw_setting(),
-        }
+    def get_settings(self) -> dict[str, Any]:
+        return {}

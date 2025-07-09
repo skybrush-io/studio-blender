@@ -6,10 +6,9 @@ import os
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from functools import partial
 from numpy import array, floating
 from numpy.typing import NDArray
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Collection, Context, Object, Operator
@@ -182,6 +181,7 @@ class ExportOperator(Operator, ExportHelper):
         settings = {
             "export_selected": self.export_selected,
             "frame_range": self.frame_range,
+            "redraw": self._get_redraw_setting(),
             **self.get_settings(),
         }
 
@@ -208,7 +208,7 @@ class ExportOperator(Operator, ExportHelper):
         """
         return "exporter"
 
-    def get_settings(self) -> Dict[str, Any]:
+    def get_settings(self) -> dict[str, Any]:
         """Returns operator-specific renderer settings that should be passed to
         the Skybrush Studio API.
         """

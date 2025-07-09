@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from bpy.props import IntProperty, StringProperty
 
@@ -45,9 +45,8 @@ class EVSKYExportOperator(ExportOperator):
     def get_operator_name(self) -> str:
         return "EVSKY exporter"
 
-    def get_settings(self) -> Dict[str, Any]:
+    def get_settings(self) -> dict[str, Any]:
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
-            "redraw": self._get_redraw_setting(),
         }
