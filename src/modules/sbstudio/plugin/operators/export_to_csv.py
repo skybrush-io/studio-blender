@@ -44,9 +44,6 @@ class SkybrushCSVExportOperator(ExportOperator):
     )
 
     def get_format(self) -> FileFormat:
-        """Returns the file format that the operator uses. Must be overridden
-        in subclasses.
-        """
         return FileFormat.CSV
 
     def get_operator_name(self) -> str:

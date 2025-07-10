@@ -13,6 +13,7 @@ from sbstudio.plugin.operators import (
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
+    SkybrushSKYCAndPDFExportOperator,
     VVIZExportOperator,
 )
 
@@ -51,6 +52,11 @@ class ExportPanel(Panel):
             layout.operator(
                 SkybrushPDFExportOperator.bl_idname,
                 text="Export validation report .pdf",
+            )
+        if FileFormat.SKYC_AND_PDF in formats:
+            layout.operator(
+                SkybrushSKYCAndPDFExportOperator.bl_idname,
+                text="Export to .skyc + .pdf",
             )
 
         layout.separator()

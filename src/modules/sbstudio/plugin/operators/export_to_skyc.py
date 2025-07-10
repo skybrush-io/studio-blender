@@ -78,9 +78,6 @@ class SkybrushExportOperator(ExportOperator):
         column.prop(self, "use_yaw_control")
 
     def get_format(self) -> FileFormat:
-        """Returns the file format that the operator uses. Must be overridden
-        in subclasses.
-        """
         return FileFormat.SKYC
 
     def get_operator_name(self) -> str:

@@ -22,6 +22,7 @@ from .export_to_evsky import EVSKYExportOperator
 from .export_to_drotek import DrotekExportOperator
 from .export_to_litebee import LitebeeExportOperator
 from .export_to_skyc import SkybrushExportOperator
+from .export_to_skyc_and_pdf import SkybrushSKYCAndPDFExportOperator
 from .export_to_vviz import VVIZExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
@@ -102,6 +103,7 @@ __all__ = (
     "SkybrushCSVExportOperator",
     "SkybrushExportOperator",
     "SkybrushPDFExportOperator",
+    "SkybrushSKYCAndPDFExportOperator",
     "SwapColorsInLEDControlPanelOperator",
     "TakeoffOperator",
     "TriggerPyroOnSelectedDronesOperator",
