@@ -361,7 +361,9 @@ class SkybrushStudioAPI:
         time_markers: Optional[TimeMarkers] = None,
         cameras: Optional[list[Camera]] = None,
         renderer: str | list[str] = "skyc",
-        renderer_params: Optional[dict[str, Any]] = None,
+        renderer_params: Optional[
+            dict[str, Any] | list[Optional[dict[str, Any]]]
+        ] = None,
     ) -> Optional[bytes]:
         """
         Export drone show data.
@@ -445,7 +447,7 @@ class SkybrushStudioAPI:
 
             return {"type": "generic", "settings": settings}
 
-        data = {
+        data: dict[str, Any] = {
             "input": {
                 "format": "json",
                 "data": {
@@ -464,22 +466,25 @@ class SkybrushStudioAPI:
                     "meta": meta,
                 },
             },
-            "output": {},
         }
 
-        multi_render: bool = isinstance(renderer, (list, tuple))
-
-        if multi_render:
-            data["output"]["formats"] = renderer
+        if isinstance(renderer, (list, tuple)):
+            operation = "multi-render"
+            if renderer_params is None:
+                renderer_params = [None] * len(renderer)  # type: ignore
+            assert isinstance(renderer_params, (list, tuple))
+            data["outputs"] = [
+                {"format": format, "parameters": parameters or {}}
+                for format, parameters in zip(renderer, renderer_params, strict=True)
+            ]
         else:
+            operation = "render"
+            data["output"] = {}
             data["output"]["format"] = renderer
-        if renderer_params is not None:
-            data["output"]["parameters"] = renderer_params
+            if renderer_params is not None:
+                data["output"]["parameters"] = renderer_params
 
-        with self._send_request(
-            "operations/multi-render" if multi_render else "operations/render",
-            data,
-        ) as response:
+        with self._send_request(f"operations/{operation}", data) as response:
             if output:
                 response.save_to_file(output)
             else:

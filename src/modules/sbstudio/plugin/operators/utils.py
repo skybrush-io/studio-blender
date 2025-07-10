@@ -560,9 +560,10 @@ def export_show_to_file_using_api(
             plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
             fps = settings.get("output_fps", _default_settings.output_fps)
             renderer = ["skyc", "plot"]
-            renderer_params = {
-                "plot": {"plots": ",".join(plots), "fps": fps, "single_file": True},
-            }
+            renderer_params = [
+                None,
+                {"plots": ",".join(plots), "fps": fps, "single_file": True},
+            ]
         elif format is FileFormat.CSV:
             log.info("Exporting show to Skybrush .csv format")
             renderer = "csv"
