@@ -16,6 +16,7 @@ class FileFormat(Enum):
     SKYC = "skyc"
     CSV = "csv"
     PDF = "pdf"
+    SKYC_AND_PDF = "skyc,pdf"
 
     # External drone show formats
     DSS = "dss"
@@ -63,7 +64,7 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
         elif feature == "export:litebee":
             formats.append(FileFormat.LITEBEE)
         elif feature == "export:plot":
-            formats.append(FileFormat.PDF)
+            formats.extend([FileFormat.PDF, FileFormat.SKYC_AND_PDF])
         elif feature == "export:vviz":
             formats.append(FileFormat.VVIZ)
 

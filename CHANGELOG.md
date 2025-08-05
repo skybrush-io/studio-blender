@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## main
+
+### Added
+
+- Added export option for combined/parallel .skyc and .pdf exports to save time on final
+  drone show renderings.
+
 ## [3.13.2] - 2025-06-29
 
 - Fixed the discovery of principled BSDF shader nodes when Blender is localized

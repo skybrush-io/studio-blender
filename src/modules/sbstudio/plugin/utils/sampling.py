@@ -2,7 +2,7 @@ import bpy
 
 from bpy.types import Context, Object
 from collections import defaultdict
-from typing import Callable, Dict, Iterable, Iterator, Optional, Sequence, Tuple
+from typing import Callable, Iterable, Iterator, Optional, Sequence
 
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram
@@ -58,7 +58,7 @@ def frame_range(
 @with_context
 def each_frame_in(
     frames: Iterable[int], *, redraw: bool = False, context: Optional[Context] = None
-) -> Iterable[Tuple[int, float]]:
+) -> Iterable[tuple[int, float]]:
     """Generator that iterates over the given frames, sets the current frame in
     Blender to each frame one by one, and then yields a tuple consisting of
     the current frame _index_ and the current frame _timestamp_ to the caller.
@@ -90,7 +90,7 @@ def sample_positions_of_objects(
     by_name: bool = False,
     simplify: bool = False,
     context: Optional[Context] = None,
-) -> Dict[Object, Trajectory]:
+) -> dict[Object, Trajectory]:
     """Samples the positions of the given Blender objects at the given frames,
     returning a dictionary mapping the objects to their trajectories.
 
@@ -130,7 +130,7 @@ def sample_positions_and_yaw_of_objects(
     by_name: bool = False,
     simplify: bool = False,
     context: Optional[Context] = None,
-) -> Dict[Object, Tuple[Trajectory, YawSetpointList]]:
+) -> dict[Object, tuple[Trajectory, YawSetpointList]]:
     """Samples the positions of the given Blender objects at the given frames,
     returning a dictionary mapping the objects to their trajectories.
 
@@ -190,7 +190,7 @@ def sample_colors_of_objects(
     simplify: bool = False,
     redraw: bool = False,
     context: Optional[Context] = None,
-) -> Dict[Object, LightProgram]:
+) -> dict[Object | str, LightProgram]:
     """Samples the colors of the given Blender objects at the given frames,
     returning a dictionary mapping the objects to their light programs.
 
@@ -242,7 +242,7 @@ def sample_positions_and_colors_of_objects(
     simplify: bool = False,
     redraw: bool = False,
     context: Optional[Context] = None,
-) -> Dict[Object, Tuple[Trajectory, LightProgram]]:
+) -> dict[Object, tuple[Trajectory, LightProgram]]:
     """Samples the positions and colors of the given Blender objects at the
     given frames, returning a dictionary mapping the objects to their
     trajectories and light programs.
@@ -303,7 +303,7 @@ def sample_positions_colors_and_yaw_of_objects(
     simplify: bool = False,
     redraw: bool = False,
     context: Optional[Context] = None,
-) -> Dict[Object, Tuple[Trajectory, LightProgram, YawSetpointList]]:
+) -> dict[Object, tuple[Trajectory, LightProgram, YawSetpointList]]:
     """Samples the positions, colors and yaw angles of the given Blender objects
     at the given frames, returning a dictionary mapping the objects to their
     trajectories, light programs and yaw setpoints.
@@ -373,13 +373,13 @@ def sample_positions_colors_and_yaw_of_objects(
 @with_context
 def sample_positions_of_objects_in_frame_range(
     objects: Sequence[Object],
-    bounds: Tuple[int, int],
+    bounds: tuple[int, int],
     *,
     fps: int,
     by_name: bool = False,
     simplify: bool = False,
     context: Optional[Context] = None,
-) -> Dict[Object, Trajectory]:
+) -> dict[Object, Trajectory]:
     """Samples the positions of the given Blender objects in the given range
     of frames, ensuring that the given minimum frames-per-second requirement
     is satisfied and that both the start and the end frames are sampled.

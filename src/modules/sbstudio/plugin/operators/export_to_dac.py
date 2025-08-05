@@ -26,9 +26,6 @@ class DACExportOperator(ExportOperator):
     filename_ext = ".zip"
 
     def get_format(self) -> FileFormat:
-        """Returns the file format that the operator uses. Must be overridden
-        in subclasses.
-        """
         return FileFormat.DAC
 
     def get_operator_name(self) -> str:
