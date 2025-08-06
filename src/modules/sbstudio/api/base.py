@@ -360,8 +360,10 @@ class SkybrushStudioAPI:
         timestamp_offset: Optional[float] = None,
         time_markers: Optional[TimeMarkers] = None,
         cameras: Optional[list[Camera]] = None,
-        renderer: str = "skyc",
-        renderer_params: Optional[dict[str, Any]] = None,
+        renderer: str | list[str] = "skyc",
+        renderer_params: Optional[
+            dict[str, Any] | list[Optional[dict[str, Any]]]
+        ] = None,
     ) -> Optional[bytes]:
         """
         Export drone show data.
@@ -387,8 +389,8 @@ class SkybrushStudioAPI:
             time_markers: When specified, time markers will be exported as
                 temporal cues.
             cameras: When specified, list of cameras to include in the environment.
-            renderer: The renderer to use to export the show.
-            renderer_params: Extra parameters for the renderer.
+            renderer: The renderer(s) to use to export the show.
+            renderer_params: Extra parameters for the renderer(s).
 
         Note: drone names must match in trajectories and lights
 
@@ -445,7 +447,7 @@ class SkybrushStudioAPI:
 
             return {"type": "generic", "settings": settings}
 
-        data = {
+        data: dict[str, Any] = {
             "input": {
                 "format": "json",
                 "data": {
@@ -464,13 +466,25 @@ class SkybrushStudioAPI:
                     "meta": meta,
                 },
             },
-            "output": {"format": renderer},
         }
 
-        if renderer_params is not None:
-            data["output"]["parameters"] = renderer_params
+        if isinstance(renderer, (list, tuple)):
+            operation = "multi-render"
+            if renderer_params is None:
+                renderer_params = [None] * len(renderer)  # type: ignore
+            assert isinstance(renderer_params, (list, tuple))
+            data["outputs"] = [
+                {"format": format, "parameters": parameters or {}}
+                for format, parameters in zip(renderer, renderer_params, strict=True)
+            ]
+        else:
+            operation = "render"
+            data["output"] = {}
+            data["output"]["format"] = renderer
+            if renderer_params is not None:
+                data["output"]["parameters"] = renderer_params
 
-        with self._send_request("operations/render", data) as response:
+        with self._send_request(f"operations/{operation}", data) as response:
             if output:
                 response.save_to_file(output)
             else:
@@ -565,7 +579,7 @@ class SkybrushStudioAPI:
         trajectories: dict[str, Trajectory],
         output: Path,
         validation: SafetyCheckParams,
-        plots: Sequence[str] = ("pos", "vel", "drift", "nn"),
+        plots: Sequence[str] = ("stats", "pos", "vel", "drift", "nn"),
         fps: float = 4,
         ndigits: int = 3,
         time_markers: Optional[TimeMarkers] = None,

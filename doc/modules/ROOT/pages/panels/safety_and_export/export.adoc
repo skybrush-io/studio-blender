@@ -15,7 +15,6 @@ To see the progress or predicted remaining time of the export procedure, run Ble
 window or press "Toggle System Console" in the "Windows" menu to watch its terminal log.
 
 
-
 == Export to Skybrush .skyc
 
 The Skybrush compiled show format is a single-file descriptor of your complete drone show. It is used as the primary drone show format throughout the entire *Skybrush* suite:
@@ -42,6 +41,7 @@ NOTE: This feature is not supported by our community server. To enable it, pleas
 
 Export cameras:: Enable this checkbox to export Blender cameras into the .skyc file (to be used by Skybrush Viewer).
 
+
 == Export to Skybrush .csv
 
 The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range.
@@ -57,6 +57,7 @@ Frame range:: Define the frame range of the output (Storyboard / Render / Previe
 Frame rate:: Set output frame rate of drone trajectories and light programs (make sure it is a submultiple of your render FPS)
 
 NOTE: Special characters in drone names are converted to standard characters in the exported filenames.
+
 
 == Export validation report .pdf
 
@@ -94,6 +95,14 @@ WARNING: Creating this plot might take a longer time, depending on the number of
 Create individual drone plots:: Include validation plots for each drone individually on separate pages in the final output.
 +
 WARNING: Creating these plots might take a long time, depending on the number of drones, frames and output frame rate.
+
+
+== Export to .skyc + .pdf
+
+To save some time on final renderings, there is an option to export shows into `.skyc` and validation report `.pdf` formats at the same time, in parallel. In this case the sampling of trajectories and light effects - which is generally responsible for most of the export time - is performed only once, not twice, and the export processes are also executed in parallel by the backend.
+
+All properties of this multi-export option are the same as the ones for the individual exporters.
+
 
 == Export to various third-party show formats
 
