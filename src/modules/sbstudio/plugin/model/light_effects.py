@@ -568,8 +568,8 @@ class LightEffect(PropertyGroup):
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
                 module = load_module(absolute_path) if absolute_path else None
-                if self.output_function.name:
-                    fn = getattr(module, self.output_function.name)
+                if output_function.name:
+                    fn = getattr(module, output_function.name)
                     outputs = [
                         fn(
                             frame=frame,
