@@ -1,5 +1,6 @@
 from base64 import b64encode
 from itertools import chain
+from numpy import array
 from operator import attrgetter
 from struct import Struct
 from typing import List, Optional, Sequence, TypeVar
@@ -88,14 +89,13 @@ class Trajectory:
         else:
             # Representation similar to version 0 but in a binary form for
             # reducing bandwidth usage and increasing render speed
-            floats = [
-                round(x, ndigits=ndigits)
-                for x in chain.from_iterable(point.as_tuple() for point in self.points)
-            ]
+            # TODO: use numpy arrays in Trajectory already for additional speedup
+            floats = array(
+                list(chain.from_iterable(point.as_tuple() for point in self.points)),
+                dtype="<f4",
+            )
             return {
-                "points": b64encode(Struct(f"<{len(floats)}f").pack(*floats)).decode(
-                    "ascii"
-                ),
+                "points": b64encode(floats.tobytes()).decode("ascii"),
                 "version": 2,
             }
 
