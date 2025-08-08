@@ -86,7 +86,7 @@ class Trajectory:
                 ],
                 "version": 1,
             }
-        else:
+        elif version == 2:
             # Representation similar to version 0 but in a binary form for
             # reducing bandwidth usage and increasing render speed
             # TODO: use numpy arrays in Trajectory already for additional speedup
@@ -98,6 +98,8 @@ class Trajectory:
                 "points": b64encode(floats.tobytes()).decode("ascii"),
                 "version": 2,
             }
+        else:
+            raise ValueError(f"Unknown version {version} for trajectory representation")
 
     @property
     def duration(self) -> float:
