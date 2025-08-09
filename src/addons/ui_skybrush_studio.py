@@ -170,11 +170,11 @@ from sbstudio.plugin.tasks import (
 types = (
     FormationsPanelProperties,
     ColorFunctionProperties,
-    LightEffect,
-    LightEffectCollection,
     ScheduleOverride,
     StoryboardEntry,
     Storyboard,
+    LightEffect,
+    LightEffectCollection,
     LEDControlPanelProperties,
     PyroControlPanelProperties,
     SafetyCheckProperties,

@@ -96,9 +96,27 @@ class LightEffectsPanel(Panel):
                     layout.separator()
 
             col = layout.column()
-            col.prop(entry, "frame_start")
-            col.prop(entry, "duration")
-            col.prop(entry, "frame_end")
+            # we need to restore storyboard entry selection in case
+            # storyboard has changed
+            col.prop(entry, "storyboard_entry_property")
+            if entry.storyboard_entry.name == "NONE":
+                col.prop(entry, "frame_start")
+                col.prop(entry, "duration")
+                col.prop(entry, "frame_end")
+            else:
+                col.prop(
+                    entry,
+                    "frame_start",
+                    text=f"Start Frame ({entry.frame_start_offset:+})",
+                )
+                col.prop(
+                    entry,
+                    "duration",
+                    text=f"Duration ({entry.duration_offset:+})",
+                )
+                col.prop(
+                    entry, "frame_end", text=f"End Frame ({entry.frame_end_offset:+})"
+                )
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")

@@ -627,6 +627,13 @@ class Storyboard(PropertyGroup, ListMixin):
             else bpy.context.scene.frame_start
         )
 
+    def get_entry_by_id(self, id: str) -> Optional[StoryboardEntry]:
+        """Get the storyboard entry with the given unique id
+        or `None` if there is no matching storyboard entry."""
+        for entry in self.entries:
+            if entry.id == id:
+                return entry
+
     def get_first_entry_for_formation(self, formation) -> Optional[StoryboardEntry]:
         """Returns the first storyboard entry that refers to the given formation,
         or `None` if no storyboard entry uses the given formation.
