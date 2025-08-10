@@ -40,7 +40,7 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import get_storyboard, StoryboardEntry
-from sbstudio.plugin.props import StoryboardEntryProperty
+from sbstudio.plugin.props import StoryboardEntryOrTransitionProperty
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -250,19 +250,7 @@ def invalidate_pixel_cache(static: bool = True, dynamic: bool = True) -> None:
 def _handle_storyboard_entry_change(
     self: LightEffect, context: Optional[Context] = None
 ):
-    if self.storyboard_entry_property == "NONE":
-        entry = None
-    else:
-        storyboard = get_storyboard(context=context)
-        entry = storyboard.get_entry_by_id(self.storyboard_entry_property)
-    if entry:
-        self.storyboard_entry.name = entry.name
-        self.storyboard_entry.frame_start = entry.frame_start
-        self.storyboard_entry.frame_end = entry.frame_end
-    else:
-        self.storyboard_entry.name = "NONE"
-
-    self.update_from_storyboard(reset_offset=True)
+    self.update_from_storyboard(context, reset_offset=True)
 
 
 class LightEffect(PropertyGroup):
@@ -300,9 +288,9 @@ class LightEffect(PropertyGroup):
         default="COLOR_RAMP",
     )
 
-    storyboard_entry_property = StoryboardEntryProperty(
+    storyboard_entry_property = StoryboardEntryOrTransitionProperty(
         name="Attach to",
-        description="Selector of the storyboard entry to be attached to this light effect",
+        description="Select the storyboard entry or transition to attach to this light effect",
         update=_handle_storyboard_entry_change,
     )
 
@@ -917,16 +905,42 @@ class LightEffect(PropertyGroup):
             assert other.color_ramp is not None  # because we copied the type
             update_color_ramp_from(self.color_ramp, other.color_ramp)
 
-    def update_from_storyboard(self, reset_offset: bool) -> None:
-        """Updates the start and end times and from the currently selected
-        storyboard entry."""
+    def update_from_storyboard(
+        self, context: Optional[Context], reset_offset: bool
+    ) -> None:
+        """Updates the stored storyboard entry and start and end times
+        from the currently selected storyboard entry."""
+
+        # save current offsets
+        start_offset = 0 if reset_offset else self.frame_start_offset
+        end_offset = 0 if reset_offset else self.frame_end_offset
+
+        # update our own storyboard entry placeholder
+        if self.storyboard_entry_property == "NONE":
+            prev = None
+            next = None
+        else:
+            storyboard = get_storyboard(context=context)
+            ids = self.storyboard_entry_property.split("..")
+            prev = storyboard.get_entry_by_id(ids[0])
+            next = storyboard.get_entry_by_id(ids[1]) if len(ids) > 1 else None
+        if prev:
+            if next:
+                self.storyboard_entry.name = f"{prev.name} -> {next.name}"
+                self.storyboard_entry.frame_start = prev.frame_end
+                self.storyboard_entry.frame_end = next.frame_start
+            else:
+                self.storyboard_entry.name = prev.name
+                self.storyboard_entry.frame_start = prev.frame_start
+                self.storyboard_entry.frame_end = prev.frame_end
+        else:
+            self.storyboard_entry.name = "NONE"
+
+        # update start and end times with previous offsets and
+        # possibly new storyboard start/end times
         if self.storyboard_entry.name != "NONE":
-            self.frame_start = self.storyboard_entry.frame_start + (
-                0 if reset_offset else self.frame_start_offset
-            )
-            self.frame_end = self.storyboard_entry.frame_end + (
-                0 if reset_offset else self.frame_end_offset
-            )
+            self.frame_start = self.storyboard_entry.frame_start + start_offset
+            self.frame_end = self.storyboard_entry.frame_end + end_offset
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -1221,12 +1235,5 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         # uses the position indices and not the names to show the selected
         # item and I could not find a way yet to update that properly
         # after a storyboard change.
-        storyboard = get_storyboard(context=context)
         for entry in self.entries:
-            storyboard_entry = storyboard.get_entry_by_id(
-                entry.storyboard_entry_property
-            )
-            if storyboard_entry:
-                entry.update_from_storyboard(reset_offset=False)
-            else:
-                entry.storyboard_entry_property = "NONE"
+            entry.update_from_storyboard(context, reset_offset=False)
