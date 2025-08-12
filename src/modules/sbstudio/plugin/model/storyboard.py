@@ -987,8 +987,8 @@ class Storyboard(PropertyGroup, ListMixin):
             item.name = f"{prev.name} -> {next.name}"
             item.frame_start = prev.frame_end
             item.frame_end = next.frame_start
-        if self.entries_or_transitions:
-            # add last entry
+        # add last entry
+        if self.last_entry:
             item = self.entries_or_transitions.add()
             item.id = self.last_entry.id
             item.name = self.last_entry.name
