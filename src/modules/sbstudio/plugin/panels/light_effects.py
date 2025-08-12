@@ -96,14 +96,15 @@ class LightEffectsPanel(Panel):
                     layout.separator()
 
             col = layout.column()
-            # we need to restore storyboard entry selection in case
-            # storyboard has changed
-            col.prop(entry, "storyboard_entry_property")
-            if entry.storyboard_entry.name == "NONE":
-                col.prop(entry, "frame_start")
-                col.prop(entry, "duration")
-                col.prop(entry, "frame_end")
-            else:
+            # TODO: remove bullet from beginning of text on UI somehow
+            col.prop_search(
+                entry,
+                "storyboard_entry_or_transition_selection",
+                scene.skybrush.storyboard,
+                "entries_or_transitions",
+                text="Attach to",
+            )
+            if entry.storyboard_entry_or_transition_selection:
                 col.prop(
                     entry,
                     "frame_start",
@@ -117,6 +118,10 @@ class LightEffectsPanel(Panel):
                 col.prop(
                     entry, "frame_end", text=f"End Frame ({entry.frame_end_offset:+})"
                 )
+            else:
+                col.prop(entry, "frame_start")
+                col.prop(entry, "duration")
+                col.prop(entry, "frame_end")
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")
