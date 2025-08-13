@@ -7,6 +7,7 @@ from bpy_extras.io_utils import ImportHelper
 from json import load
 
 from sbstudio.plugin.model.light_effects import LightEffectCollection
+from sbstudio.plugin.props.light_effects import LightEffectSelectionProperty
 
 from .base import LightEffectOperator
 
@@ -24,15 +25,7 @@ class ImportLightEffectsOperator(LightEffectOperator, ImportHelper):
     filter_glob = StringProperty(default="*.json", options={"HIDDEN"})
     filename_ext = ".json"
 
-    # whether to import all light effects or only enabled ones
-    import_enabled_only = BoolProperty(
-        name="Import enabled only",
-        default=False,
-        description=(
-            "Import only the enabled light effects. "
-            "Uncheck to import all light effects, irrespectively of their enabled state."
-        ),
-    )
+    selection = LightEffectSelectionProperty(add_selected=False)
 
     def execute_on_light_effect_collection(
         self, light_effects: LightEffectCollection, context
@@ -47,7 +40,7 @@ class ImportLightEffectsOperator(LightEffectOperator, ImportHelper):
             data = load(fp)
 
         for name, entry in data.items():
-            if self.import_enabled_only and not entry.get("enabled"):
+            if self.selection == "ENABLED" and not entry.get("enabled"):
                 continue
             # TODO: make name unique
             light_effect = light_effects.append_new_entry(name)

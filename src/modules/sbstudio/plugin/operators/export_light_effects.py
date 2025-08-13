@@ -7,6 +7,11 @@ from bpy_extras.io_utils import ExportHelper
 from json import dump
 
 from sbstudio.plugin.model.light_effects import LightEffectCollection
+from sbstudio.plugin.props.light_effects import (
+    iterate_light_effects_from_selection,
+    LightEffectSelectionProperty,
+)
+
 
 from .base import LightEffectOperator
 
@@ -24,15 +29,7 @@ class ExportLightEffectsOperator(LightEffectOperator, ExportHelper):
     filter_glob = StringProperty(default="*.json", options={"HIDDEN"})
     filename_ext = ".json"
 
-    # whether to export all light effects or only enabled ones
-    export_enabled_only = BoolProperty(
-        name="Export enabled only",
-        default=False,
-        description=(
-            "Export only the enabled light effects. "
-            "Uncheck to export all light effects, irrespectively of their enabled state."
-        ),
-    )
+    selection = LightEffectSelectionProperty(default="ALL")
 
     def execute_on_light_effect_collection(
         self, light_effects: LightEffectCollection, context
@@ -46,8 +43,9 @@ class ExportLightEffectsOperator(LightEffectOperator, ExportHelper):
         # TODO: make sure light effect names are unique
         data = {
             light_effect.name: light_effect.as_dict()
-            for light_effect in light_effects.entries
-            if (not self.export_enabled_only or light_effect.enabled)
+            for light_effect in iterate_light_effects_from_selection(
+                light_effects, self.selection
+            )
         }
 
         with open(filepath, "w") as fp:
