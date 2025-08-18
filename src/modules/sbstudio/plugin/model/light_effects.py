@@ -721,6 +721,7 @@ class LightEffect(PropertyGroup):
     def as_dict(self):
         """Creates a dictionary representation of the light effect."""
         # Hint: synchronize content of this function with self.update_from()
+        # TODO(vasarhelyi): self.mesh is not JSON serializable, fix this
         return {
             "enabled": self.enabled,
             "frameStart": self.frame_start,
@@ -730,7 +731,7 @@ class LightEffect(PropertyGroup):
             "output": self.output,
             "outputY": self.output_y,
             "influence": self.influence,
-            "mesh": self.mesh,
+            # "mesh": self.mesh,
             "target": self.target,
             "randomness": self.randomness,
             "outputMappingMode": self.output_mapping_mode,
