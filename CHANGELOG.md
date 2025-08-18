@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added light effect import/export feature.
+
 - Added export option for combined/parallel .skyc and .pdf exports to save time on final
   drone show renderings.
 
