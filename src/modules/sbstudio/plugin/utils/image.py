@@ -31,7 +31,7 @@ def find_image_by_name(name: str) -> Image | None:
         name: The name of the image to find.
 
     Returns:
-        : The found image object, or None if not found.
+        the image object, or None if not found.
     """
     for img in bpy.data.images:
         if img.name == name:
