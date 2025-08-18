@@ -721,7 +721,6 @@ class LightEffect(PropertyGroup):
     def as_dict(self):
         """Creates a dictionary representation of the light effect."""
         # Hint: synchronize content of this function with self.update_from()
-        # TODO(vasarhelyi): self.mesh is not JSON serializable, fix this
         return {
             "enabled": self.enabled,
             "frameStart": self.frame_start,
@@ -731,7 +730,7 @@ class LightEffect(PropertyGroup):
             "output": self.output,
             "outputY": self.output_y,
             "influence": self.influence,
-            # "mesh": self.mesh,
+            "meshName": self.mesh.name if self.mesh else None,
             "target": self.target,
             "randomness": self.randomness,
             "outputMappingMode": self.output_mapping_mode,
@@ -910,8 +909,13 @@ class LightEffect(PropertyGroup):
             self.output_y = output_y
         if influence := data.get("influence"):
             self.influence = influence
-        if mesh := data.get("mesh"):
-            self.mesh = mesh
+        if mesh_name := data.get("meshName"):
+            if mesh_name in bpy.data.objects:
+                self.mesh = bpy.data.objects[mesh_name]
+            else:
+                warnings.append(
+                    f"Could not import mesh: object {mesh_name!r} is not part of the current file"
+                )
         if target := data.get("target"):
             self.target = target
         if randomness := data.get("randomness"):
