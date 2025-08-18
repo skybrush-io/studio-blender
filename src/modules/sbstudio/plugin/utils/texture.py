@@ -20,13 +20,21 @@ __all__ = (
 
 
 def texture_as_dict(source: Texture) -> dict[str, Any]:
-    """Returns a dictionary representation of a texture.
+    """Returns a partial dictionary representation of a texture.
+
+    The dictionary representation does not contain all relevant properties of
+    the texture (it does not even store the pixel data for image textures),
+    only the part that is required for exporting light effects into JSON format
+    and reconstructing them later from the JSON representation.
+
+    For image textures, the _name_ of the image that the texture references
+    is stored in the exported representation.
 
     Parameters:
         source: the source texture to export
 
     Returns:
-        a dictionary representation of the source texture
+        a partial dictionary representation of the source texture
     """
     retval = {
         "colorRamp": None,
@@ -45,13 +53,19 @@ def texture_as_dict(source: Texture) -> dict[str, Any]:
     return retval
 
 
-def update_texture_from_dict(target: ImageTexture, data: dict[str, Any]) -> None:
-    """Updates a texture from its dictionary representation.
+def update_texture_from_dict(target: ImageTexture, data: dict[str, Any]) -> list[str]:
+    """Updates a texture from its partial dictionary representation.
 
     Parameters:
         target: the texture to update
-        data: the dictionary representation of a texture as the data source
+        data: the partial dictionary representation of a texture as the data
+            source
+
+    Returns:
+        a list of warnings generated while updating the texture
     """
+    warnings: list[str] = []
+
     if use_color_ramp := data.get("useColorRamp"):
         target.use_color_ramp = use_color_ramp
 
@@ -62,8 +76,8 @@ def update_texture_from_dict(target: ImageTexture, data: dict[str, Any]) -> None
         if image := find_image_by_name(image_name):
             target.image = image
         else:
-            print(
-                f"WARNING: could not import texture: image {image_name!r} is not part of bpy.data.images"
+            warnings.append(
+                f"Could not import texture: image {image_name!r} is not part of the current file"
             )
 
-        # TODO: setup properly in light effect
+    return warnings

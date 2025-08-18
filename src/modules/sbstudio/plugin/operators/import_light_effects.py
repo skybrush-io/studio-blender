@@ -31,6 +31,7 @@ class ImportLightEffectsOperator(LightEffectOperator, ImportHelper):
         self, light_effects: LightEffectCollection, context
     ):
         filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
+        warnings: list[str] = []
 
         if os.path.basename(filepath).lower() == self.filename_ext.lower():
             self.report({"ERROR_INVALID_INPUT"}, "Filename must not be empty")
@@ -44,9 +45,16 @@ class ImportLightEffectsOperator(LightEffectOperator, ImportHelper):
                 continue
             # TODO: make name unique
             light_effect = light_effects.append_new_entry(name)
-            light_effect.update_from_dict(entry)
+            warnings.extend(light_effect.update_from_dict(entry))
 
-        self.report({"INFO"}, f"Imported {len(data)} light effects successfully")
+        if warnings:
+            if len(warnings) > 1:
+                more = len(warnings) - 1
+                self.report({"WARNING"}, warnings[0] + f" (+{more} more warning(s))")
+            else:
+                self.report({"WARNING"}, warnings[0])
+        else:
+            self.report({"INFO"}, f"Imported {len(data)} light effects successfully")
 
         return {"FINISHED"}
 

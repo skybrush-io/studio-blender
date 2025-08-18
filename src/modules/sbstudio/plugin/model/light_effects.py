@@ -884,8 +884,14 @@ class LightEffect(PropertyGroup):
             assert other.color_ramp is not None  # because we copied the type
             update_color_ramp_from(self.color_ramp, other.color_ramp)
 
-    def update_from_dict(self, data: dict[str, Any]) -> None:
-        """Updates the properties of this light effect from its dictionary representation."""
+    def update_from_dict(self, data: dict[str, Any]) -> list[str]:
+        """Updates the properties of this light effect from its dictionary representation.
+
+        Returns:
+            a list of warnings generated while updating the light effect
+        """
+        warnings: list[str] = []
+
         # Note that we do _not_ load UUID and name, this is intentional
         # Hint: synchronize content of this function with self.update_from()
         if enabled := data.get("enabled"):
@@ -929,7 +935,9 @@ class LightEffect(PropertyGroup):
             self.output_function_y.update_from_dict(output_function_y)
 
         if texture := data.get("texture"):
-            update_texture_from_dict(self.texture, texture)
+            warnings.extend(update_texture_from_dict(self.texture, texture))
+
+        return warnings
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
