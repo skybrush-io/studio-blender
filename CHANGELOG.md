@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added export option for combined/parallel .skyc and .pdf exports to save time on final
   drone show renderings.
 
+### Changed 
+
+ - Trajectories sent to the backend use a new, compact binary format to speed up
+   render requests and save some bandwidth towards remote backends.
+
+ - BREAKING CHANGE: This release requires Skybrush Studio Server 2.9.1 or later!
+
 ### Fixed
 
 - Fixed CUSTOM y output mode of light effects that previously used x output functions 
