@@ -802,6 +802,7 @@ class LightEffect(PropertyGroup):
             "colorFunction": self.color_function.as_dict(),
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
+            "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
             "texture": texture_as_dict(self.texture),
         }
 
@@ -1002,6 +1003,13 @@ class LightEffect(PropertyGroup):
             self.output_function.update_from_dict(output_function)
         if output_function_y := data.get("outputFunctionY"):
             self.output_function_y.update_from_dict(output_function_y)
+
+        if storyboard_entry_or_transition_selection := data.get(
+            "storyboardEntryOrTransition"
+        ):
+            self.storyboard_entry_or_transition_selection = (
+                storyboard_entry_or_transition_selection
+            )
 
         if texture := data.get("texture"):
             warnings.extend(update_texture_from_dict(self.texture, texture))
