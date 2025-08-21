@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from math import inf
+from re import fullmatch
 from typing import Any, List, Optional
 
 Mapping = list[Optional[int]]
@@ -130,3 +131,39 @@ class TransitionPlan:
             if self.start_times and self.durations
             else 0.0
         )
+
+
+@dataclass(order=True, frozen=True)
+class Version:
+    """Response returned from a "query version" API request,
+    i.e., a semantic version number."""
+
+    major: int
+    minor: int
+    patch: int
+
+    @classmethod
+    def from_json(cls, obj: Any):
+        if not isinstance(obj, dict):
+            raise TypeError("version object can only be constructed from a dict")
+
+        version = obj.get("version")
+        if version is None:
+            raise TypeError("version object does not contain version string")
+
+        return cls.from_string(version)
+
+    @classmethod
+    def from_string(cls, version_str: str):
+        """Parses a semantic version from its string representation."""
+        match = fullmatch(r"(\d+)\.(\d+)\.(\d+)", version_str.strip())
+        if not match:
+            raise ValueError(f"Invalid version string: {version_str}")
+        major, minor, patch = map(int, match.groups())
+        return cls(major, minor, patch)
+
+    def to_tuple(self):
+        return (self.major, self.minor, self.patch)
+
+    def __str__(self):
+        return f"{self.major}.{self.minor}.{self.patch}"
