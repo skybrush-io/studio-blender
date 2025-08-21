@@ -8,6 +8,8 @@ from sbstudio.plugin.model.light_effects import (
 from sbstudio.plugin.operators import (
     CreateLightEffectOperator,
     DuplicateLightEffectOperator,
+    ExportLightEffectsOperator,
+    ImportLightEffectsOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     RemoveLightEffectOperator,
@@ -44,7 +46,10 @@ class LightEffectsPanel(Panel):
             return
 
         row = layout.row()
+        row.operator(ImportLightEffectsOperator.bl_idname, text="Import...")
+        row.operator(ExportLightEffectsOperator.bl_idname, text="Export...")
 
+        row = layout.row()
         col = row.column()
         col.template_list(
             "SKYBRUSH_UL_lightfxlist",

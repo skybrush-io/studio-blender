@@ -14,10 +14,7 @@ __all__ = (
     "create_glowing_material",
     "get_material_for_led_light_color",
     "get_material_for_pyro",
-    "get_shader_node_and_input_for_diffuse_color_of_material",
-    "set_diffuse_color_of_material",
     "set_led_light_color",
-    "set_specular_reflection_intensity_of_material",
 )
 
 is_blender_4 = bpy.app.version >= (4, 0, 0)
@@ -73,8 +70,8 @@ def create_colored_material(name: str, color: RGBAColor):
         object: the material that was created
     """
     mat = _create_material(name)
-    set_diffuse_color_of_material(mat, color)
-    set_specular_reflection_intensity_of_material(mat, 0)
+    _set_diffuse_color_of_material(mat, color)
+    _set_specular_reflection_intensity_of_material(mat, 0)
     return mat
 
 
@@ -106,7 +103,7 @@ def create_glowing_material(
 
     links.new(emission_node.outputs["Emission"], output_node.inputs["Surface"])
 
-    set_diffuse_color_of_material(mat, color)
+    _set_diffuse_color_of_material(mat, color)
 
     return mat
 
@@ -142,7 +139,7 @@ def get_material_for_pyro(drone) -> Optional[Material]:
         return None
 
 
-def get_diffuse_color_of_material(material) -> RGBAColor:
+def _get_diffuse_color_of_material(material) -> RGBAColor:
     """Returns the diffuse color of the given material to the given value.
 
     The material must use a principled BSDF or an emission shader.
@@ -155,13 +152,13 @@ def get_diffuse_color_of_material(material) -> RGBAColor:
         # Material is using shader nodes so we need to adjust the diffuse
         # color in the shader as well (the base property would control only
         # what we see in the preview window)
-        _, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
+        _, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
         return tuple(input.default_value)
     else:
         return material.diffuse_color
 
 
-def set_diffuse_color_of_material(material, color: RGBAColor):
+def _set_diffuse_color_of_material(material, color: RGBAColor):
     """Sets the diffuse color of the given material to the given value.
 
     The material must use a principled BSDF or an emission shader.
@@ -174,7 +171,7 @@ def set_diffuse_color_of_material(material, color: RGBAColor):
         # Material is using shader nodes so we need to adjust the diffuse
         # color in the shader as well (the base property would control only
         # what we see in the preview window)
-        _, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
+        _, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
         input.default_value = color
 
     material.diffuse_color = color
@@ -235,7 +232,7 @@ def create_keyframe_for_diffuse_color_of_material(
         keyframes.insert(0, (frame - 1, None))
 
     # Set the keyframes
-    node, input = get_shader_node_and_input_for_diffuse_color_of_material(material)
+    node, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
     index = node.inputs.find(input.name)
     data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
     set_keyframes(node_tree, data_path, keyframes, interpolation="LINEAR")
@@ -250,7 +247,7 @@ def get_led_light_color(drone) -> RGBAColor:
     """
     material = get_material_for_led_light_color(drone)
     if material is not None:
-        return get_diffuse_color_of_material(material)
+        return _get_diffuse_color_of_material(material)
     else:
         return (0.0, 0.0, 0.0, 0.0)
 
@@ -264,10 +261,10 @@ def set_led_light_color(drone, color: RGBAColorLike):
     """
     material = get_material_for_led_light_color(drone)
     if material is not None:
-        set_diffuse_color_of_material(material, color)
+        _set_diffuse_color_of_material(material, color)
 
 
-def get_shader_node_and_input_for_diffuse_color_of_material(material):
+def _get_shader_node_and_input_for_diffuse_color_of_material(material):
     """Returns a reference to the shader node and its input that controls the
     diffuse color of the given material.
 
@@ -303,7 +300,7 @@ def get_shader_node_and_input_for_diffuse_color_of_material(material):
                 ) from None
 
 
-def set_specular_reflection_intensity_of_material(material, intensity):
+def _set_specular_reflection_intensity_of_material(material, intensity):
     """Sets the intensity of the specular reflection of the material.
 
     The material must use a principled BSDF shader.

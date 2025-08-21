@@ -14,6 +14,7 @@ from .create_new_storyboard_entry import CreateNewStoryboardEntryOperator
 from .create_takeoff_grid import CreateTakeoffGridOperator
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
 from .duplicate_light_effect import DuplicateLightEffectOperator
+from .export_light_effects import ExportLightEffectsOperator
 from .export_to_csv import SkybrushCSVExportOperator
 from .export_to_dac import DACExportOperator
 from .export_to_ddsf import DDSFExportOperator
@@ -27,6 +28,7 @@ from .export_to_vviz import VVIZExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
+from .import_light_effects import ImportLightEffectsOperator
 from .land import LandOperator
 from .move_light_effect import (
     MoveLightEffectDownOperator,
@@ -63,6 +65,7 @@ __all__ = (
     "AddMarkersFromStaticCSVOperator",
     "AddMarkersFromSVGOperator",
     "AddMarkersFromZippedCSVOperator",
+    "AddMarkersFromZippedDSSOperator",
     "AppendFormationToStoryboardOperator",
     "ApplyColorsToSelectedDronesOperator",
     "CreateFormationOperator",
@@ -79,8 +82,10 @@ __all__ = (
     "DSSPathExportOperator",
     "DuplicateLightEffectOperator",
     "EVSKYExportOperator",
+    "ExportLightEffectsOperator",
     "FixConstraintOrderingOperator",
     "GetFormationStatisticsOperator",
+    "ImportLightEffectsOperator",
     "LandOperator",
     "LitebeeExportOperator",
     "MoveLightEffectDownOperator",
