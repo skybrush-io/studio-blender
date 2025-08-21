@@ -6,7 +6,7 @@ import bpy
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import cast, Optional
+from typing import Any, cast, Optional
 from uuid import uuid4
 
 from bpy.path import abspath
@@ -44,6 +44,7 @@ from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
+from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
@@ -184,10 +185,25 @@ class ColorFunctionProperties(PropertyGroup):
         default=0,
     )
 
-    def update_from(self, other):
+    def update_from(self, other) -> None:
         self.path = other.path
         if other.name:
             self.name = other.name
+
+    def update_from_dict(self, data: dict[str, Any]) -> None:
+        if path := data.get("path"):
+            self.path = path
+        if name := data.get("name"):
+            self.name = name
+
+    def as_dict(self) -> dict[str, Any]:
+        # TODO: reading self.name invokes error, but why?:
+        # WARN (bpy.rna:1360): pyrna_enum_to_py: current value '0' matches no enum in
+        # 'ColorFunctionProperties', '', 'name'
+        return {
+            "name": self.name,
+            "path": self.path,
+        }
 
 
 def _get_frame_end(self: LightEffect) -> int:
@@ -568,8 +584,8 @@ class LightEffect(PropertyGroup):
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
                 module = load_module(absolute_path) if absolute_path else None
-                if self.output_function.name:
-                    fn = getattr(module, self.output_function.name)
+                if output_function.name:
+                    fn = getattr(module, output_function.name)
                     outputs = [
                         fn(
                             frame=frame,
@@ -701,6 +717,32 @@ class LightEffect(PropertyGroup):
 
             # Apply the new color with alpha blending
             blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
+
+    def as_dict(self):
+        """Creates a dictionary representation of the light effect."""
+        # Hint: synchronize content of this function with self.update_from()
+        return {
+            "enabled": self.enabled,
+            "frameStart": self.frame_start,
+            "duration": self.duration,
+            "fadeInDuration": self.fade_in_duration,
+            "fadeOutDuration": self.fade_out_duration,
+            "output": self.output,
+            "outputY": self.output_y,
+            "influence": self.influence,
+            "meshName": self.mesh.name if self.mesh else None,
+            "target": self.target,
+            "randomness": self.randomness,
+            "outputMappingMode": self.output_mapping_mode,
+            "outputMappingModeY": self.output_mapping_mode_y,
+            "blendMode": self.blend_mode,
+            "type": self.type,
+            "invertTarget": self.invert_target,
+            "colorFunction": self.color_function.as_dict(),
+            "outputFunction": self.output_function.as_dict(),
+            "outputFunctionY": self.output_function_y.as_dict(),
+            "texture": texture_as_dict(self.texture),
+        }
 
     @property
     def color_ramp(self) -> Optional[ColorRamp]:
@@ -840,6 +882,66 @@ class LightEffect(PropertyGroup):
         if self.color_ramp is not None:
             assert other.color_ramp is not None  # because we copied the type
             update_color_ramp_from(self.color_ramp, other.color_ramp)
+
+    def update_from_dict(self, data: dict[str, Any]) -> list[str]:
+        """Updates the properties of this light effect from its dictionary representation.
+
+        Returns:
+            a list of warnings generated while updating the light effect
+        """
+        warnings: list[str] = []
+
+        # Note that we do _not_ load UUID and name, this is intentional
+        # Hint: synchronize content of this function with self.update_from()
+        if enabled := data.get("enabled"):
+            self.enabled = enabled
+        if frame_start := data.get("frameStart"):
+            self.frame_start = frame_start
+        if duration := data.get("duration"):
+            self.duration = duration
+        if fade_in_duration := data.get("fadeInDuration"):
+            self.fade_in_duration = fade_in_duration
+        if fade_out_duration := data.get("fadeOutDuration"):
+            self.fade_out_duration = fade_out_duration
+        if output := data.get("output"):
+            self.output = output
+        if output_y := data.get("outputY"):
+            self.output_y = output_y
+        if influence := data.get("influence"):
+            self.influence = influence
+        if mesh_name := data.get("meshName"):
+            if mesh_name in bpy.data.objects:
+                self.mesh = bpy.data.objects[mesh_name]
+            else:
+                warnings.append(
+                    f"Could not import mesh: object {mesh_name!r} is not part of the current file"
+                )
+        if target := data.get("target"):
+            self.target = target
+        if randomness := data.get("randomness"):
+            self.randomness = randomness
+        if output_mapping_mode := data.get("outputMappingMode"):
+            self.output_mapping_mode = output_mapping_mode
+        if output_mapping_mode_y := data.get("outputMappingModeY"):
+            self.output_mapping_mode_y = output_mapping_mode_y
+        if blend_mode := data.get("blendMode"):
+            self.blend_mode = blend_mode
+        if effect_type := data.get("type"):
+            self.type = effect_type
+        if invert_target := data.get("invertTarget"):
+            self.invert_target = invert_target
+
+        if color_function := data.get("colorFunction"):
+            self.color_function.update_from_dict(color_function)
+        if output_function := data.get("outputFunction"):
+            self.output_function.update_from_dict(output_function)
+        if output_function_y := data.get("outputFunctionY"):
+            self.output_function_y.update_from_dict(output_function_y)
+
+        if texture := data.get("texture"):
+            warnings.extend(update_texture_from_dict(self.texture, texture))
+
+        return warnings
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -1020,6 +1122,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         entry.type = "COLOR_RAMP"
         entry.frame_start = frame_start
         entry.duration = duration
+        # TODO(ntamas,vasarhelyi): propose unique name
         entry.name = name
 
         texture = entry._create_texture()
