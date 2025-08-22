@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
+from functools import total_ordering
 from math import inf
-from re import fullmatch
+from re import compile, fullmatch
 from typing import Any, List, Optional
 
 Mapping = list[Optional[int]]
@@ -133,7 +134,20 @@ class TransitionPlan:
         )
 
 
-@dataclass(order=True, frozen=True)
+_SEMVER_REGEX = compile(
+    r"^(?P<major>0|[1-9]\d*)\."
+    r"(?P<minor>0|[1-9]\d*)\."
+    r"(?P<patch>0|[1-9]\d*)"
+    r"(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+    r"(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+)
+"""Regex pattern for a semantic version string, inherited from
+https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+"""
+
+
+@total_ordering
+@dataclass(frozen=True)
 class Version:
     """Response returned from a "query version" API request,
     i.e., a semantic version number."""
@@ -141,6 +155,36 @@ class Version:
     major: int
     minor: int
     patch: int
+    pre_release: str | None = None
+    build_metadata: str | None = None
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Version):
+            raise TypeError(f"Cannot compare object of type Version and {type(other)}")
+
+        if (self.major, self.minor, self.patch) < (
+            other.major,
+            other.minor,
+            other.patch,
+        ):
+            return True
+
+        # TODO: if we need to compare pre_releases more accurately,
+        # we can extend this comparison below based on our pre-release
+        # naming convention later on, once we have one. For the time
+        # being we only treat pre-releases earlier than normal releases.
+        return bool(self.pre_release and not other.pre_release)
+
+    def __str__(self):
+        retval = f"{self.major}.{self.minor}.{self.patch}"
+
+        if self.pre_release:
+            retval += f"-{self.pre_release}"
+
+        if self.build_metadata:
+            retval += f"+{self.build_metadata}"
+
+        return retval
 
     @classmethod
     def from_json(cls, obj: Any):
@@ -156,14 +200,22 @@ class Version:
     @classmethod
     def from_string(cls, version_str: str):
         """Parses a semantic version from its string representation."""
-        match = fullmatch(r"(\d+)\.(\d+)\.(\d+)", version_str.strip())
+        match = fullmatch(_SEMVER_REGEX, version_str.strip())
         if not match:
             raise ValueError(f"Invalid version string: {version_str}")
-        major, minor, patch = map(int, match.groups())
-        return cls(major, minor, patch)
+        major = int(match.group("major"))
+        minor = int(match.group("minor"))
+        patch = int(match.group("patch"))
+        pre_release = match.group("prerelease")
+        build_metadata = match.group("buildmetadata")
+
+        return cls(major, minor, patch, pre_release, build_metadata)
 
     def to_tuple(self):
-        return (self.major, self.minor, self.patch)
-
-    def __str__(self):
-        return f"{self.major}.{self.minor}.{self.patch}"
+        return (
+            self.major,
+            self.minor,
+            self.patch,
+            self.pre_release,
+            self.build_metadata,
+        )
