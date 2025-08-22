@@ -24,7 +24,7 @@ class NoOnlineAccessAllowedError(SkybrushStudioAPIError):
         )
 
 
-class BackendVersionMismatchError(SkybrushStudioError):
+class BackendVersionMismatchError(SkybrushStudioAPIError):
     """Error thrown when the backend version is older than the expected
     minimum version.
     """
