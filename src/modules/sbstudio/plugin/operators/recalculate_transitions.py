@@ -16,7 +16,7 @@ from sbstudio.plugin.actions import (
     cleanup_actions_for_object,
     ensure_action_exists_for_object,
 )
-from sbstudio.plugin.api import get_api
+from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.keyframes import set_keyframes
 from sbstudio.plugin.model.formation import (
@@ -846,21 +846,13 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             return {"CANCELLED"}
 
         try:
-            recalculate_transitions(tasks, start_of_scene=start_of_scene)
-        except SkybrushStudioAPIError:
-            self.report(
-                {"ERROR"},
-                (
-                    "Error while invoking transition planner on the Skybrush "
-                    "Studio server"
-                ),
-            )
-            return {"CANCELLED"}
-        except SkybrushStudioError as ex:
-            self.report({"ERROR"}, str(ex))
-            return {"CANCELLED"}
+            with call_api_from_blender_operator(self, "transition planner"):
+                recalculate_transitions(tasks, start_of_scene=start_of_scene)
+            success = True
+        except Exception:
+            success = False
 
-        return {"FINISHED"}
+        return {"FINISHED"} if success else {"CANCELLED"}
 
     def _get_transitions_to_process(
         self, storyboard: Storyboard, entries: Sequence[StoryboardEntry]

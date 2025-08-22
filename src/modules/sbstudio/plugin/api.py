@@ -2,10 +2,13 @@ import logging
 
 from contextlib import contextmanager
 from functools import lru_cache
+from socket import gaierror
 from typing import Iterator, Optional, TypeVar
+from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
+from sbstudio.api.version import ensure_backend_version
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
 
 __all__ = ("get_api",)
@@ -54,8 +57,15 @@ def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
     return result
 
 
-def get_api() -> SkybrushStudioAPI:
-    """Returns the singleton instance of the Skybrush Studio API object."""
+def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
+    """Returns the singleton instance of the Skybrush Studio API object.
+
+    Optionally also checks the version number of the backend if it is not known
+    yet.
+
+    Args:
+        check_version: whether to check the version of the backend
+    """
     from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences
 
@@ -71,12 +81,17 @@ def get_api() -> SkybrushStudioAPI:
     license_file = str(prefs.license_file).strip()
     server_url = str(prefs.server_url).strip()
 
-    return _get_api_from_url_and_key_or_license(server_url, api_key, license_file)
+    api = _get_api_from_url_and_key_or_license(server_url, api_key, license_file)
+
+    if check_version:
+        ensure_backend_version(api)
+
+    return api
 
 
 @contextmanager
 def call_api_from_blender_operator(
-    operator, what: str = "operation"
+    operator, what: str = "operation", *, check_version: bool = True
 ) -> Iterator[SkybrushStudioAPI]:
     """Context manager that yields immediately back to the caller from a
     try-except block, catches all exceptions, and calls the ``report()`` method
@@ -84,22 +99,45 @@ def call_api_from_blender_operator(
     was an error. All exceptions are then re-raised; the caller is expected to
     return ``{"CANCELLED"}`` from the operator immediately in response to an
     exception.
+
+    Args:
+        check_version: whether to check the version number of the backend
     """
     default_message = f"Error while invoking {what} on the Skybrush Studio server"
     try:
-        yield get_api()
-    except NoOnlineAccessAllowedError:
-        operator.report(
-            {"ERROR"},
-            "Access of online resources is disabled in the Blender "
-            + "preferences. Please enable online access and then try again.",
-        )
-        raise
+        yield get_api(check_version=check_version)
     except SkybrushStudioExportWarning as ex:
         operator.report({"WARNING"}, str(ex))
         raise
     except SkybrushStudioAPIError as ex:
-        operator.report({"ERROR"}, str(ex) or default_message)
+        operator.report({"ERROR"}, ex.format_message() or default_message)
+        raise
+    except URLError as ex:
+        if isinstance(ex.reason, ConnectionRefusedError):
+            message = f"{default_message}: Connection refused. Is the server running?"
+        elif isinstance(ex.reason, gaierror):
+            message = f"{default_message}: Could not resolve server URL. Are you connected to the Internet?"
+        elif isinstance(ex.reason, OSError):
+            message = f"{default_message}: {ex.reason.strerror}"
+        elif isinstance(ex.reason, str):
+            message = f"{default_message}: {ex.reason}"
+        else:
+            message = default_message
+        operator.report({"ERROR"}, message)
+    except ConnectionRefusedError:
+        operator.report(
+            {"ERROR"}, f"{default_message}: Connection refused. Is the server running?"
+        )
+        raise
+    except gaierror:
+        # gaierror is short for "getaddrinfo" error, which happens when trying
+        # to look up the hostname in the server URL while not being connected
+        # to the Internet (or without a DNS server)
+        operator.report(
+            f"{default_message}: Could not resolve server URL. Are you connected to the Internet?"
+        )
+    except OSError as ex:
+        operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
         raise
     except Exception:
         operator.report({"ERROR"}, default_message)

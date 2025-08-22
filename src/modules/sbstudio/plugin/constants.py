@@ -14,8 +14,6 @@ from typing import (
     overload,
 )
 
-from sbstudio.api.types import Version
-
 from .materials import create_colored_material, create_glowing_material
 from .meshes import create_icosphere, create_cone
 from .utils import (
@@ -47,9 +45,6 @@ DEFAULT_INDOOR_DRONE_RADIUS = 0.1
 
 DEFAULT_OUTDOOR_DRONE_RADIUS = 0.5
 """Default outdoor drone radius"""
-
-MINIMUM_BACKEND_VERSION = Version(2, 29, 0)
-"""The minimum version of the backend that is compatible with this version of the plugin."""
 
 NUM_PYRO_CHANNELS = 6
 """The number of pyro channels that we support."""
