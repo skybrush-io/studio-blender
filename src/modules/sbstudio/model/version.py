@@ -7,6 +7,7 @@ _version: Version
 __all__ = (
     "get_backend_version",
     "is_backend_version_ok",
+    "update_backend_version",
 )
 
 
