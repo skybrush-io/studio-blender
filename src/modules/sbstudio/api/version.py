@@ -26,7 +26,7 @@ def _get_or_query_backend_version(
     """
     global _backend_version_cache
 
-    if _backend_version_cache is not None:
+    if not force and _backend_version_cache is not None:
         cached_api, cached_version = _backend_version_cache
         if cached_api == api:
             return cached_version
