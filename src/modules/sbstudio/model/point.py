@@ -65,7 +65,11 @@ class Point4D:
         return Point3D(x=self.x, y=self.y, z=self.z)
 
     def as_vector(self) -> Vector:
-        """Converts a Point3D instance to a Blender vector, ignoring the
+        """Converts a Point4D instance to a Blender vector, ignoring the
         timestamp.
         """
         return Vector((self.x, self.y, self.z))
+
+    def as_tuple(self) -> tuple[float, float, float, float]:
+        """Converts a Point4D instance into a tuple of floats."""
+        return (self.t, self.x, self.y, self.z)

@@ -431,7 +431,7 @@ class SkybrushStudioAPI:
             settings = {
                 "name": name,
                 "lights": lights[name].as_dict(ndigits=ndigits),
-                "trajectory": trajectories[name].as_dict(ndigits=ndigits, version=0),
+                "trajectory": trajectories[name].as_dict(ndigits=ndigits),
             }
 
             if pyro_programs is not None:

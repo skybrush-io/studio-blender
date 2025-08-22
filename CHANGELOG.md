@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The minimum backend version required for this version of the add-on is now
   2.29.0.
 
+- Trajectories sent to the backend use a new, compact binary format to speed up
+  render requests and save some bandwidth towards remote backends.
+
 ### Fixed
 
 - Fixed CUSTOM y output mode of light effects that previously used x output functions
