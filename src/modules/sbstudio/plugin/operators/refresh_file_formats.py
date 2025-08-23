@@ -9,6 +9,9 @@ __all__ = ("RefreshFileFormatsOperator",)
 class RefreshFileFormatsOperator(Operator):
     """Queries the server for the list of file formats that are supported by
     the server.
+
+    Note that operator also checks the backend version in the background and
+    informs the user if the backend is outdated.
     """
 
     bl_idname = "skybrush.refresh_file_formats"
@@ -24,4 +27,5 @@ class RefreshFileFormatsOperator(Operator):
                 update_supported_file_formats_from_limits(api.get_limits())
         except Exception:
             return {"CANCELLED"}
+
         return {"FINISHED"}

@@ -14,9 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added export option for combined/parallel .skyc and .pdf exports to save time on final
   drone show renderings.
 
+- Added mandatory backend version check before dispatching the first request to
+  the current server instance.
+
+### Changed
+
+- The minimum backend version required for this version of the add-on is now
+  2.29.0.
+
+- Trajectories sent to the backend use a new, compact binary format to speed up
+  render requests and save some bandwidth towards remote backends.
+
 ### Fixed
 
-- Fixed CUSTOM y output mode of light effects that previously used x output functions 
+- Fixed CUSTOM y output mode of light effects that previously used x output functions
   accidentally.
 
 ## [3.13.2] - 2025-06-29

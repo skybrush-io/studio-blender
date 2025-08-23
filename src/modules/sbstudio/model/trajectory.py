@@ -1,4 +1,8 @@
+from base64 import b64encode
+from itertools import chain
+from numpy import array
 from operator import attrgetter
+from struct import Struct
 from typing import List, Optional, Sequence, TypeVar
 
 from .point import Point3D, Point4D
@@ -32,7 +36,7 @@ class Trajectory:
             raise ValueError("New point must come after existing trajectory in time")
         self.points.append(point)
 
-    def as_dict(self, ndigits: int = 3, *, version: int = 1):
+    def as_dict(self, ndigits: int = 3, *, version: int = 2):
         """Create a Skybrush-compatible dictionary representation of this
         instance.
 
@@ -45,11 +49,14 @@ class Trajectory:
 
         """
         if version == 0:
-            # Special representation to be used when sending a trajectory for
+            # Deprecated representation used in the past to send a trajectory for
             # rendering to .skyc into the Skybrush Studio server. This
             # representation indicates to the Skybrush Studio server that the
             # points are samples and it is allowed to simplify the trajectory
-            # further by eliminating unneeded points
+            # further by eliminating unneeded points.
+            #
+            # Use version 2 instead, which does the same but in a faster and
+            # smaller binary representation
             return {
                 "points": [
                     [
@@ -62,7 +69,7 @@ class Trajectory:
                 ],
                 "version": 0,
             }
-        else:
+        elif version == 1:
             # Standard representation
             return {
                 "points": [
@@ -79,6 +86,20 @@ class Trajectory:
                 ],
                 "version": 1,
             }
+        elif version == 2:
+            # Representation similar to version 0 but in a binary form for
+            # reducing bandwidth usage and increasing render speed
+            # TODO: use numpy arrays in Trajectory already for additional speedup
+            floats = array(
+                list(chain.from_iterable(point.as_tuple() for point in self.points)),
+                dtype="<f4",
+            )
+            return {
+                "points": b64encode(floats.tobytes()).decode("ascii"),
+                "version": 2,
+            }
+        else:
+            raise ValueError(f"Unknown version {version} for trajectory representation")
 
     @property
     def duration(self) -> float:
