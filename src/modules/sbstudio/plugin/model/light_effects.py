@@ -39,6 +39,7 @@ from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
+from sbstudio.plugin.model.storyboard import get_storyboard, StoryboardEntryOrTransition
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -206,8 +207,32 @@ class ColorFunctionProperties(PropertyGroup):
         }
 
 
+def _get_frame_start_offset(self: LightEffect) -> int:
+    if self.storyboard_entry_or_transition_selection:
+        return self.frame_start - self.storyboard_entry_or_transition.frame_start
+    else:
+        return 0
+
+
+def _get_duration_offset(self: LightEffect) -> int:
+    if self.storyboard_entry_or_transition_selection:
+        return (self.frame_end - self.frame_start) - (
+            self.storyboard_entry_or_transition.frame_end
+            - self.storyboard_entry_or_transition.frame_start
+        )
+    else:
+        return 1
+
+
 def _get_frame_end(self: LightEffect) -> int:
     return self.frame_start + self.duration - 1
+
+
+def _get_frame_end_offset(self: LightEffect) -> int:
+    if self.storyboard_entry_or_transition_selection:
+        return self.frame_end - self.storyboard_entry_or_transition.frame_end
+    else:
+        return 0
 
 
 def _set_frame_end(self: LightEffect, value: int) -> None:
@@ -236,6 +261,12 @@ def invalidate_pixel_cache(static: bool = True, dynamic: bool = True) -> None:
         _pixel_cache.clear()
     elif dynamic:
         _pixel_cache.clear_dynamic()
+
+
+def _storyboard_entry_or_transition_selection_update(
+    self: LightEffect, context: Optional[Context] = None
+):
+    self.update_from_storyboard(context, reset_offset=True)
 
 
 class LightEffect(PropertyGroup):
@@ -273,10 +304,28 @@ class LightEffect(PropertyGroup):
         default="COLOR_RAMP",
     )
 
+    storyboard_entry_or_transition_selection = StringProperty(
+        name="Storyboard entry/transition",
+        description="The storyboard entry/transition attached to this light effect",
+        update=_storyboard_entry_or_transition_selection_update,
+    )
+
+    storyboard_entry_or_transition = PointerProperty(
+        name="Storyboard entry/transition",
+        type=StoryboardEntryOrTransition,
+        description="The internal storage for the storyboard entry/transition attached to this light effect",
+    )
+
     frame_start = IntProperty(
         name="Start Frame",
         description="Frame when this light effect should start in the show",
         default=0,
+        options=set(),
+    )
+    frame_start_offset = IntProperty(
+        name="Start Frame offset",
+        description="Frame offset relative to storyboard entry start",
+        get=_get_frame_start_offset,
         options=set(),
     )
     duration = IntProperty(
@@ -286,11 +335,23 @@ class LightEffect(PropertyGroup):
         default=1,
         options=set(),
     )
+    duration_offset = IntProperty(
+        name="Duration offset",
+        description="Duration offset relative to storyboard entry duration",
+        get=_get_duration_offset,
+        options=set(),
+    )
     frame_end = IntProperty(
         name="End Frame",
         description="Frame when this light effect should end in the show",
         get=_get_frame_end,
         set=_set_frame_end,
+        options=set(),
+    )
+    frame_end_offset = IntProperty(
+        name="End Frame offset",
+        description="Frame offset relative to storyboard entry end",
+        get=_get_frame_end_offset,
         options=set(),
     )
     fade_in_duration = IntProperty(
@@ -741,6 +802,7 @@ class LightEffect(PropertyGroup):
             "colorFunction": self.color_function.as_dict(),
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
+            "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
             "texture": texture_as_dict(self.texture),
         }
 
@@ -879,6 +941,10 @@ class LightEffect(PropertyGroup):
         self.output_function.update_from(other.output_function)
         self.output_function_y.update_from(other.output_function_y)
 
+        self.storyboard_entry_or_transition_selection = (
+            other.storyboard_entry_or_transition_selection
+        )
+
         if self.color_ramp is not None:
             assert other.color_ramp is not None  # because we copied the type
             update_color_ramp_from(self.color_ramp, other.color_ramp)
@@ -938,10 +1004,42 @@ class LightEffect(PropertyGroup):
         if output_function_y := data.get("outputFunctionY"):
             self.output_function_y.update_from_dict(output_function_y)
 
+        if storyboard_entry_or_transition_selection := data.get(
+            "storyboardEntryOrTransition"
+        ):
+            self.storyboard_entry_or_transition_selection = (
+                storyboard_entry_or_transition_selection
+            )
+
         if texture := data.get("texture"):
             warnings.extend(update_texture_from_dict(self.texture, texture))
 
         return warnings
+
+    def update_from_storyboard(
+        self, context: Optional[Context], reset_offset: bool
+    ) -> None:
+        """Updates the stored storyboard entry/transition's name and
+        start and end times from the currently selected entry/transition."""
+
+        # save current offsets
+        start_offset = 0 if reset_offset else self.frame_start_offset
+        end_offset = 0 if reset_offset else self.frame_end_offset
+
+        # update our own storyboard entry pointer from the name
+        # property that is updated by the prop search dropdown
+        storyboard = get_storyboard(context=context)
+        entry = storyboard.get_entry_or_transition_by_name(
+            self.storyboard_entry_or_transition_selection
+        )
+        if entry is not None:
+            # update start and end times with previous offsets and
+            # possibly new storyboard start/end times
+            self.storyboard_entry_or_transition.update_from(entry)
+            self.frame_start = (
+                self.storyboard_entry_or_transition.frame_start + start_offset
+            )
+            self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
     def _evaluate_influence_at(
         self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
@@ -1228,3 +1326,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
     def _on_removing_entry(self, entry) -> bool:
         entry._remove_texture()
         return True
+
+    def update_from_storyboard(self, context: Context) -> None:
+        for entry in self.entries:
+            entry.update_from_storyboard(context, reset_offset=False)
