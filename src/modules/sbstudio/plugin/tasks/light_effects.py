@@ -12,7 +12,7 @@ from .base import Task
 
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.materials import get_led_light_color, set_led_light_color
+from sbstudio.plugin.colors import get_color_of_drone, set_color_of_drone
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
                 # the base color cache in parallel to the colors list
                 colors: list[MutableRGBAColor] = []
                 for drone in drones:
-                    color = list(get_led_light_color(drone))
+                    color = list(get_color_of_drone(drone))
                     colors.append(color)
                     _base_color_cache[id(drone)] = color
             else:
@@ -116,7 +116,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     if changed:
         assert drones is not None
         for drone, color in zip(drones, colors):
-            set_led_light_color(drone, color)
+            set_color_of_drone(drone, color)
 
 
 @contextmanager

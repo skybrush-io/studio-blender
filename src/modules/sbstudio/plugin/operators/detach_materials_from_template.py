@@ -11,6 +11,8 @@ from sbstudio.plugin.materials import (
 __all__ = ("DetachMaterialsFromDroneTemplateOperator",)
 
 
+# TODO: deprecated function, not used since drones use a
+# shared template material
 def detach_led_light_material_from_drone_template(
     drone, template_material: Optional[Material] = None
 ) -> None:
@@ -74,16 +76,10 @@ class DetachMaterialsFromDroneTemplateOperator(Operator):
 
     def execute(self, context):
         template = Templates.find_drone(create=False)
-        led_light_template_material = (
-            get_material_for_led_light_color(template) if template else None
-        )
         pyro_template_material = get_material_for_pyro(template) if template else None
 
         drones = Collections.find_drones()
         for drone in drones.objects:
-            detach_led_light_material_from_drone_template(
-                drone, template_material=led_light_template_material
-            )
             detach_pyro_material_from_drone_template(
                 drone, template_material=pyro_template_material
             )
