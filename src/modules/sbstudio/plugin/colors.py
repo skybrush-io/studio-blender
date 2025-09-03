@@ -34,7 +34,7 @@ def create_keyframe_for_color_of_drone(
     if frame is None:
         frame = bpy.context.scene.frame_current
 
-    ensure_action_exists_for_object(drone, name=f"Color of {drone.name}")
+    ensure_action_exists_for_object(drone)
 
     if hasattr(color, "r"):
         color_as_rgba = color.r, color.g, color.b, 1.0

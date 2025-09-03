@@ -30,6 +30,9 @@ from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
 from .import_light_effects import ImportLightEffectsOperator
 from .land import LandOperator
+from .migrations.use_common_material_for_all_drones import (
+    UseSharedMaterialForAllDronesMigrationOperator,
+)
 from .move_light_effect import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
@@ -116,6 +119,7 @@ __all__ = (
     "UpdateFrameRangeFromStoryboardOperator",
     "UpdateTimeMarkersFromStoryboardOperator",
     "UseSelectedVertexGroupForFormationOperator",
+    "UseSharedMaterialForAllDronesMigrationOperator",
     "ValidateTrajectoriesOperator",
     "VVIZExportOperator",
 )
