@@ -1,5 +1,8 @@
 import bpy
+import logging
+
 from bpy.types import Operator
+from time import time
 
 from sbstudio.plugin.actions import ensure_action_exists_for_object
 from sbstudio.plugin.constants import Collections, Templates
@@ -11,6 +14,8 @@ from sbstudio.plugin.materials import (
 )
 
 __all__ = ("UseSharedMaterialForAllDronesMigrationOperator",)
+
+log = logging.getLogger(__name__)
 
 
 def add_object_info_to_shader_node_tree_of_drone_template() -> None:
@@ -37,7 +42,9 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
     template = Templates.find_drone(create=False)
     template_material = get_material_for_led_light_color(template)
     drones = Collections.find_drones()
-    for drone in drones.objects:
+    num_drones = len(drones.objects)
+    last_log = time()
+    for i, drone in enumerate(drones.objects):
         material = get_material_for_led_light_color(drone)
         if material and material.name == f"LED color of {drone.name}":
             # copy color animation from shader node to drone
@@ -53,12 +60,25 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
                 set_keyframes(drone, "color", keyframes, interpolation="LINEAR")
             # reset drone's material to the template material
             drone.material_slots[0].material = template_material
+        if time() - last_log > 10 or i == num_drones - 1:
+            log.info(
+                f"    {(i + 1) / num_drones * 100:.1f}% ready, "
+                f"{i + 1}/{num_drones} drones converted"
+            )
+            last_log = time()
 
 
 def set_all_shading_color_types_to_object() -> None:
-    """Sets the object color source of the solid shading mode of the
-    3D Viewport to use object color."""
-    shading = bpy.context.space_data.shading
+    """Sets the object color source of the solid and wireframe
+    shading types of the 3D Viewport to use object color."""
+    shading = getattr(bpy.context.space_data, "shading", None)
+    if shading is None:
+        log.warning(
+            "Space data does not have 'shading' property. "
+            "Call again with 3D Viewport open!"
+        )
+        return
+
     shading.color_type = "OBJECT"
     shading.wireframe_color_type = "OBJECT"
 
@@ -73,8 +93,17 @@ class UseSharedMaterialForAllDronesMigrationOperator(Operator):
     bl_label = "Use Shared Material For All Drones Migration"
 
     def execute(self, context):
+        log.info("Upgrade started.")
+
+        log.info("Modifying shader node tree of drone template...")
         add_object_info_to_shader_node_tree_of_drone_template()
+
+        log.info("Simplifying drone color animation storage...")
         upgrade_drone_color_animations_and_drone_materials()
+
+        log.info("Changing 3D Viewport shader color types to 'OBJECT'...")
         set_all_shading_color_types_to_object()
+
+        log.info("Upgrade successful.")
 
         return {"FINISHED"}
