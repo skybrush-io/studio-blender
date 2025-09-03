@@ -81,6 +81,10 @@ def config_logging(*args):
     )
 
 
+def perform_migrations(*args):
+    bpy.ops.skybrush.use_shared_material_for_all_drones_migration("INVOKE_DEFAULT")
+
+
 class InitializationTask(Task):
     """Background task that is called every time a new file is loaded."""
 
@@ -92,5 +96,6 @@ class InitializationTask(Task):
             setup_random_seed,
             update_pyro_particles_of_drones,
             config_logging,
+            perform_migrations,
         ]
     }

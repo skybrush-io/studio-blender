@@ -1,7 +1,6 @@
 import bpy
 import logging
 
-from bpy.types import Operator
 from time import time
 
 from sbstudio.plugin.actions import ensure_action_exists_for_object
@@ -12,6 +11,7 @@ from sbstudio.plugin.materials import (
     get_material_for_led_light_color,
     _get_shader_node_and_input_for_diffuse_color_of_material,
 )
+from sbstudio.plugin.operators.base import MigrationOperator
 
 __all__ = ("UseSharedMaterialForAllDronesMigrationOperator",)
 
@@ -34,6 +34,22 @@ def add_object_info_to_shader_node_tree_of_drone_template() -> None:
             links.new(object_info_node.outputs["Color"], input)
         elif input.links[0].from_node.name != "Object Info":
             raise SkybrushStudioAddonError("Template drone shader node tree mismatch")
+
+
+def set_all_shading_color_types_to_object() -> None:
+    """Sets the object color source of the solid and wireframe
+    shading types of the 3D Viewport to use object color."""
+    shading = getattr(bpy.context.space_data, "shading", None)
+    if shading is None:
+        log.warning(
+            "Space data does not have a 'shading' property. "
+            "Set Object Color and Wireframe color to Object "
+            "in your 3D Viewport's Viewport Shading properties manually!"
+        )
+        return
+
+    shading.color_type = "OBJECT"
+    shading.wireframe_color_type = "OBJECT"
 
 
 def upgrade_drone_color_animations_and_drone_materials() -> None:
@@ -62,37 +78,52 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
             drone.material_slots[0].material = template_material
         if time() - last_log > 10 or i == num_drones - 1:
             log.info(
-                f"    {(i + 1) / num_drones * 100:.1f}% ready, "
+                f"{(i + 1) / num_drones * 100:.1f}% ready, "
                 f"{i + 1}/{num_drones} drones converted"
             )
             last_log = time()
 
 
-def set_all_shading_color_types_to_object() -> None:
-    """Sets the object color source of the solid and wireframe
-    shading types of the 3D Viewport to use object color."""
-    shading = getattr(bpy.context.space_data, "shading", None)
-    if shading is None:
-        log.warning(
-            "Space data does not have 'shading' property. "
-            "Call again with 3D Viewport open!"
-        )
-        return
+def needs_migration():
+    """Returns whether the current Blender content needs migration."""
+    # TODO: what should be the optimal method to check if file
+    # needs migration or not? We check the template material now
+    # as it is most probably not modified by the users frequently
+    try:
+        template = Templates.find_drone(create=False)
+    except (KeyError, ValueError):
+        return False
 
-    shading.color_type = "OBJECT"
-    shading.wireframe_color_type = "OBJECT"
+    template_material = get_material_for_led_light_color(template)
+    if template_material is None:
+        return False
+
+    _, input = _get_shader_node_and_input_for_diffuse_color_of_material(
+        template_material
+    )
+
+    return not input.is_linked
 
 
-class UseSharedMaterialForAllDronesMigrationOperator(Operator):
-    """Upgrades old Blender file content (<=3.13.2) that uses
-    a different material for all drone objects to store color animation to
-    new version in which all drones share a common material.
+class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
+    """Upgrades old Skybrush Studio for Blender file content (<=3.13.2)
+    that uses a separate material for all drone objects to a new version
+    in which all drones share a common material. This speeds up light effect
+    handling substantially.
     """
 
     bl_idname = "skybrush.use_shared_material_for_all_drones_migration"
-    bl_label = "Use Shared Material For All Drones Migration"
+    bl_label = "Update file content to speed up light effect rendering"
+    bl_description = (
+        "Upgrade your old (<=3.13.2) Skybrush Studio for Blender file content\n"
+        "to speed up light effect playback and show export, by replacing all\n"
+        "drone object materials to a shared template material, modifying its shader\n"
+        "node tree and storing color animations in the drone object's 'color' property\n"
+    )
 
-    def execute(self, context):
+    def execute_migration(self, context):
+        """Executes the migration/upgrade on the current Blender content."""
+
         log.info("Upgrade started.")
 
         log.info("Modifying shader node tree of drone template...")
@@ -107,3 +138,7 @@ class UseSharedMaterialForAllDronesMigrationOperator(Operator):
         log.info("Upgrade successful.")
 
         return {"FINISHED"}
+
+    def needs_migration(self) -> bool:
+        """Returns whether the current Blender content needs migration."""
+        return needs_migration()

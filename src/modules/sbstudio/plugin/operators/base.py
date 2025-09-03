@@ -496,3 +496,34 @@ class StaticMarkerCreationOperator(FormationOperator):
         else:
             num_existing_markers = 0
         return max(0, num_drones - num_existing_markers)
+
+
+class MigrationOperator(Operator):
+    """Operator mixin for migrations/upgrades for files created in earlier
+    versions of the Skybrush Studio for Blender plugin."""
+
+    @classmethod
+    def poll(cls, context: Context):
+        return context.scene.skybrush
+
+    def execute(self, context: Context):
+        if self.needs_migration():
+            return self.execute_migration(context)
+
+        return {"FINISHED"}
+
+    def invoke(self, context: Context, event):
+        if self.needs_migration():
+            return context.window_manager.invoke_confirm(
+                self, event, title=self.bl_label, message=self.bl_description
+            )
+
+        return {"CANCELLED"}
+
+    def needs_migration(self) -> bool:
+        """Returns whether the current Blender content needs migration."""
+        raise NotImplementedError
+
+    def execute_migration(self, context: Context):
+        """Executes the migration/upgrade on the current Blender content."""
+        raise NotImplementedError
