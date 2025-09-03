@@ -71,6 +71,16 @@ def update_pyro_particles_of_drones(*args):
         update_pyro_particles_of_object(drone)
 
 
+def config_logging(*args):
+    import logging
+
+    logging.basicConfig(
+        format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+        level=logging.INFO,
+        datefmt="%H:%M:%S",
+    )
+
+
 class InitializationTask(Task):
     """Background task that is called every time a new file is loaded."""
 
@@ -81,5 +91,6 @@ class InitializationTask(Task):
             remove_legacy_formation_constraints,
             setup_random_seed,
             update_pyro_particles_of_drones,
+            config_logging,
         ]
     }
