@@ -59,8 +59,8 @@ def set_solid_shading_color_type_to_object() -> None:
     """Sets the object color source of the solid shading mode of the
     3D Viewport to use object color."""
     shading = bpy.context.space_data.shading
-    shading.type = "SOLID"
     shading.color_type = "OBJECT"
+    shading.wireframe_color_type = "OBJECT"
 
 
 class UseSharedMaterialForAllDronesMigrationOperator(Operator):
