@@ -55,7 +55,7 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
             drone.material_slots[0].material = template_material
 
 
-def set_solid_shading_color_type_to_object() -> None:
+def set_all_shading_color_types_to_object() -> None:
     """Sets the object color source of the solid shading mode of the
     3D Viewport to use object color."""
     shading = bpy.context.space_data.shading
@@ -75,6 +75,6 @@ class UseSharedMaterialForAllDronesMigrationOperator(Operator):
     def execute(self, context):
         add_object_info_to_shader_node_tree_of_drone_template()
         upgrade_drone_color_animations_and_drone_materials()
-        set_solid_shading_color_type_to_object()
+        set_all_shading_color_types_to_object()
 
         return {"FINISHED"}
