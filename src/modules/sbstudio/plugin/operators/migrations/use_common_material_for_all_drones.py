@@ -121,6 +121,15 @@ class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
         "node tree and storing color animations in the drone object's 'color' property\n"
     )
 
+    def initialize_migration(self) -> None:
+        """Initializes the operator by setting up the from/to versions."""
+        self.version_from = 1
+        self.version_to = 2
+
+    def needs_migration(self) -> bool:
+        """Returns whether the current Blender content needs migration."""
+        return needs_migration()
+
     def execute_migration(self, context):
         """Executes the migration/upgrade on the current Blender content."""
 
@@ -138,7 +147,3 @@ class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
         log.info("Upgrade successful.")
 
         return {"FINISHED"}
-
-    def needs_migration(self) -> bool:
-        """Returns whether the current Blender content needs migration."""
-        return needs_migration()

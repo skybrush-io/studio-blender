@@ -82,6 +82,7 @@ def config_logging(*args):
 
 
 def perform_migrations(*args):
+    # version 1 -> 2
     bpy.ops.skybrush.use_shared_material_for_all_drones_migration("INVOKE_DEFAULT")
 
 

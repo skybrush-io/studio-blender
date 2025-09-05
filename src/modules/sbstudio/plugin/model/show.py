@@ -1,4 +1,4 @@
-from bpy.props import PointerProperty
+from bpy.props import IntProperty, PointerProperty
 from bpy.types import PropertyGroup
 
 from .formations_panel import FormationsPanelProperties
@@ -35,3 +35,12 @@ class DroneShowAddonProperties(PropertyGroup):
         type=DroneShowAddonFileSpecificSettings
     )
     storyboard: Storyboard = PointerProperty(type=Storyboard)
+    version: IntProperty = IntProperty(
+        name="Version",
+        description=(
+            "Current version of the show content stored in Blender. "
+            "Version 1 is the initial version (plugin version <= 3.13.2). "
+            "Version 2 uses a shared material for all drones to speed up light effects."
+        ),
+        default=1,
+    )
