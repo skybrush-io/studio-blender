@@ -71,7 +71,7 @@ def update_pyro_particles_of_drones(*args):
         update_pyro_particles_of_object(drone)
 
 
-def config_logging(*args):
+def _config_logging(*args):
     import logging
 
     logging.basicConfig(
@@ -96,7 +96,8 @@ class InitializationTask(Task):
             remove_legacy_formation_constraints,
             setup_random_seed,
             update_pyro_particles_of_drones,
-            config_logging,
+            # enable this below for neat logs
+            # _config_logging,
             perform_migrations,
         ]
     }
