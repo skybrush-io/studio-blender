@@ -12,6 +12,7 @@ from sbstudio.plugin.materials import (
     _get_shader_node_and_input_for_diffuse_color_of_material,
 )
 from sbstudio.plugin.operators.base import MigrationOperator
+from sbstudio.plugin.views import find_all_3d_views
 
 __all__ = ("UseSharedMaterialForAllDronesMigrationOperator",)
 
@@ -39,17 +40,9 @@ def add_object_info_to_shader_node_tree_of_drone_template() -> None:
 def set_all_shading_color_types_to_object() -> None:
     """Sets the object color source of the solid and wireframe
     shading types of the 3D Viewport to use object color."""
-    shading = getattr(bpy.context.space_data, "shading", None)
-    if shading is None:
-        log.warning(
-            "Space data does not have a 'shading' property. "
-            "Set Object Color and Wireframe color to Object "
-            "in your 3D Viewport's Viewport Shading properties manually!"
-        )
-        return
-
-    shading.color_type = "OBJECT"
-    shading.wireframe_color_type = "OBJECT"
+    for space in find_all_3d_views():
+        space.shading.color_type = "OBJECT"
+        space.shading.wireframe_color_type = "OBJECT"
 
 
 def upgrade_drone_color_animations_and_drone_materials() -> None:
@@ -115,10 +108,11 @@ class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
     bl_idname = "skybrush.use_shared_material_for_all_drones_migration"
     bl_label = "Update file content to speed up light effect rendering"
     bl_description = (
-        "Upgrade your old (<=3.13.2) Skybrush Studio for Blender file content\n"
+        "Upgrade your old (<4.0) Skybrush Studio for Blender file content\n"
         "to speed up light effect playback and show export, by replacing all\n"
         "drone object materials to a shared template material, modifying its shader\n"
-        "node tree and storing color animations in the drone object's 'color' property\n"
+        "node tree and storing color animations in the drone object's 'color' property.\n"
+        "The upgrade also changes active 3D Viewport wireframe and object color to 'OBJECT'.\n"
     )
 
     def initialize_migration(self) -> None:
