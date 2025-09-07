@@ -42,5 +42,12 @@ class DroneShowAddonProperties(PropertyGroup):
             "Version 1 is the initial version (plugin version <= 3.13.2). "
             "Version 2 uses a shared material for all drones to speed up light effects."
         ),
+        min=1,
+        max=2,
         default=1,
     )
+
+    @property
+    def latest_version(self) -> int:
+        """Returns the latest plugin file format version available."""
+        return self.__annotations__["version"].keywords["max"]
