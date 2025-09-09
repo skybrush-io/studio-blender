@@ -131,7 +131,7 @@ class SkybrushStudioAPI:
     """The root URL of the API, with a trailing slash"""
 
     _http_status: dict[int | None, str]
-    """Predefined http status messages."""
+    """Predefined HTTP status messages."""
 
     @staticmethod
     def validate_api_key(key: str) -> str:
