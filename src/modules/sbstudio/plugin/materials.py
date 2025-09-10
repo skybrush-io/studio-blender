@@ -12,9 +12,12 @@ from .errors import SkybrushStudioAddonError
 __all__ = (
     "create_colored_material",
     "create_glowing_material",
+    "create_keyframe_for_diffuse_color_of_material",
     "get_material_for_led_light_color",
     "get_material_for_pyro",
-    "set_led_light_color",
+    "get_led_light_color_from_material",
+    "set_emission_strength_of_material",
+    "set_led_light_color_to_material",
 )
 
 is_blender_4 = bpy.app.version >= (4, 0, 0)
@@ -96,11 +99,17 @@ def create_glowing_material(
     links.clear()
     nodes.clear()
 
+    object_info_node = nodes.new("ShaderNodeObjectInfo")
+    object_info_node.location = (-300, 0)
+
     emission_node = nodes.new("ShaderNodeEmission")
     emission_node.inputs["Strength"].default_value = strength
+    emission_node.location = (0, 0)
 
     output_node = nodes.new("ShaderNodeOutputMaterial")
+    output_node.location = (300, 0)
 
+    links.new(object_info_node.outputs["Color"], emission_node.inputs["Color"])
     links.new(emission_node.outputs["Emission"], output_node.inputs["Surface"])
 
     _set_diffuse_color_of_material(mat, color)
@@ -140,13 +149,12 @@ def get_material_for_pyro(drone) -> Optional[Material]:
 
 
 def _get_diffuse_color_of_material(material) -> RGBAColor:
-    """Returns the diffuse color of the given material to the given value.
+    """Returns the diffuse color of the given material.
 
     The material must use a principled BSDF or an emission shader.
 
     Parameters:
-        material: the Blender material to update
-        color: the color to apply to the material
+        material: the Blender material to get the color from
     """
     if material.use_nodes:
         # Material is using shader nodes so we need to adjust the diffuse
@@ -238,7 +246,7 @@ def create_keyframe_for_diffuse_color_of_material(
     set_keyframes(node_tree, data_path, keyframes, interpolation="LINEAR")
 
 
-def get_led_light_color(drone) -> RGBAColor:
+def get_led_light_color_from_material(drone) -> RGBAColor:
     """Returns the color of the LED light on the given drone.
 
     Parameters:
@@ -252,7 +260,7 @@ def get_led_light_color(drone) -> RGBAColor:
         return (0.0, 0.0, 0.0, 0.0)
 
 
-def set_led_light_color(drone, color: RGBAColorLike):
+def set_led_light_color_to_material(drone, color: RGBAColorLike):
     """Sets the color of the LED light on the given drone.
 
     Parameters:

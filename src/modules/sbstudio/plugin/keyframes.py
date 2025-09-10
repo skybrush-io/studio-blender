@@ -1,6 +1,7 @@
 """Functions related to the handling of keyframes in animation actions."""
 
 from bpy.types import Action, FCurve
+from collections import defaultdict
 from typing import Callable, Optional, Sequence, Tuple, Union
 
 from .actions import (
@@ -9,7 +10,7 @@ from .actions import (
     get_action_for_object,
 )
 
-__all__ = ("clear_keyframes", "set_keyframes")
+__all__ = ("clear_keyframes", "get_keyframes", "set_keyframes")
 
 
 def clear_keyframes(
@@ -65,6 +66,38 @@ def clear_keyframes(
 
             for index in reversed(indices_to_delete):
                 points.remove(points[index])
+
+
+def get_keyframes(
+    object,
+    data_path: str,
+) -> list[tuple[float, float | list[float]]]:
+    """Gets the values of all keyframes of an object at the given data path.
+
+    Parameters:
+        object: the object on which the keyframes are to be retrieved
+        data_path: the data path to use
+
+    Returns:
+        the keyframes of the object at the given data path
+    """
+    source, sep, prop = data_path.rpartition(".")
+    source = object.path_resolve(source) if sep else object
+
+    fcurves = find_all_f_curves_for_data_path(object, data_path)
+
+    match len(fcurves):
+        case 0:
+            return []
+        case 1:
+            return [(p.co.x, p.co.y) for p in fcurves[0].keyframe_points]
+        case _:
+            frames_dict = defaultdict(lambda: [0.0] * len(fcurves))
+            for curve in fcurves:
+                if curve.data_path == data_path:
+                    for point in curve.keyframe_points:
+                        frames_dict[int(point.co.x)][curve.array_index] = point.co.y
+            return sorted(frames_dict.items())
 
 
 def set_keyframes(

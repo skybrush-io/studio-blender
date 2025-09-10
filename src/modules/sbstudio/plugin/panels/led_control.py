@@ -4,6 +4,10 @@ from sbstudio.plugin.operators import (
     ApplyColorsToSelectedDronesOperator as ApplyColors,
 )
 from sbstudio.plugin.utils.bloom import bloom_effect_supported
+from sbstudio.plugin.utils.warnings import (
+    draw_bad_shader_color_source_warning,
+    draw_version_warning,
+)
 
 
 class LEDControlPanel(Panel):
@@ -31,6 +35,9 @@ class LEDControlPanel(Panel):
             return
 
         layout = self.layout
+
+        draw_version_warning(context, layout)
+        draw_bad_shader_color_source_warning(context, layout)
 
         row = layout.row()
         col = row.column()

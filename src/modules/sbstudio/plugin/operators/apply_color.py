@@ -2,10 +2,7 @@ from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 from random import shuffle
 
-from sbstudio.plugin.materials import (
-    create_keyframe_for_diffuse_color_of_material,
-    get_material_for_led_light_color,
-)
+from sbstudio.plugin.colors import create_keyframe_for_color_of_drone
 from sbstudio.plugin.props import ColorProperty
 from sbstudio.plugin.selection import get_selected_drones
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
@@ -158,11 +155,6 @@ class ApplyColorsToSelectedDronesOperator(Operator):
             # Gradient
             color = self.primary_color * (1 - ratio) + self.secondary_color * ratio
 
-        material = get_material_for_led_light_color(drone)
-        if not material:
-            # Drone does not have an LED light
-            return
-
-        create_keyframe_for_diffuse_color_of_material(
-            material, color, frame=frame, step=not self.fade
+        create_keyframe_for_color_of_drone(
+            drone, color, frame=frame, step=not self.fade
         )

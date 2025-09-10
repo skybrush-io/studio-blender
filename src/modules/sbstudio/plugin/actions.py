@@ -146,9 +146,7 @@ def find_f_curve_for_data_path_and_index(
     return None
 
 
-def find_all_f_curves_for_data_path(
-    object_or_action, data_path: str
-) -> Optional[FCurve]:
+def find_all_f_curves_for_data_path(object_or_action, data_path: str) -> list[FCurve]:
     """Finds all F-curves in the F-curves of the action whose data path
     matches the given property, sorted by the array index of the curves.
 
@@ -166,9 +164,10 @@ def find_all_f_curves_for_data_path(
     else:
         action = object_or_action
 
-    # TODO(ntamas): sort by array index!
-    result = [curve for curve in action.fcurves if curve.data_path == data_path]
-    return result
+    return sorted(
+        [curve for curve in action.fcurves if curve.data_path == data_path],
+        key=lambda c: c.array_index,
+    )
 
 
 def cleanup_actions_for_object(object):
