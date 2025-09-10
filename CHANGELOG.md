@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added light effect import/export feature.
 
+- Added an option to attach a storyboard entry or a transition between two consecutive 
+  storyboard entries to a light effect, defining the effect's start and end time 
+  automatically, based on the time span of the storyboard entry or transition and
+  user defined relative offsets.
+
 - Added export option for combined/parallel .skyc and .pdf exports to save time on final
   drone show renderings.
 
