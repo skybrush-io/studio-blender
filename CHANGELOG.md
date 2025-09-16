@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trajectories sent to the backend use a new, compact binary format to speed up
   render requests and save some bandwidth towards remote backends.
 
+- Error messages became more informative.
+
 ### Fixed
 
 - Fixed CUSTOM y output mode of light effects that previously used x output functions
