@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added mandatory backend version check before dispatching the first request to
   the current server instance.
 
+- Added small buttons next to the start and end frame properties of storyboard entries
+  and light effects to be able to set them to the current frame easily.
+
 ### Changed
 
 - The minimum backend version required for this version of the add-on is now
