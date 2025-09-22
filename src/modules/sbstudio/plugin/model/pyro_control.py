@@ -8,6 +8,7 @@ from sbstudio.plugin.constants import Collections, NUM_PYRO_CHANNELS
 from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 from sbstudio.plugin.overlays.pyro import (
     PyroOverlay,
+    PyroOverlayInfo,
     PyroOverlayMarker,
 )
 
@@ -54,6 +55,7 @@ class PyroControlPanelProperties(PropertyGroup):
             ("NONE", "None", "No rendering is very quick but invisible", 1),
             ("MARKERS", "Markers", "Markers are simple but quick", 2),
             ("PARTICLES", "Particles", "Particles are spectacular but slow", 3),
+            ("INFO", "Info", "Static pyro info for aiding pre-flight handling", 4),
         ],
         name="Visualization",
         description=("The visualization method of the pyro effect."),
@@ -105,7 +107,7 @@ class PyroControlPanelProperties(PropertyGroup):
             overlay.markers = []
 
     def ensure_overlays_enabled_if_needed(self) -> None:
-        get_overlay().enabled = self.visualization == "MARKERS"
+        get_overlay().enabled = self.visualization in ["MARKERS", "INFO"]
 
     def update_pyro_overlay_markers(self, markers: list[PyroOverlayMarker]) -> None:
         """Updates the pyro overlay markers."""
@@ -114,3 +116,13 @@ class PyroControlPanelProperties(PropertyGroup):
         overlay = get_overlay(create=False)
         if overlay:
             overlay.markers = markers
+
+    def update_pyro_overlay_info_blocks(
+        self, info_blocks: list[PyroOverlayInfo]
+    ) -> None:
+        """Updates the pyro overlay info blocks."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.info_blocks = info_blocks
