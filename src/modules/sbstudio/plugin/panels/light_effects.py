@@ -13,6 +13,8 @@ from sbstudio.plugin.operators import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     RemoveLightEffectOperator,
+    SetLightEffectEndFrameOperator,
+    SetLightEffectStartFrameOperator,
 )
 
 
@@ -101,9 +103,23 @@ class LightEffectsPanel(Panel):
                     layout.separator()
 
             col = layout.column()
-            col.prop(entry, "frame_start")
+            row = col.row()
+            row.prop(entry, "frame_start")
+            row.separator()
+            row.operator(
+                SetLightEffectStartFrameOperator.bl_idname,
+                icon="TRIA_LEFT",
+                text="",
+            )
             col.prop(entry, "duration")
-            col.prop(entry, "frame_end")
+            row = col.row()
+            row.prop(entry, "frame_end")
+            row.separator()
+            row.operator(
+                SetLightEffectEndFrameOperator.bl_idname,
+                icon="TRIA_LEFT",
+                text="",
+            )
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")

@@ -16,11 +16,15 @@ Each storyboard entry has a label and an associated set of properties that defin
 
 Formation:: Shows or sets the formation corresponding to the selected storyboard entry.
 
-Start Frame:: Shows or sets the frame when the formation of the selected storyboard entry should appear on the sky in the drone show.
+Start Frame:: Shows or sets the frame when the formation of the selected storyboard entry should appear on the sky in the drone show. 
++
+TIP: Press the btn:[◀] button on the right to set the start frame to the current frame.
 
 Duration:: Sets the duration of the selected storyboard entry in the drone show. The end frame of the formation will be the sum of the start frame and the duration, inclusive (i.e. the end frame is part of the formation). Each entry must have a duration of at least one frame.
 
 End Frame:: Shows or sets the end frame of the formation. Adjusts the duration behind the scenes.
++
+TIP: Press the btn:[◀] button on the right to set the end frame to the current frame.
 
 Custom Name:: Ticking this check box allows you to keep the label of the storyboard entry even if you change the associated formation. Unticking this will change the label of the storyboard entry to the name of the formation when you change the formation.
 

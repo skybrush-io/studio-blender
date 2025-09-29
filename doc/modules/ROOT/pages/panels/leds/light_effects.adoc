@@ -83,12 +83,13 @@ def color_function(frame, time_fraction, drone_index, formation_index, position,
 
 == Temporal constraints
 
-The next group of widgets below the color ramp or color image specify the temporal constraints of the light effect, i.e. _when_ the light effect should be applied. The two hard limits are the *start frame* and the *duration*: the light effect will be completely inactive outside this time interval. The *fade in* and *fade out*
-widgets specify the duration of the fade-in and the fade-out periods at the
-beginning and the end of the time interval of the light effect. During the
-fade-in period, the intensity of the light effect grows gradually from zero
-(inactive) to 1 (fully active). Similarly, the fade-out period animates the
-intensity of the light effect from 1 (fully active) to 0 (inactive). You can
+The next group of properties below the color ramp or color image specify the temporal constraints of the light effect, i.e. _when_ the light effect should be applied. 
+
+The *Start frame*, *Duration* and *End frame* properties define the hard temporal limits: the light effect will be completely inactive outside this time interval. 
+
+TIP: Press the btn:[◀] buttons on the right side of the start and end frame boxes to set them to the current frame.
+
+The *Fade in* and *Fade out* properties specify the duration of the fade-in and the fade-out periods at the beginning and the end of the time interval of the light effect. During the fade-in period, the intensity of the light effect grows gradually from zero (inactive) to 1 (fully active). Similarly, the fade-out period animates the intensity of the light effect from 1 (fully active) to 0 (inactive). You can
 turn both of these off by setting their duration to zero.
 
 == Spatial constraints

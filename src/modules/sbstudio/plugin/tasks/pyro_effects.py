@@ -12,6 +12,7 @@ from typing import Iterator, TYPE_CHECKING
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.overlays.pyro import (
     DEFAULT_PYRO_OVERLAY_MARKER_COLOR,
+    PyroOverlayInfo,
     PyroOverlayMarker,
 )
 from sbstudio.plugin.utils.evaluator import get_position_of_object
@@ -36,7 +37,7 @@ def run_update_pyro_overlay_markers(scene: Scene, depsgraph) -> None:
 
     pyro_control = scene.skybrush.pyro_control
 
-    if pyro_control.visualization == "MARKERS":
+    if pyro_control.visualization in ["MARKERS", "INFO"]:
         drones = Collections.find_drones(create=False)
     else:
         drones = None
@@ -50,16 +51,27 @@ def run_update_pyro_overlay_markers(scene: Scene, depsgraph) -> None:
     frame = scene.frame_current
     fps = scene.render.fps
     overlay_markers: list[PyroOverlayMarker] = []
+    overlay_info_blocks: list[PyroOverlayInfo] = []
     for drone in drones.objects:
         markers = get_pyro_markers_of_object(drone)
-        for _channel, marker in markers.markers.items():
-            if marker.is_active_at_frame(frame, fps):
-                position = get_position_of_object(drone)
+        info_lines = []
+        position = None
+        for channel, marker in markers.markers.items():
+            if pyro_control.visualization == "INFO" or marker.is_active_at_frame(
+                frame, fps
+            ):
+                if position is None:
+                    position = get_position_of_object(drone)
                 # TODO: change color with pyro channel
                 color = DEFAULT_PYRO_OVERLAY_MARKER_COLOR
                 overlay_markers.append((position, color))
+                info_lines.append(f"C{channel} F{marker.frame}: {marker.payload.name}")
+        if info_lines:
+            assert position is not None
+            overlay_info_blocks.append((position, info_lines))
 
     pyro_control.update_pyro_overlay_markers(overlay_markers)
+    pyro_control.update_pyro_overlay_info_blocks(overlay_info_blocks)
 
 
 def ensure_overlays_enabled():

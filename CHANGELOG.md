@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added mandatory backend version check before dispatching the first request to
   the current server instance.
 
+- Added small buttons next to the start and end frame properties of storyboard entries
+  and light effects to be able to set them to the current frame easily.
+
+- Added a new "Info" option to pyro rendering to aid preflight pyro setup with
+  higlighting pyro drones throughout the entire show timeline from takeoff to landing.
+
 ### Changed
 
 - The minimum backend version required for this version of the add-on is now
@@ -24,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Trajectories sent to the backend use a new, compact binary format to speed up
   render requests and save some bandwidth towards remote backends.
+
+- Error messages became more informative.
 
 ### Fixed
 
