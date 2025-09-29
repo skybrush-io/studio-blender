@@ -55,7 +55,7 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
     last_log = time()
     for i, drone in enumerate(drones.objects):
         material = get_material_for_led_light_color(drone)
-        if material and material.name == f"LED color of {drone.name}":
+        if material:
             # copy color animation from shader node to drone
             node_tree = material.node_tree
             if node_tree.animation_data:
@@ -78,7 +78,10 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
 
 
 def needs_migration():
-    """Returns whether the current Blender content needs migration."""
+    """Returns whether the current Blender content needs migration.
+
+    Note that return value is checked based on actual content,
+    irrespective of the current plugin version."""
     # TODO: what should be the optimal method to check if file
     # needs migration or not? We check the template material now
     # as it is most probably not modified by the users frequently
@@ -121,7 +124,10 @@ class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
         self.version_to = 2
 
     def needs_migration(self) -> bool:
-        """Returns whether the current Blender content needs migration."""
+        """Returns whether the current Blender content needs migration.
+
+        Note that return value is checked based on actual content,
+        irrespective of the current plugin version."""
         return needs_migration()
 
     def execute_migration(self, context):

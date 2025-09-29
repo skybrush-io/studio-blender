@@ -550,5 +550,8 @@ class MigrationOperator(Operator):
         raise NotImplementedError
 
     def needs_migration(self) -> bool:
-        """Returns whether the current Blender content needs migration."""
+        """Returns whether the current Blender content needs migration.
+
+        Note that return value is checked based on actual content,
+        irrespective of the current plugin version."""
         raise NotImplementedError

@@ -19,17 +19,12 @@ def _draw_warning(layout, text: str) -> None:
 
 def draw_bad_shader_color_source_warning(context: Context, layout) -> None:
     """Draw a bad shader color source warning to a layout, if needed."""
+    shading = context.space_data.shading
     label = (
         "Set shader Wireframe Color to 'OBJECT'"
-        if (
-            context.space_data.shading.type == "WIREFRAME"
-            and context.space_data.shading.wireframe_color_type != "OBJECT"
-        )
+        if (shading.type == "WIREFRAME" and shading.wireframe_color_type != "OBJECT")
         else "Set shader Object Color to 'OBJECT'"
-        if (
-            context.space_data.shading.type == "SOLID"
-            and context.space_data.shading.color_type != "OBJECT"
-        )
+        if (shading.type == "SOLID" and shading.color_type != "OBJECT")
         else None
     )
     if label:
