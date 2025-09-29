@@ -1,6 +1,8 @@
 from bpy.props import IntProperty, PointerProperty
 from bpy.types import PropertyGroup
 
+from sbstudio.plugin.constants import LATEST_SKYBRUSH_PLUGIN_VERSION
+
 from .formations_panel import FormationsPanelProperties
 from .led_control import LEDControlPanelProperties
 from .light_effects import LightEffectCollection
@@ -43,11 +45,6 @@ class DroneShowAddonProperties(PropertyGroup):
             "Version 2 uses a shared material for all drones to speed up light effects."
         ),
         min=1,
-        max=2,
+        max=LATEST_SKYBRUSH_PLUGIN_VERSION,
         default=1,
     )
-
-    @property
-    def latest_version(self) -> int:
-        """Returns the latest plugin file format version available."""
-        return self.__annotations__["version"].keywords["max"]

@@ -46,6 +46,9 @@ DEFAULT_INDOOR_DRONE_RADIUS = 0.1
 DEFAULT_OUTDOOR_DRONE_RADIUS = 0.5
 """Default outdoor drone radius"""
 
+LATEST_SKYBRUSH_PLUGIN_VERSION = 2
+"""The latest (current) plugin version."""
+
 NUM_PYRO_CHANNELS = 6
 """The number of pyro channels that we support."""
 

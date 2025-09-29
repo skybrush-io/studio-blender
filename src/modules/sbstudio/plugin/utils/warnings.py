@@ -1,5 +1,6 @@
 from bpy.types import Context
 
+from sbstudio.plugin.constants import LATEST_SKYBRUSH_PLUGIN_VERSION
 from sbstudio.plugin.model.formation import count_markers_in_formation
 from sbstudio.plugin.stats import get_drone_count
 
@@ -63,8 +64,8 @@ def draw_formation_size_warning(context: Context, layout) -> None:
 def draw_version_warning(context: Context, layout) -> None:
     """Draw a version warning to a layout, if needed."""
     skybrush = context.scene.skybrush
-    if skybrush.version < skybrush.latest_version:
+    if skybrush.version < LATEST_SKYBRUSH_PLUGIN_VERSION:
         _draw_warning(
             layout,
-            text=f"File format is old (version {skybrush.version} < {skybrush.latest_version})",
+            text=f"File format is old (version {skybrush.version} < {LATEST_SKYBRUSH_PLUGIN_VERSION})",
         )
