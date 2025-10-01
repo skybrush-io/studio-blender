@@ -13,6 +13,8 @@ from sbstudio.plugin.operators import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     RemoveLightEffectOperator,
+    SetLightEffectEndFrameOperator,
+    SetLightEffectStartFrameOperator,
 )
 
 
@@ -110,23 +112,51 @@ class LightEffectsPanel(Panel):
                 text="Attach to",
             )
             if entry.storyboard_entry_or_transition_selection:
-                col.prop(
+                row = col.row()
+                row.prop(
                     entry,
                     "frame_start",
                     text=f"Start Frame ({entry.frame_start_offset:+})",
+                )
+                row.separator()
+                row.operator(
+                    SetLightEffectStartFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
                 )
                 col.prop(
                     entry,
                     "duration",
                     text=f"Duration ({entry.duration_offset:+})",
                 )
-                col.prop(
+                row = col.row()
+                row.prop(
                     entry, "frame_end", text=f"End Frame ({entry.frame_end_offset:+})"
                 )
+                row.separator()
+                row.operator(
+                    SetLightEffectEndFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
             else:
-                col.prop(entry, "frame_start")
+                row = col.row()
+                row.prop(entry, "frame_start")
+                row.separator()
+                row.operator(
+                    SetLightEffectStartFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
                 col.prop(entry, "duration")
-                col.prop(entry, "frame_end")
+                row = col.row()
+                row.prop(entry, "frame_end")
+                row.separator()
+                row.operator(
+                    SetLightEffectEndFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")

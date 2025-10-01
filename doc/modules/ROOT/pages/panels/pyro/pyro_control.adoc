@@ -12,11 +12,23 @@ image::panels/pyro_control/pyro_control.jpg[Pyro Control panel]
 
 There are three visualization types for pyro effects you can choose dynamically:
 
-* `None` means not to visualize pyro at all
-* Select `Markers` to use very simple but quick markers on drones which are supposed 
-  to have an active pyro effect at a given frame.
-* Select `Particles` to imitate gerbs falling down from the drones for visualization
-  purposes (this option slows down rendering time substantially).
+None:: 
+Select this option to skip pyro visualization completely 
+(might be needed for speeding up playback or render).
+
+Markers:: 
+select this option to use very simple but quick markers on drones 
+which are supposed to have an active pyro effect at a given frame.
+
+Particles:: Select this option to imitate gerbs falling down from the drones 
+for visualization purposes (this option slows down rendering time substantially).
+
+Info:: With this option drones will be highlighed with the same markers as in the 
+`Markers` option but statically, throughout the entire show. Additionally, details 
+about pyro channel, timing and payload will be also printed on them. Use this option 
+to highlight and follow pyro drones throughout the entire show and to aid preflight 
+pyro setup with double checking you added pyro to the right drones and to the right 
+channel.
 
 Particles of the pyro effect are assumed to be hosted by the _second_ material slot 
 in the material list of the drone mesh. The name of the material starts with 
