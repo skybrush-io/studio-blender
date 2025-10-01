@@ -101,6 +101,16 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 
 *Skybrush Studio for Blender* also supports flawless light design for your drone light shows. In Blender we support a single RGB color to be mapped to each drone at each frame in the timeline by simple baked colors or by complex parametric light effects overlayed to the base color. The RGB color output from Blender will be transformed to the RGB or RGBW color of your LED driver on your drones by the Skybrush backend and firmware. There are several smart tools dedicated in *Skybrush Studio for Blender* for light design, to see these options please checkout the description of the xref:panels/leds.adoc[LEDs tab].
 
+=== Storage and visualization of color data
+
+Baked colors of a given drone object is stored in the  animation data of the object's own `color` property, while parametric light effect colors are dynamically overlaid onto this property for the current frame in real-time.
+
+For properly visualizing colors, internally we use a common drone template material for all drones (which should always be the first material of each drone) with a shader node tree that inputs object color as the color source for the material. Thus for properly visualizing drone colors, you should set the "Object Color" and/or "Wireframe Color" properties of the Viewport Shading panel in your 3D Viewports to `Object`.
+
+Note that earlier (pre 4.0) versions of the *Skybrush Studio for Blender* plugin used a different shader node tree with one unique material for each drone and storing color animation in these individual materials (we dropped this solution due to efficiency constraints). So when you open an old Blender file, a migration window should pop up warning you about the deprecated structure of your old file and providing means for upgrading your file to the new structure automatically with a simple click.
+
+=== Color space
+
 Internally, *Skybrush Studio for Blender* uses the linear RGB color space, just like the entire Blender pipeline. The colors are encoded in this color space when they are exported to a show file, and it is the responsibility of the show viewer application (i.e. *Skybrush Viewer*) and the LED driver of the drone to convert linear RGB colors to the color space appropriate for the end device.
 
 
@@ -108,6 +118,11 @@ Internally, *Skybrush Studio for Blender* uses the linear RGB color space, just 
 
 *Skybrush Studio for Blender* supports pyro control as part of your drone light shows. Pyro trigger events on multiple channels can be created with convenient payload descriptors and different visualization types. Pyro control events can be exported into the main .skyc show file or into external formats supporting drone-launched pyro. For more information please checkout the description of the xref:panels/pyro.adoc[Pyro tab].
 
+=== Storage and visualization of pyro data
+
+Pyro data for each drone is stored as a JSON string under "Object Data Properties" -> "Drone Show" -> "Pyro trigger events".
+
+This JSON string gets converted into different visualizations based on the "Render" dropdown selection of the xref:panels/pyro/pyro_control.adoc[Pyro Control panel]. Some visualizations of pyro data need a dedicated material for each drone, this is always stored as the second material of the drone objects.
 
 == Yaw control
 
