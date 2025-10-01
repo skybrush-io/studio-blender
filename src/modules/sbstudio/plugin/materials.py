@@ -12,12 +12,9 @@ from .errors import SkybrushStudioAddonError
 __all__ = (
     "create_colored_material",
     "create_glowing_material",
-    "create_keyframe_for_diffuse_color_of_material",
     "get_material_for_led_light_color",
     "get_material_for_pyro",
-    "get_led_light_color_from_material",
     "set_emission_strength_of_material",
-    "set_led_light_color_to_material",
 )
 
 is_blender_4 = bpy.app.version >= (4, 0, 0)
@@ -148,24 +145,6 @@ def get_material_for_pyro(drone) -> Optional[Material]:
         return None
 
 
-def _get_diffuse_color_of_material(material) -> RGBAColor:
-    """Returns the diffuse color of the given material.
-
-    The material must use a principled BSDF or an emission shader.
-
-    Parameters:
-        material: the Blender material to get the color from
-    """
-    if material.use_nodes:
-        # Material is using shader nodes so we need to adjust the diffuse
-        # color in the shader as well (the base property would control only
-        # what we see in the preview window)
-        _, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
-        return tuple(input.default_value)
-    else:
-        return material.diffuse_color
-
-
 def _set_diffuse_color_of_material(material, color: RGBAColor):
     """Sets the diffuse color of the given material to the given value.
 
@@ -197,79 +176,6 @@ def set_emission_strength_of_material(material, value: float) -> None:
         return
 
     input.default_value = value
-
-
-def create_keyframe_for_diffuse_color_of_material(
-    material,
-    color: Union[
-        Tuple[float, float, float], Tuple[float, float, float, float], RGBAColor
-    ],
-    *,
-    frame: Optional[int] = None,
-    step: bool = False,
-):
-    """Creates keyframes for the diffuse color of the given material to set it
-    to the given color in the given frame.
-
-    Parameters:
-        material: the material to modify
-        color: the RGB color to use for the diffuse color of the material
-        frame: the frame to apply the diffuse color on; `None` means the
-            current frame
-        step: whether to insert an additional keyframe in the preceding frame to
-            ensure an abrupt transition
-    """
-    if frame is None:
-        frame = bpy.context.scene.frame_current
-
-    # Ensure that we have animation data for the shader node tree. we need
-    # to use a custom name because all the node trees otherwise have the
-    # same name ("Shader Nodetree") so they would get the same action
-    node_tree = material.node_tree
-    ensure_action_exists_for_object(
-        node_tree, name=f"{material.name} Shader Nodetree Action"
-    )
-
-    if hasattr(color, "r"):
-        color_as_rgba = color.r, color.g, color.b, 1.0
-    else:
-        color_as_rgba = color[0], color[1], color[2], 1.0
-
-    keyframes = [(frame, color_as_rgba)]
-    if step and frame > bpy.context.scene.frame_start:
-        keyframes.insert(0, (frame - 1, None))
-
-    # Set the keyframes
-    node, input = _get_shader_node_and_input_for_diffuse_color_of_material(material)
-    index = node.inputs.find(input.name)
-    data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
-    set_keyframes(node_tree, data_path, keyframes, interpolation="LINEAR")
-
-
-def get_led_light_color_from_material(drone) -> RGBAColor:
-    """Returns the color of the LED light on the given drone.
-
-    Parameters:
-        drone: the drone to query
-        color: the color to apply to the LED light of the drone
-    """
-    material = get_material_for_led_light_color(drone)
-    if material is not None:
-        return _get_diffuse_color_of_material(material)
-    else:
-        return (0.0, 0.0, 0.0, 0.0)
-
-
-def set_led_light_color_to_material(drone, color: RGBAColorLike):
-    """Sets the color of the LED light on the given drone.
-
-    Parameters:
-        drone: the drone to update
-        color: the color to apply to the LED light of the drone
-    """
-    material = get_material_for_led_light_color(drone)
-    if material is not None:
-        _set_diffuse_color_of_material(material, color)
 
 
 def _get_shader_node_and_input_for_diffuse_color_of_material(material):

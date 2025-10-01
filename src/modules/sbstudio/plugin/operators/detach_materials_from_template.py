@@ -4,33 +4,10 @@ from typing import Optional
 from sbstudio.plugin.constants import Collections, Templates
 from sbstudio.plugin.materials import (
     create_colored_material,
-    get_material_for_led_light_color,
     get_material_for_pyro,
 )
 
 __all__ = ("DetachMaterialsFromDroneTemplateOperator",)
-
-
-# TODO: deprecated function, not used since drones use a
-# shared template material
-def detach_led_light_material_from_drone_template(
-    drone, template_material: Optional[Material] = None
-) -> None:
-    if template_material is None:
-        template = Templates.find_drone(create=False)
-        template_material = (
-            get_material_for_led_light_color(template) if template else None
-        )
-
-    if template_material is None:
-        return None
-
-    for slot in drone.material_slots:
-        if slot.material == template_material:
-            copied_material = template_material.copy()
-            copied_material.name = f"LED color of {drone.name}"
-            slot.material = copied_material
-            return slot.material
 
 
 def detach_pyro_material_from_drone_template(
