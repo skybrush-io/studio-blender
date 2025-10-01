@@ -103,11 +103,11 @@ NOTE: While using the regular return to home, it is not guaranteed that each dro
 
 === Storage and visualization of color data
 
-Baked colors of a given drone object is stored in the  animation data of the object's own `color` property, while parametric light effect colors are dynamically overlaid onto this property for the current frame in real-time.
+Baked colors of a given drone object are stored in the animation data of the `color` property of the object (shown as "Color" in the "Viewport Display" section in the Properties editor), while parametric light effect colors are dynamically overlaid onto this property for the current frame in real-time.
 
-For properly visualizing colors, internally we use a common drone template material for all drones (which should always be the first material of each drone) with a shader node tree that inputs object color as the color source for the material. Thus for properly visualizing drone colors, you should set the "Object Color" and/or "Wireframe Color" properties of the Viewport Shading panel in your 3D Viewports to `Object`.
+For properly visualizing colors, internally we use a common drone template material for all drones (which should always be the first material of each drone) with a shader node tree that injects the viewport color of the object (i.e. the `color` property) as the color source for the material. Therefore, for properly visualizing drone colors, you should set the "Object Color" and/or "Wireframe Color" properties of the Viewport Shading panel in your 3D viewports to `Object`.
 
-Note that earlier (pre 4.0) versions of the *Skybrush Studio for Blender* plugin used a different shader node tree with one unique material for each drone and storing color animation in these individual materials (we dropped this solution due to efficiency constraints). So when you open an old Blender file, a migration window should pop up warning you about the deprecated structure of your old file and providing means for upgrading your file to the new structure automatically with a simple click.
+Note that earlier (pre 4.0) versions of the *Skybrush Studio for Blender* plugin used a different shader node tree with one unique material for each drone. This solution was changed in version 4.0 due to efficiency reasons. When you open a file that was created with an earlier version of the plugin, a migration window should pop up warning you about the deprecated structure of your old file and providing means for upgrading your file to the new structure automatically with a single click.
 
 === Color space
 
