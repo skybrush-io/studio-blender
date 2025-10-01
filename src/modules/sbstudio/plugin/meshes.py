@@ -16,45 +16,10 @@ from .objects import create_object
 
 __all__ = (
     "create_cone",
-    "create_cube",
     "create_icosphere",
     "edit_mesh",
     "subdivide_edges",
 )
-
-
-def _current_object_renamed_to(name):
-    result = bpy.context.object
-    if name is not None:
-        result.name = name
-    return result
-
-
-def create_cube(
-    center: Coordinate3D = (0, 0, 0),
-    size: float = 1,
-    *,
-    name: Optional[str] = None,
-):
-    """Creates a Blender mesh object with the shape of a cube.
-
-    Parameters:
-        center: the center of the cube
-        size: the size of the cube. You may also pass a tuple of length 3
-            to create a box with different width, height and depth.
-        name: the name of the mesh object; `None` to use the default name that
-            Blender assigns to the object
-
-    Returns:
-        object: the created mesh object
-    """
-    if isinstance(size, (int, float)):
-        size = (size, size, size)
-
-    bpy.ops.mesh.primitive_cube_add(location=center)
-    bpy.context.object.scale = size
-
-    return _current_object_renamed_to(name)
 
 
 def create_cone(
@@ -133,27 +98,6 @@ def create_object_from_bmesh(bm, *, name: Optional[str] = None):
     mesh.name = f"{obj.name} Mesh"
 
     return obj
-
-
-def create_sphere(
-    center: Coordinate3D = (0, 0, 0),
-    radius: float = 1,
-    *,
-    name: Optional[str] = None,
-):
-    """Creates a Blender mesh object with the shape of a sphere.
-
-    Parameters:
-        center: the center of the sphere
-        radius: the radius of the sphere
-        name: the name of the mesh object; `None` to use the default name that
-            Blender assigns to the object
-
-    Returns:
-        object: the created mesh object
-    """
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, location=center)
-    return _current_object_renamed_to(name)
 
 
 @contextmanager
