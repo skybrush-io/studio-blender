@@ -9,7 +9,7 @@ from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.yaw import YawSetpoint, YawSetpointList
-from sbstudio.plugin.materials import get_led_light_color
+from sbstudio.plugin.colors import get_color_of_drone
 from sbstudio.plugin.utils.evaluator import (
     get_position_of_object,
     get_xyz_euler_rotation_of_object,
@@ -217,7 +217,7 @@ def sample_colors_of_objects(
     for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
             key = obj.name if by_name else obj
-            color = get_led_light_color(obj)
+            color = get_color_of_drone(obj)
             lights[key].append(
                 Color4D(
                     time,
@@ -272,7 +272,7 @@ def sample_positions_and_colors_of_objects(
         for obj in objects:
             key = obj.name if by_name else obj
             pos = get_position_of_object(obj)
-            color = get_led_light_color(obj)
+            color = get_color_of_drone(obj)
             trajectories[key].append(Point4D(time, *pos))
             lights[key].append(
                 Color4D(
@@ -335,7 +335,7 @@ def sample_positions_colors_and_yaw_of_objects(
         for obj in objects:
             key = obj.name if by_name else obj
             pos = get_position_of_object(obj)
-            color = get_led_light_color(obj)
+            color = get_color_of_drone(obj)
             rotation = get_xyz_euler_rotation_of_object(obj)
             trajectories[key].append(Point4D(time, *pos))
             lights[key].append(
