@@ -103,23 +103,60 @@ class LightEffectsPanel(Panel):
                     layout.separator()
 
             col = layout.column()
-            row = col.row()
-            row.prop(entry, "frame_start")
-            row.separator()
-            row.operator(
-                SetLightEffectStartFrameOperator.bl_idname,
-                icon="TRIA_LEFT",
-                text="",
+            # TODO: remove bullet from beginning of text on UI somehow
+            col.prop_search(
+                entry,
+                "storyboard_entry_or_transition_selection",
+                scene.skybrush.storyboard,
+                "entries_or_transitions",
+                text="Attach to",
             )
-            col.prop(entry, "duration")
-            row = col.row()
-            row.prop(entry, "frame_end")
-            row.separator()
-            row.operator(
-                SetLightEffectEndFrameOperator.bl_idname,
-                icon="TRIA_LEFT",
-                text="",
-            )
+            if entry.storyboard_entry_or_transition_selection:
+                row = col.row()
+                row.prop(
+                    entry,
+                    "frame_start",
+                    text=f"Start Frame ({entry.frame_start_offset:+})",
+                )
+                row.separator()
+                row.operator(
+                    SetLightEffectStartFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
+                col.prop(
+                    entry,
+                    "duration",
+                    text=f"Duration ({entry.duration_offset:+})",
+                )
+                row = col.row()
+                row.prop(
+                    entry, "frame_end", text=f"End Frame ({entry.frame_end_offset:+})"
+                )
+                row.separator()
+                row.operator(
+                    SetLightEffectEndFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
+            else:
+                row = col.row()
+                row.prop(entry, "frame_start")
+                row.separator()
+                row.operator(
+                    SetLightEffectStartFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
+                col.prop(entry, "duration")
+                row = col.row()
+                row.prop(entry, "frame_end")
+                row.separator()
+                row.operator(
+                    SetLightEffectEndFrameOperator.bl_idname,
+                    icon="TRIA_LEFT",
+                    text="",
+                )
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")
