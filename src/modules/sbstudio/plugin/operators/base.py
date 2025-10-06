@@ -10,7 +10,7 @@ from numpy import array, floating
 from numpy.typing import NDArray
 from typing import Any, Optional
 
-from bpy.props import BoolProperty, EnumProperty
+from bpy.props import BoolProperty, EnumProperty, IntProperty
 from bpy.types import Collection, Context, Object, Operator
 from bpy_extras.io_utils import ExportHelper
 
@@ -496,3 +496,62 @@ class StaticMarkerCreationOperator(FormationOperator):
         else:
             num_existing_markers = 0
         return max(0, num_drones - num_existing_markers)
+
+
+class MigrationOperator(Operator):
+    """Operator mixin for migrations/upgrades for files created in earlier
+    versions of the Skybrush Studio for Blender plugin."""
+
+    version_from = IntProperty(name="Input format version", options={"HIDDEN"})
+    version_to = IntProperty(name="Output format version", options={"HIDDEN"})
+
+    @classmethod
+    def poll(cls, context: Context):
+        return context.scene.skybrush
+
+    def execute(self, context: Context):
+        if context.scene.skybrush.version < self.version_from:
+            raise RuntimeError(
+                f"Input format version should be {self.version_from}, "
+                f"not {context.scene.skybrush.version}"
+            )
+        elif context.scene.skybrush.version == self.version_from:
+            retval = (
+                self.execute_migration(context)
+                if self.needs_migration()
+                else {"FINISHED"}
+            )
+            if retval == {"FINISHED"}:
+                context.scene.skybrush.version = self.version_to
+
+            return retval
+
+        return {"FINISHED"}
+
+    def invoke(self, context: Context, event):
+        self.initialize_migration()
+
+        if context.scene.skybrush.version >= self.version_to:
+            return {"CANCELLED"}
+
+        if self.needs_migration():
+            return context.window_manager.invoke_confirm(
+                self, event, title=self.bl_label, message=self.bl_description
+            )
+        else:
+            return self.execute(context)
+
+    def execute_migration(self, context: Context):
+        """Executes the migration/upgrade on the current Blender content."""
+        raise NotImplementedError
+
+    def initialize_migration(self) -> None:
+        """Initializes the operator by setting up the from/to versions."""
+        raise NotImplementedError
+
+    def needs_migration(self) -> bool:
+        """Returns whether the current Blender content needs migration.
+
+        Note that return value is checked based on actual content,
+        irrespective of the current plugin version."""
+        raise NotImplementedError

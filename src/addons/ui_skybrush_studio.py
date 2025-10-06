@@ -127,6 +127,7 @@ from sbstudio.plugin.operators import (
     UpdateFrameRangeFromStoryboardOperator,
     UpdateTimeMarkersFromStoryboardOperator,
     UseSelectedVertexGroupForFormationOperator,
+    UseSharedMaterialForAllDronesMigrationOperator,
     ValidateTrajectoriesOperator,
     VVIZExportOperator,
 )
@@ -256,6 +257,7 @@ operators = (
     AddMarkersFromQRCodeOperator,
     RefreshFileFormatsOperator,
     RunFullProximityCheckOperator,
+    UseSharedMaterialForAllDronesMigrationOperator,
 )
 
 #: List widgets in this addon.
