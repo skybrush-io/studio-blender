@@ -34,11 +34,14 @@ from .constants import COMMUNITY_SERVER_URL
 from .errors import SkybrushStudioAPIError
 from .types import Limits, Mapping, SmartRTHPlan, TransitionPlan, Version
 
-__all__ = ("SkybrushStudioAPI",)
+__all__ = (
+    "SkybrushSignerAPI",
+    "SkybrushStudioAPI",
+)
 
 
 class Response:
-    """Class representing a response from the Skybrush Studio API."""
+    """Class representing a response from the Skybrush Studio/Signer APIs."""
 
     def __init__(self, response: HTTPResponse):
         """Constructor.
@@ -68,6 +71,7 @@ class Response:
             "application/octet-stream",
             "application/json",
             "application/zip",
+            "text/plain",
         ):
             raise SkybrushStudioAPIError(
                 f"Unexpected content type {self.content_type!r} in response"
@@ -117,14 +121,9 @@ _LICENSE_API_KEY_REGEXP = re.compile(
 )
 
 
-class SkybrushStudioAPI:
-    """Class that represents a connection to the API of a Skybrush Studio
-    server.
-    """
-
-    _api_key: Optional[str] = None
-    """The API key that will be submitted with each request. For license-type
-    API keys, the key must start with the string "License ".
+class SkybrushStudioBaseAPI:
+    """Base class that represents a connection to the API of
+    either Skybrush Studio Server or Skybrush Request Signer.
     """
 
     _root: str
@@ -133,83 +132,19 @@ class SkybrushStudioAPI:
     _http_status: dict[int | None, str]
     """Predefined HTTP status messages."""
 
-    @staticmethod
-    def validate_api_key(key: str) -> str:
-        """Validates the given API key.
-
-        Returns:
-            the validated API key; same as the input argument
-
-        Raises:
-            ValueError: if the key cannot be a valid API key
-        """
-        if key.startswith("License"):
-            if not _LICENSE_API_KEY_REGEXP.match(key):
-                raise ValueError("Invalid license-type API key")
-        else:
-            if not _API_KEY_REGEXP.match(key):
-                raise ValueError("Invalid API key")
-        return key
-
-    def __init__(
-        self,
-        url: str = COMMUNITY_SERVER_URL,
-        api_key: Optional[str] = None,
-        license_file: Optional[str] = None,
-    ):
+    def __init__(self, url: str):
         """Constructor.
 
         Parameters:
-            url: the root URL of the Skybrush Studio API; defaults to the public
-                online service
-            api_key: the API key used to authenticate with the server
-            license_file: the path to a license file to be used as the API Key
+            url: the root URL of the Skybrush API
         """
+        self._api_key = None
         self._root = None  # type: ignore
         self._request_context = create_default_context()
         self._http_status = {status.value: status.phrase for status in HTTPStatus}
         self._http_status[None] = "HTTP error"
 
-        if api_key and license_file:
-            raise SkybrushStudioAPIError(
-                "Cannot use API key and license file at the same time"
-            )
-
-        if license_file:
-            self.api_key = self._convert_license_file_to_api_key(license_file)
-        else:
-            self.api_key = api_key
-
         self.url = url
-
-    @property
-    def api_key(self) -> Optional[str]:
-        """The API key used to authenticate with the server."""
-        return self._api_key
-
-    @api_key.setter
-    def api_key(self, value: Optional[str]) -> None:
-        self._api_key = self.validate_api_key(value) if value else None
-
-    def _convert_license_file_to_api_key(self, file: str) -> str:
-        """Parses a license file and transforms it to an API key.
-
-        Returns:
-            the license file parsed as an API key
-
-        Raises:
-            ValueError: if the file cannot be read as an API key
-        """
-        if not Path(file).exists():
-            raise ValueError("License file does not exist")
-
-        try:
-            with open(file, "rb") as fp:
-                api_key = f"License {b64encode(fp.read()).decode('ascii')}"
-        except Exception:
-            raise ValueError("Could not read license file") from None
-
-        return api_key
 
     @property
     def url(self) -> str:
@@ -324,6 +259,117 @@ class SkybrushStudioAPI:
         ctx.check_hostname = False
         ctx.verify_mode = CERT_NONE
         self._request_context = ctx
+
+
+class SkybrushSignerAPI(SkybrushStudioBaseAPI):
+    """Class that represents a connection to the API of a
+    Skybrush Request Signer.
+    """
+
+    def get_hardware_id(self) -> str:
+        """Gets the hardware ID of the current machine from the request signer."""
+        with self._send_request("hwid") as response:
+            result = response.as_str()
+
+        return result
+
+    def sign_request(self, data: dict[str, Any]) -> str:
+        """Signs a JSON request issued by Skybrush Studio.
+
+        Args:
+            data: the JSON data to sign.
+
+        Returns:
+            the signed data to be sent to Skybrush Studio Server
+        """
+        with self._send_request("sign", data=data) as response:
+            result = response.as_str()
+
+        return result
+
+
+class SkybrushStudioAPI(SkybrushStudioBaseAPI):
+    """Class that represents a connection to the API of a Skybrush Studio
+    server.
+    """
+
+    _api_key: Optional[str] = None
+    """The API key that will be submitted with each request. For license-type
+    API keys, the key must start with the string "License ".
+    """
+
+    @staticmethod
+    def validate_api_key(key: str) -> str:
+        """Validates the given API key.
+
+        Returns:
+            the validated API key; same as the input argument
+
+        Raises:
+            ValueError: if the key cannot be a valid API key
+        """
+        if key.startswith("License"):
+            if not _LICENSE_API_KEY_REGEXP.match(key):
+                raise ValueError("Invalid license-type API key")
+        else:
+            if not _API_KEY_REGEXP.match(key):
+                raise ValueError("Invalid API key")
+        return key
+
+    def __init__(
+        self,
+        url: str = COMMUNITY_SERVER_URL,
+        api_key: Optional[str] = None,
+        license_file: Optional[str] = None,
+    ):
+        """Constructor.
+
+        Parameters:
+            url: the root URL of the Skybrush Studio API; defaults to the public
+                online service
+            api_key: the API key used to authenticate with the server
+            license_file: the path to a license file to be used as the API Key
+        """
+        super().__init__(url=url)
+
+        if api_key and license_file:
+            raise SkybrushStudioAPIError(
+                "Cannot use API key and license file at the same time"
+            )
+
+        if license_file:
+            self.api_key = self._convert_license_file_to_api_key(license_file)
+        else:
+            self.api_key = api_key
+
+    @property
+    def api_key(self) -> Optional[str]:
+        """The API key used to authenticate with the server."""
+        return self._api_key
+
+    @api_key.setter
+    def api_key(self, value: Optional[str]) -> None:
+        self._api_key = self.validate_api_key(value) if value else None
+
+    def _convert_license_file_to_api_key(self, file: str) -> str:
+        """Parses a license file and transforms it to an API key.
+
+        Returns:
+            the license file parsed as an API key
+
+        Raises:
+            ValueError: if the file cannot be read as an API key
+        """
+        if not Path(file).exists():
+            raise ValueError("License file does not exist")
+
+        try:
+            with open(file, "rb") as fp:
+                api_key = f"License {b64encode(fp.read()).decode('ascii')}"
+        except Exception:
+            raise ValueError("Could not read license file") from None
+
+        return api_key
 
     def decompose_points(
         self,

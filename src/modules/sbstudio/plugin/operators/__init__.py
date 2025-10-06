@@ -44,6 +44,7 @@ from .move_storyboard_entry import (
 from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .refresh_file_formats import RefreshFileFormatsOperator
+from .register_hardware_id import RegisterHardwareIDOperator
 from .remove_formation import RemoveFormationOperator
 from .remove_light_effect import RemoveLightEffectOperator
 from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
@@ -62,6 +63,7 @@ from .set_time_of_storyboard_entry import (
     SetStoryboardEntryStartFrameOperator,
 )
 from .set_server_url import SetServerURLOperator
+from .set_signer_url import SetSignerURLOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
 from .takeoff import TakeoffOperator
 from .trigger_pyro import TriggerPyroOnSelectedDronesOperator
@@ -106,6 +108,7 @@ __all__ = (
     "PrepareSceneOperator",
     "RecalculateTransitionsOperator",
     "RefreshFileFormatsOperator",
+    "RegisterHardwareIDOperator",
     "RemoveFormationOperator",
     "RemoveLightEffectOperator",
     "RemoveScheduleOverrideEntryOperator",
@@ -120,6 +123,7 @@ __all__ = (
     "SetStoryboardEntryEndFrameOperator",
     "SetStoryboardEntryStartFrameOperator",
     "SetServerURLOperator",
+    "SetSignerURLOperator",
     "SkybrushCSVExportOperator",
     "SkybrushExportOperator",
     "SkybrushPDFExportOperator",

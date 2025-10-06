@@ -102,6 +102,7 @@ from sbstudio.plugin.operators import (
     PrepareSceneOperator,
     RecalculateTransitionsOperator,
     RefreshFileFormatsOperator,
+    RegisterHardwareIDOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
     RemoveScheduleOverrideEntryOperator,
@@ -116,6 +117,7 @@ from sbstudio.plugin.operators import (
     SetStoryboardEntryEndFrameOperator,
     SetStoryboardEntryStartFrameOperator,
     SetServerURLOperator,
+    SetSignerURLOperator,
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
@@ -258,6 +260,8 @@ operators = (
     RefreshFileFormatsOperator,
     RunFullProximityCheckOperator,
     UseSharedMaterialForAllDronesMigrationOperator,
+    SetSignerURLOperator,
+    RegisterHardwareIDOperator,
 )
 
 #: List widgets in this addon.

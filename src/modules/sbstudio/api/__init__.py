@@ -1,4 +1,4 @@
-from .base import SkybrushStudioAPI
+from .base import SkybrushSignerAPI, SkybrushStudioAPI
 from .errors import SkybrushStudioAPIError
 
-__all__ = ("SkybrushStudioAPI", "SkybrushStudioAPIError")
+__all__ = ("SkybrushSignerAPI", "SkybrushStudioAPI", "SkybrushStudioAPIError")
