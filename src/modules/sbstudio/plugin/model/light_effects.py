@@ -207,32 +207,8 @@ class ColorFunctionProperties(PropertyGroup):
         }
 
 
-def _get_frame_start_offset(self: LightEffect) -> int:
-    if self.storyboard_entry_or_transition_selection:
-        return self.frame_start - self.storyboard_entry_or_transition.frame_start
-    else:
-        return 0
-
-
-def _get_duration_offset(self: LightEffect) -> int:
-    if self.storyboard_entry_or_transition_selection:
-        return (self.frame_end - self.frame_start) - (
-            self.storyboard_entry_or_transition.frame_end
-            - self.storyboard_entry_or_transition.frame_start
-        )
-    else:
-        return 1
-
-
 def _get_frame_end(self: LightEffect) -> int:
     return self.frame_start + self.duration - 1
-
-
-def _get_frame_end_offset(self: LightEffect) -> int:
-    if self.storyboard_entry_or_transition_selection:
-        return self.frame_end - self.storyboard_entry_or_transition.frame_end
-    else:
-        return 0
 
 
 def _set_frame_end(self: LightEffect, value: int) -> None:
@@ -322,12 +298,6 @@ class LightEffect(PropertyGroup):
         default=0,
         options=set(),
     )
-    frame_start_offset = IntProperty(
-        name="Start Frame offset",
-        description="Frame offset relative to storyboard entry start",
-        get=_get_frame_start_offset,
-        options=set(),
-    )
     duration = IntProperty(
         name="Duration",
         description="Duration of this light effect",
@@ -335,23 +305,11 @@ class LightEffect(PropertyGroup):
         default=1,
         options=set(),
     )
-    duration_offset = IntProperty(
-        name="Duration offset",
-        description="Duration offset relative to storyboard entry duration",
-        get=_get_duration_offset,
-        options=set(),
-    )
     frame_end = IntProperty(
         name="End Frame",
         description="Frame when this light effect should end in the show",
         get=_get_frame_end,
         set=_set_frame_end,
-        options=set(),
-    )
-    frame_end_offset = IntProperty(
-        name="End Frame offset",
-        description="Frame offset relative to storyboard entry end",
-        get=_get_frame_end_offset,
         options=set(),
     )
     fade_in_duration = IntProperty(
@@ -872,6 +830,30 @@ class LightEffect(PropertyGroup):
         """
         self.color_image = bpy.data.images.new(name=name, width=width, height=height)
         return self.color_image
+
+    @property
+    def duration_offset(self) -> int:
+        """Returns the duration offset relative to attached storyboard entry duration,
+        or zero if no storyboard entry is attached."""
+        return self.frame_end_offset - self.frame_start_offset
+
+    @property
+    def frame_end_offset(self) -> int:
+        """Returns frame offset relative to attached storyboard entry end,
+        or zero if no storyboard entry is attached."""
+        if self.storyboard_entry_or_transition_selection:
+            return self.frame_end - self.storyboard_entry_or_transition.frame_end
+        else:
+            return 0
+
+    @property
+    def frame_start_offset(self) -> int:
+        """ "Returns the frame offset relative to attached storyboard entry start,
+        or zero if no storyboard entry is attached."""
+        if self.storyboard_entry_or_transition_selection:
+            return self.frame_start - self.storyboard_entry_or_transition.frame_start
+        else:
+            return 0
 
     def get_image_pixels(self) -> Sequence[float]:
         """Returns the pixel-level representation of the color image of the light
