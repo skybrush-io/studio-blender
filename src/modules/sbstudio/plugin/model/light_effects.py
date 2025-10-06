@@ -999,7 +999,7 @@ class LightEffect(PropertyGroup):
         return warnings
 
     def update_from_storyboard(
-        self, context: Optional[Context], reset_offset: bool
+        self, context: Optional[Context], *, reset_offset: bool
     ) -> None:
         """Updates the stored storyboard entry/transition's name and
         start and end times from the currently selected entry/transition."""
