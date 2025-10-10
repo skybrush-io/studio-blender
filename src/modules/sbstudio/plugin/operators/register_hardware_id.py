@@ -13,7 +13,7 @@ __all__ = ("RegisterHardwareIDOperator",)
 log = logging.getLogger(__name__)
 
 
-SKYBRUSH_ACCOUNT_URL_TEMPLATE = """https://account.skybrush.io/login?redirect=/licenses?pendingHardwareId={hardware_id}&pendingProduct=studio"""
+SKYBRUSH_ACCOUNT_URL_TEMPLATE = """https://account.skybrush.io/login?redirect=%2Flicenses%3FpendingHardwareId%3D{hardware_id}%26pendingProduct%3Dio.skybrush.studio.api"""
 
 
 class RegisterHardwareIDOperator(Operator):
