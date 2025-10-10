@@ -12,7 +12,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Callable, Optional, cast
 
-from sbstudio.api.base import SkybrushStudioAPI
+from sbstudio.api import SkybrushStudioAPI
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation

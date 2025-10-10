@@ -4,8 +4,6 @@ import logging
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from sbstudio.plugin.signer import get_signer
-
 __all__ = ("SetSignerURLOperator",)
 
 

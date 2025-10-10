@@ -27,7 +27,8 @@ def signer_url_updated(
     hardware_id: str = ""
     if self.signer_url:
         try:
-            hardware_id = get_signer().get_hardware_id()
+            signer = get_signer()
+            hardware_id = signer.get_hardware_id()
             log.info("Hardware ID: {hardware_id}")
         except Exception as ex:
             log.warning(

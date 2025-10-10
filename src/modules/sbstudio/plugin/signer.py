@@ -1,14 +1,10 @@
 import logging
 
-from contextlib import contextmanager
 from functools import lru_cache
-from socket import gaierror
-from typing import Iterator, TypeVar
-from urllib.error import URLError
+from typing import TypeVar
 
 from sbstudio.api import SkybrushSignerAPI
 from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
 
 __all__ = ("get_signer",)
 
@@ -26,6 +22,10 @@ def _get_signer_from_url(url: str):
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
+
+    Raises:
+        ValueError on initialization error
+        Exception on all other unhandled exceptions
     """
     try:
         result = SkybrushSignerAPI(url=url)
@@ -46,7 +46,11 @@ def _get_signer_from_url(url: str):
 
 
 def get_signer() -> SkybrushSignerAPI:
-    """Returns the singleton instance of the Skybrush Signer API object."""
+    """Returns the singleton instance of the Skybrush Signer API object.
+
+    Raises:
+        SkybrushStudioAPIError if signer is not configured
+    """
     from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences
 
@@ -58,60 +62,11 @@ def get_signer() -> SkybrushSignerAPI:
     prefs = get_preferences()
     signer_url = str(prefs.signer_url).strip()
 
+    if not signer_url:
+        raise SkybrushStudioAPIError(
+            "Request signer is not configured in the preferences"
+        )
+
     signer = _get_signer_from_url(signer_url)
 
     return signer
-
-
-# TODO(vasarhelyi): this is so far a copy of call_api_from_blender_operator(),
-# might not be needed at all
-@contextmanager
-def call_signer_from_blender_operator(
-    operator, what: str = "operation"
-) -> Iterator[SkybrushSignerAPI]:
-    """Context manager that yields immediately back to the caller from a
-    try-except block, catches all exceptions, and calls the ``report()`` method
-    of the given Blender operator with an appropriate error message if there
-    was an error. All exceptions are then re-raised; the caller is expected to
-    return ``{"CANCELLED"}`` from the operator immediately in response to an
-    exception.
-    """
-    default_message = f"Error while invoking {what} on the Skybrush Signer"
-    try:
-        yield get_signer()
-    except SkybrushStudioExportWarning as ex:
-        operator.report({"WARNING"}, str(ex))
-        raise
-    except SkybrushStudioAPIError as ex:
-        operator.report({"ERROR"}, ex.format_message() or default_message)
-        raise
-    except URLError as ex:
-        if isinstance(ex.reason, ConnectionRefusedError):
-            message = f"{default_message}: Connection refused. Is the signer running?"
-        elif isinstance(ex.reason, gaierror):
-            message = f"{default_message}: Could not resolve signer URL. Are you connected to the Internet?"
-        elif isinstance(ex.reason, OSError):
-            message = f"{default_message}: {ex.reason.strerror}"
-        elif isinstance(ex.reason, str):
-            message = f"{default_message}: {ex.reason}"
-        else:
-            message = default_message
-        operator.report({"ERROR"}, message)
-    except ConnectionRefusedError:
-        operator.report(
-            {"ERROR"}, f"{default_message}: Connection refused. Is the signer running?"
-        )
-        raise
-    except gaierror:
-        # gaierror is short for "getaddrinfo" error, which happens when trying
-        # to look up the hostname in the signer URL while not being connected
-        # to the Internet (or without a DNS server)
-        operator.report(
-            f"{default_message}: Could not resolve signer URL. Are you connected to the Internet?"
-        )
-    except OSError as ex:
-        operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
-        raise
-    except Exception:
-        operator.report({"ERROR"}, default_message)
-        raise
