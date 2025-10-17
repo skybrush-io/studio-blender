@@ -117,7 +117,7 @@ If you are preparing your drone show as part of a larger event, e.g. with firewo
 * External link: https://finale3d.com/documentation/vviz-file-format/[Finale 3D: VVIZ format]
 * External link: https://finale3d.com/documentation/skybrush-studio-blender/[Finale 3D: Import from Skybrush]
 * External link: https://www.fwsim.com/doc/en/drone_shows.html[FWSim: VVIZ support]
-* External link: https://help.depence.com/[Depence]
+* External link: https://help.depence.com/depence-construction/drones[Depence: Drones]
 
 Note that our exporters that provide compatibility with these software require a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
 
