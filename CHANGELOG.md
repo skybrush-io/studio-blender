@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The minimum backend version required for this version of the add-on is now
+  2.29.0.
+
 - A major update is that the color animation of drones is stored in a much more efficient
   way: instead of a unique material for all drones we now have one single template material
   with a modified shader node tree that inputs colors from the drone object's color property.
@@ -37,9 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   all previous files need to be migrated once to be used in the new format. Whenever you load
   an old Blender file, a popup message will give you details about this migration. Please 
   press OK, save the new file at a different name and use that in the future.
-
-- The minimum backend version required for this version of the add-on is now
-  2.29.0.
 
 - Trajectories sent to the backend use a new, compact binary format to speed up
   render requests and save some bandwidth towards remote backends.
