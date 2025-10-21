@@ -119,6 +119,8 @@ If you are preparing your drone show as part of a larger event, e.g. with firewo
 * External link: https://www.fwsim.com/doc/en/drone_shows.html[FWSim: VVIZ support]
 * External link: https://help.depence.com/depence-construction/drones[Depence: Drones]
 
+WARNING: Even though yaw control and pyro triggering is part of the official .ddsf specification and hence the actual .ddsf files Skybrush exports, according to Depence customer service they only read the trajectories and light program from the .ddsf files so far, not yaw or pyro. Implementation of the latter two is in progress in Depence and we will be notified once it is ready.
+
 Note that our exporters that provide compatibility with these software require a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
 
 If you press one of the btn:[Export to Finale 3D .vviz] or btn:[Export to Depence .ddsf] buttons, you have to choose the path and filename of your output file. The btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for these export types as well.
