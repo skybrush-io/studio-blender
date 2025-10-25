@@ -13,9 +13,6 @@ from sbstudio.plugin.errors import SkybrushStudioExportWarning
 
 __all__ = ("get_api",)
 
-_fallback_api_key: str = "trial"
-"""Fallback API key to use when the user did not enter any API key"""
-
 T = TypeVar("T")
 
 #############################################################################
@@ -32,11 +29,9 @@ def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
     """
-    global _fallback_api_key
-
     try:
         result = SkybrushStudioAPI(
-            api_key=key or (None if license_file else _fallback_api_key),
+            api_key=key or None,
             license_file=license_file or None,
         )
         if url:
@@ -142,11 +137,3 @@ def call_api_from_blender_operator(
     except Exception:
         operator.report({"ERROR"}, default_message)
         raise
-
-
-def set_fallback_api_key(value: Optional[str]) -> None:
-    """Sets the fallback API key to use when the user did not provide one in the
-    add-on preferences.
-    """
-    global _fallback_api_key
-    _fallback_api_key = str(value) if value is not None else ""
