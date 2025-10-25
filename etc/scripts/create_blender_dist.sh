@@ -111,8 +111,6 @@ if [ "x${BOOTLOADER_DIR}" != x ]; then
 
 register()
 
-from sbstudio.plugin.api import set_fallback_api_key, get_api
-set_fallback_api_key("NNAs8w.hApopcx8s68YZAuRAGofbboqzFwx7KikdT0Q")
 EOF
     PYTHONPATH=vendor .venv/bin/python -m stickytape.main ${BUILD_DIR}/entrypoint.py \
         --add-python-path ${BUILD_DIR}/vendor/skybrush \
