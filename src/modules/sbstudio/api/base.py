@@ -177,7 +177,7 @@ class SkybrushStudioBaseAPI:
                 content_type = "application/octet-stream"
 
         if content_encoding == "gzip":
-            data = compress(data)
+            data = compress(data, mtime=0)
 
         headers = {}
         if content_type is not None:
