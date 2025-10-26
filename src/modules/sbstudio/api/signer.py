@@ -9,6 +9,8 @@ class SkybrushSignerAPI(SkybrushStudioBaseAPI):
     Skybrush Request Signer.
     """
 
+    _use_get: bool = False
+
     def get_hardware_id(self) -> str:
         """Gets the hardware ID of the current machine from the request signer."""
         with self._send_request("hwid") as response:
@@ -16,7 +18,7 @@ class SkybrushSignerAPI(SkybrushStudioBaseAPI):
 
         return result
 
-    def sign_request(self, data: dict[str, Any]) -> str:
+    def sign_request(self, data: dict[str, Any] | None) -> str:
         """Signs a JSON request issued by Skybrush Studio.
 
         Args:

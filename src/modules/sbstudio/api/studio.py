@@ -61,7 +61,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         except Exception as ex:
             log.warning(f"Could not find request signer: {ex}")
             signer = None
-        if signer is not None and data is not None:
+        if signer is not None:
             try:
                 signature = signer.sign_request(data)
             except Exception as ex:

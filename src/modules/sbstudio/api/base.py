@@ -104,11 +104,14 @@ class SkybrushStudioBaseAPI:
     either Skybrush Studio Server or Skybrush Request Signer.
     """
 
-    _root: str
-    """The root URL of the API, with a trailing slash"""
-
     _http_status: dict[int | None, str]
     """Predefined HTTP status messages."""
+
+    _root: str
+    """The root URL of the API, with a trailing slash."""
+
+    _use_get: bool = True
+    """whether to use GET instead of POST if applicable."""
 
     def __init__(self, url: str):
         """Constructor.
@@ -166,7 +169,7 @@ class SkybrushStudioBaseAPI:
         content_encoding = None
 
         if data is None:
-            method = "GET"
+            method = "GET" if self._use_get else "POST"
         else:
             method = "POST"
             if not isinstance(data, bytes):
