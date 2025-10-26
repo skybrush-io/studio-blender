@@ -85,9 +85,12 @@ def needs_migration():
     # TODO: what should be the optimal method to check if file
     # needs migration or not? We check the template material now
     # as it is most probably not modified by the users frequently
-    try:
-        template = Templates.find_drone(create=False)
-    except (KeyError, ValueError):
+    templates = Collections.find_templates(create=False)
+    if templates is None:
+        return False
+
+    template = Templates.find_drone(create=False)
+    if template is None:
         return False
 
     template_material = get_material_for_led_light_color(template)
