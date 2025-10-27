@@ -4,7 +4,7 @@ import logging
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-__all__ = ("SetSignerURLOperator",)
+__all__ = ("SetGatewayURLOperator",)
 
 
 #############################################################################
@@ -13,12 +13,12 @@ __all__ = ("SetSignerURLOperator",)
 log = logging.getLogger(__name__)
 
 
-class SetSignerURLOperator(Operator):
-    """Sets the request signer URL to a fixed value."""
+class SetGatewayURLOperator(Operator):
+    """Sets the Studio Gateway URL to a fixed value."""
 
-    bl_idname = "skybrush.set_signer_url"
-    bl_label = "Set signer URL"
-    bl_description = "Sets the request signer URL to a fixed value"
+    bl_idname = "skybrush.set_gateway_url"
+    bl_label = "Set gateway URL"
+    bl_description = "Sets the Studio Gateway URL to a fixed value"
 
     url = StringProperty(default="")
 
@@ -26,7 +26,7 @@ class SetSignerURLOperator(Operator):
         from sbstudio.plugin.model.global_settings import get_preferences
 
         prefs = get_preferences()
-        prefs.signer_url = self.url
+        prefs.gateway_url = self.url
 
         bpy.ops.wm.save_userpref()
 

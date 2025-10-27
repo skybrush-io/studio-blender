@@ -117,7 +117,7 @@ from sbstudio.plugin.operators import (
     SetStoryboardEntryEndFrameOperator,
     SetStoryboardEntryStartFrameOperator,
     SetServerURLOperator,
-    SetSignerURLOperator,
+    SetGatewayURLOperator,
     SkybrushExportOperator,
     SkybrushCSVExportOperator,
     SkybrushPDFExportOperator,
@@ -260,7 +260,7 @@ operators = (
     RefreshFileFormatsOperator,
     RunFullProximityCheckOperator,
     UseSharedMaterialForAllDronesMigrationOperator,
-    SetSignerURLOperator,
+    SetGatewayURLOperator,
     RegisterHardwareIDOperator,
 )
 

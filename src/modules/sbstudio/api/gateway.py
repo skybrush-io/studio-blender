@@ -1,18 +1,18 @@
 from typing import Any
 from .base import SkybrushStudioBaseAPI
 
-__all__ = ("SkybrushSignerAPI",)
+__all__ = ("SkybrushGatewayAPI",)
 
 
-class SkybrushSignerAPI(SkybrushStudioBaseAPI):
+class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
     """Class that represents a connection to the API of a
-    Skybrush Request Signer.
+    Skybrush Gateway for request signing and progress display.
     """
 
     _use_get: bool = False
 
     def get_hardware_id(self) -> str:
-        """Gets the hardware ID of the current machine from the request signer."""
+        """Gets the hardware ID of the current machine from the Studio Gateway."""
         with self._send_request("hwid") as response:
             result = response.as_str()
 

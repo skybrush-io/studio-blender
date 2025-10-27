@@ -25,7 +25,7 @@ __all__ = (
 
 
 class SkybrushStudioResponse:
-    """Class representing a response from the Skybrush Studio/Signer APIs."""
+    """Class representing a response from the Skybrush Studio/Gateway APIs."""
 
     def __init__(self, response: HTTPResponse):
         """Constructor.
@@ -101,7 +101,7 @@ class SkybrushStudioResponse:
 
 class SkybrushStudioBaseAPI:
     """Base class that represents a connection to the API of
-    either Skybrush Studio Server or Skybrush Request Signer.
+    either Skybrush Studio Server or Skybrush Studio Gateway.
     """
 
     _http_status: dict[int | None, str]

@@ -3,10 +3,10 @@ import logging
 from functools import lru_cache
 from typing import TypeVar
 
-from sbstudio.api import SkybrushSignerAPI
+from sbstudio.api import SkybrushGatewayAPI
 from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
 
-__all__ = ("get_signer",)
+__all__ = ("get_gateway",)
 
 T = TypeVar("T")
 
@@ -17,8 +17,8 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _get_signer_from_url(url: str):
-    """Constructs a Skybrush Signer API object from a root URL.
+def _get_gateway_from_url(url: str):
+    """Constructs a Skybrush Gateway API object from a root URL.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
@@ -28,12 +28,12 @@ def _get_signer_from_url(url: str):
         Exception on all other unhandled exceptions
     """
     try:
-        result = SkybrushSignerAPI(url=url)
+        result = SkybrushGatewayAPI(url=url)
     except ValueError as ex:
-        log.error(f"Could not initialize Skybrush Signer API: {str(ex)}")
+        log.error(f"Could not initialize Skybrush Gateway API: {str(ex)}")
         raise
     except Exception as ex:
-        log.error(f"Unhandled exception in Skybrush Signer API initialization: {ex!r}")
+        log.error(f"Unhandled exception in Skybrush Gateway API initialization: {ex!r}")
         raise
 
     # This is bad practice, but the default installation of Blender does not find
@@ -45,11 +45,11 @@ def _get_signer_from_url(url: str):
     return result
 
 
-def get_signer() -> SkybrushSignerAPI:
-    """Returns the singleton instance of the Skybrush Signer API object.
+def get_gateway() -> SkybrushGatewayAPI:
+    """Returns the singleton instance of the Skybrush Gateway API object.
 
     Raises:
-        SkybrushStudioAPIError if signer is not configured
+        SkybrushStudioAPIError if gateway is not configured
     """
     from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences
@@ -57,16 +57,16 @@ def get_signer() -> SkybrushSignerAPI:
     if not is_online_access_allowed():
         raise NoOnlineAccessAllowedError()
 
-    signer_url: str
+    gateway_url: str
 
     prefs = get_preferences()
-    signer_url = str(prefs.signer_url).strip()
+    gateway_url = str(prefs.gateway_url).strip()
 
-    if not signer_url:
+    if not gateway_url:
         raise SkybrushStudioAPIError(
-            "Request signer is not configured in the preferences"
+            "Skybrush Gateway is not configured in the preferences"
         )
 
-    signer = _get_signer_from_url(signer_url)
+    gateway = _get_gateway_from_url(gateway_url)
 
-    return signer
+    return gateway

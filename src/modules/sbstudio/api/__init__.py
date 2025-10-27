@@ -1,5 +1,5 @@
 from .errors import SkybrushStudioAPIError
-from .signer import SkybrushSignerAPI
+from .gateway import SkybrushGatewayAPI
 from .studio import SkybrushStudioAPI
 
-__all__ = ("SkybrushSignerAPI", "SkybrushStudioAPI", "SkybrushStudioAPIError")
+__all__ = ("SkybrushGatewayAPI", "SkybrushStudioAPI", "SkybrushStudioAPIError")

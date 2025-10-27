@@ -21,7 +21,7 @@ from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.model.yaw import YawSetpointList
-from sbstudio.plugin.signer import get_signer
+from sbstudio.plugin.gateway import get_gateway
 
 from .base import SkybrushStudioResponse, SkybrushStudioBaseAPI
 from .constants import SKYBRUSH_STUDIO_SERVER_URL
@@ -71,13 +71,13 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             data = compress(json.dumps(data).encode("utf-8"))
             compressed = True
         try:
-            signer = get_signer()
+            gateway = get_gateway()
         except Exception as ex:
-            log.warning(f"Could not find request signer: {ex}")
-            signer = None
-        if signer is not None:
+            log.warning(f"Could not find studio gateway: {ex}")
+            gateway = None
+        if gateway is not None:
             try:
-                signature = signer.sign_request(data, compressed=compressed)
+                signature = gateway.sign_request(data, compressed=compressed)
             except Exception as ex:
                 log.warning(f"Could not sign request: {ex}")
                 signature = None

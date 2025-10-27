@@ -8,8 +8,8 @@ from typing import Optional
 
 from sbstudio.plugin.operators.register_hardware_id import RegisterHardwareIDOperator
 from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
-from sbstudio.plugin.operators.set_signer_url import SetSignerURLOperator
-from sbstudio.plugin.signer import get_signer
+from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
+from sbstudio.plugin.gateway import get_gateway
 from sbstudio.plugin.utils import with_context
 
 
@@ -21,18 +21,18 @@ __all__ = ("DroneShowAddonGlobalSettings",)
 log = logging.getLogger(__name__)
 
 
-def signer_url_updated(
+def gateway_url_updated(
     self: DroneShowAddonGlobalSettings, context: Optional[Context] = None
 ):
     hardware_id: str = ""
-    if self.signer_url:
+    if self.gateway_url:
         try:
-            signer = get_signer()
-            hardware_id = signer.get_hardware_id()
+            gateway = get_gateway()
+            hardware_id = gateway.get_hardware_id()
             log.info("Hardware ID: {hardware_id}")
         except Exception as ex:
             log.warning(
-                f"Request signer could not be reached at {self.signer_url}: {ex}"
+                f"Studio gateway could not be reached at {self.gateway_url}: {ex}"
             )
             pass
 
@@ -76,14 +76,14 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         ),
     )
 
-    signer_url = StringProperty(
-        name="Signer URL",
+    gateway_url = StringProperty(
+        name="Gateway URL",
         description=(
-            "URL of a dedicated Skybrush Studio Request Signer for using the "
+            "URL of a dedicated Skybrush Studio Gateway for using the online "
             "cloud server with pro features. Leave it empty if you have a local "
             "server or if you wish to use the free community cloud server"
         ),
-        update=signer_url_updated,
+        update=gateway_url_updated,
     )
 
     enable_experimental_features = BoolProperty(
@@ -109,17 +109,13 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         col.enabled = bool(self.hardware_id)
         op = col.operator(RegisterHardwareIDOperator.bl_idname)
 
-        layout.prop(self, "signer_url")
+        layout.prop(self, "gateway_url")
 
         row = layout.row()
-        op = row.operator(
-            SetSignerURLOperator.bl_idname, text="Use local request signer"
-        )
+        op = row.operator(SetGatewayURLOperator.bl_idname, text="Use local gateway")
         op.url = "http://localhost:7999"
 
-        op = row.operator(
-            SetSignerURLOperator.bl_idname, text="Do not use request signer"
-        )
+        op = row.operator(SetGatewayURLOperator.bl_idname, text="Do not use gateway")
         op.url = ""
 
         layout.prop(self, "api_key")

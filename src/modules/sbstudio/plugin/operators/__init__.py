@@ -63,7 +63,7 @@ from .set_time_of_storyboard_entry import (
     SetStoryboardEntryStartFrameOperator,
 )
 from .set_server_url import SetServerURLOperator
-from .set_signer_url import SetSignerURLOperator
+from .set_gateway_url import SetGatewayURLOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
 from .takeoff import TakeoffOperator
 from .trigger_pyro import TriggerPyroOnSelectedDronesOperator
@@ -123,7 +123,7 @@ __all__ = (
     "SetStoryboardEntryEndFrameOperator",
     "SetStoryboardEntryStartFrameOperator",
     "SetServerURLOperator",
-    "SetSignerURLOperator",
+    "SetGatewayURLOperator",
     "SkybrushCSVExportOperator",
     "SkybrushExportOperator",
     "SkybrushPDFExportOperator",
