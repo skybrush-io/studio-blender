@@ -1,9 +1,11 @@
+import json
 import logging
 import re
 
 from base64 import b64encode
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from gzip import compress
 from natsort import natsorted
 from pathlib import Path
 from typing import Any, Optional
@@ -55,7 +57,19 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
     def _sign_and_send_request(
         self, url: str, data: Any = None
     ) -> Iterator[SkybrushStudioResponse]:
-        """Sign and send a request."""
+        """Sign and send a request.
+
+        Args:
+            url: the URL (relative to the API root) where the request should be
+                sent to.
+            data: the data to sign and send; for supported data types see
+                `self.send_request()`.
+        """
+        if data is None or isinstance(data, bytes):
+            compressed = False
+        else:
+            data = compress(json.dumps(data).encode("utf-8"))
+            compressed = True
         try:
             signer = get_signer()
         except Exception as ex:
@@ -63,13 +77,15 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             signer = None
         if signer is not None:
             try:
-                signature = signer.sign_request(data)
+                signature = signer.sign_request(data, compressed=compressed)
             except Exception as ex:
                 log.warning(f"Could not sign request: {ex}")
                 signature = None
         else:
             signature = None
-        with self._send_request(url, data, signature=signature) as response:
+        with self._send_request(
+            url, data, signature=signature, compressed=compressed
+        ) as response:
             yield response
 
     @staticmethod

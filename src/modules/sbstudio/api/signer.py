@@ -18,16 +18,17 @@ class SkybrushSignerAPI(SkybrushStudioBaseAPI):
 
         return result
 
-    def sign_request(self, data: dict[str, Any] | None) -> str:
+    def sign_request(self, data: Any, *, compressed: bool = False) -> str:
         """Signs a JSON request issued by Skybrush Studio.
 
         Args:
-            data: the JSON data to sign.
+            data: the raw or compressed data to sign
+            compressed: whether data is an already gzip-compressed JSON-object
 
         Returns:
             the signed data to be sent to Skybrush Studio Server
         """
-        with self._send_request("sign", data=data) as response:
+        with self._send_request("sign", data=data, compressed=compressed) as response:
             result = response.as_str()
 
         return result

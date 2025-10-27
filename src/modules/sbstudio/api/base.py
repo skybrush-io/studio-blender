@@ -140,7 +140,12 @@ class SkybrushStudioBaseAPI:
 
     @contextmanager
     def _send_request(
-        self, url: str, data: Any = None, *, signature: str | None = None
+        self,
+        url: str,
+        data: Any = None,
+        *,
+        signature: str | None = None,
+        compressed: bool = False,
     ) -> Iterator[SkybrushStudioResponse]:
         """Sends a request to the given URL, relative to the API root, and
         returns the corresponding HTTP response object.
@@ -154,12 +159,14 @@ class SkybrushStudioBaseAPI:
                 of the request will be determined based on the type of this
                 parameter; when `data` is a `bytes` object, it is sent as the
                 request body directly and the content type will be
-                `application/octet-stream`. When `data` is any other Python
+                `application/octet-stream` or `application/json` depending on
+                the `compressed` parameter. When `data` is any other Python
                 object, it will be encoded as JSON, compressed with `gzip` and
                 then sent as a request with `Content-Type` equal to
                 `application/json`.
             signature: an optional digital signature of the request for
                 server side validation
+            compressed: whether data is an already gzip-compressed JSON-object
 
         Raises:
             SkybrushStudioAPIError: when the request returned a non-successful
@@ -173,14 +180,14 @@ class SkybrushStudioBaseAPI:
         else:
             method = "POST"
             if not isinstance(data, bytes):
-                data = json.dumps(data).encode("utf-8")
+                data = compress(json.dumps(data).encode("utf-8"))
+                content_type = "application/json"
+                content_encoding = "gzip"
+            elif compressed:
                 content_type = "application/json"
                 content_encoding = "gzip"
             else:
                 content_type = "application/octet-stream"
-
-        if content_encoding == "gzip":
-            data = compress(data, mtime=0)
 
         headers = {}
         if content_type is not None:
