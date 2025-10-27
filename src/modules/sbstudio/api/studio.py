@@ -22,7 +22,7 @@ from sbstudio.model.yaw import YawSetpointList
 from sbstudio.plugin.signer import get_signer
 
 from .base import SkybrushStudioResponse, SkybrushStudioBaseAPI
-from .constants import COMMUNITY_SERVER_URL
+from .constants import SKYBRUSH_STUDIO_SERVER_URL
 from .errors import SkybrushStudioAPIError
 from .types import Limits, Mapping, SmartRTHPlan, TransitionPlan, Version
 
@@ -92,7 +92,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
 
     def __init__(
         self,
-        url: str = COMMUNITY_SERVER_URL,
+        url: str = SKYBRUSH_STUDIO_SERVER_URL,
         api_key: Optional[str] = None,
         license_file: Optional[str] = None,
     ):
