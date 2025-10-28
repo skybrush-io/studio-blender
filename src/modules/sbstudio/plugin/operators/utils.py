@@ -26,6 +26,7 @@ from sbstudio.plugin.model.storyboard import (
 )
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
+from sbstudio.plugin.gateway import get_gateway
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
@@ -377,7 +378,23 @@ def _get_trajectories_lights_and_yaw_setpoints(
 
 
 def _show_progress_during_export(progress: FrameProgressReport) -> None:
-    print(progress.format())
+    # TODO: if gateway is configured but is not running,
+    # this call jams execution as connection is attempted
+    # to be established on every progress call. How to handle?
+    try:
+        gateway = get_gateway()
+    except Exception:
+        gateway = None
+
+    if gateway is not None:
+        try:
+            gateway.show_progress(progress)
+        except Exception as ex:
+            log.error(f"Gateway cannot show progress: {ex}")
+            gateway = None
+
+    if gateway is None:
+        print(progress.format())
 
 
 def export_show_to_file_using_api(

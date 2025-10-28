@@ -41,14 +41,18 @@ class SkybrushStudioResponse:
         info = self._response.info()
         return info.get_content_type()
 
+    @property
+    def status_code(self) -> int:
+        """Returns the HTTP status code of the response."""
+        return self._response.getcode()
+
     def _run_sanity_checks(self) -> None:
         """Runs basic sanity checks on the wrapped HTTP response and raises
         appropriate exceptions when the HTTP response signals an error.
         """
-        status_code = self._response.getcode()
-        if status_code != 200:
+        if self.status_code not in [200, 201]:
             raise SkybrushStudioAPIError(
-                f"Request returned HTTP error code {status_code}"
+                f"Request returned HTTP error code {self.status_code}"
             )
 
         if self.content_type not in (
@@ -92,6 +96,10 @@ class SkybrushStudioResponse:
             data = data.decode("utf-8")
 
         return data
+
+    def get_header(self, name: str) -> str | None:
+        """Returns the value of the response header matching name."""
+        return self._response.getheader(name)
 
     def save_to_file(self, filename: Path) -> None:
         """Writes response to a given file."""
@@ -143,7 +151,7 @@ class SkybrushStudioBaseAPI:
         *,
         signature: str | None = None,
         compressed: bool = False,
-        enforce_post: bool = False,
+        method: str | None = None,
     ) -> Iterator[SkybrushStudioResponse]:
         """Sends a request to the given URL, relative to the API root, and
         returns the corresponding HTTP response object.
@@ -165,8 +173,7 @@ class SkybrushStudioBaseAPI:
             signature: an optional digital signature of the request for
                 server side validation
             compressed: whether data is an already gzip-compressed JSON-object
-            enforce_post: whether to enforce POST method over GET even if
-                data is empty
+            method: explicit method to use, or `None` to infer automatically
 
         Raises:
             SkybrushStudioAPIError: when the request returned a non-successful
@@ -176,9 +183,9 @@ class SkybrushStudioBaseAPI:
         content_encoding = None
 
         if data is None:
-            method = "POST" if enforce_post else "GET"
+            method = method or "GET"
         else:
-            method = "POST"
+            method = method or "POST"
             if not isinstance(data, bytes):
                 data = compress(json.dumps(data).encode("utf-8"))
                 content_type = "application/json"
