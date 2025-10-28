@@ -110,9 +110,6 @@ class SkybrushStudioBaseAPI:
     _root: str
     """The root URL of the API, with a trailing slash."""
 
-    _use_get: bool = True
-    """whether to use GET instead of POST if applicable."""
-
     def __init__(self, url: str):
         """Constructor.
 
@@ -146,6 +143,7 @@ class SkybrushStudioBaseAPI:
         *,
         signature: str | None = None,
         compressed: bool = False,
+        enforce_post: bool = False,
     ) -> Iterator[SkybrushStudioResponse]:
         """Sends a request to the given URL, relative to the API root, and
         returns the corresponding HTTP response object.
@@ -167,6 +165,8 @@ class SkybrushStudioBaseAPI:
             signature: an optional digital signature of the request for
                 server side validation
             compressed: whether data is an already gzip-compressed JSON-object
+            enforce_post: whether to enforce POST method over GET even if
+                data is empty
 
         Raises:
             SkybrushStudioAPIError: when the request returned a non-successful
@@ -176,7 +176,7 @@ class SkybrushStudioBaseAPI:
         content_encoding = None
 
         if data is None:
-            method = "GET" if self._use_get else "POST"
+            method = "POST" if enforce_post else "GET"
         else:
             method = "POST"
             if not isinstance(data, bytes):
