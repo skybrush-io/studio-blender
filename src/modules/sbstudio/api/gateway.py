@@ -24,12 +24,14 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
 
         return result
 
-    def sign_request(self, data: Any, *, compressed: bool = False) -> str:
+    def sign_request(self, data: Any, *, compressed: bool | None = None) -> str:
         """Signs a JSON request issued by Skybrush Studio.
 
         Args:
             data: the raw or compressed data to sign
-            compressed: whether data is an already gzip-compressed JSON-object
+            compressed: whether data is an already gzip-compressed JSON-object (True),
+                a JSON-object not to be compressed (False), or an object to be compressed
+                if applicable (None)
 
         Returns:
             the signed data to be sent to Skybrush Studio Server
@@ -49,7 +51,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         if self._progress_task_url is None or progress.steps_done == 1:
             self._init_progress(title=progress.operation or "Progress")
 
-        self._set_progress(progress=int(progress.percentage or 0))
+        self._set_progress(progress=progress.percentage or 0)
 
         if progress.steps_done == progress.total_steps:
             self._close_progress()
@@ -57,7 +59,10 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
     def _close_progress(self) -> None:
         """Closes the current progress task reporter."""
         if self._progress_task_url is not None:
-            self._send_request(self._progress_task_url, method="DELETE")
+            with self._send_request(
+                self._progress_task_url, method="DELETE"
+            ) as _response:
+                pass  # TODO: what to do with the result?
             self._progress_task_url = None
 
     def _init_progress(self, title: str) -> None:
@@ -71,7 +76,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
 
         """
         data = {"title": title, "progress": 0}
-        with self._send_request("task", data) as response:
+        with self._send_request("task", data, compressed=False) as response:
             if response.status_code != 201:
                 raise SkybrushStudioAPIError(
                     f"Progress reporter for {title!r} could not be initialized"
@@ -80,13 +85,13 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
             task_url = response.get_header("Location")
             if task_url is None:
                 raise SkybrushStudioAPIError("Gateway did not return progress task URL")
-            task_url = task_url.rstrip("/")
+            task_url = task_url.lstrip("/")
 
             if self._progress_task_url and task_url != self._progress_task_url:
                 self._close_progress()
             self._progress_task_url = task_url
 
-    def _set_progress(self, progress: int) -> None:
+    def _set_progress(self, progress: float) -> None:
         """Sets the progress reporter of the Skybrush Gateway to the given value.
 
         Args:
@@ -94,4 +99,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         """
         if self._progress_task_url is not None:
             data = {"progress": progress}
-            self._send_request(self._progress_task_url, data)
+            with self._send_request(
+                self._progress_task_url, data, compressed=False
+            ) as _response:
+                pass  # TODO: what to do with the result?

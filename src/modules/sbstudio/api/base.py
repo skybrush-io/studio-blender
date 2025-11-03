@@ -150,7 +150,7 @@ class SkybrushStudioBaseAPI:
         data: Any = None,
         *,
         signature: str | None = None,
-        compressed: bool = False,
+        compressed: bool | None = None,
         method: str | None = None,
     ) -> Iterator[SkybrushStudioResponse]:
         """Sends a request to the given URL, relative to the API root, and
@@ -172,7 +172,10 @@ class SkybrushStudioBaseAPI:
                 `application/json`.
             signature: an optional digital signature of the request for
                 server side validation
-            compressed: whether data is an already gzip-compressed JSON-object
+            compressed: should be `True` if data is an already gzip-compressed
+                JSON-object, `False` if data is a JSON-object and compression
+                is not needed on it and `None` if data should be compressed
+                automatically if it is not of type bytes
             method: explicit method to use, or `None` to infer automatically
 
         Raises:
@@ -187,9 +190,15 @@ class SkybrushStudioBaseAPI:
         else:
             method = method or "POST"
             if not isinstance(data, bytes):
-                data = compress(json.dumps(data).encode("utf-8"))
+                if compressed is True:
+                    raise SkybrushStudioAPIError(
+                        "Compressed is set to True but data type is not bytes"
+                    )
+                data = json.dumps(data).encode("utf-8")
+                if compressed is None:
+                    data = compress(data)
+                    content_encoding = "gzip"
                 content_type = "application/json"
-                content_encoding = "gzip"
             elif compressed:
                 content_type = "application/json"
                 content_encoding = "gzip"
@@ -206,7 +215,7 @@ class SkybrushStudioBaseAPI:
         if signature is not None:
             headers["X-Skybrush-Request-Signature"] = signature
 
-        url = urljoin(self._root, url.lstrip("/"))
+        url = urljoin(self._root, url.rstrip("/"))
         req = Request(url, data=data, headers=headers, method=method)
 
         try:

@@ -66,7 +66,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
                 `self.send_request()`.
         """
         if data is None or isinstance(data, bytes):
-            compressed = False
+            compressed = None
         else:
             data = compress(json.dumps(data).encode("utf-8"))
             compressed = True
