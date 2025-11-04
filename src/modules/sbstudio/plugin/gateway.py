@@ -24,8 +24,8 @@ def _get_gateway_from_url(url: str):
     the user does not change the add-on settings.
 
     Raises:
-        ValueError on initialization error
-        Exception on all other unhandled exceptions
+        ValueError: on initialization error
+        Exception: on all other unhandled exceptions
     """
     try:
         result = SkybrushGatewayAPI(url=url)
@@ -49,7 +49,7 @@ def get_gateway() -> SkybrushGatewayAPI:
     """Returns the singleton instance of the Skybrush Gateway API object.
 
     Raises:
-        SkybrushStudioAPIError if gateway is not configured
+        SkybrushStudioAPIError: if gateway is not configured
     """
     from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences

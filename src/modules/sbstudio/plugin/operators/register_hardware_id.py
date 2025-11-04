@@ -1,6 +1,5 @@
 import logging
-
-from webbrowser import open
+import webbrowser
 
 from bpy.types import Operator
 
@@ -30,6 +29,8 @@ class RegisterHardwareIDOperator(Operator):
         hardware_id = prefs.hardware_id
 
         if hardware_id:
-            open(SKYBRUSH_ACCOUNT_URL_TEMPLATE.format(hardware_id=hardware_id))
+            webbrowser.open(
+                SKYBRUSH_ACCOUNT_URL_TEMPLATE.format(hardware_id=hardware_id)
+            )
 
         return {"FINISHED"}

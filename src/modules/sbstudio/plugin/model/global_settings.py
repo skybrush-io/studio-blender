@@ -29,12 +29,11 @@ def gateway_url_updated(
         try:
             gateway = get_gateway()
             hardware_id = gateway.get_hardware_id()
-            log.info("Hardware ID: {hardware_id}")
+            log.info(f"Hardware ID: {hardware_id}")
         except Exception as ex:
             log.warning(
                 f"Studio gateway could not be reached at {self.gateway_url}: {ex}"
             )
-            pass
 
     self.hardware_id = hardware_id
 
