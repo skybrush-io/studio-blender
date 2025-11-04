@@ -46,7 +46,7 @@ def get_selected_drones(*, context: Optional[Context] = None):
 
 
 @with_context
-def get_selected_objects(*, context: Optional[Context] = None):
+def get_selected_objects(*, sort = False, context: Optional[Context] = None):
     """Returns the list of selected objects in the given context.
 
     When the context is in object mode, all the objects currently selected in
@@ -58,7 +58,10 @@ def get_selected_objects(*, context: Optional[Context] = None):
         the list of selected objects, taking into account the current mode
     """
     if context.mode == "OBJECT":
-        return context.selected_objects
+        if sort:
+            return sorted(context.selected_objects, key=lambda obj: obj.name)
+        else:
+            return context.selected_objects
     else:
         active_object = context.active_object
         return [active_object] if active_object else []
