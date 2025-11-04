@@ -20,9 +20,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
     def get_hardware_id(self) -> str:
         """Gets the hardware ID of the current machine from the Studio Gateway."""
         with self._send_request("hwid") as response:
-            result = response.as_str()
-
-        return result
+            return response.as_str()
 
     def sign_request(self, data: Any, *, compressed: bool | None = None) -> str:
         """Signs a JSON request issued by Skybrush Studio.
@@ -39,9 +37,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         with self._send_request(
             "sign", data=data, compressed=compressed, method="POST"
         ) as response:
-            result = response.as_str()
-
-        return result
+            return response.as_str()
 
     def show_progress(self, progress: ProgressReport) -> None:
         """Shows the progress of the given progress report in Skybrush Gateway.
