@@ -17907,7 +17907,7 @@ translations_tuple = (
     (
         (
             "*",
-            "Upgrade your old (<4.0) Skybrush Studio for Blender file content\nto speed up light effect playback and show export, by replacing all\ndrone object materials to a shared template material, modifying its shader\nnode tree and storing color animations in the drone object's 'color' property.\nThe upgrade also changes active 3D Viewport wireframe and object color to 'OBJECT'.\n",
+            "Upgrade your old (<4.0) Skybrush Studio for Blender file content\nto speed up light effect playback and show export, by replacing all\ndrone object materials to a shared template material, modifying its shader\nnode tree and storing color animations in the drone object's 'color' property.\nThe upgrade also changes active 3D Viewport wireframe and object color to 'OBJECT'.",
         ),
         (("bpy.types.SKYBRUSH_OT_use_shared_material_for_all_drones_migration",), ()),
         ("ab", "", (False, ())),

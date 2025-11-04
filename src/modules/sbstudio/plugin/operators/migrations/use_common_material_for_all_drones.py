@@ -124,7 +124,7 @@ class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
         "to speed up light effect playback and show export, by replacing all\n"
         "drone object materials to a shared template material, modifying its shader\n"
         "node tree and storing color animations in the drone object's 'color' property.\n"
-        "The upgrade also changes active 3D Viewport wireframe and object color to 'OBJECT'.\n"
+        "The upgrade also changes active 3D Viewport wireframe and object color to 'OBJECT'."
     )
 
     def initialize_migration(self) -> None:
