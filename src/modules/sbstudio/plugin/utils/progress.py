@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from time import time
-from typing import Callable, Iterator, Optional, Tuple
+from typing import Callable, Iterator
 
 __all__ = ("ProgressReport", "FrameProgressReport")
 
@@ -14,31 +14,33 @@ class ProgressReport:
     steps_done: int = 0
     """Number of steps already performed in the operation."""
 
-    total_steps: Optional[int] = None
+    total_steps: int | None = None
     """Total number of steps in the operation; ``None`` if unknown."""
 
-    operation: Optional[str] = None
+    operation: str | None = None
     """Optional string that describes the operation being executed."""
 
-    start_time: float | None = None
+    _started_at: float | None = None
     """Optional user updated start time of the progress procedure."""
 
-    current_time: float | None = None
-    """Optional user updated current time of the progress procedure."""
+    _last_updated_at: float | None = None
+    """Time when the progress information was updated most recently. Used to
+    calculate the time remaining.
+    """
 
     @property
     def remaining_time(self) -> float | None:
         """Calculates remaining time in seconds or None if not known."""
         if (
             not self.percentage
-            or self.current_time is None
-            or self.start_time is None
-            or self.current_time == self.start_time
+            or self._last_updated_at is None
+            or self._started_at is None
+            or self._last_updated_at == self._started_at
         ):
             return None
 
         return (
-            (self.current_time - self.start_time)
+            (self._last_updated_at - self._started_at)
             * (100 - self.percentage)
             / self.percentage
         )
@@ -54,11 +56,37 @@ class ProgressReport:
         )
 
     @property
-    def percentage(self) -> Optional[float]:
-        """Percentage of the operation that has been completed."""
+    def percentage(self) -> float | None:
+        """Percentage of the operation that has been completed, or ``None`` if
+        the percentage is unknown.
+        """
         if self.total_steps is None or self.total_steps < 1:
             return None
         return self.steps_done / self.total_steps * 100
+
+    def add_step(self) -> None:
+        """Registers that one step has been performed."""
+        self.add_steps(1)
+
+    def add_steps(self, count: int) -> None:
+        """Registers that the given number of steps have been performed."
+
+        Args:
+            count: number of steps to add
+        """
+        self.steps_done += count
+        self._last_updated_at = time()
+
+    def start(self, now: float | None = None) -> None:
+        """Marks the start time of the progress report."""
+        if now is None:
+            now = time()
+
+        if self._started_at is not None:
+            raise RuntimeError("Progress report has already been started")
+
+        self._started_at = now
+        self._last_updated_at = now
 
     def format(self) -> str:
         time_left = (
@@ -66,10 +94,16 @@ class ProgressReport:
             if self.remaining_time_str is None
             else f", {self.remaining_time_str} mins left"
         )
-        return (
-            f"{self.operation}: {self.steps_done}/{self.total_steps}, "
-            f"{self.percentage:.1f}%{time_left}"
-        )
+        if self.total_steps is None:
+            return (
+                f"{self.operation}: {self.steps_done} step(s) done, "
+                f"{self.percentage or 0:.1f}%{time_left}"
+            )
+        else:
+            return (
+                f"{self.operation}: {self.steps_done}/{self.total_steps}, "
+                f"{self.percentage:.1f}%{time_left}"
+            )
 
 
 @dataclass
@@ -78,7 +112,7 @@ class FrameProgressReport(ProgressReport):
     operation that works on individual Blender frames.
     """
 
-    frame_range: Tuple[int, int] = (0, 0)
+    frame_range: tuple[int, int] = (0, 0)
     """Frame range of the operation."""
 
     current_frame: int = 0
@@ -113,7 +147,7 @@ class FrameIterator(Iterator[int]):
     current: int
     """The current frame number."""
 
-    _callback: Optional[Callable[[FrameProgressReport], None]] = None
+    _callback: Callable[[FrameProgressReport], None] | None = None
     """Callback to call in every iteration to report progress."""
 
     _callback_called_at: float
@@ -128,8 +162,8 @@ class FrameIterator(Iterator[int]):
         end: int,
         step: int,
         *,
-        operation: Optional[str] = None,
-        progress: Optional[Callable[[FrameProgressReport], None]] = None,
+        operation: str | None = None,
+        progress: Callable[[FrameProgressReport], None] | None = None,
     ):
         self.start = start
         self.end = max(start, end)
@@ -146,6 +180,7 @@ class FrameIterator(Iterator[int]):
         self._callback_called_at = 0
 
     def __iter__(self) -> Iterator[int]:
+        self._progress.start()
         return self
 
     def __next__(self) -> int:
@@ -164,15 +199,10 @@ class FrameIterator(Iterator[int]):
             self.current = min(self.current + self.step, self.end)
 
         self._progress.current_frame = frame
-        self._progress.steps_done += 1
+        self._progress.add_steps(1)
 
         if self._callback:
             now = time()
-
-            if not self._progress.start_time:
-                self._progress.start_time = now
-            self._progress.current_time = now
-
             if now - self._callback_called_at >= 1 or frame == self.end:
                 self._callback(self._progress)
                 self._callback_called_at = now
