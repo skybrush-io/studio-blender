@@ -57,8 +57,6 @@ def get_gateway() -> SkybrushGatewayAPI:
     if not is_online_access_allowed():
         raise NoOnlineAccessAllowedError()
 
-    gateway_url: str
-
     prefs = get_preferences()
     gateway_url = str(prefs.gateway_url).strip()
 
