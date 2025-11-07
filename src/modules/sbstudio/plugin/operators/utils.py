@@ -210,7 +210,6 @@ def _get_trajectories_and_lights(
                 drones,
                 frames,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -239,7 +238,6 @@ def _get_trajectories_and_lights(
                     drones,
                     frames,
                     context=context,
-                    by_name=True,
                     simplify=True,
                 )
 
@@ -255,7 +253,6 @@ def _get_trajectories_and_lights(
                 drones,
                 frames,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -303,7 +300,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
         with suspended_safety_checks():
-            range = frame_range(
+            frames = frame_range(
                 bounds[0],
                 bounds[1],
                 fps=trajectory_fps,
@@ -313,9 +310,8 @@ def _get_trajectories_lights_and_yaw_setpoints(
             )
             result = sample_positions_colors_and_yaw_of_objects(
                 drones,
-                range,
+                frames,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -333,7 +329,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
         # We need to iterate over the show twice, once for the trajectories
         # and yaw setpoints, once for the lights
         with suspended_safety_checks():
-            range = frame_range(
+            frames = frame_range(
                 bounds[0],
                 bounds[1],
                 fps=trajectory_fps,
@@ -344,9 +340,8 @@ def _get_trajectories_lights_and_yaw_setpoints(
             with suspended_light_effects():
                 result = sample_positions_and_yaw_of_objects(
                     drones,
-                    range,
+                    frames,
                     context=context,
-                    by_name=True,
                     simplify=True,
                 )
 
@@ -357,7 +352,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
                     trajectories[key] = trajectory
                     yaw_setpoints[key] = yaw_curve
 
-            range = frame_range(
+            frames = frame_range(
                 bounds[0],
                 bounds[1],
                 fps=light_fps,
@@ -367,9 +362,8 @@ def _get_trajectories_lights_and_yaw_setpoints(
             )
             lights = sample_colors_of_objects(
                 drones,
-                range,
+                frames,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
