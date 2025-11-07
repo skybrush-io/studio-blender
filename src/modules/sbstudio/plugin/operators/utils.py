@@ -33,7 +33,7 @@ from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
 from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
-from sbstudio.plugin.utils.progress import FrameProgressReport
+from sbstudio.plugin.utils.progress import ProgressReport
 from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
 from sbstudio.plugin.utils.sampling import (
     frame_range,
@@ -166,7 +166,7 @@ def _get_trajectories_and_lights(
     bounds: tuple[int, int],
     *,
     context: Optional[Context] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    progress: Optional[Callable[[ProgressReport], None]] = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram]]:
     """Get trajectories and LED lights of all selected/picked objects.
 
@@ -270,7 +270,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
     bounds: tuple[int, int],
     *,
     context: Optional[Context] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    progress: Optional[Callable[[ProgressReport], None]] = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram], dict[str, YawSetpointList]]:
     """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
 
@@ -377,7 +377,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
     return trajectories, lights, yaw_setpoints
 
 
-def _show_progress_during_export(progress: FrameProgressReport) -> None:
+def _show_progress_during_export(progress: ProgressReport) -> None:
     # TODO: if gateway is configured but is not running,
     # this call jams execution as connection is attempted
     # to be established on every progress call. How to handle?

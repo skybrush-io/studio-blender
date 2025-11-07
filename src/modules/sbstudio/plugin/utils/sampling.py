@@ -14,7 +14,7 @@ from sbstudio.plugin.utils.evaluator import (
     get_position_of_object,
     get_xyz_euler_rotation_of_object,
 )
-from sbstudio.plugin.utils.progress import FrameIterator, FrameProgressReport
+from sbstudio.plugin.utils.progress import FrameIterator, ProgressReport
 
 from .decorators import with_context
 
@@ -43,7 +43,7 @@ def frame_range(
     fps: int,
     context: Optional[Context] = None,
     operation: Optional[str] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    progress: Optional[Callable[[ProgressReport], None]] = None,
 ) -> Iterator[int]:
     """Generator that iterates from the given start frame to the given end frame
     with the given number of frames per second.

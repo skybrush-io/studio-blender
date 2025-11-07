@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from time import time
 from typing import Callable, Iterator
 
-__all__ = ("ProgressReport", "FrameProgressReport")
+__all__ = ("ProgressReport", "FrameIterator")
 
 
 @dataclass
@@ -163,7 +163,7 @@ class FrameIterator(Iterator[int]):
         step: int,
         *,
         operation: str | None = None,
-        progress: Callable[[FrameProgressReport], None] | None = None,
+        progress: Callable[[ProgressReport], None] | None = None,
     ):
         self.start = start
         self.end = max(start, end)
