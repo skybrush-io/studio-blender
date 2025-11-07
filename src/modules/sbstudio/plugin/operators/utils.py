@@ -197,7 +197,7 @@ def _get_trajectories_and_lights(
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
-        range = frame_range(
+        frames = frame_range(
             bounds[0],
             bounds[1],
             fps=trajectory_fps,
@@ -208,7 +208,7 @@ def _get_trajectories_and_lights(
         with suspended_safety_checks():
             result = sample_positions_and_colors_of_objects(
                 drones,
-                range,
+                frames,
                 context=context,
                 by_name=True,
                 redraw=redraw,
@@ -226,7 +226,7 @@ def _get_trajectories_and_lights(
         # We need to iterate over the show twice, once for the trajectories,
         # once for the lights
         with suspended_safety_checks():
-            range = frame_range(
+            frames = frame_range(
                 bounds[0],
                 bounds[1],
                 fps=trajectory_fps,
@@ -237,13 +237,13 @@ def _get_trajectories_and_lights(
             with suspended_light_effects():
                 trajectories = sample_positions_of_objects(
                     drones,
-                    range,
+                    frames,
                     context=context,
                     by_name=True,
                     simplify=True,
                 )
 
-            range = frame_range(
+            frames = frame_range(
                 bounds[0],
                 bounds[1],
                 fps=light_fps,
@@ -253,7 +253,7 @@ def _get_trajectories_and_lights(
             )
             lights = sample_colors_of_objects(
                 drones,
-                range,
+                frames,
                 context=context,
                 by_name=True,
                 redraw=redraw,
