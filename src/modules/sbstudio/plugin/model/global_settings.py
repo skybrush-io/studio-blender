@@ -125,7 +125,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         op = row.operator(SetServerURLOperator.bl_idname, text="Use local server")
         op.url = "http://localhost:8000"
 
-        op = row.operator(SetServerURLOperator.bl_idname, text="Use cloud server")
+        op = row.operator(SetServerURLOperator.bl_idname, text="Use community server")
         op.url = ""
 
         layout.prop(self, "enable_experimental_features")
