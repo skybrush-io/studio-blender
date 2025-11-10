@@ -11,7 +11,7 @@ from shutil import copyfileobj
 from ssl import create_default_context, CERT_NONE
 from typing import Any
 from urllib.error import HTTPError
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, urlunparse
 from urllib.request import Request, urlopen
 
 from sbstudio.utils import create_path_and_open
@@ -112,6 +112,9 @@ class SkybrushStudioBaseAPI:
     either Skybrush Studio Server or Skybrush Studio Gateway.
     """
 
+    _api_key: str | None
+    """The optional API key that will be submitted with each request."""
+
     _http_status: dict[int | None, str]
     """Predefined HTTP status messages."""
 
@@ -125,12 +128,29 @@ class SkybrushStudioBaseAPI:
             url: the root URL of the Skybrush API
         """
         self._api_key = None
-        self._root = None  # type: ignore
         self._request_context = create_default_context()
         self._http_status = {status.value: status.phrase for status in HTTPStatus}
         self._http_status[None] = "HTTP error"
 
         self.url = url
+
+    def joined_url(self, url: str) -> str:
+        """Returns a full normalized url from the API root and a relative url.
+
+        Args:
+            url: the URL relative to the API root."""
+
+        url = urljoin(self.url, url.rstrip("/"))
+
+        # replace localhost to 127.0.0.1 to force IPv4
+        parsed = urlparse(url)
+        if parsed.hostname == "localhost":
+            parsed = parsed._replace(
+                netloc=parsed.netloc.replace("localhost", "127.0.0.1")
+            )
+            return urlunparse(parsed)
+
+        return url
 
     @property
     def url(self) -> str:
@@ -215,8 +235,7 @@ class SkybrushStudioBaseAPI:
         if signature is not None:
             headers["X-Skybrush-Request-Signature"] = signature
 
-        url = urljoin(self._root, url.rstrip("/"))
-        req = Request(url, data=data, headers=headers, method=method)
+        req = Request(self.joined_url(url), data=data, headers=headers, method=method)
 
         try:
             with urlopen(req, context=self._request_context) as raw_response:

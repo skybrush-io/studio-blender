@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from typing import Any, Iterator
-from urllib.parse import urljoin
 
 from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
 
@@ -108,7 +107,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
             title: the title of the task
 
         Returns:
-            the URL where updates to the progress of the task can be sent
+            the full normalized URL where updates to the progress of the task can be sent
 
         Raises:
             SkybrushStudioAPIError: if the task could not be created
@@ -127,4 +126,4 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
                 "Gateway did not return URL for newly created task"
             )
 
-        return urljoin(self._root, task_url)
+        return self.joined_url(task_url)
