@@ -192,23 +192,26 @@ def _get_trajectories_and_lights(
             for effect in context.scene.skybrush.light_effects.entries
         )
 
+    frames = frame_range(
+        bounds[0],
+        bounds[1],
+        context=context,
+    )
+
     trajectories: dict[str, Trajectory]
     lights: dict[str, LightProgram]
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
-        frames = frame_range(
-            bounds[0],
-            bounds[1],
-            fps=trajectory_fps,
-            context=context,
-            operation="Sampling trajectories and lights",
-            progress=progress,
-        )
         with suspended_safety_checks():
+            frame_iter = frames.iter(
+                trajectory_fps,
+                operation="Sampling trajectories and lights",
+                on_progress=progress,
+            )
             result = sample_positions_and_colors_of_objects(
                 drones,
-                frames,
+                frame_iter,
                 context=context,
                 redraw=redraw,
                 simplify=True,
@@ -225,33 +228,27 @@ def _get_trajectories_and_lights(
         # We need to iterate over the show twice, once for the trajectories,
         # once for the lights
         with suspended_safety_checks():
-            frames = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=trajectory_fps,
-                context=context,
+            frame_iter = frames.iter(
+                trajectory_fps,
                 operation="Sampling trajectories",
-                progress=progress,
+                on_progress=progress,
             )
             with suspended_light_effects():
                 trajectories = sample_positions_of_objects(
                     drones,
-                    frames,
+                    frame_iter,
                     context=context,
                     simplify=True,
                 )
 
-            frames = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=light_fps,
-                context=context,
+            frame_iter = frames.iter(
+                light_fps,
                 operation="Sampling lights",
-                progress=progress,
+                on_progress=progress,
             )
             lights = sample_colors_of_objects(
                 drones,
-                frames,
+                frame_iter,
                 context=context,
                 redraw=redraw,
                 simplify=True,
@@ -293,6 +290,12 @@ def _get_trajectories_lights_and_yaw_setpoints(
             for effect in context.scene.skybrush.light_effects.entries
         )
 
+    frames = frame_range(
+        bounds[0],
+        bounds[1],
+        context=context,
+    )
+
     trajectories: dict[str, Trajectory]
     lights: dict[str, LightProgram]
     yaw_setpoints: dict[str, YawSetpointList]
@@ -300,17 +303,14 @@ def _get_trajectories_lights_and_yaw_setpoints(
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
         with suspended_safety_checks():
-            frames = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=trajectory_fps,
-                context=context,
+            frame_iter = frames.iter(
+                trajectory_fps,
                 operation="Sampling trajectories, lights and yaw setpoints",
-                progress=progress,
+                on_progress=progress,
             )
             result = sample_positions_colors_and_yaw_of_objects(
                 drones,
-                frames,
+                frame_iter,
                 context=context,
                 redraw=redraw,
                 simplify=True,
@@ -329,18 +329,15 @@ def _get_trajectories_lights_and_yaw_setpoints(
         # We need to iterate over the show twice, once for the trajectories
         # and yaw setpoints, once for the lights
         with suspended_safety_checks():
-            frames = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=trajectory_fps,
-                context=context,
+            frame_iter = frames.iter(
+                trajectory_fps,
                 operation="Sampling trajectories and yaw setpoints",
-                progress=progress,
+                on_progress=progress,
             )
             with suspended_light_effects():
                 result = sample_positions_and_yaw_of_objects(
                     drones,
-                    frames,
+                    frame_iter,
                     context=context,
                     simplify=True,
                 )
@@ -352,17 +349,14 @@ def _get_trajectories_lights_and_yaw_setpoints(
                     trajectories[key] = trajectory
                     yaw_setpoints[key] = yaw_curve
 
-            frames = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=light_fps,
-                context=context,
+            frame_iter = frames.iter(
+                light_fps,
                 operation="Sampling lights",
-                progress=progress,
+                on_progress=progress,
             )
             lights = sample_colors_of_objects(
                 drones,
-                frames,
+                frame_iter,
                 context=context,
                 redraw=redraw,
                 simplify=True,

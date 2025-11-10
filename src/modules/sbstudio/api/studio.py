@@ -73,7 +73,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         try:
             gateway = get_gateway()
         except Exception as ex:
-            log.warning(f"Could not find studio gateway: {ex}")
+            log.warning(f"Could not find Studio Gateway: {ex}")
             gateway = None
         if gateway is not None:
             try:

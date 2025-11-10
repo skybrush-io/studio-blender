@@ -44,12 +44,12 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
 
         Note that only one progress reporter can be used at a time.
         """
-        if self._progress_task_url is None or progress.steps_done == 1:
+        if self._progress_task_url is None:
             self._init_progress(title=progress.operation or "Progress")
 
         self._set_progress(progress=progress.percentage or 0)
 
-        if progress.steps_done == progress.total_steps:
+        if progress.finished:
             self._close_progress()
 
     def _close_progress(self) -> None:
