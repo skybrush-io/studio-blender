@@ -5,7 +5,13 @@ from itertools import chain
 from time import time
 from typing import Callable, Iterable, Iterator, Protocol, TypeVar
 
-__all__ = ("ProgressReport", "FrameRange")
+__all__ = (
+    "ProgressReport",
+    "ProgressHandler",
+    "StepBasedProgressReport",
+    "FrameRange",
+    "report_progress",
+)
 
 
 T = TypeVar("T")
@@ -207,14 +213,19 @@ class StepBasedProgressReport(ProgressReportBase):
             )
 
 
+ProgressHandler = Callable[[ProgressReport], None]
+"""Type alias for functions that handle progress reports."""
+
+
 def report_progress(
     iterable: Iterable[T],
     *,
     size_hint: int | None = None,
     operation: str | None = None,
+    throttle: float | bool = True,
     report_factory: Callable[[int | None], StepBasedProgressReport],
     on_advance: Callable[[ProgressReport, T], None] | None = None,
-    on_progress: Callable[[ProgressReport], None] | None = None,
+    on_progress: ProgressHandler | None = None,
 ) -> Iterator[T]:
     """Wraps an iterable to report progress on its consumption.
 
@@ -240,6 +251,13 @@ def report_progress(
 
     callback_called_at = 0
 
+    if isinstance(throttle, (int, float)):
+        throttle_interval = float(throttle)
+    elif throttle:
+        throttle_interval = 0.5
+    else:
+        throttle_interval = 0.0
+
     try:
         for item in iterable:
             yield item
@@ -248,7 +266,7 @@ def report_progress(
             progress.add_step()
             if on_advance:
                 on_advance(progress, item)
-            if on_progress and now - callback_called_at >= 1:
+            if on_progress and now - callback_called_at >= throttle_interval:
                 on_progress(progress)
                 callback_called_at = now
 
@@ -290,7 +308,7 @@ class FrameRange:
         fps: int = 1,
         *,
         operation: str | None = None,
-        on_progress: Callable[[ProgressReport], None] | None = None,
+        on_progress: ProgressHandler | None = None,
     ) -> Iterator[int]:
         frame_step = max(1, int(self._fps // fps))
 

@@ -1,6 +1,8 @@
-from typing import Any
+from contextlib import contextmanager
+from typing import Any, Iterator
+from urllib.parse import urljoin
 
-from sbstudio.plugin.utils.progress import ProgressReport
+from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
 
 from .base import SkybrushStudioBaseAPI
 from .errors import SkybrushStudioAPIError
@@ -39,63 +41,90 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         ) as response:
             return response.as_str()
 
-    def show_progress(self, progress: ProgressReport) -> None:
-        """Shows the progress of the given progress report in Skybrush Gateway.
-
-        Note that only one progress reporter can be used at a time.
-        """
-        if self._progress_task_url is None:
-            self._init_progress(title=progress.operation or "Progress")
-
-        self._set_progress(progress=progress.percentage or 0)
-
-        if progress.finished:
-            self._close_progress()
-
-    def _close_progress(self) -> None:
-        """Closes the current progress task reporter."""
-        if self._progress_task_url is not None:
-            with self._send_request(
-                self._progress_task_url, method="DELETE"
-            ) as _response:
-                pass  # TODO: what to do with the result?
-            self._progress_task_url = None
-
-    def _init_progress(self, title: str) -> None:
-        """Initializes a progress reporter in Skybrush Gateway with the given title.
+    @contextmanager
+    def use_new_operation(self, title: str = "") -> Iterator[ProgressHandler]:
+        """Returns a progress handler that uses a new operation in Skybrush Gateway.
 
         Args:
-            title: the title of the progress reporter
+            title: the title of the operation
+
+        Returns:
+            a progress handler function
+        """
+        task_url = self._create_task(title=title)
+        last_percentage: float | None = None
+
+        def handler(progress: ProgressReport) -> None:
+            nonlocal last_percentage
+            last_percentage = progress.percentage
+            with self._send_request(
+                task_url,
+                {
+                    "progress": round(progress.percentage, 1)
+                    if progress.percentage is not None
+                    else -1,
+                    "title": progress.operation,
+                },
+                compressed=False,
+            ):
+                # TODO(ntamas): currently we ignore the response, but in the
+                # near term the gateway should report whether the user
+                # attempted to cancel the operation, and if so, we should be
+                # able to pass this information back to the caller
+                pass
+
+        try:
+            yield handler
+        except Exception as ex:
+            with self._send_request(
+                task_url,
+                {
+                    "completed": True,
+                    "error": str(ex) or "An unexpected error occurred",
+                    "progress": last_percentage if last_percentage is not None else 0,
+                },
+                compressed=False,
+            ):
+                pass  # Response can be ignored
+            raise
+        else:
+            with self._send_request(
+                task_url,
+                {
+                    "completed": True,
+                    "progress": 100,
+                },
+                compressed=False,
+            ):
+                pass  # Response can be ignored
+        finally:
+            with self._send_request(task_url, method="DELETE"):
+                pass  # Response can be ignored
+
+    def _create_task(self, title: str) -> str:
+        """Creates a new task in Skybrush Gateway with the given title.
+
+        Args:
+            title: the title of the task
+
+        Returns:
+            the URL where updates to the progress of the task can be sent
 
         Raises:
-            SkybrushStudioAPIError if the progress reporter could not be initialized
-
+            SkybrushStudioAPIError: if the task could not be created
         """
-        data = {"title": title, "progress": 0}
+        data = {"title": title}
         with self._send_request("task", data, compressed=False) as response:
             if response.status_code != 201:
                 raise SkybrushStudioAPIError(
-                    f"Progress reporter for {title!r} could not be initialized"
+                    f"Progress reporter for {title!r} could not be created"
                 )
 
             task_url = response.get_header("Location")
-            if task_url is None:
-                raise SkybrushStudioAPIError("Gateway did not return progress task URL")
-            task_url = task_url.lstrip("/")
 
-            if self._progress_task_url and task_url != self._progress_task_url:
-                self._close_progress()
-            self._progress_task_url = task_url
+        if task_url is None:
+            raise SkybrushStudioAPIError(
+                "Gateway did not return URL for newly created task"
+            )
 
-    def _set_progress(self, progress: float) -> None:
-        """Sets the progress reporter of the Skybrush Gateway to the given value.
-
-        Args:
-            progress: the progress to show
-        """
-        if self._progress_task_url is not None:
-            data = {"progress": progress}
-            with self._send_request(
-                self._progress_task_url, data, compressed=False
-            ) as _response:
-                pass  # TODO: what to do with the result?
+        return urljoin(self._root, task_url)
