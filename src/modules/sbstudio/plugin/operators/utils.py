@@ -646,7 +646,6 @@ def export_show_to_file_using_api(
         log.info(message)
 
         with report_progress_during_api_operation(message):
-            raise ValueError("Missing return statement")
             api.export(
                 show_title=show_title,
                 show_type=show_type,
