@@ -92,6 +92,18 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
             ):
                 pass  # Response can be ignored
             raise
+        except KeyboardInterrupt:
+            with self._send_request(
+                task_url,
+                {
+                    "completed": False,
+                    "error": "Cancelled by user",
+                    "progress": last_percentage if last_percentage is not None else 0,
+                },
+                compressed=False,
+            ):
+                pass  # Response can be ignored
+            raise
         else:
             with self._send_request(
                 task_url,
