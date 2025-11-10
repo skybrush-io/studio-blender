@@ -15,9 +15,6 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
     Skybrush Gateway for request signing and progress display.
     """
 
-    _progress_task_url: str | None = None
-    """Relative URL of the current progress reporter initialized."""
-
     def get_hardware_id(self) -> str:
         """Gets the hardware ID of the current machine from the Studio Gateway."""
         with self._send_request("hwid") as response:
