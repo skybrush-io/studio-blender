@@ -1,6 +1,11 @@
 from sbstudio.errors import SkybrushStudioError
 
-__all__ = ("SkybrushStudioAddonError", "StoryboardValidationError")
+__all__ = (
+    "SkybrushStudioAddonError",
+    "SkybrushStudioExportWarning",
+    "SkybrushStudioTaskCancelledError",
+    "StoryboardValidationError",
+)
 
 
 class SkybrushStudioAddonError(SkybrushStudioError):
@@ -19,5 +24,11 @@ class SkybrushStudioExportWarning(SkybrushStudioError):
     """Error thrown during an export operation when the export cannot be
     completed. Converted into a Blender warning.
     """
+
+    pass
+
+
+class SkybrushStudioTaskCancelledError(SkybrushStudioError):
+    """Error thrown during a long lasting task that the user cancelled."""
 
     pass

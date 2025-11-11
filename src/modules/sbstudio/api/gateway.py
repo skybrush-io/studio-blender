@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from typing import Any, Iterator
 
+from sbstudio.plugin.errors import SkybrushStudioTaskCancelledError
 from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
 
 from .base import SkybrushStudioBaseAPI
@@ -50,7 +51,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         task_url = self._create_task(title=title)
         last_percentage: float | None = None
 
-        def handler(progress: ProgressReport) -> None:
+        def handler(progress: ProgressReport) -> bool:
             nonlocal last_percentage
             last_percentage = progress.percentage
             with self._send_request(
@@ -62,15 +63,23 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
                     "title": progress.operation,
                 },
                 compressed=False,
-            ):
-                # TODO(ntamas): currently we ignore the response, but in the
-                # near term the gateway should report whether the user
-                # attempted to cancel the operation, and if so, we should be
-                # able to pass this information back to the caller
-                pass
+            ) as response:
+                cancelled = bool(response.as_json())
+                return cancelled
 
         try:
             yield handler
+        except SkybrushStudioTaskCancelledError:
+            with self._send_request(
+                task_url,
+                {
+                    "completed": True,
+                    "error": "Task cancelled",
+                    "progress": last_percentage if last_percentage is not None else 0,
+                },
+                compressed=False,
+            ):
+                pass  # Response can be ignored
         except Exception as ex:
             with self._send_request(
                 task_url,

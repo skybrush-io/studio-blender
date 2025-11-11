@@ -368,8 +368,9 @@ def _get_trajectories_lights_and_yaw_setpoints(
 
 @contextmanager
 def _report_progress_on_console(title: str = "") -> Iterator[ProgressHandler]:
-    def reporter(progress: ProgressReport) -> None:
+    def reporter(progress: ProgressReport) -> bool:
         print(progress.format())
+        return False
 
     if title:
         print(f"{title}...")

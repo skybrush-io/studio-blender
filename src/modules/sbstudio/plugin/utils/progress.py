@@ -5,6 +5,8 @@ from itertools import chain
 from time import time
 from typing import Callable, Iterable, Iterator, Protocol, TypeVar
 
+from sbstudio.plugin.errors import SkybrushStudioTaskCancelledError
+
 __all__ = (
     "ProgressReport",
     "ProgressHandler",
@@ -213,8 +215,9 @@ class StepBasedProgressReport(ProgressReportBase):
             )
 
 
-ProgressHandler = Callable[[ProgressReport], None]
-"""Type alias for functions that handle progress reports."""
+ProgressHandler = Callable[[ProgressReport], bool]
+"""Type alias for functions that handle progress reports.
+Return value of `True` means that the task needs to be cancelled."""
 
 
 def report_progress(
@@ -267,13 +270,21 @@ def report_progress(
             if on_advance:
                 on_advance(progress, item)
             if on_progress and now - callback_called_at >= throttle_interval:
-                on_progress(progress)
+                cancelled = on_progress(progress)
                 callback_called_at = now
+                if cancelled:
+                    raise SkybrushStudioTaskCancelledError(
+                        f"Cancelled operation: {operation}"
+                    )
 
     finally:
         progress.finish()
         if on_progress:
-            on_progress(progress)
+            cancelled = on_progress(progress)
+            if cancelled:
+                raise SkybrushStudioTaskCancelledError(
+                    f"Cancelled operation: {operation}"
+                )
 
 
 class FrameRange:
