@@ -69,17 +69,6 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
 
         try:
             yield handler
-        except TaskCancelled:
-            with self._send_request(
-                task_url,
-                {
-                    "completed": True,
-                    "error": "Task cancelled",
-                    "progress": last_percentage if last_percentage is not None else 0,
-                },
-                compressed=False,
-            ):
-                pass  # Response can be ignored
         except Exception as ex:
             with self._send_request(
                 task_url,
@@ -92,7 +81,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
             ):
                 pass  # Response can be ignored
             raise
-        except KeyboardInterrupt:
+        except (TaskCancelled, KeyboardInterrupt):
             with self._send_request(
                 task_url,
                 {
