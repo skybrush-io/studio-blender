@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from typing import Any, Iterator
 
-from sbstudio.plugin.errors import SkybrushStudioTaskCancelledError
+from sbstudio.plugin.errors import TaskCancelled
 from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
 
 from .base import SkybrushStudioBaseAPI
@@ -69,7 +69,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
 
         try:
             yield handler
-        except SkybrushStudioTaskCancelledError:
+        except TaskCancelled:
             with self._send_request(
                 task_url,
                 {

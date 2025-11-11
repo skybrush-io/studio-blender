@@ -3,7 +3,7 @@ from sbstudio.errors import SkybrushStudioError
 __all__ = (
     "SkybrushStudioAddonError",
     "SkybrushStudioExportWarning",
-    "SkybrushStudioTaskCancelledError",
+    "TaskCancelled",
     "StoryboardValidationError",
 )
 
@@ -28,7 +28,7 @@ class SkybrushStudioExportWarning(SkybrushStudioError):
     pass
 
 
-class SkybrushStudioTaskCancelledError(SkybrushStudioError):
+class TaskCancelled(SkybrushStudioError):
     """Error thrown during a long lasting task that the user cancelled."""
 
     pass

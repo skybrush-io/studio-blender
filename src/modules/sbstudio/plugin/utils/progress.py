@@ -5,7 +5,7 @@ from itertools import chain
 from time import time
 from typing import Callable, Iterable, Iterator, Protocol, TypeVar
 
-from sbstudio.plugin.errors import SkybrushStudioTaskCancelledError
+from sbstudio.plugin.errors import TaskCancelled
 
 __all__ = (
     "ProgressReport",
@@ -273,18 +273,14 @@ def report_progress(
                 cancelled = on_progress(progress)
                 callback_called_at = now
                 if cancelled:
-                    raise SkybrushStudioTaskCancelledError(
-                        f"Cancelled operation: {operation}"
-                    )
+                    raise TaskCancelled(f"Cancelled operation: {operation}")
 
     finally:
         progress.finish()
         if on_progress:
             cancelled = on_progress(progress)
             if cancelled:
-                raise SkybrushStudioTaskCancelledError(
-                    f"Cancelled operation: {operation}"
-                )
+                raise TaskCancelled(f"Cancelled operation: {operation}")
 
 
 class FrameRange:
