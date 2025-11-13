@@ -28,10 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a new "Info" option to pyro rendering to aid preflight pyro setup with
   higlighting pyro drones throughout the entire show timeline from takeoff to landing.
 
+- Added support for three drone models and two GCS types in the HG DAC exporter.
+
 ### Changed
 
-- The minimum backend version required for this version of the add-on is now
-  2.29.0.
+- The minimum backend version required for this version of the add-on is now 
+  2.31.3.
 
 - A major update is that the color animation of drones is stored in a much more efficient
   way: instead of a unique material for all drones we now have one single template material
