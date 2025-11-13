@@ -576,6 +576,8 @@ def export_show_to_file_using_api(
             renderer_params = {
                 "show_id": 1555,
                 "title": "Skybrush show",
+                "model": settings["drone_model"],
+                "gcs": settings["gcs_type"],
             }
         elif format is FileFormat.DDSF:
             log.info("Exporting show to Depence .ddsf format")
