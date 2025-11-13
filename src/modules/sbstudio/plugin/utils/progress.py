@@ -253,6 +253,7 @@ def report_progress(
     progress.start(operation)
 
     callback_called_at = 0
+    cancelled = False
 
     if isinstance(throttle, (int, float)):
         throttle_interval = float(throttle)
@@ -278,8 +279,8 @@ def report_progress(
     finally:
         progress.finish()
         if on_progress:
-            cancelled = on_progress(progress)
-            if cancelled:
+            cancelled_last = on_progress(progress)
+            if not cancelled and cancelled_last:
                 raise TaskCancelled(f"Cancelled operation: {operation}")
 
 

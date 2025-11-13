@@ -3,13 +3,13 @@ import logging
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import Iterator, Optional, TypeVar
+from typing import Iterator, TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
 from sbstudio.api.version import ensure_backend_version
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
+from sbstudio.plugin.errors import SkybrushStudioExportWarning, TaskCancelled
 
 __all__ = ("get_api",)
 
@@ -133,6 +133,9 @@ def call_api_from_blender_operator(
         )
     except OSError as ex:
         operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
+        raise
+    except (TaskCancelled, KeyboardInterrupt):
+        operator.report({"ERROR"}, "Operation cancelled by user.")
         raise
     except Exception:
         operator.report({"ERROR"}, default_message)
