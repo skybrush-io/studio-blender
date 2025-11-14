@@ -396,11 +396,22 @@ def report_progress_during_api_operation(title: str = "") -> Iterator[ProgressHa
     except Exception:
         gateway = None
 
+    # Note that at this point it is not ensured that the gateway is running,
+    # only that it is configured, so we need to test if it is functional
+    # before we actually select it as the progress context.
+    if gateway:
+        try:
+            gateway.get_hardware_id()
+        except Exception:
+            log.warning("Gateway error; reporting progress on console")
+            gateway = None
+
     ctx = (
         gateway.use_new_operation(title=title)
         if gateway
         else _report_progress_on_console(title)
     )
+
     with ctx as on_progress:
         yield on_progress
 

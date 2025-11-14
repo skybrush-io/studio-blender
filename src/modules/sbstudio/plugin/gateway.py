@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _get_gateway_from_url(url: str):
+def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI:
     """Constructs a Skybrush Gateway API object from a root URL.
 
     Memoized so we do not need to re-construct the same instance as long as
