@@ -26,7 +26,7 @@ from sbstudio.plugin.model.storyboard import (
     get_storyboard,
 )
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
+from sbstudio.plugin.errors import SkybrushStudioExportWarning, TaskCancelled
 from sbstudio.plugin.gateway import get_gateway
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
@@ -375,12 +375,18 @@ def _report_progress_on_console(title: str = "") -> Iterator[ProgressHandler]:
     if title:
         print(f"{title}...")
 
+    failed = False
+
     try:
         yield reporter
+    except (KeyboardInterrupt, TaskCancelled):
+        print("Operation cancelled by user.")
+        failed = True
     except Exception as ex:
-        print(repr(ex))
+        print(f"Operation failed: {ex}")
+        failed = True
     finally:
-        print(f"{title}: done.")
+        print(f"{title}: {'failed' if failed else 'done'}.")
 
 
 @contextmanager
