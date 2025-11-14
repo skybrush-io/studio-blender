@@ -73,6 +73,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
             with self._send_request(
                 task_url,
                 {
+                    "cancelled": True,
                     "completed": False,
                     "error": "Cancelled by user",
                     "progress": last_percentage if last_percentage is not None else 0,
