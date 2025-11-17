@@ -26,6 +26,8 @@ End Frame:: Shows or sets the end frame of the formation. Adjusts the duration b
 +
 TIP: Press the btn:[◀] button on the right to set the end frame to the current frame.
 
+Purpose:: Shows or sets the purpose of the given formation. The purpose can be "Takeoff", "Show", "Land" or left "Unspecified". The purpose of a given formation is automatically inferred from the operation you use to create the formation. In practise you usually do not need to modify it manually unless you know what you are doing. The purpose annotation gets written into the .skyc file as a hard requirement for the show adaptation tool in **Skybrush Live**. If you perform onsite show adaptation, only formations marked with the "Show" purpose will be kept from the show, the rest (takeoff and land) will be replaced on the spot based on your actual environment and needs.
+
 Custom Name:: Ticking this check box allows you to keep the label of the storyboard entry even if you change the associated formation. Unticking this will change the label of the storyboard entry to the name of the formation when you change the formation.
 
 Transition from previous:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Skybrush Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order (note that you need to turn off alphabetic ordering in the Outliner first). Blender will then map the nth marker in the initial formation to the nth marker in the target formation.

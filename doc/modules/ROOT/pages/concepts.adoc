@@ -137,6 +137,7 @@ To export yaw control for your show, check the "Export yaw" checkbox in the .sky
 
 We suggest you to check the following Blender settings before you start designing your drone show:
 
+* Set the "Object Color" and "Wireframe Color" properties of "Viewport Shading" in the top right corner of your 3D Viewport to "Object" as drone colors handled by our addon are sourced from drone object's viewport color animation data.
 * set the first frame of the scene to 0 (instead of the default 1)
 * set your rendering frame rate to a convenient value
 * If you use a preview frame range separately from the render frame range, make sure it is enabled, otherwise it will return (0, 0) values in the Blender API that might result in erroneous output in certain cases
