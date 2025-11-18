@@ -100,7 +100,6 @@ class ValidateTrajectoriesOperator(Operator):
                 frame_range,
                 fps=4,
                 context=context,
-                by_name=True,
                 simplify=True,
             )
 

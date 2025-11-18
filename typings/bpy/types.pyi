@@ -248,6 +248,7 @@ class BlendDataObjects(bpy_prop_collection[Object]):
 
 class BlendData(bpy_struct):
     collections: BlendDataCollections
+    filepath: str
     images: BlendDataImage
     materials: bpy_prop_collection[Material]
     meshes: bpy_prop_collection[Mesh]
