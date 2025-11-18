@@ -24,6 +24,8 @@ There are many Blender versions out there, we aim for compatibility with the htt
 
 *Skybrush Gateway* is a local component running on your machine, responsible for assuring trusted communication with our online server. It also shows you real-time progress information for your long lasting Blender tasks.
 
+image::skybrush_gateway.jpg[Skybrush Gateway]
+
 ==== Community users
 
 If you are a community user, you do _not_ need to install *Skybrush Gateway* as you can rely purely on our cloud-based community server.
@@ -48,7 +50,9 @@ WARNING: Keep *Skybrush Gateway* running throughout your entire design process t
 
 *Skybrush Studio Server* is the required backend of *Skybrush Studio for Blender*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin. 
 
-*Skybrush Studio Server* is available for all, this is our community server online. It can also be purchased to run on your machine as a local server instance.
+*Skybrush Studio Server* is available online for all, this is called our community server. It can also be purchased to run on your machine locally.
+
+image::skybrush_studio_server.jpg[Skybrush Studio Server]
 
 ==== Community users
 
