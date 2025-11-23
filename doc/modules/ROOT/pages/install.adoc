@@ -100,7 +100,7 @@ Note that generally you need to change add-on preferences _only_ if you are usin
 
 image::skybrush_studio_addon_settings.jpg[Skybrush Studio Add-on settings]
 
-Register HWID:: If you are a pro license holder using *Skybrush Gateway*, you already pressed btn:[Use local gateway] and see your hardware ID in the btn:[Hardware ID] text box, press this button to open your Skybrush account and to register your current machine for your active license automatically.
+Register HWID:: If you are a pro license holder using *Skybrush Gateway*, you already pressed btn:[Use local gateway] and see your hardware ID in the btn:[Hardware ID] text box, press this button to open your Skybrush account and register your current machine for your active license automatically.
 
 Gateway URL:: Shows the URL of *Skybrush Gateway* available for pro license holders only. By default you do not have to touch this setting manually, change only if you know what you are doing.
 
