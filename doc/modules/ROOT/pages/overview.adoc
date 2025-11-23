@@ -2,20 +2,25 @@
 :imagesdir: ../assets/images
 
 // Note that this page is very similar (but not identical to) the same pages in the
-// Skybrush Live, Skybrush Server and Skybrush Sidekick documentations.
+// Skybrush Live, Skybrush Server, Skybrush firmware and Skybrush Sidekick documentations.
 // Synchronous update is recommended in all repos.
-
 
 *Skybrush Studio* is part of the https://skybrush.io/[*Skybrush*] suite, an integrated software solution for the design, visualisation, testing and delivery of both indoor and outdoor drone light shows. Skybrush was built from the ground up on a rock solid platform-independent architecture and a clean and intuitive user interface, incorporating our experiences gathered during ten years of research in drone swarms as well as all the lessons we have learned while operating drone shows regularly since 2015.
 
 https://skybrush.io/[*Skybrush*] is a modular software suite, consisting of the following modules, each of which may be operated on its own or as part of the whole suite:
 
-* *Skybrush Studio Server* - drone show designer framework backend
-* *Skybrush Studio for Blender* - drone show designer framework frontend
-* *Skybrush Viewer* - 3D drone show visualiser for testing and presentation purposes
-* *Skybrush Server* - drone show management and fleet control framework backend
-* *Skybrush Live* - drone show management and fleet control framework frontend
-* *Skybrush Sidekick* - companion app to *Skybrush Live* that operates an independent, fallback communication channel
+* Design and validation:
+** *Skybrush Studio for Blender* - drone show designer framework frontend
+** *Skybrush Studio Server* - drone show designer framework backend
+** *Skybrush Viewer* - 3D drone show visualiser for testing and presentation purposes
+* Execution:
+** *Skybrush Live* - drone show management and fleet control framework frontend
+** *Skybrush Sidekick* - companion app to *Skybrush Live* that operates an independent, fallback communication channel
+** *Skybrush Server* - drone show management and fleet control framework backend
+** *Skybrush firmware* - drone show firmware onboard the drones
+* Maintenance:
+** *Paplan* - Professional ArduPilot Log Analyzer tool
+
 
 In this manual our focus is on *Skybrush Studio for Blender*, which is an implementation of *Skybrush Studio* modules and functions in https://www.blender.org/[Blender], an open-source 3D creation suite.
 
