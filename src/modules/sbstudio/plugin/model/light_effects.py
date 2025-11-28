@@ -61,7 +61,7 @@ def object_has_mesh_data(self, obj) -> bool:
     return obj.data and isinstance(obj.data, Mesh)
 
 
-CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)), Vector((-1, 0, 0)), Vector((0, -1, 0)), Vector((0, 0, -1)))
 """Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
 OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
