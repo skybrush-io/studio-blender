@@ -27,6 +27,7 @@ class SKYBRUSH_UL_scheduleoverridelist(UIList):
             layout.prop(item, "enabled", emboss=False, text="", icon=checkbox)
             layout.label(text=item.label)
         elif self.layout_type in {"GRID"}:
+            # Removed in Blender 5 but we need to keep it for backward compatibility
             layout.alignment = "CENTER"
 
             checkbox = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
