@@ -4,6 +4,7 @@ import blf
 import bpy
 from bpy.types import SpaceView3D
 import gpu
+import gpu.state
 
 from gpu_extras.batch import batch_for_shader
 from typing import List, Literal, Optional, Sequence, Tuple, TYPE_CHECKING, cast
@@ -16,14 +17,6 @@ from .base import ShaderOverlay
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
 
-try:
-    import gpu.state
-
-    has_gpu_state_module = True
-except ImportError:
-    import bgl
-
-    has_gpu_state_module = False
 
 __all__ = ("SafetyCheckOverlay",)
 
@@ -211,10 +204,7 @@ class SafetyCheckOverlay(ShaderOverlay):
             y -= line_height
 
     def draw_3d(self) -> None:
-        if has_gpu_state_module:
-            gpu.state.blend_set("ALPHA")
-        else:
-            bgl.glEnable(bgl.GL_BLEND)
+        gpu.state.blend_set("ALPHA")
 
         if self._markers is not None:
             assert self._shader is not None
@@ -224,12 +214,8 @@ class SafetyCheckOverlay(ShaderOverlay):
 
             if self._shader_batches:
                 self._shader.bind()
-                if has_gpu_state_module:
-                    gpu.state.line_width_set(5)
-                    gpu.state.point_size_set(20)
-                else:
-                    bgl.glLineWidth(5)
-                    bgl.glPointSize(20)
+                gpu.state.line_width_set(5)
+                gpu.state.point_size_set(20)
                 for batch in self._shader_batches:
                     batch.draw(self._shader)
 

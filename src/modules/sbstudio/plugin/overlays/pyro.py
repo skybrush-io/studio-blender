@@ -3,6 +3,7 @@ from __future__ import annotations
 import blf
 import bpy
 import gpu
+import gpu.state
 
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 from bpy.types import SpaceView3D
@@ -16,15 +17,6 @@ from .base import ShaderOverlay
 if TYPE_CHECKING:
     from sbstudio.plugin.model.pyro_control import PyroControlPanelProperties
     from gpu.types import GPUBatch
-
-try:
-    import gpu.state
-
-    has_gpu_state_module = True
-except ImportError:
-    import bgl
-
-    has_gpu_state_module = False
 
 __all__ = (
     "PyroOverlay",
@@ -145,10 +137,7 @@ class PyroOverlay(ShaderOverlay):
                 y -= line_height
 
     def draw_3d(self) -> None:
-        if has_gpu_state_module:
-            gpu.state.blend_set("ALPHA")
-        else:
-            bgl.glEnable(bgl.GL_BLEND)
+        gpu.state.blend_set("ALPHA")
 
         skybrush = getattr(bpy.context.scene, "skybrush", None)
         pyro_control: PyroControlPanelProperties | None = getattr(
@@ -165,10 +154,7 @@ class PyroOverlay(ShaderOverlay):
 
             if self._shader_batches:
                 self._shader.bind()
-                if has_gpu_state_module:
-                    gpu.state.point_size_set(30)
-                else:
-                    bgl.glPointSize(30)
+                gpu.state.point_size_set(30)
                 for batch in self._shader_batches:
                     batch.draw(self._shader)
 

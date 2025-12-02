@@ -1,5 +1,6 @@
 import bpy
 import gpu
+import gpu.state
 
 from gpu_extras.batch import batch_for_shader
 from numpy import linspace
@@ -9,15 +10,6 @@ from sbstudio.plugin.model.formation import (
 )
 
 from .base import ShaderOverlay
-
-try:
-    import gpu.state
-
-    has_gpu_state_module = True
-except ImportError:
-    import bgl
-
-    has_gpu_state_module = False
 
 __all__ = ("FormationOrderOverlay",)
 
@@ -30,10 +22,7 @@ class FormationOrderOverlay(ShaderOverlay):
     shader_type = "SMOOTH_COLOR"
 
     def draw_3d(self) -> None:
-        if has_gpu_state_module:
-            gpu.state.blend_set("ALPHA")
-        else:
-            bgl.glEnable(bgl.GL_BLEND)
+        gpu.state.blend_set("ALPHA")
 
         # TODO(ntamas): cache if possible. We would need to listen for events
         # that are triggered when the selected formation changes or when any
@@ -44,10 +33,7 @@ class FormationOrderOverlay(ShaderOverlay):
             assert self._shader is not None
 
             self._shader.bind()
-            if has_gpu_state_module:
-                gpu.state.line_width_set(3)
-            else:
-                bgl.glLineWidth(3)
+            gpu.state.line_width_set(3)
             batch.draw(self._shader)
 
     def _create_shader_batch(self):
