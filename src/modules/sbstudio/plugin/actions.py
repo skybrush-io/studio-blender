@@ -1,11 +1,14 @@
 """Functions related to the handling of animation actions."""
 
 from bpy.types import Action, FCurve
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, cast
 
 import bpy
 
 from .utils.collections import ensure_object_exists_in_collection
+
+if TYPE_CHECKING:
+    from bpy.types import IdType
 
 __all__ = (
     "ensure_action_exists_for_object",
@@ -16,8 +19,6 @@ __all__ = (
     "get_name_of_action_for_object",
     "cleanup_actions_for_object",
 )
-
-has_action_slots = bpy.app.version >= (4, 4, 0)
 
 
 def get_name_of_action_for_object(object) -> str:
@@ -32,7 +33,7 @@ def ensure_action_exists_for_object(
     name: Optional[str] = None,
     *,
     clean: bool = False,
-    id_type: Optional[str] = None,
+    id_type: Optional[IdType] = None,
 ) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -62,28 +63,26 @@ def ensure_action_exists_for_object(
     if clean:
         action.fcurves.clear()
 
-    if has_action_slots:
-        # Blender 4.4 switched to slotted actions, so we need to ensure that
-        # the action has at least one slot.
-        slot_name = f"{name} / Default slot" if name else "Default slot"
-        if id_type is None:
-            id_type = object.id_type
-        action.slots.new(id_type=id_type, name=slot_name)
+    # Blender 4.4 switched to slotted actions, so we need to ensure that
+    # the action has at least one slot.
+    slot_name = f"{name} / Default slot" if name else "Default slot"
+    if id_type is None:
+        id_type = cast("IdType", object.id_type)
+    action.slots.new(id_type=id_type, name=slot_name)
 
     object.animation_data.action = action
 
-    if has_action_slots:
-        # Blender 4.4 switched to slotted actions. We need to assign the first
-        # slot of the action to the animation data. See more info here:
-        #
-        # https://developer.blender.org/docs/release_notes/4.4/python_api/#breaking
-        if object.animation_data.action_slot is None and len(action.slots) > 0:
-            object.animation_data.action_slot = action.slots[0]
+    # Blender 4.4 switched to slotted actions. We need to assign the first
+    # slot of the action to the animation data. See more info here:
+    #
+    # https://developer.blender.org/docs/release_notes/4.4/python_api/#breaking
+    if object.animation_data.action_slot is None and len(action.slots) > 0:
+        object.animation_data.action_slot = action.slots[0]
 
     return action
 
 
-def get_action_for_object(object) -> Action:
+def get_action_for_object(object) -> Optional[Action]:
     """Returns the animation action of the given object if it has one, or
     `None` otherwise.
     """

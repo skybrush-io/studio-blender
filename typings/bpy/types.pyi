@@ -17,6 +17,48 @@ from sbstudio.plugin.model import DroneShowAddonProperties
 T = TypeVar("T")
 U = TypeVar("U")
 
+IdType = Literal[
+    "ACTION",
+    "ARMATURE",
+    "BRUSH",
+    "CACHEFILE",
+    "CAMERA",
+    "COLLECTION",
+    "CURVE",
+    "CURVES",
+    "FONT",
+    "GREASEPENCIL",
+    "GREASEPENCIL_V3",
+    "IMAGE",
+    "KEY",
+    "LATTICE",
+    "LIBRARY",
+    "LIGHT",
+    "LIGHT_PROBE",
+    "LINESTYLE",
+    "MASK",
+    "MATERIAL",
+    "MESH",
+    "META",
+    "MOVIECLIP",
+    "NODETREE",
+    "OBJECT",
+    "PAINTCURVE",
+    "PALETTE",
+    "PARTICLE",
+    "POINTCLOUD",
+    "SCENE",
+    "SCREEN",
+    "SOUND",
+    "SPEAKER",
+    "TEXT",
+    "TEXTURE",
+    "VOLUME",
+    "WINDOWMANAGER",
+    "WORKSPACE",
+    "WORLD",
+]
+
 RGBAColor = MutableSequence[float]
 Vector3 = tuple[float, float, float]
 
@@ -26,7 +68,7 @@ class bpy_prop_collection(Sequence[T]):
     def get(self, key: str) -> Optional[T]: ...
     @overload
     def get(self, key: str, default: U) -> Union[T, U]: ...
-    def __getitem__(self, key: Union[int, str]) -> T: ...
+    def __getitem__(self, key: Union[int, str]) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
     def __len__(self) -> int: ...
 
 class bpy_struct: ...
@@ -90,6 +132,16 @@ class ID(bpy_struct):
 
     def copy(self: Self) -> Self: ...
 
+class ActionSlot(bpy_struct):
+    active: bool
+    handle: int
+    identifier: str
+    name_display: str
+    select: bool
+    show_expanded: bool
+
+    def duplicate(self) -> ActionSlot: ...
+
 class MeshVertex(bpy_struct):
     groups: bpy_prop_collection[VertexGroupElement]
     index: int
@@ -119,6 +171,9 @@ class VertexGroupElement(bpy_struct):
 
 class VertexGroups(bpy_prop_collection[VertexGroup]): ...
 class ViewLayer(bpy_struct): ...
+
+class Action(ID):
+    slots: ActionSlots
 
 class Collection(ID):
     children: CollectionChildren
@@ -205,6 +260,10 @@ class Object(ID):
         self, state: bool, view_layer: Optional[ViewLayer] = None
     ) -> None: ...
 
+class ActionSlots(bpy_prop_collection[ActionSlot]):
+    def new(self, id_type: IdType, name: str) -> ActionSlot: ...
+    def remove(self, action_slot: ActionSlot) -> None: ...
+
 class CollectionChildren(bpy_prop_collection[Collection]):
     def link(self, object: Object) -> None: ...
     def unlink(self, object: Object) -> None: ...
@@ -216,10 +275,26 @@ class CollectionObjects(bpy_prop_collection[Object]):
 class ObjectConstraints(bpy_prop_collection[Constraint]):
     def new(self, type: str) -> Constraint: ...
 
+class BlendDataActions(bpy_prop_collection[Action]):
+    def new(self, name: str) -> Action: ...
+    def remove(
+        self,
+        action: Action,
+        *,
+        do_unlink: bool = True,
+        do_id_user: bool = True,
+        do_ui_user: bool = True,
+    ) -> None: ...
+
 class BlendDataCollections(bpy_prop_collection[Collection]):
     def new(self, name: str) -> Collection: ...
     def remove(
-        self, collection: Collection, do_unlink=True, do_id_user=True, do_ui_user=True
+        self,
+        collection: Collection,
+        *,
+        do_unlink: bool = True,
+        do_id_user: bool = True,
+        do_ui_user: bool = True,
     ) -> None: ...
 
 class BlendDataImage(bpy_prop_collection[Image]):
@@ -247,6 +322,7 @@ class BlendDataObjects(bpy_prop_collection[Object]):
     ) -> None: ...
 
 class BlendData(bpy_struct):
+    actions: BlendDataActions
     collections: BlendDataCollections
     images: BlendDataImage
     materials: bpy_prop_collection[Material]
