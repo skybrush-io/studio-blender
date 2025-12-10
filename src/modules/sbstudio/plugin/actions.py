@@ -1,5 +1,6 @@
 """Functions related to the handling of animation actions."""
 
+from collections.abc import Iterable
 from bpy.types import Action, FCurve, Object
 from typing import TYPE_CHECKING, cast
 
@@ -18,6 +19,7 @@ __all__ = (
     "get_action_for_object",
     "get_name_of_action_for_object",
     "cleanup_actions_for_object",
+    "clear_all_slots_from_action",
 )
 
 
@@ -61,7 +63,7 @@ def ensure_action_exists_for_object(
     )
 
     if clean:
-        action.fcurves.clear()
+        clear_all_slots_from_action(action)
 
     # Blender 4.4 switched to slotted actions, so we need to ensure that
     # the action has at least one slot.
@@ -90,6 +92,11 @@ def get_action_for_object(object: Object) -> Action | None:
         return object.animation_data.action
 
 
+def _iter_all_f_curves(action: Action) -> Iterable[FCurve]:
+    """Yields all F-curves in the given action."""
+    return iter(action.fcurves)
+
+
 def find_f_curve_for_data_path(
     object_or_action: Object | Action, data_path: str
 ) -> FCurve | None:
@@ -111,7 +118,7 @@ def find_f_curve_for_data_path(
     else:
         action = object_or_action
 
-    for curve in action.fcurves:
+    for curve in _iter_all_f_curves(action):
         if curve.data_path == data_path:
             return curve
 
@@ -140,7 +147,7 @@ def find_f_curve_for_data_path_and_index(
     else:
         action = object_or_action
 
-    for curve in action.fcurves:
+    for curve in _iter_all_f_curves(action):
         if curve.data_path == data_path and curve.array_index == index:
             return curve
 
@@ -168,7 +175,7 @@ def find_all_f_curves_for_data_path(
         action = object_or_action
 
     return sorted(
-        [curve for curve in action.fcurves if curve.data_path == data_path],
+        [curve for curve in _iter_all_f_curves(action) if curve.data_path == data_path],
         key=lambda c: c.array_index,
     )
 
@@ -181,9 +188,11 @@ def cleanup_actions_for_object(object: Object) -> None:
     that are not valid any more.
     """
     action = get_action_for_object(object)
+    if not action:
+        return
 
     to_delete = []
-    for curve in action.fcurves:
+    for curve in _iter_all_f_curves(action):
         if curve.data_path:
             try:
                 object.path_resolve(curve.data_path)
@@ -192,3 +201,10 @@ def cleanup_actions_for_object(object: Object) -> None:
 
     while to_delete:
         action.fcurves.remove(to_delete.pop())
+
+
+def clear_all_slots_from_action(action: Action) -> None:
+    """Removes all F-curves from all slots of the given action."""
+    slots = list(action.slots)
+    for slot in slots:
+        action.slots.remove(slot)

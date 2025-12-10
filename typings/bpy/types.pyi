@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import AbstractContextManager
 from typing import (
+    Any,
     Literal,
     MutableSequence,
     Optional,
@@ -71,7 +72,8 @@ class bpy_prop_collection(Sequence[T]):
     def __getitem__(self, key: Union[int, str]) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
     def __len__(self) -> int: ...
 
-class bpy_struct: ...
+class bpy_struct:
+    def path_resolve(self, path: str): ...
 
 class AnimData(bpy_struct):
     action: Action
@@ -147,6 +149,13 @@ class ActionSlot(bpy_struct):
     show_expanded: bool
 
     def duplicate(self) -> ActionSlot: ...
+
+class FCurve(bpy_struct):
+    array_index: int
+    data_path: str
+    lock: bool
+    mute: bool
+    select: bool
 
 class MeshVertex(bpy_struct):
     co: Vector
