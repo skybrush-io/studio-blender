@@ -1,7 +1,7 @@
 """Functions related to the handling of animation actions."""
 
-from bpy.types import Action, FCurve
-from typing import Optional, TYPE_CHECKING, cast
+from bpy.types import Action, FCurve, Object
+from typing import TYPE_CHECKING, cast
 
 import bpy
 
@@ -21,7 +21,7 @@ __all__ = (
 )
 
 
-def get_name_of_action_for_object(object) -> str:
+def get_name_of_action_for_object(object: Object) -> str:
     """Returns the name of the action that we primarily wish to use for animating
     the properties of an object.
     """
@@ -29,11 +29,11 @@ def get_name_of_action_for_object(object) -> str:
 
 
 def ensure_action_exists_for_object(
-    object,
-    name: Optional[str] = None,
+    object: Object,
+    name: str | None = None,
     *,
     clean: bool = False,
-    id_type: Optional[IdType] = None,
+    id_type: IdType | None = None,
 ) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -82,7 +82,7 @@ def ensure_action_exists_for_object(
     return action
 
 
-def get_action_for_object(object) -> Optional[Action]:
+def get_action_for_object(object: Object) -> Action | None:
     """Returns the animation action of the given object if it has one, or
     `None` otherwise.
     """
@@ -90,7 +90,9 @@ def get_action_for_object(object) -> Optional[Action]:
         return object.animation_data.action
 
 
-def find_f_curve_for_data_path(object_or_action, data_path: str) -> Optional[FCurve]:
+def find_f_curve_for_data_path(
+    object_or_action: Object | Action, data_path: str
+) -> FCurve | None:
     """Finds the first F-curve in the F-curves of the action whose data path
     matches the given argument.
 
@@ -117,8 +119,8 @@ def find_f_curve_for_data_path(object_or_action, data_path: str) -> Optional[FCu
 
 
 def find_f_curve_for_data_path_and_index(
-    object_or_action, data_path: str, index: int
-) -> Optional[FCurve]:
+    object_or_action: Object | Action, data_path: str, index: int
+) -> FCurve | None:
     """Finds the first F-curve in the F-curves of the action whose data path
     and index match the given arguments.
 
@@ -145,7 +147,9 @@ def find_f_curve_for_data_path_and_index(
     return None
 
 
-def find_all_f_curves_for_data_path(object_or_action, data_path: str) -> list[FCurve]:
+def find_all_f_curves_for_data_path(
+    object_or_action: Object | Action, data_path: str
+) -> list[FCurve]:
     """Finds all F-curves in the F-curves of the action whose data path
     matches the given property, sorted by the array index of the curves.
 
@@ -169,7 +173,7 @@ def find_all_f_curves_for_data_path(object_or_action, data_path: str) -> list[FC
     )
 
 
-def cleanup_actions_for_object(object):
+def cleanup_actions_for_object(object: Object) -> None:
     """Iterates over all F-curves in the animation data of the object and
     removes those that refer to a data path that does not exist.
 

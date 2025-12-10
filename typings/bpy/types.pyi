@@ -73,6 +73,10 @@ class bpy_prop_collection(Sequence[T]):
 
 class bpy_struct: ...
 
+class AnimData(bpy_struct):
+    action: Action
+    action_slot: ActionSlot
+
 class ColorRampElement(bpy_struct):
     alpha: float
     color: RGBAColor
@@ -129,7 +133,9 @@ Self = TypeVar("Self", bound="ID")
 class ID(bpy_struct):
     name: str
     users: int
+    id_type: IdType
 
+    def animation_data_create(self) -> AnimData | None: ...
     def copy(self: Self) -> Self: ...
 
 class ActionSlot(bpy_struct):
@@ -239,6 +245,7 @@ class Context(bpy_struct):
 
 class Object(ID):
     active_material: Material
+    animation_data: AnimData
     constraints: ObjectConstraints
     vertex_groups: VertexGroups
 
