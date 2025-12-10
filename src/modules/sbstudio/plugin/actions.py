@@ -1,5 +1,7 @@
 """Functions related to the handling of animation actions."""
 
+from __future__ import annotations
+
 from collections.abc import Iterable
 from bpy.types import Action, FCurve, Object
 from typing import TYPE_CHECKING, cast
@@ -9,7 +11,7 @@ import bpy
 from .utils.collections import ensure_object_exists_in_collection
 
 if TYPE_CHECKING:
-    from bpy.types import IdType
+    from bpy.types import ActionChannelbag, ActionKeyframeStrip, IdType
 
 __all__ = (
     "ensure_action_exists_for_object",
@@ -92,9 +94,54 @@ def get_action_for_object(object: Object) -> Action | None:
         return object.animation_data.action
 
 
-def _iter_all_f_curves(action: Action) -> Iterable[FCurve]:
+def _get_legacy_channelbag_from_action(
+    action: Action | None,
+) -> ActionChannelbag | None:
+    """Returns the channelbag of the given action that used to store all F-curves
+    in Blender before the migration to the new "slotted" action system.
+    """
+    if (
+        action
+        and len(action.slots) > 0
+        and len(action.layers) > 0
+        and len(action.layers[0].strips) > 0
+    ):
+        strip = cast("ActionKeyframeStrip", action.layers[0].strips[0])
+        bag = strip.channelbag(action.slots[0])
+        return bag
+    else:
+        return None
+
+
+def add_new_f_curve(action: Action, *, data_path: str, index: int = 0) -> FCurve:
+    """Adds a new F-curve to the given action for the given data path and
+    index.
+    """
+    bag = _get_legacy_channelbag_from_action(action)
+    if bag is None:
+        # TODO(ntamas): create the channel bag if it does not exist yet
+        raise RuntimeError("Could not get channel bag from action")
+
+    curve = bag.fcurves.new(data_path=data_path, index=index)
+    return curve
+
+
+def iter_all_f_curves(
+    action: Action | None,
+) -> Iterable[FCurve]:
     """Yields all F-curves in the given action."""
-    return iter(action.fcurves)
+    bag = _get_legacy_channelbag_from_action(action)
+    return iter(bag.fcurves) if bag else iter(())
+
+
+def iter_all_f_curves_and_bags(
+    action: Action | None,
+) -> Iterable[tuple[FCurve, ActionChannelbag]]:
+    """Yields all F-curves in the given action along with the channel bag that
+    they belong to.
+    """
+    bag = _get_legacy_channelbag_from_action(action)
+    return iter((curve, bag) for curve in bag.fcurves) if bag else iter(())
 
 
 def find_f_curve_for_data_path(
@@ -118,7 +165,7 @@ def find_f_curve_for_data_path(
     else:
         action = object_or_action
 
-    for curve in _iter_all_f_curves(action):
+    for curve in iter_all_f_curves(action):
         if curve.data_path == data_path:
             return curve
 
@@ -147,7 +194,7 @@ def find_f_curve_for_data_path_and_index(
     else:
         action = object_or_action
 
-    for curve in _iter_all_f_curves(action):
+    for curve in iter_all_f_curves(action):
         if curve.data_path == data_path and curve.array_index == index:
             return curve
 
@@ -175,7 +222,7 @@ def find_all_f_curves_for_data_path(
         action = object_or_action
 
     return sorted(
-        [curve for curve in _iter_all_f_curves(action) if curve.data_path == data_path],
+        [curve for curve in iter_all_f_curves(action) if curve.data_path == data_path],
         key=lambda c: c.array_index,
     )
 
@@ -192,15 +239,16 @@ def cleanup_actions_for_object(object: Object) -> None:
         return
 
     to_delete = []
-    for curve in _iter_all_f_curves(action):
+    for curve, bag in iter_all_f_curves_and_bags(action):
         if curve.data_path:
             try:
                 object.path_resolve(curve.data_path)
             except ValueError:
-                to_delete.append(curve)
+                to_delete.append((bag, curve))
 
     while to_delete:
-        action.fcurves.remove(to_delete.pop())
+        bag, curve = to_delete.pop()
+        bag.remove(curve)
 
 
 def clear_all_slots_from_action(action: Action) -> None:

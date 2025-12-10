@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence, Union
+from typing import MutableSequence, Sequence, Union
 
 class Matrix:
     @classmethod
@@ -11,5 +11,13 @@ class Matrix:
     @property
     def translation(self) -> Vector: ...
 
-class Vector(Iterable[float]):
+class Vector(MutableSequence[float]):
     def __init__(self, coords: Sequence[float]): ...
+    @property
+    def w(self) -> float: ...
+    @property
+    def x(self) -> float: ...
+    @property
+    def y(self) -> float: ...
+    @property
+    def z(self) -> float: ...

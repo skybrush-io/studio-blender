@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from .types import BlendData, Context, Object
+from .path impo
 
 class _App:
     version: tuple[int, int, int]

@@ -19,6 +19,7 @@ from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.actions import (
+    add_new_f_curve,
     ensure_action_exists_for_object,
     find_f_curve_for_data_path_and_index,
 )
@@ -311,7 +312,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
             for i in range(3):
                 f_curve = find_f_curve_for_data_path_and_index(action, "location", i)
                 if f_curve is None:
-                    f_curve = action.fcurves.new("location", index=i)
+                    f_curve = add_new_f_curve(action, data_path="location", index=i)
                 else:
                     # We should clear the keyframes that fall within the
                     # range of our keyframes. Currently it's not needed because
@@ -360,6 +361,8 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 select=True,
             )
             light_effect = light_effects.active_entry
+            assert light_effect is not None
+
             light_effect.type = "IMAGE"
             light_effect.output = "TEMPORAL"
             light_effect.output_y = "INDEXED_BY_FORMATION"
@@ -464,6 +467,8 @@ class StaticMarkerCreationOperator(FormationOperator):
                     select=True,
                 )
                 light_effect = light_effects.active_entry
+                assert light_effect is not None
+
                 light_effect.output = "TEMPORAL"
                 light_effect.output_y = "INDEXED_BY_FORMATION"
                 light_effect.type = "IMAGE"

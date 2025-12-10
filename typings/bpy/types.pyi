@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from contextlib import AbstractContextManager
 from typing import (
-    Any,
     Literal,
     MutableSequence,
-    Optional,
     Sequence,
     TypeVar,
     Union,
@@ -66,13 +64,22 @@ Vector3 = tuple[float, float, float]
 class bpy_prop_collection(Sequence[T]):
     def find(self, key: str) -> int: ...
     @overload
-    def get(self, key: str) -> Optional[T]: ...
+    def get(self, key: str) -> T | None: ...
     @overload
     def get(self, key: str, default: U) -> Union[T, U]: ...
     def __getitem__(self, key: Union[int, str]) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
     def __len__(self) -> int: ...
 
 class bpy_struct:
+    def keyframe_delete(
+        self,
+        data_path: str,
+        /,
+        *,
+        index: int = -1,
+        frame: float | None,
+        group: str = "",
+    ): ...
     def path_resolve(self, path: str): ...
 
 class AnimData(bpy_struct):
@@ -132,6 +139,8 @@ class CopyLocationConstraint(Constraint):
 
 Self = TypeVar("Self", bound="ID")
 
+## bpy_struct and ID subclasses
+
 class ID(bpy_struct):
     name: str
     users: int
@@ -139,6 +148,20 @@ class ID(bpy_struct):
 
     def animation_data_create(self) -> AnimData | None: ...
     def copy(self: Self) -> Self: ...
+
+class ActionChannelbag(bpy_struct):
+    fcurves: ActionChannelbagFCurves
+    slot: ActionSlot
+
+class ActionKeyframeStrip(ActionStrip):
+    channelbags: ActionChannelbags
+    def channelbag(
+        self, slot: ActionSlot, *, ensure: bool = False
+    ) -> ActionChannelbag: ...
+
+class ActionLayer(bpy_struct):
+    name: str
+    strips: ActionStrips
 
 class ActionSlot(bpy_struct):
     active: bool
@@ -150,12 +173,28 @@ class ActionSlot(bpy_struct):
 
     def duplicate(self) -> ActionSlot: ...
 
+ActionStripType = Literal["KEYFRAME"]
+
+class ActionStrip(bpy_struct):
+    type: ActionStripType
+
 class FCurve(bpy_struct):
     array_index: int
     data_path: str
+    keyframe_points: FCurveKeyframePoints
     lock: bool
     mute: bool
     select: bool
+
+class Keyframe(bpy_struct):
+    co: Vector
+    handle_left: Vector
+    handle_right: Vector
+    interpolation: Literal[
+        "CONSTANT",
+        "LINEAR",
+        "BEZIER",
+    ]
 
 class MeshVertex(bpy_struct):
     co: Vector
@@ -189,6 +228,7 @@ class VertexGroups(bpy_prop_collection[VertexGroup]): ...
 class ViewLayer(bpy_struct): ...
 
 class Action(ID):
+    layers: ActionLayers
     slots: ActionSlots
 
 class Collection(ID):
@@ -200,6 +240,8 @@ class Image(ID):
     frame_duration: int
     size: tuple[int, int]
     pixels: Sequence[float]
+
+    def pack(self) -> None: ...
 
 class Material(ID): ...
 
@@ -213,12 +255,18 @@ class Texture(ID):
     use_color_ramp: bool
 
 class ImageTexture(Texture):
-    image: Optional[Image]
+    image: Image | None
 
 class Depsgraph(bpy_struct):
     objects: bpy_prop_collection[Object]
     scene: Scene
     scene_eval: Scene
+
+class Event(bpy_struct): ...
+
+class Operator(bpy_struct):
+    bl_label: str
+    bl_description: str
 
 class Scene:
     frame_current: int
@@ -232,6 +280,7 @@ class Scene:
     frame_subframe: float
 
     collection: Collection
+    cursor: View3DCursor
     eevee: SceneEEVEE
     render: RenderSettings
     skybrush: DroneShowAddonProperties
@@ -243,10 +292,30 @@ class SceneEEVEE(bpy_struct):
     bloom_intensity: float  # only for Blender <4.3
     use_bloom: bool  # only for Blender <4.3
 
+class View3DCursor(bpy_struct):
+    location: Vector
+    matrix: Matrix
+
+class WindowManager(ID):
+    def fileselect_add(self, operator: Operator) -> None: ...
+    def invoke_confirm(
+        self,
+        operator: Operator,
+        event: Event,
+        *,
+        title: str = "",
+        message: str = "",
+        confirm_text: str = "",
+        icon: str = "",
+        text_ctxt: str = "",
+        translate: bool = True,
+    ) -> None: ...
+
 class Context(bpy_struct):
     area: Area
     scene: Scene
     space_data: Space
+    window_manager: WindowManager
 
     def evaluated_depsgraph_get(self) -> Depsgraph: ...
     def temp_override(
@@ -272,14 +341,38 @@ class Object(ID):
     matrix_parent_inverse: Matrix
     matrix_world: Matrix
 
-    def select_get(self, view_layer: Optional[ViewLayer] = None) -> bool: ...
-    def select_set(
-        self, state: bool, view_layer: Optional[ViewLayer] = None
-    ) -> None: ...
+    def select_get(self, view_layer: ViewLayer | None = None) -> bool: ...
+    def select_set(self, state: bool, view_layer: ViewLayer | None = None) -> None: ...
+
+## Collection types
+
+class ActionChannelbags(bpy_prop_collection[ActionChannelbag]):
+    def new(self, slot: ActionSlot) -> ActionChannelbag: ...
+    def remove(self, channelbag: ActionChannelbag) -> None: ...
+
+class ActionChannelbagFCurves(bpy_prop_collection[FCurve]):
+    def clear(self) -> None: ...
+    def ensure(
+        self, data_path: str, *, index: int = 0, group_name: str = ""
+    ) -> FCurve: ...
+    def find(self, data_path: str, *, index: int = 0) -> FCurve | None: ...  # pyright: ignore[reportIncompatibleMethodOverride]
+    def new(
+        self, data_path: str, *, index: int = 0, group_name: str = ""
+    ) -> FCurve: ...
+    def new_from_fcurve(self, fcurve: FCurve, *, data_path: str = "") -> FCurve: ...
+    def remove(self, fcurve: FCurve) -> None: ...
+
+class ActionLayers(bpy_prop_collection[ActionLayer]):
+    def new(self, name: str) -> ActionLayer: ...
+    def remove(self, anim_layer: ActionLayer) -> None: ...
 
 class ActionSlots(bpy_prop_collection[ActionSlot]):
     def new(self, id_type: IdType, name: str) -> ActionSlot: ...
     def remove(self, action_slot: ActionSlot) -> None: ...
+
+class ActionStrips(bpy_prop_collection[ActionStrip]):
+    def new(self, *, type: ActionStripType) -> ActionStrip: ...
+    def remove(self, anim_strip: ActionStrip) -> None: ...
 
 class CollectionChildren(bpy_prop_collection[Collection]):
     def link(self, object: Object) -> None: ...
@@ -288,6 +381,21 @@ class CollectionChildren(bpy_prop_collection[Collection]):
 class CollectionObjects(bpy_prop_collection[Object]):
     def link(self, object: Object) -> None: ...
     def unlink(self, object: Object) -> None: ...
+
+class FCurveKeyframePoints(bpy_prop_collection[Keyframe]):
+    def add(self, count: int) -> None: ...
+    def clear(self) -> None: ...
+    def deduplicate(self) -> None: ...
+    def handles_recalc(self) -> None: ...
+    def insert(
+        self,
+        frame: float,
+        value: float,
+        *,
+        options: set[Literal["REPLACE", "NEEDED", "FAST"]] = {"REPLACE"},
+    ) -> Keyframe: ...
+    def remove(self, keyframe: Keyframe, *, fast: bool = False) -> None: ...
+    def sort(self) -> None: ...
 
 class ObjectConstraints(bpy_prop_collection[Constraint]):
     def new(self, type: str) -> Constraint: ...
@@ -337,6 +445,8 @@ class BlendDataObjects(bpy_prop_collection[Object]):
     def remove(
         self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
     ) -> None: ...
+
+## Large top-level objects
 
 class BlendData(bpy_struct):
     actions: BlendDataActions

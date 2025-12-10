@@ -384,7 +384,7 @@ def export_show_to_file_using_api(
     api: SkybrushStudioAPI,
     context: Context,
     settings: dict[str, Any],
-    filepath: Path,
+    filepath: str | Path,
     format: FileFormat,
 ) -> None:
     """Creates Skybrush-compatible output from Blender trajectories and color

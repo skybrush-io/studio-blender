@@ -12,6 +12,7 @@ from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.actions import (
+    add_new_f_curve,
     ensure_action_exists_for_object,
     find_f_curve_for_data_path_and_index,
 )
@@ -349,7 +350,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             for i in range(3):
                 f_curve = find_f_curve_for_data_path_and_index(action, "location", i)
                 if f_curve is None:
-                    f_curve = action.fcurves.new("location", index=i)
+                    f_curve = add_new_f_curve(action, data_path="location", index=i)
                 else:
                     # We should clear the keyframes that fall within the
                     # range of our keyframes. Currently it's not needed because

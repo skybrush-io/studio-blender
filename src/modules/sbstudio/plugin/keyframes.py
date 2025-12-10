@@ -1,39 +1,37 @@
 """Functions related to the handling of keyframes in animation actions."""
 
-from bpy.types import Action, FCurve
+from bpy.types import Action, FCurve, Object
 from collections import defaultdict
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Sequence
 
 from .actions import (
     find_f_curve_for_data_path,
     find_all_f_curves_for_data_path,
     get_action_for_object,
+    iter_all_f_curves,
 )
 
 __all__ = ("clear_keyframes", "get_keyframes", "set_keyframes")
 
 
 def clear_keyframes(
-    object_action_or_curve,
-    start: Optional[float] = None,
-    end: Optional[float] = None,
-    data_path_filter: Optional[Union[str, Callable[[str], bool]]] = None,
+    object_action_or_curve: Action | FCurve | Object,
+    start: float | None = None,
+    end: float | None = None,
+    data_path_filter: str | Callable[[str], bool] | None = None,
 ):
     """Clears all the keyframes in all the F-curves of the given action in the
     given range (inclusive).
     """
     if isinstance(object_action_or_curve, Action):
-        object = None
         action = object_action_or_curve
-        curves = action.fcurves
+        curves = iter_all_f_curves(action)
     elif isinstance(object_action_or_curve, FCurve):
-        object = None
         action = None
         curves = [object_action_or_curve]
     else:
-        object = object_action_or_curve
-        action = get_action_for_object(object_action_or_curve)
-        curves = action.fcurves
+        maybe_action = get_action_for_object(object_action_or_curve)
+        curves = iter_all_f_curves(maybe_action)
 
     if isinstance(data_path_filter, str):
         data_path_filter = data_path_filter.__eq__
@@ -43,13 +41,7 @@ def clear_keyframes(
             continue
 
         if start is None and end is None:
-            if object is not None:
-                object.keyframe_delete(curve.data_path)
-            else:
-                points = curve.keyframe_points
-                for point in reversed(points):
-                    points.remove(point)
-
+            curve.keyframe_points.clear()
         else:
             points = curve.keyframe_points
             indices_to_delete = []
@@ -65,7 +57,8 @@ def clear_keyframes(
                 indices_to_delete.append(index)
 
             for index in reversed(indices_to_delete):
-                points.remove(points[index])
+                points.remove(points[index], fast=True)
+            points.handles_recalc()
 
 
 def get_keyframes(
@@ -103,9 +96,9 @@ def get_keyframes(
 def set_keyframes(
     object,
     data_path: str,
-    values: Sequence[Tuple[float, Optional[Union[float, Sequence[float]]]]],
-    clear_range: Optional[Tuple[Optional[float], Optional[float]]] = None,
-    interpolation: Optional[str] = None,
+    values: Sequence[tuple[float, float | Sequence[float] | None]],
+    clear_range: tuple[float | None, float | None] | None = None,
+    interpolation: str | None = None,
 ) -> list:
     """Sets the values of multiple keyframes to specific values, optionally
     removing any other keyframes in the range spanned by the values.
@@ -127,18 +120,18 @@ def set_keyframes(
         the keyframes that were added
     """
     if not values:
-        return
+        return []
 
     is_array = any(isinstance(value[1], (tuple, list)) for value in values)
 
     if clear_range is not None:
-        clear_range = list(clear_range)
-        if clear_range[0] is None:
-            clear_range[0] = values[0][0]
-        if clear_range[1] is None:
-            clear_range[1] = values[-1][0]
-        if clear_range[1] > clear_range[0]:
-            clear_keyframes(object, clear_range[0], clear_range[1], data_path)
+        start, end = list(clear_range)
+        if start is None:
+            start = values[0][0]
+        if end is None:
+            end = values[-1][0]
+        if end > start:
+            clear_keyframes(object, start, end, data_path)
 
     target, sep, prop = data_path.rpartition(".")
     target = object.path_resolve(target) if sep else object
@@ -169,7 +162,7 @@ def set_keyframes(
 
 
 def _update_keyframes_on_single_f_curve(
-    fcurve: FCurve, values: Sequence[Tuple[float, float]]
+    fcurve: FCurve, values: Sequence[tuple[float, float]]
 ) -> list:
     result = []
 
