@@ -11,7 +11,7 @@ from typing import (
     overload,
 )
 
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 from sbstudio.plugin.model import DroneShowAddonProperties
 
 T = TypeVar("T")
@@ -149,6 +149,7 @@ class ActionSlot(bpy_struct):
     def duplicate(self) -> ActionSlot: ...
 
 class MeshVertex(bpy_struct):
+    co: Vector
     groups: bpy_prop_collection[VertexGroupElement]
     index: int
     select: bool

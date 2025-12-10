@@ -1,4 +1,4 @@
-from typing import Sequence, Union
+from typing import Iterable, Sequence, Union
 
 class Matrix:
     @classmethod
@@ -8,6 +8,8 @@ class Matrix:
     @classmethod
     def Translation(cls, vector: Vector): ...
     def __init__(self, rows: Sequence[Sequence[float]] = ()): ...
+    @property
+    def translation(self) -> Vector: ...
 
-class Vector:
+class Vector(Iterable[float]):
     def __init__(self, coords: Sequence[float]): ...
