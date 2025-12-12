@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from bpy.types import Action, FCurve, Object
+from bpy.types import Action, ActionSlot, FCurve, Object
 
 from .utils.collections import ensure_object_exists_in_collection
 
@@ -94,25 +94,38 @@ def get_action_for_object(object: Object) -> Action | None:
         return object.animation_data.action
 
 
-def _get_legacy_channelbag_from_action(
-    action: Action | None,
+def _get_channelbag_from_action(
+    action: Action | None, *, slot: ActionSlot | None = None
 ) -> ActionChannelbag | None:
-    """Returns the channelbag of the given action that used to store all F-curves
-    in Blender before the migration to the new "slotted" action system.
+    """Returns the channelbag containing the animation F-curves corresponding to
+    the given action.
+
+    Args:
+        action: the action whose channel bag we wish to retrieve.
+        slot: the active slot of the animation data that owns the action, if known.
+            `None` means that we fall back to the legacy behaviour in Blender before
+            the migration to the new "slotted" action system, retrieving the channel
+            bag of the first slot of the action from the first (and only) strip of
+            the first (and only) layer of the action.
     """
-    if (
-        action
-        and len(action.slots) > 0
-        and len(action.layers) > 0
-        and len(action.layers[0].strips) > 0
-    ):
+    if action and len(action.layers) > 0 and len(action.layers[0].strips) > 0:
         # An action may not have more than one layer at the moment, and a layer
         # may not have more than one strip at the moment, so we just access the
         # first strip of the first layer.
         strip = cast("ActionKeyframeStrip", action.layers[0].strips[0])
-        bag = strip.channelbag(action.slots[0])
+        if slot is None:
+            # If we have no slot, we fall back to the legacy behaviour of
+            # retrieving the channel bag from the first slot of the action.
+            if len(action.slots) == 0:
+                return None
+            slot = action.slots[0]
+
+        bag = strip.channelbag(slot)
         return bag
     else:
+        # If we have no action, we obviously need to return None. We also need
+        # to return None if we have no layers or strips, because a channel bag
+        # cannot exist without a strip.
         return None
 
 
@@ -120,7 +133,7 @@ def add_new_f_curve(action: Action, *, data_path: str, index: int = 0) -> FCurve
     """Adds a new F-curve to the given action for the given data path and
     index.
     """
-    bag = _get_legacy_channelbag_from_action(action)
+    bag = _get_channelbag_from_action(action)
     if bag is None:
         # TODO(ntamas): create the channel bag if it does not exist yet
         raise RuntimeError("Could not get channel bag from action")
@@ -133,7 +146,7 @@ def iter_all_f_curves(
     action: Action | None,
 ) -> Iterable[FCurve]:
     """Yields all F-curves in the given action."""
-    bag = _get_legacy_channelbag_from_action(action)
+    bag = _get_channelbag_from_action(action)
     return iter(bag.fcurves) if bag else iter(())
 
 
@@ -143,7 +156,7 @@ def iter_all_f_curves_and_bags(
     """Yields all F-curves in the given action along with the channel bag that
     they belong to.
     """
-    bag = _get_legacy_channelbag_from_action(action)
+    bag = _get_channelbag_from_action(action)
     return iter((curve, bag) for curve in bag.fcurves) if bag else iter(())
 
 
@@ -228,6 +241,25 @@ def find_all_f_curves_for_data_path(
         [curve for curve in iter_all_f_curves(action) if curve.data_path == data_path],
         key=lambda c: c.array_index,
     )
+
+
+def ensure_f_curve_exists_for_data_path_and_index(
+    action: Action, *, data_path: str, index: int
+) -> FCurve | None:
+    """Finds the first F-curve in the F-curves of the action whose data path
+    and index match the given arguments, creating one if it does not exist yet.
+
+    Parameters:
+        action: the action to retrieve the F-curve from
+        data_path: the data path of the F-curve we are looking for
+        index: the index of the F-curve we are looking for
+
+    Returns:
+        the F-curve
+    """
+    return find_f_curve_for_data_path_and_index(
+        action, data_path=data_path, index=index
+    ) or add_new_f_curve(action, data_path=data_path, index=index)
 
 
 def cleanup_actions_for_object(object: Object) -> None:
