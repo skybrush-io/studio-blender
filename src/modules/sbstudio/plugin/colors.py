@@ -1,4 +1,5 @@
 import bpy
+from bpy.types import Object
 
 from sbstudio.model.types import RGBAColor, RGBAColorLike
 from sbstudio.plugin.actions import ensure_action_exists_for_object
@@ -14,7 +15,7 @@ is_blender_4 = bpy.app.version >= (4, 0, 0)
 
 
 def create_keyframe_for_color_of_drone(
-    drone,
+    drone: Object,
     color: tuple[float, float, float] | tuple[float, float, float, float] | RGBAColor,
     *,
     frame: int | None = None,
@@ -41,7 +42,7 @@ def create_keyframe_for_color_of_drone(
     else:
         color_as_rgba = color[0], color[1], color[2], 1.0
 
-    keyframes = [(frame, color_as_rgba)]
+    keyframes: list[tuple[int, RGBAColor | None]] = [(frame, color_as_rgba)]
     if step and frame > bpy.context.scene.frame_start:
         keyframes.insert(0, (frame - 1, None))
 

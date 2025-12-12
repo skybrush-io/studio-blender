@@ -79,7 +79,28 @@ class bpy_struct:
         index: int = -1,
         frame: float | None,
         group: str = "",
-    ): ...
+    ) -> bool: ...
+    def keyframe_insert(
+        self,
+        data_path: str,
+        /,
+        *,
+        index: int = -1,
+        frame: float | None,
+        group: str = "",
+        options: set[
+            Literal[
+                "INSERTKEY_NEEDED",
+                "INSERTKEY_VISUAL",
+                "INSERTKEY_REPLACE",
+                "INSERTKEY_AVAILABLE",
+                "INSERTKEY_CYCLE_AWARE",
+            ]
+        ] = set(),
+        keytype: Literal[
+            "KEYFRAME", "BREAKDOWN", "MOVING_HOLD", "EXTREME", "JITTER", "GENERATED"
+        ] = "KEYFRAME",
+    ) -> bool: ...
     def path_resolve(self, path: str): ...
 
 class AnimData(bpy_struct):

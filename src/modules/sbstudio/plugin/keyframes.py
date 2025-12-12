@@ -1,12 +1,13 @@
 """Functions related to the handling of keyframes in animation actions."""
 
-from bpy.types import Action, FCurve, Object
 from collections import defaultdict
-from typing import Callable, Sequence
+from typing import Callable, Sequence, overload
+
+from bpy.types import Action, FCurve, Object
 
 from .actions import (
-    find_f_curve_for_data_path,
     find_all_f_curves_for_data_path,
+    find_f_curve_for_data_path,
     get_action_for_object,
     iter_all_f_curves,
 )
@@ -62,7 +63,7 @@ def clear_keyframes(
 
 
 def get_keyframes(
-    object,
+    object: Object,
     data_path: str,
 ) -> list[tuple[float, float | list[float]]]:
     """Gets the values of all keyframes of an object at the given data path.
@@ -93,8 +94,28 @@ def get_keyframes(
             return sorted(frames_dict.items())
 
 
+@overload
 def set_keyframes(
-    object,
+    object: Object,
+    data_path: str,
+    values: Sequence[tuple[float, float | None]],
+    clear_range: tuple[float | None, float | None] | None = None,
+    interpolation: str | None = None,
+) -> list: ...
+
+
+@overload
+def set_keyframes(
+    object: Object,
+    data_path: str,
+    values: Sequence[tuple[float, Sequence[float] | None]],
+    clear_range: tuple[float | None, float | None] | None = None,
+    interpolation: str | None = None,
+) -> list: ...
+
+
+def set_keyframes(
+    object: Object,
     data_path: str,
     values: Sequence[tuple[float, float | Sequence[float] | None]],
     clear_range: tuple[float | None, float | None] | None = None,
@@ -162,7 +183,7 @@ def set_keyframes(
 
 
 def _update_keyframes_on_single_f_curve(
-    fcurve: FCurve, values: Sequence[tuple[float, float]]
+    fcurve: FCurve, values: Sequence[tuple[float, float | None]]
 ) -> list:
     result = []
 
