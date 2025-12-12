@@ -3,12 +3,13 @@
 from collections import defaultdict
 from typing import Callable, Sequence, overload
 
-from bpy.types import Action, FCurve, Object
+from bpy.types import FCurve, Object
 
 from .actions import (
+    ensure_animation_data_exists_for_object,
     find_all_f_curves_for_data_path,
     find_f_curve_for_data_path,
-    get_action_for_object,
+    get_animation_data_for_object,
     iter_all_f_curves,
 )
 
@@ -16,17 +17,16 @@ __all__ = ("clear_keyframes", "get_keyframes", "set_keyframes")
 
 
 def clear_keyframes(
-    object_action_or_curve: Action | FCurve | Object,
+    object: Object,
     start: float | None = None,
     end: float | None = None,
     data_path_filter: str | Callable[[str], bool] | None = None,
 ):
-    """Clears all the keyframes in all the F-curves of the given action in the
-    given range (inclusive).
+    """Clears all the keyframes in all the F-curves of the active slot of the
+    animation data of the given object.
 
     Args:
-        object_action_or_curve: the action, F-curve, or object whose action's
-            F-curves to clear the keyframes from
+        object: the object whose action's F-curves to clear the keyframes from
         start: the start of the range (inclusive); `None` to clear from the
             beginning
         end: the end of the range (inclusive); `None` to clear until the end
@@ -36,20 +36,12 @@ def clear_keyframes(
             will be affected) or a callable that takes a data path string and
             returns a boolean indicating whether the F-curve should be affected
     """
-    if isinstance(object_action_or_curve, Action):
-        action = object_action_or_curve
-        curves = iter_all_f_curves(action)
-    elif isinstance(object_action_or_curve, FCurve):
-        action = None
-        curves = [object_action_or_curve]
-    else:
-        maybe_action = get_action_for_object(object_action_or_curve)
-        curves = iter_all_f_curves(maybe_action)
+    anim_data = get_animation_data_for_object(object)
 
     if isinstance(data_path_filter, str):
         data_path_filter = data_path_filter.__eq__
 
-    for curve in curves:
+    for curve in iter_all_f_curves(anim_data):
         if data_path_filter is not None and not data_path_filter(curve.data_path):
             continue
 
@@ -90,7 +82,8 @@ def get_keyframes(
     source, sep, prop = data_path.rpartition(".")
     source = object.path_resolve(source) if sep else object
 
-    fcurves = find_all_f_curves_for_data_path(object, data_path)
+    anim_data = get_animation_data_for_object(object)
+    fcurves = find_all_f_curves_for_data_path(anim_data, data_path)
 
     match len(fcurves):
         case 0:
@@ -169,11 +162,13 @@ def set_keyframes(
     target, sep, prop = data_path.rpartition(".")
     target = object.path_resolve(target) if sep else object
 
+    anim_data = ensure_animation_data_exists_for_object(object)
+
     for frame, _value in values:
         target.keyframe_insert(prop, frame=frame)
 
     if is_array:
-        fcurves = find_all_f_curves_for_data_path(object, data_path)
+        fcurves = find_all_f_curves_for_data_path(anim_data, data_path)
         result = []
         for fcurve in fcurves:
             array_index = fcurve.array_index
@@ -183,7 +178,7 @@ def set_keyframes(
             ]
             result.extend(_update_keyframes_on_single_f_curve(fcurve, values_for_curve))
     else:
-        fcurve = find_f_curve_for_data_path(object, data_path)
+        fcurve = find_f_curve_for_data_path(anim_data, data_path)
         assert fcurve is not None
         result = _update_keyframes_on_single_f_curve(fcurve, values)
 

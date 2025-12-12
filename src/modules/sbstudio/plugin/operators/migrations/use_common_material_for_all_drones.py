@@ -1,15 +1,14 @@
-import bpy
 import logging
-
 from time import time
 
-from sbstudio.plugin.actions import ensure_action_exists_for_object
+import bpy
+from sbstudio.plugin.actions import ensure_animation_data_exists_for_object
 from sbstudio.plugin.constants import Collections, Templates
 from sbstudio.plugin.errors import SkybrushStudioAddonError
 from sbstudio.plugin.keyframes import get_keyframes, set_keyframes
 from sbstudio.plugin.materials import (
-    get_material_for_led_light_color,
     _get_shader_node_and_input_for_diffuse_color_of_material,
+    get_material_for_led_light_color,
 )
 from sbstudio.plugin.operators.base import MigrationOperator
 from sbstudio.plugin.views import find_all_3d_views
@@ -71,7 +70,7 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
                     index = node.inputs.find(input.name)
                     data_path = f'nodes["{node.name}"].inputs[{index}].default_value'
                     keyframes = get_keyframes(node_tree, data_path)
-                    ensure_action_exists_for_object(drone)
+                    ensure_animation_data_exists_for_object(drone)
                     set_keyframes(drone, "color", keyframes, interpolation="LINEAR")
                 # reset drone's material to the template material
                 drone.material_slots[0].material = template_material

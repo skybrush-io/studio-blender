@@ -104,8 +104,8 @@ class bpy_struct:
     def path_resolve(self, path: str): ...
 
 class AnimData(bpy_struct):
-    action: Action
-    action_slot: ActionSlot
+    action: Action | None
+    action_slot: ActionSlot | None
 
 class ColorRampElement(bpy_struct):
     alpha: float
@@ -207,10 +207,16 @@ class FCurve(bpy_struct):
     mute: bool
     select: bool
 
+    def update(self) -> None: ...
+
+KeyframeHandleType = Literal["FREE", "ALIGNED", "VECTOR", "AUTO", "AUTO_CLAMPED"]
+
 class Keyframe(bpy_struct):
     co: Vector
     handle_left: Vector
+    handle_left_type: KeyframeHandleType
     handle_right: Vector
+    handle_right_type: KeyframeHandleType
     interpolation: Literal[
         "CONSTANT",
         "LINEAR",
@@ -289,6 +295,24 @@ class Operator(bpy_struct):
     bl_label: str
     bl_description: str
 
+    def report(
+        self,
+        type: set[
+            Literal[
+                "DEBUG",
+                "INFO",
+                "OPERATOR",
+                "PROPERTY",
+                "WARNING",
+                "ERROR",
+                "ERROR_INVALID_INPUT",
+                "ERROR_INVALID_CONTEXT",
+                "ERROR_OUT_OF_MEMORY",
+            ]
+        ],
+        message: str,
+    ) -> None: ...
+
 class Scene:
     frame_current: int
     frame_current_final: float
@@ -345,7 +369,7 @@ class Context(bpy_struct):
 
 class Object(ID):
     active_material: Material
-    animation_data: AnimData
+    animation_data: AnimData | None
     constraints: ObjectConstraints
     vertex_groups: VertexGroups
 
@@ -472,6 +496,7 @@ class BlendDataObjects(bpy_prop_collection[Object]):
 class BlendData(bpy_struct):
     actions: BlendDataActions
     collections: BlendDataCollections
+    filepath: str
     images: BlendDataImage
     materials: bpy_prop_collection[Material]
     meshes: bpy_prop_collection[Mesh]

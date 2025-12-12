@@ -9,7 +9,7 @@ from bpy.types import Context
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.actions import (
-    ensure_action_exists_for_object,
+    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.api import call_api_from_blender_operator
@@ -340,14 +340,12 @@ class ReturnToHomeOperator(StoryboardOperator):
             markers,
             strict=True,
         ):
-            action = ensure_action_exists_for_object(
-                marker, name=f"Animation data for {marker.name}", clean=True
-            )
+            anim_data = ensure_animation_data_exists_for_object(marker, clean=True)
 
             f_curves = []
             for i in range(3):
                 f_curve = ensure_f_curve_exists_for_data_path_and_index(
-                    action, data_path="location", index=i
+                    anim_data, data_path="location", index=i
                 )
                 f_curves.append(f_curve)
             insert = [

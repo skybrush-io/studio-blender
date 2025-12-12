@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty, IntProperty
-from bpy.types import Collection, Context, Object, Operator
+from bpy.types import Collection, Context, FCurve, Object, Operator
 from bpy_extras.io_utils import ExportHelper
 from numpy import array, floating
 from numpy.typing import NDArray
@@ -18,7 +18,7 @@ from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point3D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.actions import (
-    ensure_action_exists_for_object,
+    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
@@ -301,14 +301,12 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 # does not need animation so we don't create the action
                 continue
 
-            action = ensure_action_exists_for_object(
-                marker, name=f"Animation data for {marker.name}", clean=True
-            )
+            anim_data = ensure_animation_data_exists_for_object(marker, clean=True)
 
-            f_curves = []
+            f_curves: list[FCurve] = []
             for i in range(3):
                 f_curve = ensure_f_curve_exists_for_data_path_and_index(
-                    action, data_path="location", index=i
+                    anim_data, data_path="location", index=i
                 )
                 f_curves.append(f_curve)
 
