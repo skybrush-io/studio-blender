@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from bpy.types import Action, FCurve, Object
 from typing import TYPE_CHECKING, cast
 
 import bpy
+from bpy.types import Action, FCurve, Object
 
 from .utils.collections import ensure_object_exists_in_collection
 
@@ -106,6 +106,9 @@ def _get_legacy_channelbag_from_action(
         and len(action.layers) > 0
         and len(action.layers[0].strips) > 0
     ):
+        # An action may not have more than one layer at the moment, and a layer
+        # may not have more than one strip at the moment, so we just access the
+        # first strip of the first layer.
         strip = cast("ActionKeyframeStrip", action.layers[0].strips[0])
         bag = strip.channelbag(action.slots[0])
         return bag

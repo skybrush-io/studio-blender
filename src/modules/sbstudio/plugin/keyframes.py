@@ -23,6 +23,18 @@ def clear_keyframes(
 ):
     """Clears all the keyframes in all the F-curves of the given action in the
     given range (inclusive).
+
+    Args:
+        object_action_or_curve: the action, F-curve, or object whose action's
+            F-curves to clear the keyframes from
+        start: the start of the range (inclusive); `None` to clear from the
+            beginning
+        end: the end of the range (inclusive); `None` to clear until the end
+        data_path_filter: if given, only F-curves whose data path matches this
+            filter will have their keyframes cleared; it may be either a string
+            (in which case only F-curves whose data path is equal to this string
+            will be affected) or a callable that takes a data path string and
+            returns a boolean indicating whether the F-curve should be affected
     """
     if isinstance(object_action_or_curve, Action):
         action = object_action_or_curve
