@@ -9,7 +9,7 @@ bl_info = {
     "author": "Tamas Nepusz (CollMot Robotics Ltd.)",
     "description": "Import a Skybrush file directly into Blender",
     "version": (0, 1, 0),
-    "blender": (2, 83, 0),
+    "blender": (4, 4, 0),
     "location": "File > Import > Skybrush",
     "category": "Import-Export",
 }
