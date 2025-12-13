@@ -35,8 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   automatically, based on the time span of the storyboard entry or transition and
   user defined relative offsets.
 
-- Added export option for combined/parallel `.skyc` and `.pdf` exports to save time on final
-  drone show renderings.
+- Added export option for combined/parallel `.skyc` and `.pdf` exports to save
+  time on final drone show renderings.
 
 - Added mandatory backend version check before dispatching the first request to
   the current server instance.
