@@ -5,16 +5,15 @@ from math import inf
 from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Union, cast
 
 import bpy
-from bpy.types import Collection, Mesh, MeshVertex, Object
-
 from bpy.props import EnumProperty
+from bpy.types import Collection, Mesh, MeshVertex, Object
 
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.api.types import Mapping
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.actions import (
     cleanup_actions_for_object,
-    ensure_action_exists_for_object,
+    ensure_animation_data_exists_for_object,
 )
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections
@@ -495,7 +494,7 @@ def update_transition_constraint_influence(
     key = f"constraints[{constraint.name!r}].influence".replace("'", '"')
 
     # Create keyframes for the influence of the constraint
-    ensure_action_exists_for_object(drone)
+    ensure_animation_data_exists_for_object(drone)
 
     # Apply the influence curve to the drone
     descriptor.apply(drone, key)

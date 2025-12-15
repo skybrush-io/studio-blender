@@ -6,8 +6,9 @@ from bpy.types import Collection
 from functools import partial
 from itertools import count
 from mathutils import Vector
-from numpy import array, c_, dot, ones, zeros
-from typing import Iterable, List, Optional, Sequence, Tuple, Union, TYPE_CHECKING
+from numpy import array, c_, dot, float64, ones, zeros
+from numpy.typing import NDArray
+from typing import Iterable, Optional, Sequence, TYPE_CHECKING
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import (
@@ -119,7 +120,7 @@ def add_points_to_formation(
     points: Optional[Iterable[Vector]],
     *,
     name: Optional[str] = None,
-) -> List[Object]:
+) -> list[Object]:
     """Creates new markers in a formation object.
 
     Parameters:
@@ -185,7 +186,7 @@ def count_markers_in_formation(formation: Collection) -> int:
 
 def get_markers_and_related_objects_from_formation(
     formation: Collection,
-) -> List[Tuple[Union[Object, MeshVertex], Object]]:
+) -> list[tuple[Object | MeshVertex, Object]]:
     """Returns a list containing all the markers and their corresponding
     objects in the formation.
 
@@ -207,7 +208,7 @@ def get_markers_and_related_objects_from_formation(
     # mappings of the StoryboardEntry_ objects. Doing so would be a breaking
     # change that messes up the mappings in already-saved scenes.
 
-    result = []
+    result: list[tuple[Object | MeshVertex, Object]] = []
 
     for obj in formation.objects:
         vertex_group_name = obj.skybrush.formation_vertex_group
@@ -226,7 +227,7 @@ def get_markers_and_related_objects_from_formation(
 
 def get_markers_from_formation(
     formation: Collection,
-) -> List[Union[Object, MeshVertex]]:
+) -> list[Object | MeshVertex]:
     """Returns a list containing all the markers in the formation.
 
     This function returns all the meshes that are direct children of the
@@ -243,7 +244,7 @@ def get_markers_from_formation(
     (obtained after applying the modifiers) but the _original_ vertices that are
     actually part of the base mesh.
     """
-    result = []
+    result: list[Object | MeshVertex] = []
 
     for obj in formation.objects:
         vertex_group_name = obj.skybrush.formation_vertex_group
@@ -291,7 +292,7 @@ def ensure_formation_consists_of_points(
 
 def get_world_coordinates_of_markers_from_formation(
     formation: Collection, *, frame: Optional[int] = None, apply_modifiers: bool = True
-):
+) -> NDArray[float64]:
     """Returns a list containing the world coordinates of the markers in the
     formation, as a NumPy array, one marker per row.
 
@@ -322,11 +323,9 @@ def get_world_coordinates_of_markers_from_formation(
         finally:
             scene.frame_set(current_frame)
 
-    vertices_by_obj = {}
+    vertices_by_obj: dict[Object, list[MeshVertex]] = {}
 
-    result = []
     num_rows = 0
-
     for obj in formation.objects:
         vertex_group_name = obj.skybrush.formation_vertex_group
         if vertex_group_name:

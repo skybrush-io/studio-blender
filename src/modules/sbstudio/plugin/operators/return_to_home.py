@@ -1,20 +1,19 @@
 from collections.abc import Sequence
-
-import bpy
-
-from bpy.props import FloatProperty, IntProperty, BoolProperty
-from bpy.types import Context
 from functools import partial
 from math import ceil, sqrt
 
+import bpy
+from bpy.props import BoolProperty, FloatProperty, IntProperty
+from bpy.types import Context
+
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.model.types import Coordinate3D
+from sbstudio.plugin.actions import (
+    ensure_animation_data_exists_for_object,
+    ensure_f_curve_exists_for_data_path_and_index,
+)
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.actions import (
-    ensure_action_exists_for_object,
-    find_f_curve_for_data_path_and_index,
-)
 from sbstudio.plugin.model.formation import create_formation, get_markers_from_formation
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.model.storyboard import (
@@ -341,22 +340,13 @@ class ReturnToHomeOperator(StoryboardOperator):
             markers,
             strict=True,
         ):
-            action = ensure_action_exists_for_object(
-                marker, name=f"Animation data for {marker.name}", clean=True
-            )
+            anim_data = ensure_animation_data_exists_for_object(marker, clean=True)
 
             f_curves = []
             for i in range(3):
-                f_curve = find_f_curve_for_data_path_and_index(action, "location", i)
-                if f_curve is None:
-                    f_curve = action.fcurves.new("location", index=i)
-                else:
-                    # We should clear the keyframes that fall within the
-                    # range of our keyframes. Currently it's not needed because
-                    # it's a freshly created marker so it can't have any
-                    # keyframes that we don't know about.
-                    print(f"Already existing F-curve! {marker.name} {i}")
-                    pass
+                f_curve = ensure_f_curve_exists_for_data_path_and_index(
+                    anim_data, data_path="location", index=i
+                )
                 f_curves.append(f_curve)
             insert = [
                 partial(f_curve.keyframe_points.insert, options={"FAST"})

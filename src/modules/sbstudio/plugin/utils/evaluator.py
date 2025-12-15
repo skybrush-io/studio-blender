@@ -2,7 +2,7 @@ from bpy.types import Context, Object
 from contextlib import contextmanager
 from functools import partial
 from math import degrees
-from typing import Callable, Optional, Sequence
+from typing import Callable, Optional, Sequence, overload
 
 from sbstudio.model.types import Coordinate3D, Rotation3D
 
@@ -34,13 +34,29 @@ def create_position_evaluator(context: Optional[Context] = None):
         seek_to(original_frame)
 
 
+@overload
+def _evaluate_positions_of_objects(
+    objects: Sequence[Object],
+) -> Sequence[Coordinate3D]: ...
+
+
+@overload
 def _evaluate_positions_of_objects(
     objects: Sequence[Object],
     *,
-    seek_to: Optional[Callable[[int], None]] = None,
-    frame: Optional[int] = None,
+    seek_to: Callable[[int], None],
+    frame: int,
+) -> Sequence[Coordinate3D]: ...
+
+
+def _evaluate_positions_of_objects(
+    objects: Sequence[Object],
+    *,
+    seek_to: Callable[[int], None] | None = None,
+    frame: int | None = None,
 ) -> Sequence[Coordinate3D]:
     if frame is not None:
+        assert seek_to is not None
         seek_to(frame)
     return [get_position_of_object(obj) for obj in objects]
 
@@ -54,7 +70,7 @@ def get_position_of_object(object: Object) -> Coordinate3D:
     Returns:
         location of object in the world frame
     """
-    return tuple(object.matrix_world.translation)
+    return tuple(object.matrix_world.translation)  # pyright: ignore[reportReturnType]
 
 
 def get_xyz_euler_rotation_of_object(object: Object) -> Rotation3D:

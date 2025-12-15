@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## main
+## [4.0.0] - 2025-12-13
+
+### Breaking changes
+
+- The color animation of drones is stored more efficiently: instead of a unique
+  material per drone, we now have one single template material with a modified
+  shader node tree that inputs colors from the color property of the drone object.
+  The new handling of color animation is substantially faster than the previous
+  solution, but all previous files need to be migrated once to be used in the
+  new format. Whenever you load an old Blender file, a popup message will give
+  you details about this migration. Please press OK, save the new file with a
+  different name and use that in the future. It is also advised to set the Object
+  Color setting in the viewport shading panel to "Object" (instead of "Material")
+  so you can see the colors of the drones properly in the 3D view.
+
+- The minimum backend version required for this version of the add-on is now
+  2.31.3.
+
+- Trajectories sent to the backend use a new, compact binary format to speed up
+  render requests and save some bandwidth towards remote backends.
 
 ### Added
 
@@ -13,13 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added light effect import/export feature.
 
-- Added an option to attach a storyboard entry or a transition between two consecutive 
-  storyboard entries to a light effect, defining the effect's start and end time 
+- Added an option to attach a storyboard entry or a transition between two consecutive
+  storyboard entries to a light effect, defining the effect's start and end time
   automatically, based on the time span of the storyboard entry or transition and
   user defined relative offsets.
 
-- Added export option for combined/parallel .skyc and .pdf exports to save time on final
-  drone show renderings.
+- Added export option for combined/parallel `.skyc` and `.pdf` exports to save
+  time on final drone show renderings.
 
 - Added mandatory backend version check before dispatching the first request to
   the current server instance.
@@ -33,20 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for three drone models and two GCS types in the HG DAC exporter.
 
 ### Changed
-
-- The minimum backend version required for this version of the add-on is now 
-  2.31.3.
-
-- A major update is that the color animation of drones is stored in a much more efficient
-  way: instead of a unique material for all drones we now have one single template material
-  with a modified shader node tree that inputs colors from the drone object's color property.
-  The new handling of color animation is substantially faster than the previous solution, but
-  all previous files need to be migrated once to be used in the new format. Whenever you load
-  an old Blender file, a popup message will give you details about this migration. Please 
-  press OK, save the new file at a different name and use that in the future.
-
-- Trajectories sent to the backend use a new, compact binary format to speed up
-  render requests and save some bandwidth towards remote backends.
 
 - Error messages became more informative.
 

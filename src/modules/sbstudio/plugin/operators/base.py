@@ -1,26 +1,25 @@
 from __future__ import annotations
 
-import bpy
 import logging
 import os
-
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from numpy import array, floating
-from numpy.typing import NDArray
 from typing import Any, Optional
 
+import bpy
 from bpy.props import BoolProperty, EnumProperty, IntProperty
-from bpy.types import Collection, Context, Object, Operator
+from bpy.types import Collection, Context, FCurve, Object, Operator
 from bpy_extras.io_utils import ExportHelper
+from numpy import array, floating
+from numpy.typing import NDArray
 
-from sbstudio.model.point import Point3D
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
+from sbstudio.model.point import Point3D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.actions import (
-    ensure_action_exists_for_object,
-    find_f_curve_for_data_path_and_index,
+    ensure_animation_data_exists_for_object,
+    ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.model.formation import (
@@ -29,9 +28,7 @@ from sbstudio.plugin.model.formation import (
 )
 from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
-from sbstudio.plugin.selection import select_only
-from sbstudio.plugin.selection import Collections
-
+from sbstudio.plugin.selection import Collections, select_only
 
 log = logging.getLogger(__name__)
 
@@ -170,6 +167,7 @@ class ExportOperator(Operator, ExportHelper):
 
     def execute(self, context: Context):
         from sbstudio.plugin.api import call_api_from_blender_operator
+
         from .utils import export_show_to_file_using_api
 
         filepath = bpy.path.ensure_ext(self.filepath, self.filename_ext)
@@ -303,21 +301,13 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 # does not need animation so we don't create the action
                 continue
 
-            action = ensure_action_exists_for_object(
-                marker, name=f"Animation data for {marker.name}", clean=True
-            )
+            anim_data = ensure_animation_data_exists_for_object(marker, clean=True)
 
-            f_curves = []
+            f_curves: list[FCurve] = []
             for i in range(3):
-                f_curve = find_f_curve_for_data_path_and_index(action, "location", i)
-                if f_curve is None:
-                    f_curve = action.fcurves.new("location", index=i)
-                else:
-                    # We should clear the keyframes that fall within the
-                    # range of our keyframes. Currently it's not needed because
-                    # it's a freshly created marker so it can't have any
-                    # keyframes that we don't know about.
-                    pass
+                f_curve = ensure_f_curve_exists_for_data_path_and_index(
+                    anim_data, data_path="location", index=i
+                )
                 f_curves.append(f_curve)
 
             # add keypoints to f-curves in low level mode
@@ -360,6 +350,8 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 select=True,
             )
             light_effect = light_effects.active_entry
+            assert light_effect is not None
+
             light_effect.type = "IMAGE"
             light_effect.output = "TEMPORAL"
             light_effect.output_y = "INDEXED_BY_FORMATION"
@@ -464,6 +456,8 @@ class StaticMarkerCreationOperator(FormationOperator):
                     select=True,
                 )
                 light_effect = light_effects.active_entry
+                assert light_effect is not None
+
                 light_effect.output = "TEMPORAL"
                 light_effect.output_y = "INDEXED_BY_FORMATION"
                 light_effect.type = "IMAGE"

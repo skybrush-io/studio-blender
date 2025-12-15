@@ -1,11 +1,9 @@
 import bpy
 
 from bpy.types import Material
-from typing import Optional, Tuple, Union
+from typing import Optional
 
-from sbstudio.model.types import RGBAColor, RGBAColorLike
-from sbstudio.plugin.actions import ensure_action_exists_for_object
-from sbstudio.plugin.keyframes import set_keyframes
+from sbstudio.model.types import RGBAColor
 
 from .errors import SkybrushStudioAddonError
 
@@ -17,13 +15,17 @@ __all__ = (
     "set_emission_strength_of_material",
 )
 
-is_blender_4 = bpy.app.version >= (4, 0, 0)
+is_blender_4_or_later = bpy.app.version >= (4, 0, 0)
+is_blender_6_or_later = bpy.app.version >= (6, 0, 0)
 
 
 def _create_material(name: str):
     """Creates a new, general purpose material with the given name."""
     mat = bpy.data.materials.new(name)
-    mat.use_nodes = True
+
+    # use_nodes will be removed in Blender 6
+    if not is_blender_6_or_later:
+        mat.use_nodes = True
 
     return mat
 
@@ -206,7 +208,9 @@ def _get_shader_node_and_input_for_diffuse_color_of_material(material):
                 node = _find_shader_node_by_name_and_type(
                     material, "Principled BSDF", "BSDF_PRINCIPLED"
                 )
-                input = node.inputs["Emission Color" if is_blender_4 else "Emission"]
+                input = node.inputs[
+                    "Emission Color" if is_blender_4_or_later else "Emission"
+                ]
                 return node, input
             except KeyError:
                 raise SkybrushStudioAddonError(
@@ -228,5 +232,5 @@ def _set_specular_reflection_intensity_of_material(material, intensity):
         material, "Principled BSDF", "BSDF_PRINCIPLED"
     )
     node.inputs[
-        "Specular IOR Level" if is_blender_4 else "Specular"
+        "Specular IOR Level" if is_blender_4_or_later else "Specular"
     ].default_value = intensity
