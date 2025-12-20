@@ -18,6 +18,10 @@ dependencies = ["natsort>=8.0.0"]
 [dependency-groups]
 dev = ["pyclean>=2.0.0"]
 
+[tool.uv.build-backend]
+module-root = "src/modules"
+module-name = "sbstudio"
+
 [tool.ruff]
 lint.ignore = ["B027", "B905", "C901", "E402", "E501", "E731"]
 lint.select = ["B", "C", "E", "F", "W"]
