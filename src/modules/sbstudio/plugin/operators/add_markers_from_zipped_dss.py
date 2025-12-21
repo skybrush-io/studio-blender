@@ -7,7 +7,7 @@ from bpy.path import ensure_ext
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
-from sbstudio.api.base import SkybrushStudioAPI
+from sbstudio.api import SkybrushStudioAPI
 
 from .add_markers_from_zipped_csv import parse_compressed_csv_zip
 from .base import DynamicMarkerCreationOperator, TrajectoryAndLightProgram

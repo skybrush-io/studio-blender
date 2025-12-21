@@ -5,14 +5,15 @@ import logging
 from bpy.path import basename
 from bpy.types import Context
 
+from contextlib import contextmanager
 from itertools import groupby
 from math import degrees
 from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Callable, Optional, cast
+from typing import Any, Iterator, Optional, cast
 
-from sbstudio.api.base import SkybrushStudioAPI
+from sbstudio.api import SkybrushStudioAPI
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation
@@ -25,14 +26,15 @@ from sbstudio.plugin.model.storyboard import (
     get_storyboard,
 )
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
+from sbstudio.plugin.errors import SkybrushStudioExportWarning, TaskCancelled
+from sbstudio.plugin.gateway import get_gateway
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
 from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
-from sbstudio.plugin.utils.progress import FrameProgressReport
+from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
 from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
 from sbstudio.plugin.utils.sampling import (
     frame_range,
@@ -164,8 +166,8 @@ def _get_trajectories_and_lights(
     settings: dict[str, Any],
     bounds: tuple[int, int],
     *,
-    context: Optional[Context] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    context: Context | None = None,
+    progress: ProgressHandler | None = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram]]:
     """Get trajectories and LED lights of all selected/picked objects.
 
@@ -191,25 +193,27 @@ def _get_trajectories_and_lights(
             for effect in context.scene.skybrush.light_effects.entries
         )
 
+    frames = frame_range(
+        bounds[0],
+        bounds[1],
+        context=context,
+    )
+
     trajectories: dict[str, Trajectory]
     lights: dict[str, LightProgram]
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
-        range = frame_range(
-            bounds[0],
-            bounds[1],
-            fps=trajectory_fps,
-            context=context,
-            operation="Sampling trajectories and lights",
-            progress=progress,
-        )
         with suspended_safety_checks():
+            frame_iter = frames.iter(
+                trajectory_fps,
+                operation="Sampling trajectories and lights",
+                on_progress=progress,
+            )
             result = sample_positions_and_colors_of_objects(
                 drones,
-                range,
+                frame_iter,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -225,36 +229,28 @@ def _get_trajectories_and_lights(
         # We need to iterate over the show twice, once for the trajectories,
         # once for the lights
         with suspended_safety_checks():
-            range = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=trajectory_fps,
-                context=context,
+            frame_iter = frames.iter(
+                trajectory_fps,
                 operation="Sampling trajectories",
-                progress=progress,
+                on_progress=progress,
             )
             with suspended_light_effects():
                 trajectories = sample_positions_of_objects(
                     drones,
-                    range,
+                    frame_iter,
                     context=context,
-                    by_name=True,
                     simplify=True,
                 )
 
-            range = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=light_fps,
-                context=context,
+            frame_iter = frames.iter(
+                light_fps,
                 operation="Sampling lights",
-                progress=progress,
+                on_progress=progress,
             )
             lights = sample_colors_of_objects(
                 drones,
-                range,
+                frame_iter,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -268,8 +264,8 @@ def _get_trajectories_lights_and_yaw_setpoints(
     settings: dict[str, Any],
     bounds: tuple[int, int],
     *,
-    context: Optional[Context] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    context: Context | None = None,
+    progress: ProgressHandler | None = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram], dict[str, YawSetpointList]]:
     """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
 
@@ -295,6 +291,12 @@ def _get_trajectories_lights_and_yaw_setpoints(
             for effect in context.scene.skybrush.light_effects.entries
         )
 
+    frames = frame_range(
+        bounds[0],
+        bounds[1],
+        context=context,
+    )
+
     trajectories: dict[str, Trajectory]
     lights: dict[str, LightProgram]
     yaw_setpoints: dict[str, YawSetpointList]
@@ -302,19 +304,15 @@ def _get_trajectories_lights_and_yaw_setpoints(
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
         with suspended_safety_checks():
-            range = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=trajectory_fps,
-                context=context,
+            frame_iter = frames.iter(
+                trajectory_fps,
                 operation="Sampling trajectories, lights and yaw setpoints",
-                progress=progress,
+                on_progress=progress,
             )
             result = sample_positions_colors_and_yaw_of_objects(
                 drones,
-                range,
+                frame_iter,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -332,20 +330,16 @@ def _get_trajectories_lights_and_yaw_setpoints(
         # We need to iterate over the show twice, once for the trajectories
         # and yaw setpoints, once for the lights
         with suspended_safety_checks():
-            range = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=trajectory_fps,
-                context=context,
+            frame_iter = frames.iter(
+                trajectory_fps,
                 operation="Sampling trajectories and yaw setpoints",
-                progress=progress,
+                on_progress=progress,
             )
             with suspended_light_effects():
                 result = sample_positions_and_yaw_of_objects(
                     drones,
-                    range,
+                    frame_iter,
                     context=context,
-                    by_name=True,
                     simplify=True,
                 )
 
@@ -356,19 +350,15 @@ def _get_trajectories_lights_and_yaw_setpoints(
                     trajectories[key] = trajectory
                     yaw_setpoints[key] = yaw_curve
 
-            range = frame_range(
-                bounds[0],
-                bounds[1],
-                fps=light_fps,
-                context=context,
+            frame_iter = frames.iter(
+                light_fps,
                 operation="Sampling lights",
-                progress=progress,
+                on_progress=progress,
             )
             lights = sample_colors_of_objects(
                 drones,
-                range,
+                frame_iter,
                 context=context,
-                by_name=True,
                 redraw=redraw,
                 simplify=True,
             )
@@ -376,8 +366,54 @@ def _get_trajectories_lights_and_yaw_setpoints(
     return trajectories, lights, yaw_setpoints
 
 
-def _show_progress_during_export(progress: FrameProgressReport) -> None:
-    print(progress.format())
+@contextmanager
+def _report_progress_on_console(title: str = "") -> Iterator[ProgressHandler]:
+    def reporter(progress: ProgressReport) -> bool:
+        print(progress.format())
+        return False
+
+    if title:
+        print(f"{title}...")
+
+    failed = False
+
+    try:
+        yield reporter
+    except (KeyboardInterrupt, TaskCancelled):
+        print("Operation cancelled by user.")
+        failed = True
+    except Exception as ex:
+        print(f"Operation failed: {ex}")
+        failed = True
+    finally:
+        print(f"{title}: {'failed' if failed else 'done'}.")
+
+
+@contextmanager
+def report_progress_during_api_operation(title: str = "") -> Iterator[ProgressHandler]:
+    try:
+        gateway = get_gateway()
+    except Exception:
+        gateway = None
+
+    # Note that at this point it is not ensured that the gateway is running,
+    # only that it is configured, so we need to test if it is functional
+    # before we actually select it as the progress context.
+    if gateway:
+        try:
+            gateway.get_hardware_id()
+        except Exception:
+            log.warning("Gateway error; reporting progress on console")
+            gateway = None
+
+    ctx = (
+        gateway.use_new_operation(title=title)
+        if gateway
+        else _report_progress_on_console(title)
+    )
+
+    with ctx as on_progress:
+        yield on_progress
 
 
 def export_show_to_file_using_api(
@@ -432,32 +468,33 @@ def export_show_to_file_using_api(
     use_yaw_control: bool = settings.get("use_yaw_control", False)
 
     # get trajectories, light programs and yaw setpoints
-    if use_yaw_control:
-        log.info("Getting object trajectories, light programs and yaw setpoints")
-        (
-            trajectories,
-            lights,
-            yaw_setpoints,
-        ) = _get_trajectories_lights_and_yaw_setpoints(
-            drones,
-            settings,
-            frame_range,
-            context=context,
-            progress=_show_progress_during_export,
-        )
-    else:
-        log.info("Getting object trajectories and light programs")
-        (
-            trajectories,
-            lights,
-        ) = _get_trajectories_and_lights(
-            drones,
-            settings,
-            frame_range,
-            context=context,
-            progress=_show_progress_during_export,
-        )
-        yaw_setpoints = None
+    with report_progress_during_api_operation() as on_progress:
+        if use_yaw_control:
+            log.info("Getting object trajectories, light programs and yaw setpoints")
+            (
+                trajectories,
+                lights,
+                yaw_setpoints,
+            ) = _get_trajectories_lights_and_yaw_setpoints(
+                drones,
+                settings,
+                frame_range,
+                context=context,
+                progress=on_progress,
+            )
+        else:
+            log.info("Getting object trajectories and light programs")
+            (
+                trajectories,
+                lights,
+            ) = _get_trajectories_and_lights(
+                drones,
+                settings,
+                frame_range,
+                context=context,
+                progress=on_progress,
+            )
+            yaw_setpoints = None
 
     # get pyro control enabled state
     use_pyro_control: bool = settings.get("use_pyro_control", False)
@@ -540,23 +577,26 @@ def export_show_to_file_using_api(
 
     # create Skybrush converter object
     if format is FileFormat.PDF:
-        log.info("Exporting validation plots to .pdf")
+        message = "Exporting validation plots to .pdf"
         plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
         fps = settings.get("output_fps", _default_settings.output_fps)
-        api.generate_plots(
-            trajectories=trajectories,
-            output=filepath,
-            validation=validation,
-            plots=plots,
-            fps=fps,
-            time_markers=time_markers,
-        )
+
+        log.info(message)
+        with report_progress_during_api_operation(message):
+            api.generate_plots(
+                trajectories=trajectories,
+                output=filepath,
+                validation=validation,
+                plots=plots,
+                fps=fps,
+                time_markers=time_markers,
+            )
     else:
         if format is FileFormat.SKYC:
-            log.info("Exporting show to Skybrush .skyc format")
+            message = "Exporting show to Skybrush .skyc format"
             renderer = "skyc"
         elif format is FileFormat.SKYC_AND_PDF:
-            log.info("Exporting show to .skyc and .pdf formats")
+            message = "Exporting show to .skyc and .pdf formats"
             plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
             fps = settings.get("output_fps", _default_settings.output_fps)
             renderer = ["skyc", "plot"]
@@ -565,13 +605,13 @@ def export_show_to_file_using_api(
                 {"plots": ",".join(plots), "fps": fps, "single_file": True},
             ]
         elif format is FileFormat.CSV:
-            log.info("Exporting show to Skybrush .csv format")
+            message = "Exporting show to Skybrush .csv format"
             renderer = "csv"
             renderer_params = {
                 "fps": settings["output_fps"],
             }
         elif format is FileFormat.DAC:
-            log.info("Exporting show to HG .dac format")
+            message = "Exporting show to HG .dac format"
             renderer = "dac"
             renderer_params = {
                 "show_id": 1555,
@@ -580,41 +620,41 @@ def export_show_to_file_using_api(
                 "gcs": settings["gcs_type"],
             }
         elif format is FileFormat.DDSF:
-            log.info("Exporting show to Depence .ddsf format")
+            message = "Exporting show to Depence .ddsf format"
             renderer = "ddsf"
             renderer_params = {
                 "fps": settings["output_fps"],
                 "light_fps": settings["light_output_fps"],
             }
         elif format is FileFormat.DROTEK:
-            log.info("Exporting show to Drotek .json format")
+            message = "Exporting show to Drotek .json format"
             renderer = "drotek"
             renderer_params = {
                 "fps": settings["output_fps"],
                 # TODO(ntamas): takeoff_angle?
             }
         elif format is FileFormat.DSS:
-            log.info("Exporting show to DSS .path format")
+            message = "Exporting show to DSS .path format"
             renderer = "dss"
         elif format is FileFormat.DSS3:
-            log.info("Exporting show to DSS .path3 format")
+            message = "Exporting show to DSS .path3 format"
             renderer = "dss3"
             renderer_params = {
                 "fps": settings["output_fps"],
                 "light_fps": settings["light_output_fps"],
             }
         elif format is FileFormat.EVSKY:
-            log.info("Exporting show to EVSKY .essp format")
+            message = "Exporting show to EVSKY .essp format"
             renderer = "evsky"
             renderer_params = {
                 "fps": settings["output_fps"],
                 "light_fps": settings["light_output_fps"],
             }
         elif format is FileFormat.LITEBEE:
-            log.info("Exporting show to Litebee .bin format")
+            message = "Exporting show to Litebee .bin format"
             renderer = "litebee"
         elif format is FileFormat.VVIZ:
-            log.info("Exporting show to Finale 3D .vviz format")
+            message = "Exporting show to Finale 3D .vviz format"
             renderer = "vviz"
             renderer_params = {
                 "fps": settings["output_fps"],
@@ -623,21 +663,24 @@ def export_show_to_file_using_api(
         else:
             raise RuntimeError(f"Unhandled format: {format!r}")
 
-        api.export(
-            show_title=show_title,
-            show_type=show_type,
-            show_location=show_location,
-            show_segments=show_segments,
-            validation=validation,
-            trajectories=trajectories,
-            lights=lights,
-            pyro_programs=pyro_programs,
-            yaw_setpoints=yaw_setpoints,
-            output=filepath,
-            time_markers=time_markers,
-            cameras=cameras,
-            renderer=renderer,
-            renderer_params=renderer_params,
-        )
+        log.info(message)
+
+        with report_progress_during_api_operation(message):
+            api.export(
+                show_title=show_title,
+                show_type=show_type,
+                show_location=show_location,
+                show_segments=show_segments,
+                validation=validation,
+                trajectories=trajectories,
+                lights=lights,
+                pyro_programs=pyro_programs,
+                yaw_setpoints=yaw_setpoints,
+                output=filepath,
+                time_markers=time_markers,
+                cameras=cameras,
+                renderer=renderer,
+                renderer_params=renderer_params,
+            )
 
     log.info("Export finished")

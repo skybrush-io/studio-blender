@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added request signing support to allow for online server usage for pro users as well.
+
 - Added light effect import/export feature.
 
 - Added an option to attach a storyboard entry or a transition between two consecutive
