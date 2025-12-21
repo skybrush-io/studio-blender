@@ -258,6 +258,10 @@ class Action(ID):
     layers: ActionLayers
     slots: ActionSlots
 
+    def fcurve_ensure_for_datablock(
+        self, datablock: ID, data_path: str, *, index: int = 0, group_name: str = ""
+    ) -> FCurve: ...
+
 class Collection(ID):
     children: CollectionChildren
     objects: CollectionObjects

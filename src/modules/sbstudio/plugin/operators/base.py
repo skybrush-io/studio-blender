@@ -18,7 +18,6 @@ from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point3D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.actions import (
-    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
@@ -301,12 +300,10 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 # does not need animation so we don't create the action
                 continue
 
-            anim_data = ensure_animation_data_exists_for_object(marker, clean=True)
-
             f_curves: list[FCurve] = []
             for i in range(3):
                 f_curve = ensure_f_curve_exists_for_data_path_and_index(
-                    anim_data, data_path="location", index=i
+                    marker, data_path="location", index=i
                 )
                 f_curves.append(f_curve)
 
