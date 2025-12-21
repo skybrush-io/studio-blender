@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import bpy
 from bpy.types import (
@@ -16,10 +16,6 @@ from bpy.types import (
 )
 
 from .utils.collections import ensure_object_exists_in_collection
-
-if TYPE_CHECKING:
-    from bpy.types import IdType  # not a real type
-
 
 __all__ = (
     "ensure_animation_data_exists_for_object",
@@ -40,7 +36,6 @@ def ensure_animation_data_exists_for_object(
     name: str | None = None,
     *,
     clean: bool = False,
-    id_type: IdType | None = None,
 ) -> AnimData:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -53,8 +48,6 @@ def ensure_animation_data_exists_for_object(
             already contain any F-curves. If this is true and an action
             already existed with the given name, the F-curves of the action
             will be cleared
-        id_type: the type of the slot that is created for the action if it does
-            not exist yet
 
     Returns:
         the animation data of the object
@@ -62,7 +55,7 @@ def ensure_animation_data_exists_for_object(
     if name is None:
         name = f"Animation data for {object.name}"
 
-    _ensure_action_exists_for_object(object, name, clean=clean, id_type=id_type)
+    _ensure_action_exists_for_object(object, name, clean=clean)
 
     assert object.animation_data is not None
     return object.animation_data
@@ -73,7 +66,6 @@ def _ensure_action_exists_for_object(
     name: str | None = None,
     *,
     clean: bool = False,
-    id_type: IdType | None = None,
 ) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -85,8 +77,6 @@ def _ensure_action_exists_for_object(
             already contain any F-curves. If this is true and an action
             already existed with the given name, the F-curves of the action
             will be cleared
-        id_type: the type of the slot that is created for the action if it does
-            not exist yet
     """
     action = get_action_for_object(object)
     if action is not None:
@@ -101,6 +91,9 @@ def _ensure_action_exists_for_object(
 
     if clean:
         clear_all_slots_from_action(action)
+
+    assert object.animation_data is not None
+    object.animation_data.action = action
 
     return action
 
