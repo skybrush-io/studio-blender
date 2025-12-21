@@ -27,12 +27,12 @@ Color = tuple[float, float, float]
 """Type alias for RGB colors in this module."""
 
 PyroOverlayInfo = tuple[Coordinate3D, list[str]]
-"""Type specification for a single info block on the overlay. An info block requires 
+"""Type specification for a single info block on the overlay. An info block requires
 a single coordinate and a list of text strings (one per line).
 """
 
 PyroOverlayMarker = tuple[Coordinate3D, Color]
-"""Type specification for a single marker on the overlay. A marker requires 
+"""Type specification for a single marker on the overlay. A marker requires
 a single coordinate and a Color.
 """
 

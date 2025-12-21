@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.2] - 2025-12-21
+
+### Changed
+
+- The add-on now expllcitly declares that the minimum required Blender version is 4.4.
+
+### Fixed
+
+- Fixed a bug in the creation of new F-curves when importing a formation from zipped
+  CSV files.
+
 ## [4.0.0] - 2025-12-13
 
 ### Breaking changes

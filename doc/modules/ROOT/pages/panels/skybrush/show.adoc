@@ -25,4 +25,3 @@ You can define the longitude of the show origin, i.e. the East-West position of 
 === Show orientation
 
 You can define the orientation of your show in the real world. The given value will define the orientation of the X+ axis of the show coordinate system relative to North (towards East) in the real world.
-

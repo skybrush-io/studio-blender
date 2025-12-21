@@ -1,7 +1,7 @@
 import bpy
 import os
 
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import StringProperty
 from bpy_extras.io_utils import ImportHelper
 
 from json import load

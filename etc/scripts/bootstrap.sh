@@ -4,7 +4,7 @@
 # that can pose as a Blender addon path.
 #
 # You should run the script without any arguments, unless you are an
-# in-house skybrush developer. In the latter case run it with the
+# in-house Skybrush developer. In the latter case run it with the
 # first argument set to "standalone".
 #
 # After running this script, open Blender and add the /dev folder to
@@ -29,15 +29,15 @@
 
 set -e
 
-SCRIPT_ROOT=`dirname $0`
+SCRIPT_ROOT=$(dirname $0)
 REPO_ROOT="${SCRIPT_ROOT}/../.."
 
 if [ "$1" == "standalone" ]; then
-    poetry install -E standalone
-    DEPENDENCIES="natsort pyledctrl skybrush svgpathtools svgwrite webcolors"
+  uv sync -E standalone
+  DEPENDENCIES="natsort pyledctrl skybrush svgpathtools svgwrite webcolors"
 else
-    poetry install
-    DEPENDENCIES=natsort
+  uv sync
+  DEPENDENCIES=natsort
 fi
 
 cd "${REPO_ROOT}"
@@ -49,10 +49,10 @@ ln -s ../src/addons
 ln -s ../src/modules
 
 cd vendor/skybrush/
-VENV_PYTHONPATH=`ls -d ../../../.venv/lib/python*/site-packages | sed -e 's#/$##'`
+VENV_PYTHONPATH=$(ls -d ../../../.venv/lib/python*/site-packages | sed -e 's#/$##')
 
 for dependency in $DEPENDENCIES; do
-    if [ -d "${VENV_PYTHONPATH}/${dependency}" ]; then
-        ln -s "${VENV_PYTHONPATH}/${dependency}"
-    fi
+  if [ -d "${VENV_PYTHONPATH}/${dependency}" ]; then
+    ln -s "${VENV_PYTHONPATH}/${dependency}"
+  fi
 done

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import bpy
 from bpy.types import (
@@ -16,10 +16,6 @@ from bpy.types import (
 )
 
 from .utils.collections import ensure_object_exists_in_collection
-
-if TYPE_CHECKING:
-    from bpy.types import IdType  # not a real type
-
 
 __all__ = (
     "ensure_animation_data_exists_for_object",
@@ -40,7 +36,6 @@ def ensure_animation_data_exists_for_object(
     name: str | None = None,
     *,
     clean: bool = False,
-    id_type: IdType | None = None,
 ) -> AnimData:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -53,8 +48,6 @@ def ensure_animation_data_exists_for_object(
             already contain any F-curves. If this is true and an action
             already existed with the given name, the F-curves of the action
             will be cleared
-        id_type: the type of the slot that is created for the action if it does
-            not exist yet
 
     Returns:
         the animation data of the object
@@ -62,7 +55,7 @@ def ensure_animation_data_exists_for_object(
     if name is None:
         name = f"Animation data for {object.name}"
 
-    _ensure_action_exists_for_object(object, name, clean=clean, id_type=id_type)
+    _ensure_action_exists_for_object(object, name, clean=clean)
 
     assert object.animation_data is not None
     return object.animation_data
@@ -73,7 +66,6 @@ def _ensure_action_exists_for_object(
     name: str | None = None,
     *,
     clean: bool = False,
-    id_type: IdType | None = None,
 ) -> Action:
     """Ensures that the given object has an action that can be used for
     animating the properties of the object.
@@ -85,8 +77,6 @@ def _ensure_action_exists_for_object(
             already contain any F-curves. If this is true and an action
             already existed with the given name, the F-curves of the action
             will be cleared
-        id_type: the type of the slot that is created for the action if it does
-            not exist yet
     """
     action = get_action_for_object(object)
     if action is not None:
@@ -102,23 +92,8 @@ def _ensure_action_exists_for_object(
     if clean:
         clear_all_slots_from_action(action)
 
-    # Blender 4.4 switched to slotted actions, so we need to ensure that
-    # the action has at least one slot.
-    slot_name = f"{name} / Default slot" if name else "Default slot"
-    if id_type is None:
-        id_type = cast("IdType", object.id_type)
-    action.slots.new(id_type=id_type, name=slot_name)
-
     assert object.animation_data is not None
-
     object.animation_data.action = action
-
-    # Blender 4.4 switched to slotted actions. We need to assign the first
-    # slot of the action to the animation data. See more info here:
-    #
-    # https://developer.blender.org/docs/release_notes/4.4/python_api/#breaking
-    if object.animation_data.action_slot is None and len(action.slots) > 0:
-        object.animation_data.action_slot = action.slots[0]
 
     return action
 
@@ -179,16 +154,6 @@ def _get_channelbag_from_animation_data(
         # to return None if we have no layers or strips, because a channel bag
         # cannot exist without a strip.
         return None
-
-
-def _add_new_f_curve(anim_data: AnimData, *, data_path: str, index: int = 0) -> FCurve:
-    """Adds a new F-curve to the given animation data object."""
-    bag = _get_channelbag_from_animation_data(anim_data)
-    if bag is None:
-        raise RuntimeError("Could not get channel bag from animation data")
-
-    curve = bag.fcurves.new(data_path=data_path, index=index)
-    return curve
 
 
 def iter_all_f_curves(anim_data: AnimData | None) -> Iterable[FCurve]:
@@ -283,24 +248,21 @@ def find_all_f_curves_for_data_path(
 
 
 def ensure_f_curve_exists_for_data_path_and_index(
-    anim_data: AnimData, *, data_path: str, index: int
+    object: Object, *, data_path: str, index: int
 ) -> FCurve:
-    """Finds the first F-curve in the F-curves of the animation data whose data path
+    """Finds the first F-curve in the F-curves of the object whose data path
     and index match the given arguments, creating one if it does not exist yet.
 
-    Only the active action and slot of the animation data are considered.
-
     Parameters:
-        anim_data: the animation data to retrieve the action from
+        object: the object to retrieve the action from
         data_path: the data path of the F-curve we are looking for
         index: the index of the F-curve we are looking for
 
     Returns:
         the F-curve
     """
-    return find_f_curve_for_data_path_and_index(
-        anim_data, data_path=data_path, index=index
-    ) or _add_new_f_curve(anim_data, data_path=data_path, index=index)
+    action = _ensure_action_exists_for_object(object)
+    return action.fcurve_ensure_for_datablock(object, data_path, index=index)
 
 
 def cleanup_actions_for_object(object: Object) -> None:

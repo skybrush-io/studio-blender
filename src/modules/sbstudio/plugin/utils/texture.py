@@ -1,7 +1,5 @@
 """Utility functions related to Blender textures."""
 
-import bpy
-
 from bpy.types import Texture, ImageTexture
 
 from typing import Any

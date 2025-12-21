@@ -1,5 +1,5 @@
 [version]
-current = "4.0.1"
+current = "4.0.2"
 regex = '''
   (?P<major>\d+)
   \.
@@ -20,3 +20,7 @@ search = 'version = "{current_version}"'
 src = "src/addons/ui_skybrush_studio.py"
 version_template = "({major}, {minor}, {patch})"
 search = '"version": {current_version}'
+
+[[before_commit]]
+name = "Run pre-commit hooks"
+cmd = "uv sync && pre-commit run --all-files"

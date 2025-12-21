@@ -83,11 +83,11 @@ def color_function(frame, time_fraction, drone_index, formation_index, position,
 
 == Temporal constraints
 
-The next group of properties below the color ramp or color image specify the temporal constraints of the light effect, i.e. _when_ the light effect should be applied. 
+The next group of properties below the color ramp or color image specify the temporal constraints of the light effect, i.e. _when_ the light effect should be applied.
 
 Start, duration, end::
 
-The *Start frame*, *Duration* and *End frame* properties define the hard temporal limits: the light effect will be completely inactive outside this time interval. 
+The *Start frame*, *Duration* and *End frame* properties define the hard temporal limits: the light effect will be completely inactive outside this time interval.
 
 TIP: Press the btn:[◀] buttons on the right side of the start and end frame boxes to set them to the current frame.
 

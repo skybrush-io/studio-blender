@@ -16,7 +16,7 @@ Each storyboard entry has a label and an associated set of properties that defin
 
 Formation:: Shows or sets the formation corresponding to the selected storyboard entry.
 
-Start Frame:: Shows or sets the frame when the formation of the selected storyboard entry should appear on the sky in the drone show. 
+Start Frame:: Shows or sets the frame when the formation of the selected storyboard entry should appear on the sky in the drone show.
 +
 TIP: Press the btn:[◀] button on the right to set the start frame to the current frame.
 

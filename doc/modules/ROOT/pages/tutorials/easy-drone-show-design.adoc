@@ -151,7 +151,7 @@ The effects defined in the "Light Effects" panel are calculated on-the-fly, fram
 
 == 9. Add optional pyro or yaw control
 
-There are additional options to make your drone shows even more spectacular, such as adding drone-launched fireworks to your shows or enhancing visuals with controlling the yaw angle of drones. 
+There are additional options to make your drone shows even more spectacular, such as adding drone-launched fireworks to your shows or enhancing visuals with controlling the yaw angle of drones.
 
 For adding pyro control please checkout the description of the xref:panels/pyro/pyro_control.adoc[Pyro Control panel].
 

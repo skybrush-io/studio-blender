@@ -1,6 +1,6 @@
 [project]
 name = "skybrush-studio-for-blender"
-version = "4.0.1"
+version = "4.0.2"
 description = "Skybrush Studio for Blender is a professional drone show designer framework integrated into Blender"
 license = "GPL-3.0-or-later"
 authors = [{ name = "CollMot Robotics Ltd.", email = "hello@skybrush.io" }]
@@ -17,6 +17,10 @@ dependencies = ["natsort>=8.0.0"]
 
 [dependency-groups]
 dev = ["pyclean>=2.0.0"]
+
+[tool.uv.build-backend]
+module-root = "src/modules"
+module-name = "sbstudio"
 
 [tool.ruff]
 lint.ignore = ["B027", "B905", "C901", "E402", "E501", "E731"]
