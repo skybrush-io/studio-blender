@@ -1,5 +1,4 @@
 import logging
-
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
@@ -10,8 +9,8 @@ from bpy_extras.io_utils import ImportHelper
 
 from sbstudio.api.base import SkybrushStudioAPI
 
-from .base import DynamicMarkerCreationOperator, TrajectoryAndLightProgram
 from .add_markers_from_zipped_csv import parse_compressed_csv_zip
+from .base import DynamicMarkerCreationOperator, TrajectoryAndLightProgram
 
 __all__ = ("AddMarkersFromZippedDSSOperator",)
 
@@ -77,7 +76,7 @@ def parse_compressed_dss_zip(
     result: dict[str, TrajectoryAndLightProgram] = {}
 
     with ZipFile(filename, "r") as zip_file:
-        extensions = list(set(Path(x).suffix.lower() for x in zip_file.namelist()))
+        extensions = list({Path(x).suffix.lower() for x in zip_file.namelist()})
 
     if extensions == [".path"]:
         importer = "dss"

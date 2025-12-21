@@ -1,7 +1,6 @@
 import logging
 from time import time
 
-import bpy
 from sbstudio.plugin.actions import ensure_animation_data_exists_for_object
 from sbstudio.plugin.constants import Collections, Templates
 from sbstudio.plugin.errors import SkybrushStudioAddonError

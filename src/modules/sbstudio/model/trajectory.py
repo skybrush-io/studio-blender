@@ -2,7 +2,6 @@ from base64 import b64encode
 from itertools import chain
 from numpy import array
 from operator import attrgetter
-from struct import Struct
 from typing import List, Optional, Sequence, TypeVar
 
 from .point import Point3D, Point4D
