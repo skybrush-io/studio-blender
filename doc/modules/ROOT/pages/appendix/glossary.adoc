@@ -1,6 +1,6 @@
 [glossary]
 = Glossary
-:imagesdir: ../assets/images
+:imagesdir: ../../assets/images
 
 [glossary]
 Collection:: Blender objects in a scene can be grouped into collections. Collections are listed in the Outliner editor. *Skybrush Studio for Blender* uses collections to group drones, formations and drone object templates. For more information on collections in general, please read the https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html[official Blender documentation].

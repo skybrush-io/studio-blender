@@ -82,11 +82,19 @@ include::pages/panels/safety_and_export/export.adoc[]
 
 :leveloffset: -1
 
+// ============================================================================
+
+include::pages/appendix/index.adoc[]
+
+:leveloffset: +1
+
+include::pages/appendix/third_party.adoc[]
+
+[glossary]
+include::pages/appendix/glossary.adoc[]
+
 :leveloffset: -1
 
 // ============================================================================
-
-[glossary]
-include::pages/glossary.adoc[]
 
 :leveloffset: -1

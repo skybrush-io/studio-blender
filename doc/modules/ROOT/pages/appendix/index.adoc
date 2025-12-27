@@ -1,0 +1,7 @@
+= Appendix
+:imagesdir: ../../assets/images
+
+In the appendix you can find useful information about the following topics:
+
+* xref:appendix/third_party.adoc[Third party tools]
+* xref:appendix/glossary.adoc[Glossary]
