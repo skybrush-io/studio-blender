@@ -5,12 +5,13 @@ import logging
 from bpy.path import basename
 from bpy.types import Context
 
+from collections.abc import Callable
 from itertools import groupby
 from math import degrees
 from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Callable, Optional, cast
+from typing import Any, cast
 
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.file_formats import FileFormat
@@ -57,7 +58,7 @@ log = logging.getLogger(__name__)
 class _default_settings:
     output_fps: int = 4
     light_output_fps: int = 4
-    redraw: Optional[bool] = None
+    redraw: bool | None = None
 
 
 ################################################################################
@@ -89,8 +90,8 @@ def get_drones_to_export(selected_only: bool = False):
 
 @with_context
 def _get_frame_range_from_export_settings(
-    settings, *, context: Optional[Context] = None
-) -> Optional[tuple[int, int]]:
+    settings, *, context: Context | None = None
+) -> tuple[int, int] | None:
     """Returns the range of frames to export, based on the chosen export settings
     of the user.
 
@@ -105,7 +106,7 @@ def _get_frame_range_from_export_settings(
 
 
 @with_context
-def _get_segments(context: Optional[Context] = None) -> dict[str, tuple[float, float]]:
+def _get_segments(context: Context | None = None) -> dict[str, tuple[float, float]]:
     """Returns dictionary that maps show segment IDs to start (inclusive) and
     end (exclusive) timestamps.
 
@@ -164,8 +165,8 @@ def _get_trajectories_and_lights(
     settings: dict[str, Any],
     bounds: tuple[int, int],
     *,
-    context: Optional[Context] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    context: Context | None = None,
+    progress: Callable[[FrameProgressReport], None] | None = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram]]:
     """Get trajectories and LED lights of all selected/picked objects.
 
@@ -268,8 +269,8 @@ def _get_trajectories_lights_and_yaw_setpoints(
     settings: dict[str, Any],
     bounds: tuple[int, int],
     *,
-    context: Optional[Context] = None,
-    progress: Optional[Callable[[FrameProgressReport], None]] = None,
+    context: Context | None = None,
+    progress: Callable[[FrameProgressReport], None] | None = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram], dict[str, YawSetpointList]]:
     """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
 
