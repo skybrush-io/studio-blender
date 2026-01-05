@@ -70,6 +70,13 @@ class SkybrushPDFExportOperator(ExportOperator):
             "Include velocity plot. Uncheck to exclude velocity plot from the output."
         ),
     )
+    plot_acc = BoolProperty(
+        name="Plot accelerations",
+        default=False,
+        description=(
+            "Include acceleration plot. Uncheck to exclude acceleration plot from the output."
+        ),
+    )
     plot_drift = BoolProperty(
         name="Plot projected drift",
         default=True,
@@ -124,6 +131,7 @@ class SkybrushPDFExportOperator(ExportOperator):
         row.enabled = False
         column.prop(self, "plot_pos")
         column.prop(self, "plot_vel")
+        column.prop(self, "plot_acc")
         column.prop(self, "plot_drift")
         column.prop(self, "plot_nn")
         column.prop(self, "plot_nnall")
@@ -140,6 +148,7 @@ class SkybrushPDFExportOperator(ExportOperator):
             "stats": self.plot_stats,
             "pos": self.plot_pos,
             "vel": self.plot_vel,
+            "acc": self.plot_acc,
             "drift": self.plot_drift,
             "nn": self.plot_nn,
             "nnall": self.plot_nnall,
