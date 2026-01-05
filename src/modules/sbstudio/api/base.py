@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 from base64 import b64encode
@@ -35,6 +36,9 @@ from .errors import SkybrushStudioAPIError
 from .types import Limits, Mapping, SmartRTHPlan, TransitionPlan, Version
 
 __all__ = ("SkybrushStudioAPI",)
+
+
+log = logging.getLogger(__name__)
 
 
 class Response:
@@ -600,6 +604,7 @@ class SkybrushStudioAPI:
             ndigits: round floats to this precision
             time_markers: temporal cues to use in the plots
         """
+        log.warning("api.generate_plots() is deprecated, use api.export() instead")
 
         if time_markers is None:
             time_markers = TimeMarkers()

@@ -539,105 +539,98 @@ def export_show_to_file_using_api(
     renderer_params = {}
 
     # create Skybrush converter object
-    if format is FileFormat.PDF:
+    if format is FileFormat.SKYC:
+        log.info("Exporting show to Skybrush .skyc format")
+        renderer = "skyc"
+    elif format is FileFormat.PDF:
         log.info("Exporting validation plots to .pdf")
+        renderer = "plot"
         plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
         fps = settings.get("output_fps", _default_settings.output_fps)
-        api.generate_plots(
-            trajectories=trajectories,
-            output=filepath,
-            validation=validation,
-            plots=plots,
-            fps=fps,
-            time_markers=time_markers,
-        )
+        renderer_params = {"plots": ",".join(plots), "fps": fps, "single_file": True}
+    elif format is FileFormat.SKYC_AND_PDF:
+        log.info("Exporting show to .skyc and .pdf formats")
+        plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
+        fps = settings.get("output_fps", _default_settings.output_fps)
+        renderer = ["skyc", "plot"]
+        renderer_params = [
+            None,
+            {"plots": ",".join(plots), "fps": fps, "single_file": True},
+        ]
+    elif format is FileFormat.CSV:
+        log.info("Exporting show to Skybrush .csv format")
+        renderer = "csv"
+        renderer_params = {
+            "fps": settings["output_fps"],
+        }
+    elif format is FileFormat.DAC:
+        log.info("Exporting show to HG .dac format")
+        renderer = "dac"
+        renderer_params = {
+            "show_id": 1555,
+            "title": "Skybrush show",
+            "model": settings["drone_model"],
+            "gcs": settings["gcs_type"],
+        }
+    elif format is FileFormat.DDSF:
+        log.info("Exporting show to Depence .ddsf format")
+        renderer = "ddsf"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    elif format is FileFormat.DROTEK:
+        log.info("Exporting show to Drotek .json format")
+        renderer = "drotek"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            # TODO(ntamas): takeoff_angle?
+        }
+    elif format is FileFormat.DSS:
+        log.info("Exporting show to DSS .path format")
+        renderer = "dss"
+    elif format is FileFormat.DSS3:
+        log.info("Exporting show to DSS .path3 format")
+        renderer = "dss3"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    elif format is FileFormat.EVSKY:
+        log.info("Exporting show to EVSKY .essp format")
+        renderer = "evsky"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    elif format is FileFormat.LITEBEE:
+        log.info("Exporting show to Litebee .bin format")
+        renderer = "litebee"
+    elif format is FileFormat.VVIZ:
+        log.info("Exporting show to Finale 3D .vviz format")
+        renderer = "vviz"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
     else:
-        if format is FileFormat.SKYC:
-            log.info("Exporting show to Skybrush .skyc format")
-            renderer = "skyc"
-        elif format is FileFormat.SKYC_AND_PDF:
-            log.info("Exporting show to .skyc and .pdf formats")
-            plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
-            fps = settings.get("output_fps", _default_settings.output_fps)
-            renderer = ["skyc", "plot"]
-            renderer_params = [
-                None,
-                {"plots": ",".join(plots), "fps": fps, "single_file": True},
-            ]
-        elif format is FileFormat.CSV:
-            log.info("Exporting show to Skybrush .csv format")
-            renderer = "csv"
-            renderer_params = {
-                "fps": settings["output_fps"],
-            }
-        elif format is FileFormat.DAC:
-            log.info("Exporting show to HG .dac format")
-            renderer = "dac"
-            renderer_params = {
-                "show_id": 1555,
-                "title": "Skybrush show",
-                "model": settings["drone_model"],
-                "gcs": settings["gcs_type"],
-            }
-        elif format is FileFormat.DDSF:
-            log.info("Exporting show to Depence .ddsf format")
-            renderer = "ddsf"
-            renderer_params = {
-                "fps": settings["output_fps"],
-                "light_fps": settings["light_output_fps"],
-            }
-        elif format is FileFormat.DROTEK:
-            log.info("Exporting show to Drotek .json format")
-            renderer = "drotek"
-            renderer_params = {
-                "fps": settings["output_fps"],
-                # TODO(ntamas): takeoff_angle?
-            }
-        elif format is FileFormat.DSS:
-            log.info("Exporting show to DSS .path format")
-            renderer = "dss"
-        elif format is FileFormat.DSS3:
-            log.info("Exporting show to DSS .path3 format")
-            renderer = "dss3"
-            renderer_params = {
-                "fps": settings["output_fps"],
-                "light_fps": settings["light_output_fps"],
-            }
-        elif format is FileFormat.EVSKY:
-            log.info("Exporting show to EVSKY .essp format")
-            renderer = "evsky"
-            renderer_params = {
-                "fps": settings["output_fps"],
-                "light_fps": settings["light_output_fps"],
-            }
-        elif format is FileFormat.LITEBEE:
-            log.info("Exporting show to Litebee .bin format")
-            renderer = "litebee"
-        elif format is FileFormat.VVIZ:
-            log.info("Exporting show to Finale 3D .vviz format")
-            renderer = "vviz"
-            renderer_params = {
-                "fps": settings["output_fps"],
-                "light_fps": settings["light_output_fps"],
-            }
-        else:
-            raise RuntimeError(f"Unhandled format: {format!r}")
+        raise RuntimeError(f"Unhandled format: {format!r}")
 
-        api.export(
-            show_title=show_title,
-            show_type=show_type,
-            show_location=show_location,
-            show_segments=show_segments,
-            validation=validation,
-            trajectories=trajectories,
-            lights=lights,
-            pyro_programs=pyro_programs,
-            yaw_setpoints=yaw_setpoints,
-            output=filepath,
-            time_markers=time_markers,
-            cameras=cameras,
-            renderer=renderer,
-            renderer_params=renderer_params,
-        )
+    api.export(
+        show_title=show_title,
+        show_type=show_type,
+        show_location=show_location,
+        show_segments=show_segments,
+        validation=validation,
+        trajectories=trajectories,
+        lights=lights,
+        pyro_programs=pyro_programs,
+        yaw_setpoints=yaw_setpoints,
+        output=filepath,
+        time_markers=time_markers,
+        cameras=cameras,
+        renderer=renderer,
+        renderer_params=renderer_params,
+    )
 
     log.info("Export finished")
