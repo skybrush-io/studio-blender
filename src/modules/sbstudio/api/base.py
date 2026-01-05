@@ -12,7 +12,7 @@ from natsort import natsorted
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import create_default_context, CERT_NONE
-from typing import Any, Optional
+from typing import Any
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
@@ -122,7 +122,7 @@ class SkybrushStudioAPI:
     server.
     """
 
-    _api_key: Optional[str] = None
+    _api_key: str | None = None
     """The API key that will be submitted with each request. For license-type
     API keys, the key must start with the string "License ".
     """
@@ -154,8 +154,8 @@ class SkybrushStudioAPI:
     def __init__(
         self,
         url: str = COMMUNITY_SERVER_URL,
-        api_key: Optional[str] = None,
-        license_file: Optional[str] = None,
+        api_key: str | None = None,
+        license_file: str | None = None,
     ):
         """Constructor.
 
@@ -183,12 +183,12 @@ class SkybrushStudioAPI:
         self.url = url
 
     @property
-    def api_key(self) -> Optional[str]:
+    def api_key(self) -> str | None:
         """The API key used to authenticate with the server."""
         return self._api_key
 
     @api_key.setter
-    def api_key(self, value: Optional[str]) -> None:
+    def api_key(self, value: str | None) -> None:
         self._api_key = self.validate_api_key(value) if value else None
 
     def _convert_license_file_to_api_key(self, file: str) -> str:
@@ -355,23 +355,21 @@ class SkybrushStudioAPI:
         *,
         validation: SafetyCheckParams,
         trajectories: dict[str, Trajectory],
-        lights: Optional[dict[str, LightProgram]] = None,
-        pyro_programs: Optional[dict[str, PyroMarkers]] = None,
-        yaw_setpoints: Optional[dict[str, YawSetpointList]] = None,
-        output: Optional[Path] = None,
-        show_title: Optional[str] = None,
+        lights: dict[str, LightProgram] | None = None,
+        pyro_programs: dict[str, PyroMarkers] | None = None,
+        yaw_setpoints: dict[str, YawSetpointList] | None = None,
+        output: Path | None = None,
+        show_title: str | None = None,
         show_type: str = "outdoor",
         show_location: ShowLocation | None = None,
-        show_segments: Optional[dict[str, tuple[float, float]]] = None,
+        show_segments: dict[str, tuple[float, float]] | None = None,
         ndigits: int = 3,
-        timestamp_offset: Optional[float] = None,
-        time_markers: Optional[TimeMarkers] = None,
-        cameras: Optional[list[Camera]] = None,
+        timestamp_offset: float | None = None,
+        time_markers: TimeMarkers | None = None,
+        cameras: list[Camera] | None = None,
         renderer: str | list[str] = "skyc",
-        renderer_params: Optional[
-            dict[str, Any] | list[Optional[dict[str, Any]]]
-        ] = None,
-    ) -> Optional[bytes]:
+        renderer_params: dict[str, Any] | list[dict[str, Any]] | None = None,
+    ) -> bytes | None:
         """
         Export drone show data.
 
@@ -589,7 +587,7 @@ class SkybrushStudioAPI:
         plots: Sequence[str] = ("stats", "pos", "vel", "drift", "nn"),
         fps: float = 4,
         ndigits: int = 3,
-        time_markers: Optional[TimeMarkers] = None,
+        time_markers: TimeMarkers | None = None,
     ) -> None:
         """Export drone show data into Skybrush Compiled Format (.skyc).
 
@@ -660,8 +658,8 @@ class SkybrushStudioAPI:
         source: Sequence[Coordinate3D],
         target: Sequence[Coordinate3D],
         *,
-        radius: Optional[float] = None,
-    ) -> tuple[Mapping, Optional[float]]:
+        radius: float | None = None,
+    ) -> tuple[Mapping, float | None]:
         """Matches the points of a source point set to the points of a
         target point set in a way that ensures collision-free straight-line
         trajectories between the matched points when neither the source nor the
@@ -799,7 +797,7 @@ class SkybrushStudioAPI:
         max_velocity_xy: float,
         max_velocity_z: float,
         max_acceleration: float,
-        max_velocity_z_up: Optional[float] = None,
+        max_velocity_z_up: float | None = None,
         matching_method: str = "optimal",
     ) -> TransitionPlan:
         """Proposes a minimum feasible duration for a transition between the
