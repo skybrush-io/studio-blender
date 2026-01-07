@@ -69,4 +69,7 @@ def set_color_of_drone(drone, color: RGBAColorLike):
         drone: the drone to update
         color: the color to apply to the LED light of the drone
     """
-    drone.color = color
+    if any(
+        abs(a - b) > 1e-3 for a, b in zip(color, get_color_of_drone(drone), strict=True)
+    ):
+        drone.color = color
