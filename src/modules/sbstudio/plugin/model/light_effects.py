@@ -6,7 +6,7 @@ import bpy
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import Any, cast, Optional
+from typing import Any, cast
 from uuid import uuid4
 
 from bpy.path import abspath
@@ -113,7 +113,7 @@ def output_type_supports_mapping_mode(type: str) -> bool:
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
 
-def test_containment(bvh_tree: Optional[BVHTree], point: Coordinate3D) -> bool:
+def test_containment(bvh_tree: BVHTree | None, point: Coordinate3D) -> bool:
     """Given a point and a BVH-tree, tests whether the point is _probably_
     within the mesh represented by the BVH-tree.
 
@@ -135,7 +135,7 @@ def test_containment(bvh_tree: Optional[BVHTree], point: Coordinate3D) -> bool:
     return True
 
 
-def test_is_in_front_of(plane: Optional[Plane], point: Coordinate3D) -> bool:
+def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
     """Given a point and a plane, tests whether the point is on the front side
     of the plane.
 
@@ -240,7 +240,7 @@ def invalidate_pixel_cache(static: bool = True, dynamic: bool = True) -> None:
 
 
 def _storyboard_entry_or_transition_selection_update(
-    self: LightEffect, context: Optional[Context] = None
+    self: LightEffect, context: Context | None = None
 ):
     self.update_from_storyboard(context, reset_offset=True)
 
@@ -455,7 +455,7 @@ class LightEffect(PropertyGroup):
         self,
         colors: Sequence[MutableRGBAColor],
         positions: Sequence[Coordinate3D],
-        mapping: Optional[list[int]],
+        mapping: list[int] | None,
         *,
         frame: int,
         random_seq: RandomSequence,
@@ -479,7 +479,7 @@ class LightEffect(PropertyGroup):
             output_type: str,
             mapping_mode: str,
             output_function,
-        ) -> tuple[Optional[list[Optional[float]]], Optional[float]]:
+        ) -> tuple[list[float | None] | None, float | None]:
             """Get the float output(s) for color ramp or image indexing based on the output type.
 
             Args:
@@ -489,9 +489,9 @@ class LightEffect(PropertyGroup):
             Returns:
                 individual and common outputs
             """
-            outputs: Optional[list[Optional[float]]] = None
-            common_output: Optional[float] = None
-            order: Optional[list[int]] = None
+            outputs: list[float | None] | None = None
+            common_output: float | None = None
+            order: list[int] | None = None
 
             if output_type == "FIRST_COLOR":
                 common_output = 0.0
@@ -765,14 +765,14 @@ class LightEffect(PropertyGroup):
         }
 
     @property
-    def color_ramp(self) -> Optional[ColorRamp]:
+    def color_ramp(self) -> ColorRamp | None:
         """The color ramp of the effect, if it exists and is being used according
         to the type of the effect.
         """
         return self.texture.color_ramp if self.type == "COLOR_RAMP" else None
 
     @property
-    def color_image(self) -> Optional[Image]:
+    def color_image(self) -> Image | None:
         """The color image of the effect, if it exists and is being used according
         to the type of the effect.
         """
@@ -783,7 +783,7 @@ class LightEffect(PropertyGroup):
         )
 
     @color_image.setter
-    def color_image(self, image: Optional[Image]):
+    def color_image(self, image: Image | None):
         # If we have an old, legacy Texture instance, replace it with an
         # ImageTexture
         if not isinstance(self.texture, ImageTexture):
@@ -798,7 +798,7 @@ class LightEffect(PropertyGroup):
         self.invalidate_color_image()
 
     @property
-    def color_function_ref(self) -> Optional[Callable]:
+    def color_function_ref(self) -> Callable | None:
         if self.type != "FUNCTION" or not self.color_function:
             return None
         absolute_path = abspath(self.color_function.path)
@@ -999,7 +999,7 @@ class LightEffect(PropertyGroup):
         return warnings
 
     def update_from_storyboard(
-        self, context: Optional[Context], *, reset_offset: bool
+        self, context: Context | None, *, reset_offset: bool
     ) -> None:
         """Updates the stored storyboard entry/transition's name and
         start and end times from the currently selected entry/transition."""
@@ -1024,7 +1024,7 @@ class LightEffect(PropertyGroup):
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
     def _evaluate_influence_at(
-        self, position, frame: int, condition: Optional[Callable[[Coordinate3D], bool]]
+        self, position, frame: int, condition: Callable[[Coordinate3D], bool] | None
     ) -> float:
         """Eveluates the effective influence of the effect on the given position
         in space and at the given frame.
@@ -1055,7 +1055,7 @@ class LightEffect(PropertyGroup):
 
         return influence
 
-    def _get_bvh_tree_from_mesh(self) -> Optional[BVHTree]:
+    def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
         """Returns a BVH-tree data structure from the mesh associated to this
         light effect for easy containment detection, or `None` if the light
         effect has no associated mesh.
@@ -1081,7 +1081,7 @@ class LightEffect(PropertyGroup):
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
 
-    def _get_plane_from_mesh(self) -> Optional[Plane]:
+    def _get_plane_from_mesh(self) -> Plane | None:
         """Returns a plane that is an infinite expansion of the first face of the
         mesh associated to this light effect, or `None` if the light effect has
         no associated mesh or it has no faces.
@@ -1098,7 +1098,7 @@ class LightEffect(PropertyGroup):
                     # probably all-zero normal vector
                     pass
 
-    def _get_spatial_effect_predicate(self) -> Optional[Callable[[Coordinate3D], bool]]:
+    def _get_spatial_effect_predicate(self) -> Callable[[Coordinate3D], bool] | None:
         if self.target == "INSIDE_MESH":
             bvh_tree = self._get_bvh_tree_from_mesh()
             func = partial(test_containment, bvh_tree)
@@ -1155,7 +1155,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
     )
 
     @property
-    def active_entry(self) -> Optional[LightEffect]:
+    def active_entry(self) -> LightEffect | None:
         """The active light effect entry currently selected for editing, or
         `None` if there is no such entry.
         """
@@ -1169,11 +1169,11 @@ class LightEffectCollection(PropertyGroup, ListMixin):
     def append_new_entry(
         self,
         name: str,
-        frame_start: Optional[int] = None,
-        duration: Optional[int] = None,
+        frame_start: int | None = None,
+        duration: int | None = None,
         *,
         select: bool = False,
-        context: Optional[Context] = None,
+        context: Context | None = None,
     ) -> LightEffect:
         """Appends a new light effect to the end of the light effect list.
 
@@ -1227,7 +1227,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         self,
         *,
         select: bool = False,
-        context: Optional[Context] = None,
+        context: Context | None = None,
     ) -> LightEffect:
         """Duplicates the selected entry in the light effect list.
 
