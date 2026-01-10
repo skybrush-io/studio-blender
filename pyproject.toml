@@ -8,12 +8,14 @@ maintainers = [
   { name = "Tamas Nepusz", email = "tamas@collmot.com" },
   { name = "Gabor Vasarhelyi", email = "vasarhelyi@collmot.com" },
 ]
-homepage = "https://skybrush.io"
-repository = "https://github.com/skybrush-io/studio-plugin-blender"
-documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 package-mode = false
 requires-python = ">=3.11"
 dependencies = ["natsort>=8.0.0"]
+
+[project.urls]
+Homepage = "https://skybrush.io"
+Pepository = "https://github.com/skybrush-io/studio-plugin-blender"
+Documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [dependency-groups]
 dev = ["pyclean>=2.0.0"]
