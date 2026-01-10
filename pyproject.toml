@@ -32,6 +32,9 @@ extend-exclude = [
   "src/modules/sbstudio/i18n/translations.py",
 ]
 
+[tool.ty.environment]
+extra-paths = ["./typings"]
+
 [build-system]
 requires = ["uv_build>=0.9.0"]
 build-backend = "uv_build"
