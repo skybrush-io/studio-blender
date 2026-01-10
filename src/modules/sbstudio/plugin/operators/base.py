@@ -329,10 +329,10 @@ class DynamicMarkerCreationOperator(FormationOperator):
         # store light program as a light effect with color image
         log.info("Creating light effects...")
         light_effects = context.scene.skybrush.light_effects
-        if light_effects:
-            light_programs = [
-                item.light_program for item in trajectories_and_lights.values()
-            ]
+        light_programs = [
+            item.light_program for item in trajectories_and_lights.values()
+        ]
+        if light_effects and light_programs:
             duration = (
                 int(
                     (light_programs[0].colors[-1].t - light_programs[0].colors[0].t)
@@ -370,6 +370,11 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 pixels.extend(list(color.as_vector()))
             image.pixels.foreach_set(pixels)
             image.pack()
+
+        if not trajectories_and_lights:
+            self.report(
+                {"WARNING"}, "No trajectories or light programs were found in the input"
+            )
 
         return {"FINISHED"}
 

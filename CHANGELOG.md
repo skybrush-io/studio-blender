@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Rendering / display speed of colored drones got substantially enhanced by only 
+- Rendering / display speed of colored drones got substantially enhanced by only
   updating their color if it has changed.
 
 ### Fixed
 
 - Yaw and pyro information can be now part of the validation .pdf (PRO only)
+
+- A warning is now printed when importing a formation from an external file that
+  contains no trajectories or light programs instead of failing with an error.
 
 ## [4.0.2] - 2025-12-21
 
