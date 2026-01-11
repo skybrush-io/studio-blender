@@ -1,5 +1,4 @@
 import logging
-
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
@@ -66,8 +65,8 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     Args:
         check_version: whether to check the version of the backend
     """
-    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences
+    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
 
     if not is_online_access_allowed():
         raise NoOnlineAccessAllowedError()
@@ -105,6 +104,10 @@ def call_api_from_blender_operator(
     """
     default_message = f"Error while invoking {what} on the Skybrush Studio server"
     try:
+        # TODO(ntamas): This is not entirely correct here. When an exception happens
+        # during get_api(...), we will not yield anything back to the caller. If we
+        # handle _that_ exception without re-raising it, the caller itself will raise
+        # a "generator didn't yield" exception, which is quite confusing.
         yield get_api(check_version=check_version)
     except SkybrushStudioExportWarning as ex:
         operator.report({"WARNING"}, str(ex))
