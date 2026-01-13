@@ -725,13 +725,19 @@ class LightEffect(PropertyGroup):
                     # we can convert the image in advance when it is stored into
                     # the pixel cache if we can vectorize the operation somehow
                     # or offload it to C.
-                    match color_image.colorspace_settings.name:
-                        case "sRGB":
-                            new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
-                        case "Linear Rec.709":
-                            new_color[:] = pixel_color
-                        case other:
-                            raise RuntimeError(f"Unhandled image color space: {other}")
+                    if color_image.colorspace_settings.is_data:
+                        new_color[:] = pixel_color
+                    else:
+                        match color_image.colorspace_settings.name:
+                            case "sRGB":
+                                new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
+                            case "Linear Rec.709":
+                                new_color[:] = pixel_color
+                            case _:
+                                # Note that we do NOT handle conversion from other color spaces here,
+                                # just use the colors as they are. If other color spaces are used frequently,
+                                # explicit conversion needs to be implemented for them as well.
+                                new_color[:] = pixel_color
             elif color_ramp:
                 new_color[:] = color_ramp.evaluate(output_x)
             else:
@@ -821,12 +827,9 @@ class LightEffect(PropertyGroup):
         return 0 <= (frame - self.frame_start) < self.duration
 
     def create_color_image(
-        self,
-        name: str,
-        width: int,
-        height: int,
+        self, name: str, width: int, height: int, *, color_space: str = "Linear Rec.709"
     ) -> Image:
-        """Creates a new color image for the light effect with linear color space
+        """Creates a new color image for the light effect with the given color space
         (and deletes the old one if it already has one).
 
         Args:
@@ -835,12 +838,13 @@ class LightEffect(PropertyGroup):
                 time axis of the color animation
             height: the height of the image in pixels, corresponding to
                 the number of drones to color
+            color_space: the color space to set on the image
 
         Returns:
             the created color image itself for easy chaining
         """
         self.color_image = bpy.data.images.new(name=name, width=width, height=height)
-        self.color_image.colorspace_settings.name = "Linear Rec.709"
+        self.color_image.colorspace_settings.name = color_space
         return self.color_image
 
     @property
