@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A warning is now printed when importing a formation from an external file that
   contains no trajectories or light programs instead of failing with an error.
 
+- Fixed color space conversion for CSV and DSS import, assuming linear color space
+  in them.
+
 ## [4.0.2] - 2025-12-21
 
 ### Changed

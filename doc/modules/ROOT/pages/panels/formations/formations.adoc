@@ -129,11 +129,11 @@ TIP: If you are in Object mode _and_ the formation being selected contains verti
 
 Once a formation is created (and preferably appended to the storybard), use the btn:[Generate Markers] button to generate extra static or dynamic markers into that formation from different sources:
 
-From static CSV file:: Use this option to import a previously created static formation from an external .csv file, in which each line contains the following values in order (colors are optional): `Name`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
+From static CSV file:: Use this option to import a previously created static formation from an external .csv file, in which each line contains the following values in order (colors are optional and assumed to have linear color space): `Name`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
 
-From zipped CSV files:: Use this option to import previously created animated formations or entire shows modularly from an external .zip source that contains multiple .csv files (one per drone), each containing baked trajectory and light animation in the following line format (colors are optional): `Time_msec`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
+From zipped CSV files:: Use this option to import previously created animated formations or entire shows modularly from an external .zip source that contains multiple .csv files (one per drone), each containing baked trajectory and light animation in the following line format (colors are optional and assumed to have linear color space): `Time_msec`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
 
-From zipped PATH/PATH3 files (PRO):: Use this option to import previously created animated formations or entire shows modularly from an external .zip source that contains multiple DSS .path or .path3 files (one per drone), each containing baked trajectory and light animation.
+From zipped PATH/PATH3 files (PRO):: Use this option to import previously created animated formations or entire shows modularly from an external .zip source that contains multiple DSS .path or .path3 files (one per drone), each containing baked trajectory and light animation (in linear color space).
 
 NOTE: This feature is not supported by our community server. To enable it, please purchase a proper license from https://shop.skybrush.io/[Skybrush Shop].
 
