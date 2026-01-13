@@ -2,9 +2,9 @@ from dataclasses import dataclass, field
 from functools import total_ordering
 from math import inf
 from re import compile, fullmatch
-from typing import Any, List, Optional
+from typing import Any
 
-Mapping = list[Optional[int]]
+Mapping = list[int | None]
 """Type alias for mappings from drone indices to the corresponding target
 marker indices.
 """
@@ -17,7 +17,7 @@ class Limits:
     num_drones: float = inf
     """Number of drones supported by the server. Infinity is allowed."""
 
-    features: List[str] = field(default_factory=list)
+    features: list[str] = field(default_factory=list)
     """List of feature tags returned by the server."""
 
     @classmethod
@@ -104,14 +104,14 @@ class TransitionPlan:
     target point.
     """
 
-    mapping: Optional[Mapping] = None
+    mapping: Mapping | None = None
     """The computed matching where the i-th item of the list contains the
     index of the source point that the i-th target point is mapped to, or
     ``None`` if the given target point is left unmatched. Omitted if the
     initial request specified a fixed matching.
     """
 
-    clearance: Optional[float] = None
+    clearance: float | None = None
     """The minimum distance across all straight-line trajectories between the
     source and target points of the mapping, after deducting the radii of the
     drones. Omitted if the request did not specify the radii or if there were
