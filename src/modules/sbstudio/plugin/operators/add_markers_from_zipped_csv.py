@@ -1,6 +1,7 @@
 import csv
 import logging
 
+from natsort import natsorted
 from pathlib import Path
 from typing import IO
 from zipfile import ZipFile
@@ -71,7 +72,7 @@ def parse_compressed_csv_zip(
     result: dict[str, TrajectoryAndLightProgram] = {}
 
     with ZipFile(filename, "r") as zip_file:
-        for filename in zip_file.namelist():
+        for filename in natsorted(zip_file.namelist()):
             name = Path(filename).stem
             if name in result:
                 raise RuntimeError(f"Duplicate object name in input CSV files: {name}")
