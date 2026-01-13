@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 from operator import attrgetter
 from uuid import uuid4
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import bpy
 from bpy.props import (
@@ -95,12 +95,12 @@ class ScheduleOverride(PropertyGroup):
         return " | ".join(parts)
 
 
-def _handle_formation_change(self: StoryboardEntry, context: Optional[Context] = None):
+def _handle_formation_change(self: StoryboardEntry, context: Context | None = None):
     if not self.is_name_customized:
         self.name = self.formation.name if self.formation else ""
 
 
-def _handle_mapping_change(self: StoryboardEntry, context: Optional[Context] = None):
+def _handle_mapping_change(self: StoryboardEntry, context: Context | None = None):
     self._invalidate_decoded_mapping()
 
 
@@ -295,11 +295,11 @@ class StoryboardEntry(PropertyGroup):
     #: Sorting key for storyboard entries
     sort_key = attrgetter("frame_start", "frame_end")
 
-    _decoded_mapping: Optional[Mapping] = None
+    _decoded_mapping: Mapping | None = None
     """Decoded mapping of the storyboard entry."""
 
     @property
-    def active_schedule_override_entry(self) -> Optional[ScheduleOverride]:
+    def active_schedule_override_entry(self) -> ScheduleOverride | None:
         """The active schedule override currently selected for editing, or
         `None` if there is no such entry.
         """
@@ -310,7 +310,7 @@ class StoryboardEntry(PropertyGroup):
             return None
 
     @active_schedule_override_entry.setter
-    def active_schedule_override_entry(self, entry: Optional[ScheduleOverride]):
+    def active_schedule_override_entry(self, entry: ScheduleOverride | None):
         if entry is None:
             self.active_schedule_override_entry_index = -1
             return
@@ -327,7 +327,7 @@ class StoryboardEntry(PropertyGroup):
         self,
         *,
         select: bool = False,
-        context: Optional[Context] = None,
+        context: Context | None = None,
     ) -> ScheduleOverride:
         """Appends a new schedule override to the end of the storyboard.
 
@@ -384,7 +384,7 @@ class StoryboardEntry(PropertyGroup):
 
         return result
 
-    def get_mapping(self) -> Optional[Mapping]:
+    def get_mapping(self) -> Mapping | None:
         """Returns the mapping of the markers in the storyboard entry to drone
         indices, or ``None`` if there is no mapping yet.
         """
@@ -416,7 +416,7 @@ class StoryboardEntry(PropertyGroup):
             max(0, index), len(self.schedule_overrides)
         )
 
-    def update_mapping(self, mapping: Optional[Mapping]) -> None:
+    def update_mapping(self, mapping: Mapping | None) -> None:
         """Updates the mapping of the markers in the storyboard entry to drone
         indices.
 
@@ -473,7 +473,7 @@ class Storyboard(PropertyGroup, ListMixin):
     """Index of the active entry (currently being edited) in the storyboard"""
 
     @property
-    def active_entry(self) -> Optional[StoryboardEntry]:
+    def active_entry(self) -> StoryboardEntry | None:
         """The active storyboard entry currently selected for editing, or
         `None` if there is no such entry.
         """
@@ -484,7 +484,7 @@ class Storyboard(PropertyGroup, ListMixin):
             return None
 
     @active_entry.setter
-    def active_entry(self, entry: Optional[StoryboardEntry]):
+    def active_entry(self, entry: StoryboardEntry | None):
         if entry is None:
             self.active_entry_index = -1
             return
@@ -499,15 +499,15 @@ class Storyboard(PropertyGroup, ListMixin):
     @with_context
     def add_new_entry(
         self,
-        name: Optional[str] = None,
-        frame_start: Optional[int] = None,
-        duration: Optional[int] = None,
+        name: str | None = None,
+        frame_start: int | None = None,
+        duration: int | None = None,
         *,
         purpose: StoryboardEntryPurpose = StoryboardEntryPurpose.SHOW,
-        formation: Optional[Collection] = None,
+        formation: Collection | None = None,
         select: bool = False,
-        context: Optional[Context] = None,
-    ) -> Optional[StoryboardEntry]:
+        context: Context | None = None,
+    ) -> StoryboardEntry | None:
         """Appends a new entry to the end of the storyboard.
 
         Parameters:
@@ -595,7 +595,7 @@ class Storyboard(PropertyGroup, ListMixin):
         return any(entry.formation == formation for entry in self.entries)
 
     @property
-    def entry_after_active_entry(self) -> Optional[StoryboardEntry]:
+    def entry_after_active_entry(self) -> StoryboardEntry | None:
         """The storyboard entry that follows the currently selected entry for
         editing, or `None` if there is no such entry.
         """
@@ -606,7 +606,7 @@ class Storyboard(PropertyGroup, ListMixin):
             return None
 
     @property
-    def entry_before_active_entry(self) -> Optional[StoryboardEntry]:
+    def entry_before_active_entry(self) -> StoryboardEntry | None:
         """The storyboard entry that precedes the currently selected entry for
         editing, or `None` if there is no such entry.
         """
@@ -617,7 +617,7 @@ class Storyboard(PropertyGroup, ListMixin):
             return None
 
     @property
-    def first_entry(self) -> Optional[StoryboardEntry]:
+    def first_entry(self) -> StoryboardEntry | None:
         """Returns the first entry of the storyboard or `None` if the storyboard
         is empty.
         """
@@ -654,14 +654,14 @@ class Storyboard(PropertyGroup, ListMixin):
 
     def get_entry_or_transition_by_name(
         self, name: str
-    ) -> Optional[StoryboardEntryOrTransition]:
+    ) -> StoryboardEntryOrTransition | None:
         """Get a storyboard entry or transition with the given name
         or `None` if there is no matching storyboard entry or transition."""
         for entry in self.entries_or_transitions:
             if entry.name == name:
                 return entry
 
-    def get_first_entry_for_formation(self, formation) -> Optional[StoryboardEntry]:
+    def get_first_entry_for_formation(self, formation) -> StoryboardEntry | None:
         """Returns the first storyboard entry that refers to the given formation,
         or `None` if no storyboard entry uses the given formation.
         """
@@ -773,7 +773,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
     def get_frame_range_of_formation_or_transition_at_frame(
         self, frame: int
-    ) -> Optional[tuple[int, int]]:
+    ) -> tuple[int, int] | None:
         """Returns the start and end frame of the current formation or transition
         that contains the given frame.
 
@@ -798,7 +798,7 @@ class Storyboard(PropertyGroup, ListMixin):
             return None
 
     @property
-    def last_entry(self) -> Optional[StoryboardEntry]:
+    def last_entry(self) -> StoryboardEntry | None:
         """Returns the last entry of the storyboard or `None` if the storyboard
         is empty.
         """
@@ -838,7 +838,7 @@ class Storyboard(PropertyGroup, ListMixin):
             return 0
 
     @property
-    def second_entry(self) -> Optional[StoryboardEntry]:
+    def second_entry(self) -> StoryboardEntry | None:
         """Returns the second entry of the storyboard or `None` if the storyboard
         contains less entries.
         """
@@ -1001,7 +1001,7 @@ class Storyboard(PropertyGroup, ListMixin):
 
 
 @with_context
-def get_storyboard(*, context: Optional[Context] = None) -> Storyboard:
+def get_storyboard(*, context: Context | None = None) -> Storyboard:
     """Helper function to retrieve the storyboard of the add-on from the
     given context object.
     """
