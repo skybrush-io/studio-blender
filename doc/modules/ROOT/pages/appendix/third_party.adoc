@@ -1,7 +1,7 @@
 = Third party tools
 :imagesdir: ../../assets/images
 
-The following third party tools might be of help throughout your drone show design process with **Skybrush Studio for Blender**. 
+The following third party tools might be of help throughout your drone show design process with **Skybrush Studio for Blender**.
 
 If you know of any other tool you think should be on this list, please mailto:support@collmot.com[let us know].
 
@@ -19,4 +19,3 @@ Murmur is a swarm flocking simulation for Blender and **Skybrush Studio**, based
 The code for the simulation is prepared by our Discord user @envyofthebirds, representing the company https://illuminaero.com/[Illuminaero].
 
 * https://github.com/illuminaero/murmur[Download open-source code]
-
