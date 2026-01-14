@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed color space conversion for CSV and DSS import, assuming linear color space
   in them.
 
+- Fixed floating point rounding errors in pixel selection of image based light effects
+  that sometimes caused bad mapping of color from the image to the drones.
+
 ## [4.0.2] - 2025-12-21
 
 ### Changed
