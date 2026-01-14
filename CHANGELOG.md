@@ -5,26 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [main]
+## [4.1.0] - 2026-01-14
 
 ### Added
 
-- Optional acceleration plot is added to the validation .pdf (PRO only)
+- Optional acceleration plot is added to the validation PDF file (PRO only)
 
 ### Changed
 
-- Rendering / display speed of colored drones got substantially enhanced by only
-  updating their color if it has changed.
+- Faster rendering of colored drones. This is achieved by updating their colors only if
+  it is significantly different from their color in the previous frame.
 
 ### Fixed
 
-- Yaw and pyro information can be now part of the validation .pdf (PRO only)
+- Yaw and pyro information can now be part of the validation PDF file (PRO only)
 
 - A warning is now printed when importing a formation from an external file that
-  contains no trajectories or light programs instead of failing with an error.
+  contains no trajectories or light programs, instead of failing with an error.
 
-- Fixed color space conversion for CSV and DSS import, assuming linear color space
-  in them.
+- Fixed color space conversion for CSV and DSS import. Since these file formats do not
+  indicate their color space, we now always assume that they are in a linear RGB space
+  and perform no additional sRGB-to-linear conversion.
 
 - Fixed floating point rounding errors in pixel selection of image based light effects
   that sometimes caused bad mapping of color from the image to the drones.
