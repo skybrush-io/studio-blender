@@ -712,8 +712,8 @@ class LightEffect(PropertyGroup):
                 width, height = color_image.size
                 pixels = self.get_image_pixels()
 
-                x = int((width - 1) * output_x)
-                y = int((height - 1) * output_y)
+                x = int(width * output_x) if output_x < 1 else width - 1
+                y = int(height * output_y) if output_y < 1 else height - 1
                 offset = (x + y * width) * 4
                 pixel_color = pixels[offset : offset + 4]
 
