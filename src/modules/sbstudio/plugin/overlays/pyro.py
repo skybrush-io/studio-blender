@@ -11,6 +11,7 @@ from gpu_extras.batch import batch_for_shader
 from typing import TYPE_CHECKING, cast
 
 from sbstudio.model.types import Coordinate3D
+from sbstudio.utils import get_skybrush_attr
 
 from .base import ShaderOverlay
 
@@ -91,9 +92,8 @@ class PyroOverlay(ShaderOverlay):
 
     def draw_2d(self) -> None:
         context = bpy.context
-        skybrush = getattr(context.scene, "skybrush", None)
-        pyro_control: PyroControlPanelProperties | None = getattr(
-            skybrush, "pyro_control", None
+        pyro_control: PyroControlPanelProperties | None = get_skybrush_attr(
+            context, "pyro_control"
         )
         if (
             not pyro_control
@@ -139,9 +139,9 @@ class PyroOverlay(ShaderOverlay):
     def draw_3d(self) -> None:
         gpu.state.blend_set("ALPHA")
 
-        skybrush = getattr(bpy.context.scene, "skybrush", None)
-        pyro_control: PyroControlPanelProperties | None = getattr(
-            skybrush, "pyro_control", None
+        context = bpy.context
+        pyro_control: PyroControlPanelProperties | None = get_skybrush_attr(
+            context, "pyro_control"
         )
         if not pyro_control or pyro_control.visualization not in ["MARKERS", "INFO"]:
             return

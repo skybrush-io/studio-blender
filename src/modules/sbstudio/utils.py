@@ -5,16 +5,19 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from functools import wraps
 from pathlib import Path
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar, TYPE_CHECKING
 
 from sbstudio.model.types import Coordinate3D
 
+if TYPE_CHECKING:
+    from bpy.types import Context
 
 __all__ = (
     "consecutive_pairs",
     "constant",
     "create_path_and_open",
     "distance_sq_of",
+    "get_skybrush_attr",
     "simplify_path",
 )
 
@@ -81,7 +84,7 @@ def distance_sq_of(p: Coordinate3D, q: Coordinate3D) -> float:
     return (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2
 
 
-def get_ends(items: Optional[Iterable[T]]) -> tuple[T, T] | None:
+def get_ends(items: Iterable[T] | None) -> tuple[T, T] | None:
     """
     Returns the first and last item from the given iterable as a tuple if the
     iterable is not empty, otherwise returns `None`.
@@ -101,6 +104,26 @@ def get_ends(items: Optional[Iterable[T]]) -> tuple[T, T] | None:
         last = item
 
     return (first, last)
+
+
+def get_skybrush_attr(context: Context, attr: str = "") -> Any | None:
+    """Get skybrush or one of its attributes from the Blender context.
+
+    Args:
+        context: the Blender context to use
+        attr: the attribute of skybrush to get or an empty string
+            to get skybrush itself
+
+    Returns:
+        skybrush or its requested attribute, or `None` if not found
+    """
+    scene = getattr(context, "scene", None)
+    skybrush = getattr(scene, "skybrush", None)
+
+    if attr:
+        return getattr(skybrush, attr, None)
+
+    return skybrush
 
 
 def negate(func: Callable[..., bool]) -> Callable[..., bool]:
