@@ -5,12 +5,10 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from functools import wraps
 from pathlib import Path
-from typing import Any, Generic, TypeVar, TYPE_CHECKING
+from typing import Any, Generic, TypeVar
 
 from sbstudio.model.types import Coordinate3D
 
-if TYPE_CHECKING:
-    from bpy.types import Context
 
 __all__ = (
     "consecutive_pairs",
@@ -106,7 +104,7 @@ def get_ends(items: Iterable[T] | None) -> tuple[T, T] | None:
     return (first, last)
 
 
-def get_skybrush_attr(context: Context, attr: str = "") -> Any | None:
+def get_skybrush_attr(context, attr: str = "") -> Any | None:
     """Get skybrush or one of its attributes from the Blender context.
 
     Args:
