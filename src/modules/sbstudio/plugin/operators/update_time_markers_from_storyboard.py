@@ -1,5 +1,4 @@
 from json import dumps, loads
-from typing import Optional
 
 from sbstudio.plugin.utils.collections import filter_collection
 
@@ -16,7 +15,7 @@ class UpdateTimeMarkersFromStoryboardOperator(StoryboardOperator):
     bl_description = "Update all time markers to be synchronized with the storyboard"
 
     def execute_on_storyboard(self, storyboard, context):
-        our_marker_names: Optional[list[str]] = None
+        our_marker_names: list[str] | None = None
 
         scene = context.scene
 

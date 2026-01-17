@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from time import time
-from typing import Callable, Iterator, Optional
+from typing import Callable, Iterator
 
 __all__ = ("ProgressReport", "FrameProgressReport")
 
@@ -14,10 +14,10 @@ class ProgressReport:
     steps_done: int = 0
     """Number of steps already performed in the operation."""
 
-    total_steps: Optional[int] = None
+    total_steps: int | None = None
     """Total number of steps in the operation; ``None`` if unknown."""
 
-    operation: Optional[str] = None
+    operation: str | None = None
     """Optional string that describes the operation being executed."""
 
     start_time: float | None = None
@@ -54,7 +54,7 @@ class ProgressReport:
         )
 
     @property
-    def percentage(self) -> Optional[float]:
+    def percentage(self) -> float | None:
         """Percentage of the operation that has been completed."""
         if self.total_steps is None or self.total_steps < 1:
             return None
@@ -113,7 +113,7 @@ class FrameIterator(Iterator[int]):
     current: int
     """The current frame number."""
 
-    _callback: Optional[Callable[[FrameProgressReport], None]] = None
+    _callback: Callable[[FrameProgressReport], None] | None = None
     """Callback to call in every iteration to report progress."""
 
     _callback_called_at: float
@@ -128,8 +128,8 @@ class FrameIterator(Iterator[int]):
         end: int,
         step: int,
         *,
-        operation: Optional[str] = None,
-        progress: Optional[Callable[[FrameProgressReport], None]] = None,
+        operation: str | None = None,
+        progress: Callable[[FrameProgressReport], None] | None = None,
     ):
         self.start = start
         self.end = max(start, end)

@@ -8,7 +8,6 @@ from typing import (
     Callable,
     ClassVar,
     Literal,
-    Optional,
     TypeVar,
     TYPE_CHECKING,
     overload,
@@ -76,14 +75,14 @@ class Collections:
 
     @classmethod
     @overload
-    def find_drones(cls, *, create: bool) -> Optional[Collection]: ...
+    def find_drones(cls, *, create: bool) -> Collection | None: ...
 
     @classmethod
     def find_drones(cls, *, create: bool = True):
         # Return the collection specified in the settings if the user specified
         # one; otherwise fall back to finding the collection by name.
         if bpy.context.scene:
-            skybrush: Optional[DroneShowAddonProperties] = getattr(
+            skybrush: DroneShowAddonProperties | None = getattr(
                 bpy.context.scene, "skybrush", None
             )
             collection = skybrush.settings.drone_collection if skybrush else None
@@ -100,7 +99,7 @@ class Collections:
 
     @classmethod
     @overload
-    def find_formations(cls, *, create: bool) -> Optional[Collection]: ...
+    def find_formations(cls, *, create: bool) -> Collection | None: ...
 
     @classmethod
     def find_formations(cls, *, create: bool = True):
@@ -112,7 +111,7 @@ class Collections:
 
     @classmethod
     @overload
-    def find_templates(cls, *, create: bool) -> Optional[Collection]: ...
+    def find_templates(cls, *, create: bool) -> Collection | None: ...
 
     @classmethod
     def find_templates(cls, *, create: bool = True):
@@ -125,7 +124,7 @@ class Collections:
         key: str,
         *,
         create: Literal[True] = True,
-        on_created: Optional[Callable[[Collection], None]] = None,
+        on_created: Callable[[Collection], None] | None = None,
     ) -> Collection: ...
 
     @classmethod
@@ -135,8 +134,8 @@ class Collections:
         key: str,
         *,
         create: bool,
-        on_created: Optional[Callable[[Collection], None]] = None,
-    ) -> Optional[Collection]: ...
+        on_created: Callable[[Collection], None] | None = None,
+    ) -> Collection | None: ...
 
     @classmethod
     def _find(
@@ -144,7 +143,7 @@ class Collections:
         key: str,
         *,
         create: bool = True,
-        on_created: Optional[Callable[[Collection], None]] = None,
+        on_created: Callable[[Collection], None] | None = None,
     ):
         """Returns the Blender collection with the given name, and optionally
         creates it if it does not exist yet.
@@ -160,8 +159,8 @@ class Collections:
         key: str,
         *,
         create: bool = True,
-        on_created: Optional[Callable[[T], None]] = None,
-    ) -> Optional[T]:
+        on_created: Callable[[T], None] | None = None,
+    ) -> T | None:
         """Returns an object from a Blender collection given its name, and
         optionally creates it if it does not exist yet.
         """
@@ -191,10 +190,10 @@ class Formations:
 
     @classmethod
     @overload
-    def find_takeoff_grid(cls, *, create: bool) -> Optional[Collection]: ...
+    def find_takeoff_grid(cls, *, create: bool) -> Collection | None: ...
 
     @classmethod
-    def find_takeoff_grid(cls, *, create: bool = True) -> Optional[Collection]:
+    def find_takeoff_grid(cls, *, create: bool = True) -> Collection | None:
         """Returns the Blender collection that represents the takeoff grid or
         ``None`` if no takeoff grid was created yet.
         """

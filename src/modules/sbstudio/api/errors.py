@@ -1,4 +1,3 @@
-from typing import Optional
 from sbstudio.api.constants import MINIMUM_BACKEND_VERSION
 from sbstudio.api.types import Version
 from sbstudio.errors import SkybrushStudioError
@@ -31,7 +30,7 @@ class BackendVersionMismatchError(SkybrushStudioAPIError):
 
     def __init__(
         self,
-        backend_version: Optional[Version] = None,
+        backend_version: Version | None = None,
         *,
         minimum_version: Version = MINIMUM_BACKEND_VERSION,
     ):

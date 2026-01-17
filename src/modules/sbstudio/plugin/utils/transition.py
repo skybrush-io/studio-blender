@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from bpy.types import Constraint, CopyLocationConstraint, Object
 
@@ -47,7 +47,7 @@ def create_transition_constraint_between(
 
 def find_transition_constraint_between(
     drone: Object, storyboard_entry: StoryboardEntry
-) -> Optional[CopyLocationConstraint]:
+) -> CopyLocationConstraint | None:
     """Finds the Blender "copy location" constraint object that exists between
     the given drone and any of the points of the formation of the given
     storyboard entry; the purpose of this constraint is to keep the drone at

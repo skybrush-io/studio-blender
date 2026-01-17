@@ -1,7 +1,5 @@
 from bpy.types import Panel
 
-from typing import Optional
-
 from sbstudio.plugin.model.storyboard import Storyboard
 from sbstudio.plugin.operators import (
     CreateNewStoryboardEntryOperator,
@@ -36,7 +34,7 @@ class StoryboardEditor(Panel):
         layout.use_property_decorate = False
 
         scene = context.scene
-        storyboard: Optional[Storyboard] = scene.skybrush.storyboard
+        storyboard: Storyboard | None = scene.skybrush.storyboard
         if not storyboard:
             return
 

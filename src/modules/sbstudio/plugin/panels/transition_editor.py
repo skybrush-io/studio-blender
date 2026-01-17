@@ -1,7 +1,5 @@
 from bpy.types import Panel
 
-from typing import Optional
-
 from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard, StoryboardEntry
 from sbstudio.plugin.operators import (
     CreateNewScheduleOverrideEntryOperator,
@@ -30,7 +28,7 @@ class TransitionEditorBase(Panel):
     bl_options = {"INSTANCED"}
 
     @classmethod
-    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+    def _get_entry(cls, storyboard: Storyboard) -> StoryboardEntry | None:
         """Returns the entry that the transition editor will edit."""
         return None
 
@@ -120,7 +118,7 @@ class TransitionEditorIntoCurrentFormation(TransitionEditorBase):
     bl_description = "Edits the transition into the currently selected formation"
 
     @classmethod
-    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+    def _get_entry(cls, storyboard: Storyboard) -> StoryboardEntry | None:
         entry = storyboard.active_entry
         return entry if entry != storyboard.first_entry else None
 
@@ -146,7 +144,7 @@ class TransitionEditorFromCurrentFormation(TransitionEditorBase):
     bl_description = "Edits the transition to the formation that follows the currently selected formation"
 
     @classmethod
-    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+    def _get_entry(cls, storyboard: Storyboard) -> StoryboardEntry | None:
         return storyboard.entry_after_active_entry if storyboard else None
 
     @classmethod

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from math import inf
-from typing import Callable, Iterable, Optional, Sequence, cast
+from typing import Callable, Iterable, Sequence, cast
 
 import bpy
 from bpy.props import EnumProperty
@@ -66,7 +66,7 @@ class InfluenceCurveDescriptor:
     scene_start_frame: int
     """The start frame of the entire scene."""
 
-    windup_start_frame: Optional[int]
+    windup_start_frame: int | None
     """The windup start frame, i.e. the _last_ frame when the influence curve
     should still be zero before winding up to full influence. `None` means that
     it is the same as the start frame of the scene.
@@ -81,7 +81,7 @@ class InfluenceCurveDescriptor:
     assumed to be one larger than the windup start frame.
     """
 
-    end_frame: Optional[int] = None
+    end_frame: int | None = None
     """The last frame when the influence is still equal to 1; ``None`` means
     that the influence curve stays 1 infinitely.
 
@@ -95,9 +95,9 @@ class InfluenceCurveDescriptor:
     def __init__(
         self,
         scene_start_frame: int,
-        windup_start_frame: Optional[int],
+        windup_start_frame: int | None,
         start_frame: int,
-        end_frame: Optional[int] = None,
+        end_frame: int | None = None,
         windup_type: InfluenceCurveTransitionType = InfluenceCurveTransitionType.SMOOTH,
     ):
         # Note that explicit __init__() method implementation is needed to
@@ -183,12 +183,12 @@ class _LazyFormationTargetList:
     collection.
     """
 
-    _formation: Optional[Collection] = None
+    _formation: Collection | None = None
     """The formation of the storyboard entry."""
 
-    _items: Optional[list[Object | MeshVertex]] = None
+    _items: list[Object | MeshVertex] | None = None
 
-    def __init__(self, entry: Optional[StoryboardEntry]):
+    def __init__(self, entry: StoryboardEntry | None):
         self._formation = entry.formation if entry else None
 
     def find(self, item, *, default: int = 0) -> int:
@@ -303,7 +303,7 @@ def _vertex_index_to_vertex_group_name(index: int) -> str:
     return create_internal_id(f"Vertex {index}")
 
 
-def _vertex_group_name_to_vertex_index(name: str) -> Optional[int]:
+def _vertex_group_name_to_vertex_index(name: str) -> int | None:
     """Extracts the index of a vertex from a vertex group name if it was
     created earlier with `_vertex_index_to_vertex_group_name()`.
     """
@@ -320,9 +320,9 @@ def _vertex_group_name_to_vertex_index(name: str) -> Optional[int]:
 def calculate_departure_index_of_drone(
     drone,
     drone_index: int,
-    previous_entry: Optional[StoryboardEntry],
+    previous_entry: StoryboardEntry | None,
     previous_entry_index: int,
-    previous_mapping: Optional[Mapping],
+    previous_mapping: Mapping | None,
     targets_in_previous_formation: _LazyFormationTargetList,
 ) -> int:
     """Calculates the departure index of a drone (i.e. the index of the source
@@ -506,11 +506,11 @@ def update_transition_for_storyboard_entry(
     drones,
     *,
     get_positions_of,
-    previous_entry: Optional[StoryboardEntry],
-    previous_mapping: Optional[Mapping],
+    previous_entry: StoryboardEntry | None,
+    previous_mapping: Mapping | None,
     start_of_scene: int,
-    start_of_next: Optional[int],
-) -> Optional[Mapping]:
+    start_of_next: int | None,
+) -> Mapping | None:
     """Updates the transition constraints corresponding to the given
     storyboard entry.
 
@@ -613,7 +613,7 @@ def update_transition_for_storyboard_entry(
             start_frame = entry.frame_start
             departure_delay = 0
             arrival_delay = 0
-            departure_index: Optional[int] = None
+            departure_index: int | None = None
 
             if entry.is_staggered:
                 # Determine the index of the drone in the departure sequence
@@ -708,12 +708,12 @@ class RecalculationTask:
     entry_index: int
     """Index of the target entry of the transition."""
 
-    previous_entry: Optional[StoryboardEntry] = None
+    previous_entry: StoryboardEntry | None = None
     """The entry that precedes the target entry in the storyboard; `None` if the
     target entry is the first one.
     """
 
-    start_frame_of_next_entry: Optional[int] = None
+    start_frame_of_next_entry: int | None = None
     """The start frame of the _next_ entry in the storyboard; `None` if the
     target entry is the last one.
     """
@@ -742,7 +742,7 @@ def recalculate_transitions(
     # - this is the first formation that we are calculating
     # - the transition of the previous storyboard entry was locked so we
     #   don't have the mapping now
-    previous_mapping: Optional[Mapping] = None
+    previous_mapping: Mapping | None = None
 
     with create_position_evaluator() as get_positions_of:
         # Iterate through the entries for which we need to recalculate the

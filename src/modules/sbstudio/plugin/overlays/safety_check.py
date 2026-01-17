@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional, Sequence, cast
+from typing import TYPE_CHECKING, Literal, Sequence, cast
 
 import blf
 import bpy
@@ -61,15 +61,15 @@ class SafetyCheckOverlay(ShaderOverlay):
 
     shader_type = "FLAT_COLOR"
 
-    _markers: Optional[list[Marker]] = None
-    _shader_batches: Optional[list[GPUBatch]] = None
+    _markers: list[Marker] | None = None
+    _shader_batches: list[GPUBatch] | None = None
 
     @property
-    def markers(self) -> Optional[list[Marker]]:
+    def markers(self) -> list[Marker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: Optional[list[Marker]]):
+    def markers(self, value: list[Marker] | None):
         if value is not None:
             self._markers = []
             for marker_points, group in value:
@@ -85,7 +85,7 @@ class SafetyCheckOverlay(ShaderOverlay):
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
-        safety_check: Optional[SafetyCheckProperties] = getattr(
+        safety_check: SafetyCheckProperties | None = getattr(
             skybrush, "safety_check", None
         )
         if not safety_check:

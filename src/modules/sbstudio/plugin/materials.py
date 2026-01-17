@@ -1,5 +1,3 @@
-from typing import Optional
-
 import bpy
 from bpy.types import Material
 
@@ -115,7 +113,7 @@ def create_glowing_material(
     return mat
 
 
-def get_material_for_led_light_color(drone) -> Optional[Material]:
+def get_material_for_led_light_color(drone) -> Material | None:
     """Returns the material of the given drone object that is supposed to
     correspond to the LED light.
 
@@ -129,7 +127,7 @@ def get_material_for_led_light_color(drone) -> Optional[Material]:
         return None
 
 
-def get_material_for_pyro(drone) -> Optional[Material]:
+def get_material_for_pyro(drone) -> Material | None:
     """Returns the material of the given drone object that is supposed to
     correspond to the pyro.
 

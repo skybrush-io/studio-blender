@@ -1,6 +1,7 @@
 """Utility functions directly related to the Blender API."""
 
 import bpy
+from bpy.types import Context
 
 from contextlib import contextmanager
 from operator import attrgetter
@@ -72,7 +73,7 @@ def descendants_of(objects, selector="children"):
 
 
 @contextmanager
-def overridden_context(current_context=None, **kwds):
+def overridden_context(current_context: Context | None = None, **kwds):
     """Context manager that overrides parts of the current Blender context and
     returns a new context object with the overridden parameters.
 
@@ -80,7 +81,7 @@ def overridden_context(current_context=None, **kwds):
     arguments (e.g., `with overridden_context(area=foo):`).
 
     Parameters:
-        current_context (Optional[bpy.Context]): the current Blender context.
+        current_context: the current Blender context.
             `None` means to use `bpy.context`
 
     Returns:

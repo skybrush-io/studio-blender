@@ -1,6 +1,5 @@
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import AddonPreferences, Context
-from typing import Optional
 
 from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
 from sbstudio.plugin.utils import with_context
@@ -68,7 +67,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
 
 @with_context
-def get_preferences(context: Optional[Context] = None) -> DroneShowAddonGlobalSettings:
+def get_preferences(context: Context | None = None) -> DroneShowAddonGlobalSettings:
     """Helper function to retrieve the preferences of the add-on from the
     given context object.
     """

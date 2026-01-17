@@ -2,7 +2,7 @@ from base64 import b64encode
 from itertools import chain
 from numpy import array
 from operator import attrgetter
-from typing import Optional, Sequence, TypeVar
+from typing import Sequence, TypeVar
 
 from .point import Point3D, Point4D
 
@@ -22,11 +22,11 @@ class Trajectory:
         self.points = sorted(points, key=attrgetter("t"))
 
     @property
-    def first_point(self) -> Optional[Point4D]:
+    def first_point(self) -> Point4D | None:
         return self.points[0] if self.points else None
 
     @property
-    def first_time(self) -> Optional[float]:
+    def first_time(self) -> float | None:
         return self.points[0].t if self.points else None
 
     def append(self, point: Point4D) -> None:

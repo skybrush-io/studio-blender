@@ -14,7 +14,6 @@ from socket import (
     IPPROTO_UDP,
 )
 from time import monotonic
-from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -126,7 +125,7 @@ class SkybrushViewerBridge:
         return bool(result.get("result"))
 
     def load_show_for_validation(
-        self, show_data: bytes, *, filename: Optional[str] = None
+        self, show_data: bytes, *, filename: str | None = None
     ) -> None:
         """Asks the running Skybrush Viewer instance to load the given show data
         for validation.
@@ -169,9 +168,9 @@ class SSDPAppDiscovery:
         self._urn = urn
         self._max_age = float(max_age)
         self._last_checked_at = 0
-        self._url = None  # type: Optional[str]
+        self._url = None  # type: str | None
 
-    def discover(self, force: bool = False) -> Optional[str]:
+    def discover(self, force: bool = False) -> str | None:
         """Finds a running service instance on the current machine using SSDP
         and returns its URL.
 
@@ -202,7 +201,7 @@ class SSDPAppDiscovery:
             self._url = self._update_url()
             self._last_checked_at = monotonic()
 
-    def _update_url(self) -> Optional[str]:
+    def _update_url(self) -> str | None:
         """Updates the URL of the running service instance unconditionally."""
         message = (
             f"M-SEARCH * HTTP/1.1\r\n"

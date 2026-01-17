@@ -4,7 +4,7 @@ import logging
 import os
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty, IntProperty
@@ -223,7 +223,7 @@ class ExportOperator(Operator, ExportHelper):
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
 
-    def _get_redraw_setting(self) -> Optional[bool]:
+    def _get_redraw_setting(self) -> bool | None:
         """Returns the redraw setting for the operator. This is used to
         determine whether to redraw the scene during export.
         """
@@ -393,7 +393,7 @@ class PointsAndColors:
     array where each row is a point.
     """
 
-    colors: Optional[NDArray[floating]] = None
+    colors: NDArray[floating] | None = None
     """Optional colors corresponding to the points in a marker creation
     operation, in a NumPy array where the i-th row is the color of the i-th
     point in RGBA space; color components must be specified in the range [0; 1].

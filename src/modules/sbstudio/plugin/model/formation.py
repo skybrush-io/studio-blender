@@ -8,7 +8,7 @@ from itertools import count
 from mathutils import Vector
 from numpy import array, c_, dot, float64, ones, zeros
 from numpy.typing import NDArray
-from typing import Iterable, Optional, Sequence, TYPE_CHECKING
+from typing import Iterable, Sequence, TYPE_CHECKING
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import (
@@ -42,9 +42,7 @@ def _get_marker_name(formation: str, index: int) -> str:
     return f"{formation} - {index + 1}"
 
 
-def create_formation(
-    name: str, points: Optional[Iterable[Vector]] = None
-) -> Collection:
+def create_formation(name: str, points: Iterable[Vector] | None = None) -> Collection:
     """Creates a new static formation object with the given name and the given
     points.
 
@@ -74,7 +72,7 @@ def create_marker(
     *,
     type: str = "PLAIN_AXES",
     size: float = 1,
-    collection: Optional[Collection] = None,
+    collection: Collection | None = None,
 ) -> Object:
     """Creates a new point marker (typically part of a formation) at the
     given location.
@@ -102,7 +100,7 @@ def create_marker(
 
 def add_objects_to_formation(
     formation,
-    objects: Optional[Iterable[Object]],
+    objects: Iterable[Object] | None,
 ) -> None:
     """Adds the given objects to a formation object as children as-is, _without_
     creating new markers for their current positions.
@@ -117,9 +115,9 @@ def add_objects_to_formation(
 
 def add_points_to_formation(
     formation,
-    points: Optional[Iterable[Vector]],
+    points: Iterable[Vector] | None,
     *,
-    name: Optional[str] = None,
+    name: str | None = None,
 ) -> list[Object]:
     """Creates new markers in a formation object.
 
@@ -291,7 +289,7 @@ def ensure_formation_consists_of_points(
 
 
 def get_world_coordinates_of_markers_from_formation(
-    formation: Collection, *, frame: Optional[int] = None, apply_modifiers: bool = True
+    formation: Collection, *, frame: int | None = None, apply_modifiers: bool = True
 ) -> NDArray[float64]:
     """Returns a list containing the world coordinates of the markers in the
     formation, as a NumPy array, one marker per row.

@@ -6,7 +6,7 @@ light effects.
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Iterator, Optional, TYPE_CHECKING
+from typing import Iterator, TYPE_CHECKING
 
 from .base import Task
 
@@ -28,7 +28,7 @@ __all__ = ("UpdateLightEffectsTask",)
 #: associated memory area
 _base_color_cache: dict[int, RGBAColor] = {}
 
-_last_frame: Optional[int] = None
+_last_frame: int | None = None
 """Number of the last frame that was evaluated with `update_light_effects()`"""
 
 _suspension_counter: int = 0

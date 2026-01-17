@@ -5,7 +5,7 @@ Blender 3D view and that can be enabled or disabled on-demand.
 from __future__ import annotations
 
 from abc import ABCMeta
-from typing import Callable, ClassVar, Optional
+from typing import Callable, ClassVar
 
 from bpy.types import SpaceView3D
 
@@ -98,7 +98,7 @@ class ShaderOverlay(Overlay):
 
     shader_type: ClassVar[str] = "UNIFORM_COLOR"
 
-    _shader: Optional[gpu.types.GPUShader] = None
+    _shader: gpu.types.GPUShader | None = None
 
     def __init__(self):
         super().__init__()

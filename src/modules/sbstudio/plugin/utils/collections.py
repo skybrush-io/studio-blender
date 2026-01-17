@@ -14,7 +14,6 @@ from typing import (
     Any,
     Callable,
     Iterable,
-    Optional,
     Sequence,
     TypeVar,
     TYPE_CHECKING,
@@ -42,8 +41,8 @@ D = TypeVar("D")
 def create_object_in_collection(
     collection: bpy_prop_collection[T],
     name: str,
-    factory: Optional[Callable[[], T]] = None,
-    remover: Optional[Callable[[T], None]] = None,
+    factory: Callable[[], T] | None = None,
+    remover: Callable[[T], None] | None = None,
     internal: bool = False,
     *args,
     **kwds,
@@ -110,7 +109,7 @@ def create_object_in_collection(
 def ensure_object_exists_in_collection(
     collection: bpy_prop_collection[T],
     name: str,
-    factory: Optional[Callable[[], T]] = None,
+    factory: Callable[[], T] | None = None,
     internal: bool = False,
     *args,
     **kwds,
@@ -229,7 +228,7 @@ def get_object_in_collection(
 
 
 def _get_actions_required_to_sort_collection_with_move_method(
-    items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
+    items: Sequence[Any], key: Callable[[Any], Any] | None = None
 ) -> list[tuple[int, int]]:
     """Given a list of items and an optional sorting key function, returns a
     list of from-to pairs representing steps that are needed to sort the list
@@ -265,7 +264,7 @@ def _get_actions_required_to_sort_collection_with_move_method(
 
 
 def _get_actions_required_to_sort_collection_with_relinking(
-    items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
+    items: Sequence[Any], key: Callable[[Any], Any] | None = None
 ) -> list[Any]:
     """Given a list of items and an optional sorting key function, returns a
     list of steps that are needed to sort the list when we are provided only

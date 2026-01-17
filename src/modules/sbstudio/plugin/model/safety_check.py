@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional, Sequence, overload, TYPE_CHECKING
+from typing import Sequence, overload, TYPE_CHECKING
 
 from sbstudio.model.safety_check import SafetyCheckResult
 from sbstudio.model.types import Coordinate3D
@@ -27,7 +27,7 @@ def get_overlay() -> SafetyCheckOverlay: ...
 
 
 @overload
-def get_overlay(create: bool) -> Optional[SafetyCheckOverlay]: ...
+def get_overlay(create: bool) -> SafetyCheckOverlay | None: ...
 
 
 def get_overlay(create: bool = True):
@@ -42,49 +42,49 @@ def get_overlay(create: bool = True):
     return _overlay
 
 
-def altitude_warning_enabled_updated(self, context: Optional[Context] = None):
+def altitude_warning_enabled_updated(self, context: Context | None = None):
     """Called when the altitude warning is enabled or disabled by the user."""
     self.ensure_overlays_enabled_if_needed()
     self._refresh_overlay()
 
 
-def altitude_warning_threshold_updated(self, context: Optional[Context] = None):
+def altitude_warning_threshold_updated(self, context: Context | None = None):
     """Called when the maximum altitude threshold or the minimum navigation
     altitude is updated by the user.
     """
     self._refresh_overlay()
 
 
-def proximity_warning_enabled_updated(self, context: Optional[Context] = None):
+def proximity_warning_enabled_updated(self, context: Context | None = None):
     """Called when the proximity warning is enabled or disabled by the user."""
     self.ensure_overlays_enabled_if_needed()
     self._refresh_overlay()
 
 
-def proximity_warning_target_updated(self, context: Optional[Context] = None):
+def proximity_warning_target_updated(self, context: Context | None = None):
     self._refresh_overlay()
 
 
-def proximity_warning_threshold_updated(self, context: Optional[Context] = None):
+def proximity_warning_threshold_updated(self, context: Context | None = None):
     self._refresh_overlay()
 
 
-def velocity_warning_enabled_updated(self, context: Optional[Context] = None):
+def velocity_warning_enabled_updated(self, context: Context | None = None):
     """Called when the velocity warning is enabled or disabled by the user."""
     self.ensure_overlays_enabled_if_needed()
     self._refresh_overlay()
 
 
-def velocity_warning_threshold_updated(self, context: Optional[Context] = None):
+def velocity_warning_threshold_updated(self, context: Context | None = None):
     self._refresh_overlay()
 
 
-def acceleration_warning_enabled_updated(self, context: Optional[Context] = None):
+def acceleration_warning_enabled_updated(self, context: Context | None = None):
     self.ensure_overlays_enabled_if_needed()
     self._refresh_overlay()
 
 
-def acceleration_warning_threshold_updated(self, context: Optional[Context] = None):
+def acceleration_warning_threshold_updated(self, context: Context | None = None):
     self._refresh_overlay()
 
 
@@ -446,7 +446,7 @@ class SafetyCheckProperties(PropertyGroup):
         )
 
     @property
-    def velocity_z_warning_threshold_up_or_none(self) -> Optional[float]:
+    def velocity_z_warning_threshold_up_or_none(self) -> float | None:
         """Returns the velocity warning threshold in the Z direction upwards
         if there is one, or ``None`` if it is the same as the warning threshold
         in the Z direction downwards.
@@ -489,7 +489,7 @@ class SafetyCheckProperties(PropertyGroup):
         to another list that contains only those points that should be considered
         for safety checks, based on the settings in this instance.
         """
-        min_altitude: Optional[float] = None
+        min_altitude: float | None = None
         if self.min_navigation_altitude_is_valid:
             min_altitude = self.min_navigation_altitude
 
@@ -503,20 +503,20 @@ class SafetyCheckProperties(PropertyGroup):
 
     def set_safety_check_result(
         self,
-        formation_status: Optional[str] = None,
-        nearest_neighbors: Optional[tuple[Coordinate3D, Coordinate3D, float]] = None,
-        min_altitude: Optional[float] = None,
-        max_altitude: Optional[float] = None,
-        drones_over_max_altitude: Optional[list[Coordinate3D]] = None,
-        max_velocity_xy: Optional[float] = None,
-        drones_over_max_velocity_xy: Optional[list[Coordinate3D]] = None,
-        max_velocity_z_up: Optional[float] = None,
-        max_velocity_z_down: Optional[float] = None,
-        drones_over_max_velocity_z: Optional[list[Coordinate3D]] = None,
-        max_acceleration: Optional[float] = None,
-        drones_over_max_acceleration: Optional[list[Coordinate3D]] = None,
-        drones_below_min_nav_altitude: Optional[list[Coordinate3D]] = None,
-        all_close_pairs: Optional[list[tuple[Coordinate3D, Coordinate3D]]] = None,
+        formation_status: str | None = None,
+        nearest_neighbors: tuple[Coordinate3D, Coordinate3D, float] | None = None,
+        min_altitude: float | None = None,
+        max_altitude: float | None = None,
+        drones_over_max_altitude: list[Coordinate3D] | None = None,
+        max_velocity_xy: float | None = None,
+        drones_over_max_velocity_xy: list[Coordinate3D] | None = None,
+        max_velocity_z_up: float | None = None,
+        max_velocity_z_down: float | None = None,
+        drones_over_max_velocity_z: list[Coordinate3D] | None = None,
+        max_acceleration: float | None = None,
+        drones_over_max_acceleration: list[Coordinate3D] | None = None,
+        drones_below_min_nav_altitude: list[Coordinate3D] | None = None,
+        all_close_pairs: list[tuple[Coordinate3D, Coordinate3D]] | None = None,
     ) -> None:
         """Updates general safety check results."""
         global _safety_check_result
