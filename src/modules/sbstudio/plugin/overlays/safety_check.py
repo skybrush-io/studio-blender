@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, List, Literal, Optional, Sequence, Tuple, cast
+
 import blf
 import bpy
-from bpy.types import SpaceView3D
 import gpu
 import gpu.state
-
+from bpy.types import SpaceView3D
 from gpu_extras.batch import batch_for_shader
-from typing import List, Literal, Optional, Sequence, Tuple, TYPE_CHECKING, cast
 
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import Coordinate3D, RGBColor
 from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
 from .base import ShaderOverlay
@@ -20,10 +20,6 @@ if TYPE_CHECKING:
 
 __all__ = ("SafetyCheckOverlay",)
 
-
-Color = Tuple[float, float, float]
-"""Type alias for RGB colors in this module."""
-
 MarkerGroup = Literal["altitude", "proximity", "velocity", "acceleration", "generic"]
 """Currently supported marker groups."""
 
@@ -33,13 +29,13 @@ of coordinates that are interconnected with lines and have an optional
 group name. Markers in the same group are colored with the same color.
 """
 
-ALTITUDE_WARNING_COLOR: Color = (0.47, 0.65, 1.0)  # "Blender blue"
-GENERIC_WARNING_COLOR: Color = (1, 0, 0)  # red
-PROXIMITY_WARNING_COLOR: Color = (1, 0, 0)  # red
-VELOCITY_WARNING_COLOR: Color = (1, 1, 0)  # yellow
-ACCELERATION_WARNING_COLOR: Color = (1, 0, 1)  # magenta
+ALTITUDE_WARNING_COLOR: RGBColor = (0.47, 0.65, 1.0)  # "Blender blue"
+GENERIC_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
+PROXIMITY_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
+VELOCITY_WARNING_COLOR: RGBColor = (1, 1, 0)  # yellow
+ACCELERATION_WARNING_COLOR: RGBColor = (1, 0, 1)  # magenta
 
-_group_to_color_map: dict[str, Color] = {
+_group_to_color_map: dict[str, RGBColor] = {
     "generic": GENERIC_WARNING_COLOR,
     "altitude": ALTITUDE_WARNING_COLOR,
     "proximity": PROXIMITY_WARNING_COLOR,
@@ -124,7 +120,6 @@ class SafetyCheckOverlay(ShaderOverlay):
 
         y = total_height - 72 * ui_scale
         if space_data.type == "VIEW_3D":
-            space_data = cast(SpaceView3D, space_data)
             if getattr(space_data.overlay, "show_text", False):
                 y -= 36 * ui_scale
             if getattr(space_data.overlay, "show_stats", False):

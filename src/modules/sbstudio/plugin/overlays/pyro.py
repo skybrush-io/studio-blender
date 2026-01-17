@@ -1,42 +1,40 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 import blf
 import bpy
 import gpu
 import gpu.state
-
-from bpy_extras.view3d_utils import location_3d_to_region_2d
 from bpy.types import SpaceView3D
+from bpy_extras.view3d_utils import location_3d_to_region_2d
 from gpu_extras.batch import batch_for_shader
-from typing import TYPE_CHECKING, cast
 
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import Coordinate3D, RGBColor
 
 from .base import ShaderOverlay
 
 if TYPE_CHECKING:
-    from sbstudio.plugin.model.pyro_control import PyroControlPanelProperties
     from gpu.types import GPUBatch
+
+    from sbstudio.plugin.model.pyro_control import PyroControlPanelProperties
 
 __all__ = (
     "PyroOverlay",
     "PyroOverlayMarker",
 )
 
-Color = tuple[float, float, float]
-"""Type alias for RGB colors in this module."""
-
 PyroOverlayInfo = tuple[Coordinate3D, list[str]]
 """Type specification for a single info block on the overlay. An info block requires
 a single coordinate and a list of text strings (one per line).
 """
 
-PyroOverlayMarker = tuple[Coordinate3D, Color]
+PyroOverlayMarker = tuple[Coordinate3D, RGBColor]
 """Type specification for a single marker on the overlay. A marker requires
 a single coordinate and a Color.
 """
 
-DEFAULT_PYRO_OVERLAY_MARKER_COLOR: Color = (0.5, 0.5, 0.5)
+DEFAULT_PYRO_OVERLAY_MARKER_COLOR: RGBColor = (0.5, 0.5, 0.5)
 """Default color for pyro marker overlays."""
 
 
