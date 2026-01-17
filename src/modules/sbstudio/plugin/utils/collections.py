@@ -18,7 +18,6 @@ from typing import (
     Sequence,
     TypeVar,
     TYPE_CHECKING,
-    Union,
     overload,
 )
 
@@ -186,7 +185,7 @@ def get_object_in_collection(
 @overload
 def get_object_in_collection(
     collection: bpy_prop_collection[T], name: str, internal: bool = False, *, default: D
-) -> Union[T, D]: ...
+) -> T | D: ...
 
 
 def get_object_in_collection(

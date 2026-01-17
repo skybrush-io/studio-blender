@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from math import inf
-from typing import Callable, Iterable, Optional, Sequence, Union, cast
+from typing import Callable, Iterable, Optional, Sequence, cast
 
 import bpy
 from bpy.props import EnumProperty
@@ -186,7 +186,7 @@ class _LazyFormationTargetList:
     _formation: Optional[Collection] = None
     """The formation of the storyboard entry."""
 
-    _items: Optional[list[Union[Object, MeshVertex]]] = None
+    _items: Optional[list[Object | MeshVertex]] = None
 
     def __init__(self, entry: Optional[StoryboardEntry]):
         self._formation = entry.formation if entry else None
@@ -203,7 +203,7 @@ class _LazyFormationTargetList:
         except ValueError:
             return default
 
-    def _validate_items(self) -> list[Union[Object, MeshVertex]]:
+    def _validate_items(self) -> list[Object | MeshVertex]:
         if self._formation is None:
             return []
         else:

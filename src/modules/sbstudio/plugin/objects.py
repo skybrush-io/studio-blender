@@ -2,7 +2,7 @@ import bpy
 
 from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
 from mathutils import Vector
-from typing import Any, Iterable, Optional, Union, cast
+from typing import Any, Iterable, Optional, cast
 
 from sbstudio.model.types import Coordinate3D
 
@@ -153,7 +153,7 @@ def object_contains_vertex(obj: Object, vertex: MeshVertex) -> bool:
     return mesh and len(mesh.vertices) > index and mesh.vertices[index] == vertex
 
 
-def remove_objects(objects: Union[Iterable[Object], Collection]) -> None:
+def remove_objects(objects: Iterable[Object] | Collection) -> None:
     """Removes the given objects from the current scene. Also supports removing
     an entire collection.
     """

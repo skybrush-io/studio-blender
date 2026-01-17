@@ -6,7 +6,6 @@ from typing import (
     MutableSequence,
     Sequence,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -66,8 +65,8 @@ class bpy_prop_collection(Sequence[T]):
     @overload
     def get(self, key: str) -> T | None: ...
     @overload
-    def get(self, key: str, default: U) -> Union[T, U]: ...
-    def __getitem__(self, key: Union[int, str]) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
+    def get(self, key: str, default: U) -> T | U: ...
+    def __getitem__(self, key: int | str) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
     def __len__(self) -> int: ...
 
 class bpy_struct:
