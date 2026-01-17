@@ -367,6 +367,9 @@ class WindowManager(ID):
 
 class Context(bpy_struct):
     area: Area
+    region: Region
+    region_data: RegionView3D
+    region_popup: Region
     scene: Scene
     space_data: Space
     window_manager: WindowManager
