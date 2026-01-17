@@ -90,7 +90,7 @@ def estimate_derivatives_at_frame(
 
     if frame <= scene.frame_start:
         # Estimate zero at the start of the scene
-        return {drone_name: _ZERO for drone_name in snapshot}, True
+        return dict.fromkeys(snapshot, _ZERO), True
 
     threshold = 5  # max frame difference that we accept
     best, best_diff = None, threshold + 1
@@ -109,7 +109,7 @@ def estimate_derivatives_at_frame(
 
     if best is None:
         # No candidate frame to estimate velocities from
-        return {drone_name: _ZERO for drone_name in snapshot}, False
+        return dict.fromkeys(snapshot, _ZERO), False
 
     # Okay, got a nice frame candidate
     other_frame, other_snapshot = best
