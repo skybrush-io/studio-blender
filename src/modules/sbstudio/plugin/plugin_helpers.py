@@ -1,8 +1,9 @@
 """Helper functions that can be used in most of our Blender addons."""
 
 import re
+from collections.abc import Set
 from contextlib import contextmanager
-from typing import ContextManager, Set, Type
+from typing import ContextManager
 
 import bpy
 
@@ -15,7 +16,7 @@ def _get_menu_by_name(menu):
         return getattr(bpy.types, "INFO_MT_" + menu)
 
 
-_already_processed_with_make_annotations: Set[Type] = set()
+_already_processed_with_make_annotations: Set[type] = set()
 
 
 def _make_annotations(cls):
