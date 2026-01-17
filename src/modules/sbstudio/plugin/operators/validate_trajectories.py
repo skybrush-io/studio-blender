@@ -1,13 +1,12 @@
 import bpy
-
 from bpy.props import BoolProperty
 from bpy.types import Operator
 
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.plugin.api import call_api_from_blender_operator
+from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
-from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.utils.sampling import sample_positions_of_objects_in_frame_range
 from sbstudio.viewer_bridge import (
     SkybrushViewerBridge,

@@ -1,8 +1,8 @@
 from bpy.props import FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator
 
-from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
 from sbstudio.model.pyro_markers import PyroMarker, PyroPayload
+from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
 from sbstudio.plugin.selection import get_selected_drones
 from sbstudio.plugin.utils.pyro_markers import add_pyro_marker_to_object
 

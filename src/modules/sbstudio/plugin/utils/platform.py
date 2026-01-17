@@ -1,6 +1,6 @@
-import bpy
-
 from pathlib import Path
+
+import bpy
 
 #: Path object representing the temporary directory of the plugin within the
 #: current Blender sessoin

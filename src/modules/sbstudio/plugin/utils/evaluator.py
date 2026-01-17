@@ -1,9 +1,10 @@
-from bpy.types import Context, Object
 from collections.abc import Callable, Sequence
 from contextlib import contextmanager
 from functools import partial
 from math import degrees
 from typing import overload
+
+from bpy.types import Context, Object
 
 from sbstudio.model.types import Coordinate3D, Rotation3D
 

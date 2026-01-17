@@ -1,10 +1,10 @@
 """Helper functions that can be used in most of our Blender addons."""
 
+import re
 from contextlib import contextmanager
 from typing import ContextManager, Set, Type
 
 import bpy
-import re
 
 
 def _get_menu_by_name(menu):

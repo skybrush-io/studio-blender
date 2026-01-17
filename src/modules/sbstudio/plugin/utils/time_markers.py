@@ -2,7 +2,6 @@ from bpy.types import Context
 
 from sbstudio.model.time_markers import TimeMarkers
 
-
 __all__ = ("get_time_markers_from_context",)
 
 

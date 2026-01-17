@@ -1,9 +1,10 @@
 from base64 import b64encode
 from collections.abc import Sequence
 from itertools import chain
-from numpy import array
 from operator import attrgetter
 from typing import TypeVar
+
+from numpy import array
 
 from .point import Point3D, Point4D
 

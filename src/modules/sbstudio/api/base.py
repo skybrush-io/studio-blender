@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-
 from base64 import b64encode
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -9,20 +8,21 @@ from gzip import compress
 from http import HTTPStatus
 from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
-from natsort import natsorted
 from pathlib import Path
 from shutil import copyfileobj
-from ssl import create_default_context, CERT_NONE
+from ssl import CERT_NONE, create_default_context
 from typing import Any
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+from natsort import natsorted
+
 from sbstudio.model.cameras import Camera
 from sbstudio.model.color import Color3D
-from sbstudio.model.point import Point3D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation
+from sbstudio.model.point import Point3D
 from sbstudio.model.pyro_markers import PyroMarkers
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.time_markers import TimeMarkers

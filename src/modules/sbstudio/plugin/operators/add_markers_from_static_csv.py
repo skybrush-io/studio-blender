@@ -1,14 +1,13 @@
 import csv
 import logging
 
-from numpy import array, zeros
-from numpy.typing import NDArray
-
 from bpy.path import ensure_ext
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
+from numpy import array, zeros
+from numpy.typing import NDArray
 
-from .base import StaticMarkerCreationOperator, PointsAndColors
+from .base import PointsAndColors, StaticMarkerCreationOperator
 
 __all__ = ("AddMarkersFromStaticCSVOperator",)
 

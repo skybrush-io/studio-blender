@@ -1,8 +1,8 @@
-import bpy
-
-from bpy.types import Context, Object
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Sequence
+
+import bpy
+from bpy.types import Context, Object
 
 from sbstudio.model.color import Color4D
 from sbstudio.model.light_program import LightProgram

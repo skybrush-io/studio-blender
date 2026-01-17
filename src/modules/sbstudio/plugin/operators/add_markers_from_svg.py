@@ -1,15 +1,15 @@
 from math import degrees, radians
-from numpy import array
-from numpy.typing import NDArray
 from pathlib import Path
 
 from bpy.path import ensure_ext
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
+from numpy import array
+from numpy.typing import NDArray
 
 from sbstudio.plugin.api import call_api_from_blender_operator
 
-from .base import StaticMarkerCreationOperator, PointsAndColors
+from .base import PointsAndColors, StaticMarkerCreationOperator
 
 __all__ = ("AddMarkersFromSVGOperator",)
 

@@ -1,28 +1,28 @@
 from __future__ import annotations
 
-
-import bpy
-
-from bpy.types import Collection
 from collections.abc import Callable
 from functools import partial
 from typing import (
+    TYPE_CHECKING,
     ClassVar,
     Literal,
     TypeVar,
-    TYPE_CHECKING,
     overload,
 )
 
+import bpy
+from bpy.types import Collection
+
 from .materials import create_colored_material, create_glowing_material
-from .meshes import create_icosphere, create_cone
+from .meshes import create_cone, create_icosphere
 from .utils import (
     ensure_object_exists_in_collection,
     get_object_in_collection,
 )
 
 if TYPE_CHECKING:
-    from bpy.types import bpy_prop_collection, ID
+    from bpy.types import ID, bpy_prop_collection
+
     from .model import DroneShowAddonProperties
 
 __all__ = ("Collections", "Templates")

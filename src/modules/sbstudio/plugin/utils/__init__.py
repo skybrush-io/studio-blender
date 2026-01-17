@@ -1,10 +1,10 @@
 """Utility functions directly related to the Blender API."""
 
-import bpy
-from bpy.types import Context
-
 from contextlib import contextmanager
 from operator import attrgetter
+
+import bpy
+from bpy.types import Context
 
 from .collections import (
     create_object_in_collection,

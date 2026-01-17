@@ -9,12 +9,12 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
-from .base import Task
-
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
-from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.colors import get_color_of_drone, set_color_of_drone
+from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils.evaluator import get_position_of_object
+
+from .base import Task
 
 if TYPE_CHECKING:
     from bpy.types import Depsgraph, Scene

@@ -1,9 +1,9 @@
-import bpy
-
-from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
 from collections.abc import Iterable
-from mathutils import Vector
 from typing import Any, cast
+
+import bpy
+from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
+from mathutils import Vector
 
 from sbstudio.model.types import Coordinate3D
 

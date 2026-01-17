@@ -1,11 +1,10 @@
-from numpy import array, logical_or
-from numpy.linalg import norm
-from natsort import index_natsorted, order_by_index
 from random import shuffle
 
 import bpy
-
 from bpy.props import EnumProperty
+from natsort import index_natsorted, order_by_index
+from numpy import array, logical_or
+from numpy.linalg import norm
 
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.utils.collections import sort_collection

@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, overload
+
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
-from collections.abc import Sequence
-from typing import overload, TYPE_CHECKING
 
 from sbstudio.model.safety_check import SafetyCheckResult
 from sbstudio.model.types import Coordinate3D
 
 if TYPE_CHECKING:
-    from sbstudio.plugin.overlays.safety_check import SafetyCheckOverlay, Marker
+    from sbstudio.plugin.overlays.safety_check import Marker, SafetyCheckOverlay
 
 __all__ = ("SafetyCheckProperties",)
 

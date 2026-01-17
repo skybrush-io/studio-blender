@@ -1,27 +1,26 @@
 """Utility functions directly related to the Blender API."""
 
 from __future__ import annotations
-from operator import attrgetter
 
-import bpy
 import re
-
-from bpy.types import Collection, Object
-
 from collections.abc import Callable, Iterable, Sequence
 from inspect import signature
 from itertools import count
+from operator import attrgetter
 from typing import (
+    TYPE_CHECKING,
     Any,
     TypeVar,
-    TYPE_CHECKING,
     overload,
 )
+
+import bpy
+from bpy.types import Collection, Object
 
 from .identifiers import create_internal_id
 
 if TYPE_CHECKING:
-    from bpy.types import bpy_prop_collection, ID
+    from bpy.types import ID, bpy_prop_collection
 
 __all__ = (
     "create_object_in_collection",

@@ -1,6 +1,6 @@
 from bpy.types import Panel
 
-from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard, StoryboardEntry
+from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry, get_storyboard
 from sbstudio.plugin.operators import (
     CreateNewScheduleOverrideEntryOperator,
     RecalculateTransitionsOperator,

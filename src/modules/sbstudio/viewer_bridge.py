@@ -7,11 +7,13 @@ from email.utils import parsedate_to_datetime
 from errno import ECONNREFUSED, ENETUNREACH
 from json import load
 from socket import (
-    socket,
-    timeout as SocketTimeoutError,
     AF_INET,
-    SOCK_DGRAM,
     IPPROTO_UDP,
+    SOCK_DGRAM,
+    socket,
+)
+from socket import (
+    timeout as SocketTimeoutError,
 )
 from time import monotonic
 from urllib.error import HTTPError, URLError

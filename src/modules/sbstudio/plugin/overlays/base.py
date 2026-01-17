@@ -8,10 +8,9 @@ from abc import ABCMeta
 from collections.abc import Callable
 from typing import ClassVar
 
-from bpy.types import SpaceView3D
-
 import bpy
 import gpu
+from bpy.types import SpaceView3D
 
 __all__ = ("Overlay",)
 

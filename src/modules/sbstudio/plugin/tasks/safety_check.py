@@ -5,21 +5,20 @@ constraints are satisfied in the current frame.
 
 from __future__ import annotations
 
-import bpy
-
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from math import hypot
 from typing import TYPE_CHECKING
 
+import bpy
+
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
-from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.utils import LRUCache
 
 # from sbstudio.plugin.utils import debounced
-
 from .base import Task
 
 if TYPE_CHECKING:

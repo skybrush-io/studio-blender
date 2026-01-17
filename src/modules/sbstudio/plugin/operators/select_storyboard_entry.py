@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard
+from sbstudio.plugin.model.storyboard import Storyboard, get_storyboard
 
 from .base import StoryboardOperator
 

@@ -1,8 +1,8 @@
-import bpy
+from math import ceil, inf
 
+import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context
-from math import ceil, inf
 
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors

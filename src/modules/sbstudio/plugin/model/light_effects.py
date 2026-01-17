@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import types
-import bpy
-
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
 from typing import Any, cast
 from uuid import uuid4
 
+import bpy
 from bpy.path import abspath
 from bpy.props import (
     BoolProperty,
@@ -24,22 +23,22 @@ from bpy.types import (
     Context,
     Image,
     ImageTexture,
-    PropertyGroup,
     Mesh,
     Object,
+    PropertyGroup,
     Texture,
 )
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
-from sbstudio.math.colors import blend_in_place, BlendMode
+from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
-from sbstudio.plugin.model.storyboard import get_storyboard, StoryboardEntryOrTransition
+from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -49,7 +48,6 @@ from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_d
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
-
 
 __all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
 

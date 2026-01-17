@@ -1,14 +1,13 @@
 import importlib.util
-import numpy as np
-
 from collections import OrderedDict
 from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from functools import wraps
 from pathlib import Path
 from typing import Any, Generic, TypeVar
 
-from sbstudio.model.types import Coordinate3D
+import numpy as np
 
+from sbstudio.model.types import Coordinate3D
 
 __all__ = (
     "consecutive_pairs",

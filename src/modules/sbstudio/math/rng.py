@@ -5,7 +5,6 @@ from random import Random
 from threading import Lock
 from typing import TypeVar
 
-
 C = TypeVar("C", bound="RandomSequence")
 
 

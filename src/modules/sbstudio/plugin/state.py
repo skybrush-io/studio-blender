@@ -1,11 +1,11 @@
 """Global and file-specific state of Skybrush Studio for Blender."""
 
-import bpy
 import json
-
 from abc import ABCMeta, abstractmethod
-from bpy.app.handlers import persistent
 from typing import Any
+
+import bpy
+from bpy.app.handlers import persistent
 
 from .utils import (
     create_internal_id,

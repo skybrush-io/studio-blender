@@ -6,7 +6,6 @@ from sbstudio.plugin.utils.evaluator import (
     get_quaternion_rotation_of_object,
 )
 
-
 __all__ = ("get_cameras_from_context",)
 
 

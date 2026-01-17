@@ -1,6 +1,6 @@
-import bpy
-
 from itertools import count as count_from
+
+import bpy
 
 __all__ = ("create_internal_id", "is_internal_id", "propose_name", "propose_names")
 

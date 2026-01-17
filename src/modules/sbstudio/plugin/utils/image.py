@@ -1,8 +1,8 @@
 """Utility functions related to Blender images."""
 
 import bpy
-
 from bpy.types import Image
+
 from sbstudio.model.types import RGBAColor
 
 __all__ = ["convert_from_srgb_to_linear", "find_image_by_name", "get_pixel"]

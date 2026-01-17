@@ -1,5 +1,4 @@
 import bpy
-
 from bpy.types import Collection, Context
 
 from .constants import Collections

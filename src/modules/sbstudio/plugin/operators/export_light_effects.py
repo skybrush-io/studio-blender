@@ -1,20 +1,17 @@
-import bpy
 import os
+from json import dump
 
+import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
-from json import dump
-
 from sbstudio.plugin.model.light_effects import LightEffectCollection
 from sbstudio.plugin.props.light_effects import (
-    iterate_light_effects_from_selection,
     LightEffectSelectionProperty,
+    iterate_light_effects_from_selection,
 )
 
-
 from .base import LightEffectOperator
-
 
 __all__ = ("ExportLightEffectsOperator",)
 

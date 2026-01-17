@@ -4,8 +4,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from bpy.types import Area
-    from bpy.types import SpaceView3D
+    from bpy.types import Area, SpaceView3D
 
 from .utils import with_screen
 
