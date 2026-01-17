@@ -117,11 +117,7 @@ class PyroOverlay(ShaderOverlay):
         font_size = int(11 * ui_scale)
         line_height = font_size + 2
 
-        if bpy.app.version >= (4, 0, 0):
-            # DPI argument was removed in Blender 4.0
-            blf.size(font_id, font_size)
-        else:
-            blf.size(font_id, font_size, 72)
+        blf.size(font_id, font_size)
         blf.enable(font_id, blf.SHADOW)
         blf.color(font_id, 1, 1, 1, 1)
 

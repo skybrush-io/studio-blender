@@ -19,24 +19,20 @@ __license__ = "GPLv3"
 #############################################################################
 # imports needed to set up the Python path properly
 
-import bpy
 import sys
-
-from bpy.path import abspath
 from pathlib import Path
 
+import bpy
+from bpy.path import abspath
 
 #############################################################################
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
-if bpy.app.version >= (3, 6, 0):
-    candidates = [
-        abspath(script_directory.directory)
-        for script_directory in bpy.context.preferences.filepaths.script_directories
-    ]
-else:
-    candidates = [abspath(bpy.context.preferences.filepaths.script_directory)]
+candidates = [
+    abspath(script_directory.directory)
+    for script_directory in bpy.context.preferences.filepaths.script_directories
+]
 candidates.append(Path(sys.modules[__name__].__file__).parent.parent)
 
 for candidate in candidates:
@@ -51,23 +47,20 @@ for candidate in candidates:
 
 import logging
 
-from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty
 from bpy.types import Operator
-
-from skybrush.io.blender.renderer import render
-from skybrush.io.base.importer import find_importer_function, ImportContext
-from skybrush.io.base.renderer import RenderContext, RenderMode
-from skybrush.io.utils import uncompressed_file_list
-from skybrush.utils.filesystem import working_directory
-
+from bpy_extras.io_utils import ImportHelper
 from sbstudio.plugin.plugin_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
     unregister_operator,
 )
-
+from skybrush.io.base.importer import ImportContext, find_importer_function
+from skybrush.io.base.renderer import RenderContext, RenderMode
+from skybrush.io.blender.renderer import render
+from skybrush.io.utils import uncompressed_file_list
+from skybrush.utils.filesystem import working_directory
 
 #############################################################################
 # configure logger
