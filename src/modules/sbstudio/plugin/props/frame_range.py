@@ -1,7 +1,7 @@
 from bpy.props import EnumProperty
 from bpy.types import Context
 
-from typing import Optional, Tuple
+from typing import Optional
 
 from sbstudio.plugin.utils import with_context
 
@@ -34,7 +34,7 @@ def FrameRangeProperty(**kwds):
 @with_context
 def resolve_frame_range(
     range: str, *, context: Optional[Context] = None
-) -> Optional[Tuple[int, int]]:
+) -> Optional[tuple[int, int]]:
     """Resolves one of the commonly used frame ranges used in multiple places
     throughout the plugin.
     """

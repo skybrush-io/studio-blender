@@ -2,7 +2,6 @@ from math import degrees, radians
 from numpy import array
 from numpy.typing import NDArray
 from pathlib import Path
-from typing import Tuple
 
 from bpy.path import ensure_ext
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
@@ -89,7 +88,7 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
 
 def parse_svg(
     filename: str, *, num_points: int, size: float, angle: float, api
-) -> Tuple[NDArray[float], NDArray[float]]:
+) -> tuple[NDArray[float], NDArray[float]]:
     """Parse an .svg file (containing a list of static positions and colors)
     using the backend API
 

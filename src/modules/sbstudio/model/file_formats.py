@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List, Tuple
 
 from sbstudio.api.types import Limits
 
@@ -31,10 +30,10 @@ class FileFormat(Enum):
     VVIZ = "vviz"
 
 
-_file_formats: Tuple[FileFormat, ...] = ()
+_file_formats: tuple[FileFormat, ...] = ()
 
 
-def get_supported_file_formats() -> Tuple[FileFormat, ...]:
+def get_supported_file_formats() -> tuple[FileFormat, ...]:
     """Returns the list of file formats that the server supports."""
     return _file_formats
 
@@ -46,7 +45,7 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
     global _file_formats
 
     # .skyc and CSV are always supported
-    formats: List[FileFormat] = [FileFormat.SKYC, FileFormat.CSV]
+    formats: list[FileFormat] = [FileFormat.SKYC, FileFormat.CSV]
 
     # Add formats from the server (if any)
     for feature in limits.features:

@@ -14,9 +14,7 @@ from typing import (
     Any,
     Callable,
     Iterable,
-    List,
     Optional,
-    Tuple,
     Sequence,
     TypeVar,
     TYPE_CHECKING,
@@ -117,7 +115,7 @@ def ensure_object_exists_in_collection(
     internal: bool = False,
     *args,
     **kwds,
-) -> Tuple[T, bool]:
+) -> tuple[T, bool]:
     """Ensures that a Blender object with the given name exists in the given
     collection.
 
@@ -233,7 +231,7 @@ def get_object_in_collection(
 
 def _get_actions_required_to_sort_collection_with_move_method(
     items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Given a list of items and an optional sorting key function, returns a
     list of from-to pairs representing steps that are needed to sort the list
     with single-item moves. This is useful for sorting Blender collections
@@ -269,7 +267,7 @@ def _get_actions_required_to_sort_collection_with_move_method(
 
 def _get_actions_required_to_sort_collection_with_relinking(
     items: Sequence[Any], key: Optional[Callable[[Any], Any]] = None
-) -> List[Any]:
+) -> list[Any]:
     """Given a list of items and an optional sorting key function, returns a
     list of steps that are needed to sort the list when we are provided only
     with an `unlink()` method that removes an item from the list and a
@@ -333,7 +331,7 @@ def filter_collection(collection: Collection, filter: Callable[[Any], bool]) -> 
     """Filters the given Blender collection in place, keeping only those items
     that match the given filter.
     """
-    to_remove: List[Any] = []
+    to_remove: list[Any] = []
     for item in collection:
         if not filter(item):
             to_remove.append(item)

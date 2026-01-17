@@ -1,6 +1,6 @@
 from bpy.types import Panel
 
-from typing import List, Optional
+from typing import Optional
 
 from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard, StoryboardEntry
 from sbstudio.plugin.operators import (
@@ -45,7 +45,7 @@ class TransitionEditorBase(Panel):
     @classmethod
     def _get_info_labels(
         cls, storyboard: Storyboard, entry: StoryboardEntry
-    ) -> List[str]:
+    ) -> list[str]:
         return []
 
     @classmethod
@@ -127,7 +127,7 @@ class TransitionEditorIntoCurrentFormation(TransitionEditorBase):
     @classmethod
     def _get_info_labels(
         cls, storyboard: Storyboard, entry: StoryboardEntry
-    ) -> List[str]:
+    ) -> list[str]:
         duration = storyboard.get_transition_duration_into_current_entry()
         return [format_transition_duration(duration)]
 
@@ -152,7 +152,7 @@ class TransitionEditorFromCurrentFormation(TransitionEditorBase):
     @classmethod
     def _get_info_labels(
         cls, storyboard: Storyboard, entry: StoryboardEntry
-    ) -> List[str]:
+    ) -> list[str]:
         duration = storyboard.get_transition_duration_from_current_entry()
         return [format_transition_duration(duration)]
 

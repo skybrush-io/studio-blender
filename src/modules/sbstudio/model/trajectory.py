@@ -2,7 +2,7 @@ from base64 import b64encode
 from itertools import chain
 from numpy import array
 from operator import attrgetter
-from typing import List, Optional, Sequence, TypeVar
+from typing import Optional, Sequence, TypeVar
 
 from .point import Point3D, Point4D
 
@@ -141,7 +141,7 @@ class Trajectory:
             return self
 
         first_point = self.points[0]
-        new_points: List[Point4D] = []
+        new_points: list[Point4D] = []
 
         # Make up a fake last point that is different from the first one
         last_point = Point4D(

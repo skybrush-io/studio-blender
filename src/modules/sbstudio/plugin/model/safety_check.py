@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
 from bpy.types import Context, PropertyGroup
-from typing import Optional, List, Sequence, Tuple, overload, TYPE_CHECKING
+from typing import Optional, Sequence, overload, TYPE_CHECKING
 
 from sbstudio.model.safety_check import SafetyCheckResult
 from sbstudio.model.types import Coordinate3D
@@ -504,19 +504,19 @@ class SafetyCheckProperties(PropertyGroup):
     def set_safety_check_result(
         self,
         formation_status: Optional[str] = None,
-        nearest_neighbors: Optional[Tuple[Coordinate3D, Coordinate3D, float]] = None,
+        nearest_neighbors: Optional[tuple[Coordinate3D, Coordinate3D, float]] = None,
         min_altitude: Optional[float] = None,
         max_altitude: Optional[float] = None,
-        drones_over_max_altitude: Optional[List[Coordinate3D]] = None,
+        drones_over_max_altitude: Optional[list[Coordinate3D]] = None,
         max_velocity_xy: Optional[float] = None,
-        drones_over_max_velocity_xy: Optional[List[Coordinate3D]] = None,
+        drones_over_max_velocity_xy: Optional[list[Coordinate3D]] = None,
         max_velocity_z_up: Optional[float] = None,
         max_velocity_z_down: Optional[float] = None,
-        drones_over_max_velocity_z: Optional[List[Coordinate3D]] = None,
+        drones_over_max_velocity_z: Optional[list[Coordinate3D]] = None,
         max_acceleration: Optional[float] = None,
-        drones_over_max_acceleration: Optional[List[Coordinate3D]] = None,
-        drones_below_min_nav_altitude: Optional[List[Coordinate3D]] = None,
-        all_close_pairs: Optional[List[Tuple[Coordinate3D, Coordinate3D]]] = None,
+        drones_over_max_acceleration: Optional[list[Coordinate3D]] = None,
+        drones_below_min_nav_altitude: Optional[list[Coordinate3D]] = None,
+        all_close_pairs: Optional[list[tuple[Coordinate3D, Coordinate3D]]] = None,
     ) -> None:
         """Updates general safety check results."""
         global _safety_check_result
@@ -601,7 +601,7 @@ class SafetyCheckProperties(PropertyGroup):
         overlay = get_overlay(create=False)
 
         if overlay:
-            markers: List[Marker] = []
+            markers: list[Marker] = []
 
             # The conditions for showing the proximity warning are:
             # - it should be explicitly enabled, OR

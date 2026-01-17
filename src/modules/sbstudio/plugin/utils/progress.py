@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from time import time
-from typing import Callable, Iterator, Optional, Tuple
+from typing import Callable, Iterator, Optional
 
 __all__ = ("ProgressReport", "FrameProgressReport")
 
@@ -78,7 +78,7 @@ class FrameProgressReport(ProgressReport):
     operation that works on individual Blender frames.
     """
 
-    frame_range: Tuple[int, int] = (0, 0)
+    frame_range: tuple[int, int] = (0, 0)
     """Frame range of the operation."""
 
     current_frame: int = 0

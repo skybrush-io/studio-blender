@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING, Tuple
+from typing import Iterable, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from bpy.types import Area
@@ -35,7 +35,7 @@ def find_all_3d_views(screen: Optional[str] = None) -> Iterable[SpaceView3D]:
 @with_screen
 def find_all_3d_views_and_their_areas(
     screen: Optional[str] = None,
-) -> Iterable[Tuple[SpaceView3D, Area]]:
+) -> Iterable[tuple[SpaceView3D, Area]]:
     """Finds all 3D views in the Blender screen with the given name, and returns
     an iterator that iterates over them and their containing areas.
 
@@ -53,7 +53,7 @@ def find_all_3d_views_and_their_areas(
 
 def _find_all_3d_views_and_their_areas(
     screen: Optional[str] = None,
-) -> Iterable[Tuple[SpaceView3D, Area]]:
+) -> Iterable[tuple[SpaceView3D, Area]]:
     for area in screen.areas:  # type: ignore
         if area.type == "VIEW_3D":
             for space in area.spaces:
@@ -80,7 +80,7 @@ def find_one_3d_view(screen: Optional[str] = None) -> Optional[SpaceView3D]:
 @with_screen
 def find_one_3d_view_and_its_area(
     screen: Optional[str] = None,
-) -> Tuple[Optional[SpaceView3D], Optional[Area]]:
+) -> tuple[Optional[SpaceView3D], Optional[Area]]:
     """Finds a 3D view in the Blender screen with the given name, and returns
     the view and its containing area in a tuple.
 

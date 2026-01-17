@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from math import inf
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Iterable, Optional, Sequence, Union, cast
 
 import bpy
 from bpy.props import EnumProperty
@@ -126,7 +126,7 @@ class InfluenceCurveDescriptor:
         # drone itself
 
         is_first = self.scene_start_frame == self.start_frame
-        keyframes: List[Tuple[int, float]] = [
+        keyframes: list[tuple[int, float]] = [
             (self.scene_start_frame - (1 if is_first else 0), 0.0)
         ]
 
@@ -186,7 +186,7 @@ class _LazyFormationTargetList:
     _formation: Optional[Collection] = None
     """The formation of the storyboard entry."""
 
-    _items: Optional[List[Union[Object, MeshVertex]]] = None
+    _items: Optional[list[Union[Object, MeshVertex]]] = None
 
     def __init__(self, entry: Optional[StoryboardEntry]):
         self._formation = entry.formation if entry else None
@@ -203,7 +203,7 @@ class _LazyFormationTargetList:
         except ValueError:
             return default
 
-    def _validate_items(self) -> List[Union[Object, MeshVertex]]:
+    def _validate_items(self) -> list[Union[Object, MeshVertex]]:
         if self._formation is None:
             return []
         else:
@@ -215,7 +215,7 @@ class _LazyFormationTargetList:
             ]
 
 
-def get_coordinates_of_formation(formation, *, frame: int) -> List[Tuple[float, ...]]:
+def get_coordinates_of_formation(formation, *, frame: int) -> list[tuple[float, ...]]:
     """Returns the coordinates of all the markers in the given formation at the
     given frame as a list of triplets.
     """
@@ -595,7 +595,7 @@ def update_transition_for_storyboard_entry(
     # Now we have the index of the target point that each drone
     # should be mapped to, and we have `None` for those drones that
     # will not participate in the formation
-    todo: List[Callable[[], None]] = []
+    todo: list[Callable[[], None]] = []
     for drone_index, drone in enumerate(drones):
         target_index = mapping[drone_index]
         if target_index is None:
@@ -855,7 +855,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
 
     def _get_transitions_to_process(
         self, storyboard: Storyboard, entries: Sequence[StoryboardEntry]
-    ) -> List[RecalculationTask]:
+    ) -> list[RecalculationTask]:
         """Processes the storyboard entries and selects the ones for which we
         need to recalculate the transitions, based on the scope parameter of
         the operator.
@@ -868,7 +868,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
             the next formation (`None` if this is the last formation in the
             entire storyboard)
         """
-        tasks: List[RecalculationTask] = []
+        tasks: list[RecalculationTask] = []
         active_index = int(storyboard.active_entry_index)
         num_entries = len(entries)
 

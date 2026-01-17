@@ -5,7 +5,7 @@ import json
 
 from abc import ABCMeta, abstractmethod
 from bpy.app.handlers import persistent
-from typing import Any, Dict
+from typing import Any
 
 from .utils import (
     create_internal_id,
@@ -20,7 +20,7 @@ class StateBase(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def from_json(self, data: Dict[str, Any]) -> None:
+    def from_json(self, data: dict[str, Any]) -> None:
         """Updates the current state object from the data retrieved from a state
         object saved earlier with `to_json()`.
         """
@@ -31,7 +31,7 @@ class StateBase(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """Returns a representation of the state object that can be stored in a
         JSON object.
         """
@@ -45,13 +45,13 @@ class _SkybrushStudioFileState:
 
     _initialized: bool = False
 
-    def from_json(self, data: Dict[str, Any]) -> None:
+    def from_json(self, data: dict[str, Any]) -> None:
         self._initialized = bool(data.get("initialized", False))
 
     def reset(self) -> None:
         self._initialized = False
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """Returns a representation of the state object that can be stored in
         JSON.
         """

@@ -2,7 +2,7 @@
 
 from random import Random
 from threading import Lock
-from typing import Callable, List, Optional, Sequence, TypeVar
+from typing import Callable, Optional, Sequence, TypeVar
 
 
 C = TypeVar("C", bound="RandomSequence")
@@ -13,7 +13,7 @@ class RandomSequence(Sequence[int]):
     can be accessed by indexing.
     """
 
-    _cache: List[int]
+    _cache: list[int]
     """Cached items of the sequence that were already generated."""
 
     _max: int

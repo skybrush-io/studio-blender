@@ -2,7 +2,7 @@ import bpy
 
 from bpy.types import Collection, Context, Mesh, MeshVertex, Object, Scene, VertexGroup
 from mathutils import Vector
-from typing import Any, Iterable, List, Optional, Union, Tuple, cast
+from typing import Any, Iterable, Optional, Union, cast
 
 from sbstudio.model.types import Coordinate3D
 
@@ -72,7 +72,7 @@ def get_vertices_of_object(object: Object):
 
 def get_vertices_of_object_in_vertex_group(
     object: Object, group: VertexGroup
-) -> List[MeshVertex]:
+) -> list[MeshVertex]:
     """Returns all the vertices in the given object that are members of the
     given vertex group.
 
@@ -93,7 +93,7 @@ def get_vertices_of_object_in_vertex_group(
 
 def get_vertices_of_object_in_vertex_group_by_name(
     object: Object, name: str
-) -> List[MeshVertex]:
+) -> list[MeshVertex]:
     """Returns all the vertices in the given object that are members of the
     given vertex group by name.
 
@@ -211,7 +211,7 @@ def get_derived_object_after_applying_modifiers(
 @with_context
 def get_axis_aligned_bounding_box_of_object(
     obj: Object, *, apply_modifiers: bool = True, context: Optional[Context] = None
-) -> Tuple[Coordinate3D, Coordinate3D]:
+) -> tuple[Coordinate3D, Coordinate3D]:
     """Returns the axis-aligned bounding box of the object, in world coordinates.
 
     Parameters:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, Optional, Sequence, Tuple, cast
+from typing import TYPE_CHECKING, Literal, Optional, Sequence, cast
 
 import blf
 import bpy
@@ -23,7 +23,7 @@ __all__ = ("SafetyCheckOverlay",)
 MarkerGroup = Literal["altitude", "proximity", "velocity", "acceleration", "generic"]
 """Currently supported marker groups."""
 
-Marker = Tuple[Sequence[Coordinate3D], MarkerGroup]
+Marker = tuple[Sequence[Coordinate3D], MarkerGroup]
 """Type specification for a single marker on the overlay. A marker is a sequence
 of coordinates that are interconnected with lines and have an optional
 group name. Markers in the same group are colored with the same color.
@@ -46,7 +46,7 @@ _group_to_color_map: dict[str, RGBColor] = {
 
 
 def set_warning_color_iff(
-    condition: bool, font_id: int, color: Tuple[float, float, float]
+    condition: bool, font_id: int, color: tuple[float, float, float]
 ) -> None:
     if condition:
         blf.color(font_id, *color, 1)
@@ -61,15 +61,15 @@ class SafetyCheckOverlay(ShaderOverlay):
 
     shader_type = "FLAT_COLOR"
 
-    _markers: Optional[List[Marker]] = None
-    _shader_batches: Optional[List[GPUBatch]] = None
+    _markers: Optional[list[Marker]] = None
+    _shader_batches: Optional[list[GPUBatch]] = None
 
     @property
-    def markers(self) -> Optional[List[Marker]]:
+    def markers(self) -> Optional[list[Marker]]:
         return self._markers
 
     @markers.setter
-    def markers(self, value: Optional[List[Marker]]):
+    def markers(self, value: Optional[list[Marker]]):
         if value is not None:
             self._markers = []
             for marker_points, group in value:
@@ -207,14 +207,14 @@ class SafetyCheckOverlay(ShaderOverlay):
         super().dispose()
         self._shader_batches = None
 
-    def _create_shader_batches(self) -> List[GPUBatch]:
+    def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
-        batches: List[GPUBatch] = []
-        points: List[Coordinate3D] = []
-        lines: List[Coordinate3D] = []
-        point_colors: List[Tuple[float, ...]] = []
-        line_colors: List[Tuple[float, ...]] = []
+        batches: list[GPUBatch] = []
+        points: list[Coordinate3D] = []
+        lines: list[Coordinate3D] = []
+        point_colors: list[tuple[float, ...]] = []
+        line_colors: list[tuple[float, ...]] = []
 
         RED = _group_to_color_map["generic"]
 
