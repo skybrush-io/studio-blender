@@ -127,7 +127,11 @@ class PyroOverlay(ShaderOverlay):
 
         for info_block in self._info_blocks:
             num_lines = len(info_block[1])
-            x, y = location_3d_to_region_2d(region, region_3d, info_block[0])
+            vec = location_3d_to_region_2d(region, region_3d, info_block[0])
+            if vec is None:
+                continue
+
+            x, y = vec
             y += (num_lines - 3 / 2) * font_size / 2
             for line in info_block[1]:
                 blf.position(font_id, x, y, 0)

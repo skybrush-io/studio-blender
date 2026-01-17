@@ -552,6 +552,8 @@ class Region(bpy_struct):
     width: int
     height: int
 
+class RegionView3D(bpy_struct): ...
+
 class SpaceView3D(Space):
     overlay: View3DOverlay
     shading: View3DShading
