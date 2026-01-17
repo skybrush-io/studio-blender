@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable, TYPE_CHECKING
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from bpy.types import Area

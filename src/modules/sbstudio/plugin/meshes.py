@@ -5,10 +5,10 @@ visualizations.
 import bmesh
 import bpy
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from math import radians
 from mathutils import Matrix
-from typing import Iterator
 
 from sbstudio.model.types import Coordinate3D
 

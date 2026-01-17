@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+
 import bpy
 
 from bpy.types import Collection
+from collections.abc import Callable
 from functools import partial
 from typing import (
-    Callable,
     ClassVar,
     Literal,
     TypeVar,

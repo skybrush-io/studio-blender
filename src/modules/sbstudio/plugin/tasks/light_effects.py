@@ -5,8 +5,9 @@ light effects.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .base import Task
 

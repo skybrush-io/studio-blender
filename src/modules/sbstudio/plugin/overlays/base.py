@@ -5,7 +5,8 @@ Blender 3D view and that can be enabled or disabled on-demand.
 from __future__ import annotations
 
 from abc import ABCMeta
-from typing import Callable, ClassVar
+from collections.abc import Callable
+from typing import ClassVar
 
 from bpy.types import SpaceView3D
 

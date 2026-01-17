@@ -1,4 +1,4 @@
-from typing import MutableSequence, Sequence
+from collections.abc import MutableSequence, Sequence
 
 class Matrix:
     @classmethod

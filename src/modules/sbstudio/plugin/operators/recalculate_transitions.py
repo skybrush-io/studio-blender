@@ -1,8 +1,9 @@
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from math import inf
-from typing import Callable, Iterable, Sequence, cast
+from typing import cast
 
 import bpy
 from bpy.props import EnumProperty

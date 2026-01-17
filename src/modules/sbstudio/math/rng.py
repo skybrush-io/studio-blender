@@ -1,8 +1,9 @@
 """Classes and functions related to random number generation."""
 
+from collections.abc import Callable, Sequence
 from random import Random
 from threading import Lock
-from typing import Callable, Sequence, TypeVar
+from typing import TypeVar
 
 
 C = TypeVar("C", bound="RandomSequence")

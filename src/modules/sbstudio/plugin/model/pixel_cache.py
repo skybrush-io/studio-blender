@@ -1,5 +1,4 @@
-from collections.abc import Mapping
-from typing import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 
 __all__ = ("PixelCache",)
 

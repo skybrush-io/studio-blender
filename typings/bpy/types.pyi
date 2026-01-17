@@ -1,13 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import MutableSequence, Sequence
 from contextlib import AbstractContextManager
-from typing import (
-    Literal,
-    MutableSequence,
-    Sequence,
-    TypeVar,
-    overload,
-)
+from typing import Literal, TypeVar, overload
 
 from mathutils import Matrix, Vector
 from sbstudio.plugin.model import DroneShowAddonProperties

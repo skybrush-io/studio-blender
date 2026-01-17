@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import bpy
 
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from math import hypot
-from typing import Iterator, Mapping, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D

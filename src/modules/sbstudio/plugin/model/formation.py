@@ -3,12 +3,13 @@ from __future__ import annotations
 import bpy
 
 from bpy.types import Collection
+from collections.abc import Iterable, Sequence
 from functools import partial
 from itertools import count
 from mathutils import Vector
 from numpy import array, c_, dot, float64, ones, zeros
 from numpy.typing import NDArray
-from typing import Iterable, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import (

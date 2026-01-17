@@ -8,13 +8,11 @@ import re
 
 from bpy.types import Collection, Object
 
+from collections.abc import Callable, Iterable, Sequence
 from inspect import signature
 from itertools import count
 from typing import (
     Any,
-    Callable,
-    Iterable,
-    Sequence,
     TypeVar,
     TYPE_CHECKING,
     overload,

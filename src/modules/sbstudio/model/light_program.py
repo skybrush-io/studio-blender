@@ -1,5 +1,6 @@
+from collections.abc import Iterable, Sequence
 from operator import attrgetter
-from typing import Iterable, Sequence, TypeVar
+from typing import TypeVar
 
 from sbstudio.utils import simplify_path
 
