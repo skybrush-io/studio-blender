@@ -9,7 +9,6 @@ from sbstudio.plugin.tasks.safety_check import (
 )
 from sbstudio.plugin.views import find_all_3d_views_and_their_areas
 
-
 __all__: tuple[Literal["RunFullProximityCheckOperator"]] = (
     "RunFullProximityCheckOperator",
 )

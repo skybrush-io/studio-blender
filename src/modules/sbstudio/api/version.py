@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .constants import MINIMUM_BACKEND_VERSION
 from .errors import BackendVersionMismatchError
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 __all__ = ("ensure_backend_version",)
 
-_backend_version_cache: Optional[tuple[SkybrushStudioAPI, Version]] = None
+_backend_version_cache: tuple[SkybrushStudioAPI, Version] | None = None
 
 
 def _get_or_query_backend_version(

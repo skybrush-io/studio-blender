@@ -1,6 +1,6 @@
 from .color import ColorProperty
-from .frame_range import FrameRangeProperty
 from .formation import FormationProperty
+from .frame_range import FrameRangeProperty
 from .light_effects import LightEffectSelectionProperty
 
 __all__ = (

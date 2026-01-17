@@ -4,8 +4,8 @@ import enum
 import json
 from dataclasses import dataclass
 from operator import attrgetter
-from uuid import uuid4
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 import bpy
 from bpy.props import (
@@ -20,9 +20,9 @@ from bpy.types import PropertyGroup
 
 from sbstudio.api.types import Mapping
 from sbstudio.plugin.constants import (
-    Collections,
     DEFAULT_STORYBOARD_ENTRY_DURATION,
     DEFAULT_STORYBOARD_TRANSITION_DURATION,
+    Collections,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
 from sbstudio.plugin.props import FormationProperty
@@ -33,7 +33,7 @@ from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
 if TYPE_CHECKING:
-    from bpy.types import bpy_prop_collection, Collection, Context
+    from bpy.types import Collection, Context, bpy_prop_collection
 
 __all__ = (
     "ScheduleOverride",

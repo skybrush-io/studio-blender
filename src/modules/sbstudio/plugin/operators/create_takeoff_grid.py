@@ -1,13 +1,11 @@
 import bpy
-
 from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Operator
-
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
 
 from sbstudio.model.types import Coordinate3D
-from sbstudio.plugin.constants import Collections, Formations, Templates
 from sbstudio.plugin.colors import create_keyframe_for_color_of_drone
+from sbstudio.plugin.constants import Collections, Formations, Templates
 from sbstudio.plugin.materials import get_material_for_pyro
 from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
 from sbstudio.plugin.model.storyboard import StoryboardEntryPurpose, get_storyboard

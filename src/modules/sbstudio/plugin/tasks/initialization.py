@@ -1,10 +1,10 @@
 """Background task that is called every time a new file is loaded."""
 
-import bpy
-
 from random import randint
 
-from sbstudio.plugin.constants import Collections, RANDOM_SEED_MAX
+import bpy
+
+from sbstudio.plugin.constants import RANDOM_SEED_MAX, Collections
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 

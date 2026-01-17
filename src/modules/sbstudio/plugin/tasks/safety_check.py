@@ -5,20 +5,20 @@ constraints are satisfied in the current frame.
 
 from __future__ import annotations
 
-import bpy
-
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from math import hypot
-from typing import Iterator, Mapping, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
+
+import bpy
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
-from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.utils import LRUCache
 
 # from sbstudio.plugin.utils import debounced
-
 from .base import Task
 
 if TYPE_CHECKING:
@@ -70,7 +70,7 @@ def estimate_derivatives_at_frame(
     *,
     frame: int,
     scene: Scene,
-) -> Tuple[VectorSnapshot, bool]:
+) -> tuple[VectorSnapshot, bool]:
     """Attempts to estimate the derivatives of some quantity in the given frame,
     given a cache mapping frame indices to values of the same quantity in
     other frames.
@@ -90,7 +90,7 @@ def estimate_derivatives_at_frame(
 
     if frame <= scene.frame_start:
         # Estimate zero at the start of the scene
-        return {drone_name: _ZERO for drone_name in snapshot}, True
+        return dict.fromkeys(snapshot, _ZERO), True
 
     threshold = 5  # max frame difference that we accept
     best, best_diff = None, threshold + 1
@@ -109,7 +109,7 @@ def estimate_derivatives_at_frame(
 
     if best is None:
         # No candidate frame to estimate velocities from
-        return {drone_name: _ZERO for drone_name in snapshot}, False
+        return dict.fromkeys(snapshot, _ZERO), False
 
     # Okay, got a nice frame candidate
     other_frame, other_snapshot = best

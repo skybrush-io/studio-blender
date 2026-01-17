@@ -1,17 +1,16 @@
 """Utility functions for operators."""
 
 import logging
-
-from bpy.path import basename
-from bpy.types import Context
-
 from collections.abc import Callable
 from itertools import groupby
 from math import degrees
-from natsort import natsorted
 from operator import attrgetter
 from pathlib import Path
 from typing import Any, cast
+
+from bpy.path import basename
+from bpy.types import Context
+from natsort import natsorted
 
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.model.file_formats import FileFormat
@@ -20,13 +19,13 @@ from sbstudio.model.location import ShowLocation
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.yaw import YawSetpointList
+from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.model.storyboard import (
     StoryboardEntry,
     StoryboardEntryPurpose,
     get_storyboard,
 )
-from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
@@ -38,10 +37,10 @@ from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
 from sbstudio.plugin.utils.sampling import (
     frame_range,
     sample_colors_of_objects,
-    sample_positions_of_objects,
     sample_positions_and_colors_of_objects,
     sample_positions_and_yaw_of_objects,
     sample_positions_colors_and_yaw_of_objects,
+    sample_positions_of_objects,
 )
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
 from sbstudio.utils import get_ends

@@ -1,13 +1,13 @@
 from math import ceil
 
-from .base import FormationOperator
-
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import (
     get_world_coordinates_of_markers_from_formation,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
+
+from .base import FormationOperator
 
 __all__ = ("AppendFormationToStoryboardOperator",)
 

@@ -1,8 +1,10 @@
 from base64 import b64encode
+from collections.abc import Sequence
 from itertools import chain
-from numpy import array
 from operator import attrgetter
-from typing import List, Optional, Sequence, TypeVar
+from typing import TypeVar
+
+from numpy import array
 
 from .point import Point3D, Point4D
 
@@ -22,11 +24,11 @@ class Trajectory:
         self.points = sorted(points, key=attrgetter("t"))
 
     @property
-    def first_point(self) -> Optional[Point4D]:
+    def first_point(self) -> Point4D | None:
         return self.points[0] if self.points else None
 
     @property
-    def first_time(self) -> Optional[float]:
+    def first_time(self) -> float | None:
         return self.points[0].t if self.points else None
 
     def append(self, point: Point4D) -> None:
@@ -141,7 +143,7 @@ class Trajectory:
             return self
 
         first_point = self.points[0]
-        new_points: List[Point4D] = []
+        new_points: list[Point4D] = []
 
         # Make up a fake last point that is different from the first one
         last_point = Point4D(

@@ -1,8 +1,9 @@
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import Iterator, Optional, TypeVar
+from typing import TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
@@ -147,7 +148,7 @@ def call_api_from_blender_operator(
         raise
 
 
-def set_fallback_api_key(value: Optional[str]) -> None:
+def set_fallback_api_key(value: str | None) -> None:
     """Sets the fallback API key to use when the user did not provide one in the
     add-on preferences.
     """

@@ -1,8 +1,7 @@
 from bpy.props import EnumProperty, FloatProperty, StringProperty
-
 from numpy import array
 
-from .base import StaticMarkerCreationOperator, PointsAndColors
+from .base import PointsAndColors, StaticMarkerCreationOperator
 
 __all__ = ("AddMarkersFromQRCodeOperator",)
 
@@ -44,11 +43,11 @@ class AddMarkersFromQRCodeOperator(StaticMarkerCreationOperator):
 
     def _create_points(self, context) -> PointsAndColors:
         from sbstudio.vendor.qrcode import (
-            QRCode,
+            ERROR_CORRECT_H,
             ERROR_CORRECT_L,
             ERROR_CORRECT_M,
             ERROR_CORRECT_Q,
-            ERROR_CORRECT_H,
+            QRCode,
         )
 
         levels = {

@@ -2,13 +2,13 @@
 visualizations.
 """
 
-import bmesh
-import bpy
-
+from collections.abc import Iterator
 from contextlib import contextmanager
 from math import radians
+
+import bmesh
+import bpy
 from mathutils import Matrix
-from typing import Iterator, Optional
 
 from sbstudio.model.types import Coordinate3D
 
@@ -23,7 +23,7 @@ __all__ = (
 
 
 def create_cone(
-    center: Coordinate3D = (0, 0, 0), radius: float = 1, *, name: Optional[str] = None
+    center: Coordinate3D = (0, 0, 0), radius: float = 1, *, name: str | None = None
 ):
     """Creates a Blender cone mesh object thats tip is pointing horizontally,
     to be suitable for visualizing yaw controlled shows.
@@ -56,7 +56,7 @@ def create_cone(
 
 
 def create_icosphere(
-    center: Coordinate3D = (0, 0, 0), radius: float = 1, *, name: Optional[str] = None
+    center: Coordinate3D = (0, 0, 0), radius: float = 1, *, name: str | None = None
 ):
     """Creates a Blender icosphere mesh object.
 
@@ -79,7 +79,7 @@ def create_icosphere(
     return obj
 
 
-def create_object_from_bmesh(bm, *, name: Optional[str] = None):
+def create_object_from_bmesh(bm, *, name: str | None = None):
     """Creates a new Blender object from a B-mesh representation.
 
     Parameters:

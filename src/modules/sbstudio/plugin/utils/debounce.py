@@ -1,7 +1,7 @@
-import bpy
-
 from functools import wraps
 from time import monotonic
+
+import bpy
 
 __all__ = ("debounced",)
 

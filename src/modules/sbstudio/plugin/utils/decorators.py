@@ -1,6 +1,6 @@
-import bpy
-
 from functools import wraps
+
+import bpy
 
 __all__ = ("with_context", "with_scene", "with_screen")
 

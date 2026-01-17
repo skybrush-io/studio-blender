@@ -1,16 +1,15 @@
+from typing import overload
+
 from bpy.props import EnumProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Context, PropertyGroup
 
-from typing import overload
-
-from sbstudio.plugin.constants import Collections, NUM_PYRO_CHANNELS
-
-from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
+from sbstudio.plugin.constants import NUM_PYRO_CHANNELS, Collections
 from sbstudio.plugin.overlays.pyro import (
     PyroOverlay,
     PyroOverlayInfo,
     PyroOverlayMarker,
 )
+from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 
 __all__ = ("PyroControlPanelProperties",)
 

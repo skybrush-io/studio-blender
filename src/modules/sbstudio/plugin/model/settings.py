@@ -10,9 +10,9 @@ from bpy.types import Collection, PropertyGroup
 
 from sbstudio.math.rng import RandomSequence
 from sbstudio.plugin.constants import (
+    DEFAULT_EMISSION_STRENGTH,
     DEFAULT_INDOOR_DRONE_RADIUS,
     DEFAULT_OUTDOOR_DRONE_RADIUS,
-    DEFAULT_EMISSION_STRENGTH,
     RANDOM_SEED_MAX,
 )
 from sbstudio.plugin.utils.bloom import (
@@ -25,7 +25,6 @@ from sbstudio.plugin.utils.gps_coordinates import (
     parse_latitude,
     parse_longitude,
 )
-
 
 __all__ = ("DroneShowAddonFileSpecificSettings",)
 

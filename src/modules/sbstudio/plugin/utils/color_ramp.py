@@ -1,8 +1,8 @@
 """Utility functions related to Blender color ramps."""
 
-from bpy.types import ColorRamp
-
 from typing import Any
+
+from bpy.types import ColorRamp
 
 __all__ = (
     "color_ramp_as_dict",

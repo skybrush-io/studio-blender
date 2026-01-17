@@ -1,7 +1,6 @@
-import bpy
-
 from pathlib import Path
-from typing import Union
+
+import bpy
 
 #: Path object representing the temporary directory of the plugin within the
 #: current Blender sessoin
@@ -20,7 +19,7 @@ def get_temporary_directory() -> Path:
     return _tmpdir
 
 
-def open_file_with_default_application(path: Union[str, Path]) -> None:
+def open_file_with_default_application(path: str | Path) -> None:
     """Opens the given file with the default application of the OS."""
     path = str(path)
 

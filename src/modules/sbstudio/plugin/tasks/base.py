@@ -3,7 +3,6 @@ to certain events such as a frame change.
 """
 
 import bpy
-
 from bpy.app.handlers import persistent
 
 __all__ = ("Task",)

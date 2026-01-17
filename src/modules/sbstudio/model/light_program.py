@@ -1,5 +1,6 @@
+from collections.abc import Iterable, Sequence
 from operator import attrgetter
-from typing import Iterable, Optional, Sequence, TypeVar
+from typing import TypeVar
 
 from sbstudio.utils import simplify_path
 
@@ -48,7 +49,7 @@ class LightProgram:
     from past according to the is_fade property of each Color4D element.
     """
 
-    def __init__(self, colors: Optional[Sequence[Color4D]] = None):
+    def __init__(self, colors: Sequence[Color4D] | None = None):
         self.colors = sorted(colors, key=attrgetter("t")) if colors is not None else []
 
     def append(self, color: Color4D) -> None:

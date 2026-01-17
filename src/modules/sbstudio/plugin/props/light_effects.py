@@ -1,6 +1,6 @@
-from bpy.props import EnumProperty
+from collections.abc import Iterator
 
-from typing import Iterator
+from bpy.props import EnumProperty
 
 from sbstudio.plugin.model.light_effects import LightEffect, LightEffectCollection
 

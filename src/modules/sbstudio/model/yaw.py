@@ -1,9 +1,7 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from operator import attrgetter
-from typing import (
-    Sequence,
-    TypeVar,
-)
+from typing import TypeVar
 
 __all__ = (
     "YawSetpointList",
