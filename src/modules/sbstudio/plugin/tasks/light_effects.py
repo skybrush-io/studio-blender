@@ -22,12 +22,12 @@ if TYPE_CHECKING:
 __all__ = ("UpdateLightEffectsTask",)
 
 
-#: Cache for the "base" color of every drone in the current frame before we
-#: apply the light effects on them. Cleared when we move to a new frame. The
-#: mapping is keyed by the _ids_ of the drones so we do not hang on to a
-#: reference of a drone if the user deletes it and Blender decides to free the
-#: associated memory area
 _base_color_cache: dict[int, RGBAColor] = {}
+"""Cache for the "base" color of every drone in the current frame before we
+apply the light effects on them. Cleared when we move to a new frame. The
+mapping is keyed by the _ids_ of the drones so we do not hang on to a
+reference of a drone if the user deletes it and Blender decides to free the
+associated memory area."""
 
 _last_frame: int | None = None
 """Number of the last frame that was evaluated with `update_light_effects()`"""

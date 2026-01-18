@@ -13,9 +13,9 @@ from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 
 __all__ = ("PyroControlPanelProperties",)
 
-#: Global pyro marker overlay. This cannot be an attribute of PyroControlPanelProperties
-#: for some reason; Blender PropertyGroup objects are weird.
 _overlay = None
+"""Global pyro marker overlay. This cannot be an attribute of PyroControlPanelProperties
+for some reason; Blender PropertyGroup objects are weird."""
 
 
 @overload

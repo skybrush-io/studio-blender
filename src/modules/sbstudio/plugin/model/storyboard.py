@@ -292,8 +292,8 @@ class StoryboardEntry(PropertyGroup):
         update=_handle_mapping_change,
     )
 
-    #: Sorting key for storyboard entries
     sort_key = attrgetter("frame_start", "frame_end")
+    """Sorting key for storyboard entries."""
 
     _decoded_mapping: Mapping | None = None
     """Decoded mapping of the storyboard entry."""

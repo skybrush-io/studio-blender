@@ -15,13 +15,13 @@ if TYPE_CHECKING:
 __all__ = ("SafetyCheckProperties",)
 
 
-#: Global safety check overlay. This cannot be an attribute of SafetyCheckProperties
-#: for some reason; Blender PropertyGroup objects are weird.
 _overlay = None
+"""Global safety check overlay. This cannot be an attribute of SafetyCheckProperties
+for some reason; Blender PropertyGroup objects are weird."""
 
-#: Current safety check result object. This cannot be an attribute of
-#: SafetyCheckProperties for some reason; Blender PropertyGroup objects are weird.
 _safety_check_result = SafetyCheckResult()
+"""Current safety check result object. This cannot be an attribute of
+SafetyCheckProperties for some reason; Blender PropertyGroup objects are weird."""
 
 
 @overload

@@ -10,19 +10,17 @@ not need to call it directly.
 """
 
 import sys
-
 from argparse import ArgumentParser
 from pathlib import Path
 from struct import pack
 from zlib import compress
 
-
-#: XOR mask to use in the generated executable
 MAGIC_MASK = 0x5B
+"""XOR mask to use in the generated executable"""
 
-#: Magic trailer in the bootloader that is used to identify that the payload is
-#: already appended
 MAGIC_TRAILER = b"\x5b\x57\x00\xd1\x01"
+"""Magic trailer in the bootloader that is used to identify that the payload is
+already appended"""
 
 
 def mask_bytes(data: bytes, mask: int = MAGIC_MASK) -> bytes:

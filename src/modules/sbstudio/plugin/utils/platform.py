@@ -2,9 +2,9 @@ from pathlib import Path
 
 import bpy
 
-#: Path object representing the temporary directory of the plugin within the
-#: current Blender sessoin
 _tmpdir = None
+"""Path object representing the temporary directory of the plugin within the
+current Blender session."""
 
 
 def get_temporary_directory() -> Path:

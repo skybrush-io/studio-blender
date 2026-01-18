@@ -72,8 +72,8 @@ class _SkybrushStudioFileState:
         pass
 
 
-#: File-specific state object
 _file_specific_state = _SkybrushStudioFileState()
+"""File-specific state object."""
 
 
 def get_file_specific_state() -> _SkybrushStudioFileState:

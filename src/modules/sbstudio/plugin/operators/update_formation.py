@@ -19,9 +19,6 @@ from .base import FormationOperator
 __all__ = ("UpdateFormationOperator",)
 
 
-#: Formation update options, kept here in dictionary to ensure that Python has
-#: a reference to their strings all the time -- there is a bug in Blender that
-#: would cause it to crash if we do not have a reference
 FORMATION_UPDATE_ITEMS = {
     "EMPTY": ("EMPTY", "Empty", "", 1),
     "ALL_DRONES": ("ALL_DRONES", "Current positions of drones", "", 2),
@@ -39,6 +36,9 @@ FORMATION_UPDATE_ITEMS = {
         5,
     ),
 }
+"""Formation update options, kept here in dictionary to ensure that Python has
+a reference to their strings all the time -- there is a bug in Blender that
+would cause it to crash if we do not have a reference."""
 
 
 def get_options_for_formation_update(scene: Scene, context: Context):

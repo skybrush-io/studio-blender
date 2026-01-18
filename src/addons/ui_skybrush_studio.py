@@ -180,7 +180,6 @@ from sbstudio.plugin.tasks import (
     UpdateLightEffectsTask,
 )
 
-#: Custom types in this addon
 types = (
     FormationsPanelProperties,
     ColorFunctionProperties,
@@ -198,9 +197,8 @@ types = (
     DroneShowAddonProperties,
     DroneShowAddonObjectProperties,
 )
+"""Custom types in this addon."""
 
-#: Operators in this addon; operators that require other operators must come
-#: later in the list than their dependencies
 operators = (
     PrepareSceneOperator,
     CreateFormationOperator,
@@ -265,15 +263,16 @@ operators = (
     RunFullProximityCheckOperator,
     UseSharedMaterialForAllDronesMigrationOperator,
 )
+"""Operators in this addon; operators that require other operators must come
+later in the list than their dependencies."""
 
-#: List widgets in this addon.
+
 lists = (SKYBRUSH_UL_lightfxlist, SKYBRUSH_UL_scheduleoverridelist)
+"""List widgets in this addon."""
 
-#: Menus in this addon
 menus = (GenerateMarkersMenu,)
+"""Menus in this addon."""
 
-#: Panels in this addon. The order also implicitly defines the order in which
-#: our tabs appear in the sidebar of the 3D view.
 panels = (
     ShowPanel,
     SwarmPanel,
@@ -288,11 +287,12 @@ panels = (
     ExportPanel,
     DroneShowAddonObjectPropertiesPanel,
 )
+"""Panels in this addon. The order also implicitly defines the order in which
+our tabs appear in the sidebar of the 3D view."""
 
-#: Headers in this addon
 headers = ()
+"""Headers in this addon."""
 
-#: Background tasks in this addon
 tasks = (
     InitializationTask(),
     InvalidatePixelCacheTask(),
@@ -300,14 +300,14 @@ tasks = (
     SafetyCheckTask(),
     UpdateLightEffectsTask(),
 )
+"""Background tasks in this addon."""
 
-#: Getters for the overlays in this addon, used to disable them before unloading
 overlay_getters = (
     partial(get_safety_check_overlay, create=False),
     partial(get_pyro_effects_overlay, create=False),
     get_formation_order_overlay,
 )
-
+"""Getters for the overlays in this addon, used to disable them before unloading."""
 
 def register():
     register_translations(translations_dict)

@@ -12,14 +12,14 @@ __all__ = (
 class Color3D:
     """Simplest representation of a 3D color in RGB space."""
 
-    #: red component of the color in the range [0-255]
     r: int
+    """Red component of the color in the range [0-255]."""
 
-    #: green component of the color in the range [0-255]
     g: int
+    """Green component of the color in the range [0-255]."""
 
-    #: blue component of the color in the range [0-255]
     b: int
+    """Blue component of the color in the range [0-255]."""
 
     def at_time(self, t: float, is_fade: bool = True) -> "Color4D":
         """Returns a Color4D copy of this color such that the copy is placed
@@ -46,22 +46,22 @@ class Color3D:
 class Color4D:
     """Simplest representation of a 4D color in RGB space and time."""
 
-    #: time in [s]
     t: float
+    """Time in [s]."""
 
-    #: red component of the color in the range [0-255]
     r: int
+    """Red component of the color in the range [0-255]."""
 
-    #: green component of the color in the range[0-255]
     g: int
+    """Green component of the color in the range [0-255]."""
 
-    #: blue component of the color in the range[0-255]
     b: int
+    """Blue component of the color in the range [0-255]."""
 
-    #: flag to specify whether we should fade here from the previous keypoint
-    #: (True) or maintain previous color until this moment and change here
-    #: abruptly (False)
     is_fade: bool = True
+    """Flag to specify whether we should fade here from the previous keypoint
+    (True) or maintain previous color until this moment and change here
+    abruptly (False)."""
 
     def as_vector(self) -> Vector:
         """Converts a Color4D instance to a Blender color vector with alpha

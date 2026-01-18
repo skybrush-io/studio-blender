@@ -18,8 +18,8 @@ from .utils import get_drones_to_export
 
 __all__ = ("ValidateTrajectoriesOperator",)
 
-#: Global object to access Skybrush Viewer and send it the trajectories to validate
 skybrush_viewer = SkybrushViewerBridge()
+"""Global object to access Skybrush Viewer and send it the trajectories to validate."""
 
 
 class ValidateTrajectoriesOperator(Operator):

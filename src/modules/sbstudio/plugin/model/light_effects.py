@@ -1159,14 +1159,14 @@ class LightEffectCollection(PropertyGroup, ListMixin):
     on the drones in the drone show.
     """
 
-    #: The entries in the collection
     entries = CollectionProperty(type=LightEffect)
+    """The entries in the collection."""
 
-    #: Index of the active entry (currently being edited)
     active_entry_index = IntProperty(
         name="Selected index",
         description="Index of the light effect currently being edited",
     )
+    """Index of the active entry (currently being edited)."""
 
     @property
     def active_entry(self) -> LightEffect | None:
