@@ -1,5 +1,5 @@
 = Skybrush Studio for Blender User Guide
-CollMot Robotics Ltd. <hello@skybrush.io>
+{company-name} <{contact-email}>
 v2.6.0, {docdatetime}
 :doctype: book
 :encoding: utf-8

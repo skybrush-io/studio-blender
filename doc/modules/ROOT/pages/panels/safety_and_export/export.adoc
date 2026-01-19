@@ -108,7 +108,7 @@ All properties of this multi-export option are the same as the ones for the indi
 
 Upon purchasing a professional license, we provide additional exporters to various external drone show formats, including DSS PATH, DSS PATH3, Drotek, EVSKY, HighGreat DAC, LiteBee, etc.
 
-Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:support@collmot.com[Contact us] if you need any additional exporters that are not on the list yet.
+Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:{contact-email}[Contact us] if you need any additional exporters that are not on the list yet.
 
 == Export to external fireworks and show visualization formats
 
