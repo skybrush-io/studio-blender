@@ -2,15 +2,13 @@ from base64 import b64encode
 from collections.abc import Sequence
 from itertools import chain
 from operator import attrgetter
-from typing import TypeVar
+from typing import Self
 
 from numpy import array
 
 from .point import Point3D, Point4D
 
 __all__ = ("Trajectory",)
-
-C = TypeVar("C", bound="Trajectory")
 
 
 class Trajectory:
@@ -111,7 +109,7 @@ class Trajectory:
 
         return self.points[-1].t - self.points[0].t
 
-    def shift_in_place(self: C, offset: Point3D) -> C:
+    def shift_in_place(self, offset: Point3D) -> Self:
         """Shifts all points of the trajectory in-place.
 
         Parameters:
@@ -124,7 +122,7 @@ class Trajectory:
             point.z += offset.z
         return self
 
-    def shift_time_in_place(self: C, delta: float) -> C:
+    def shift_time_in_place(self, delta: float) -> Self:
         """Shifts all timestamp of the trajectory in-place.
 
         Parameters:
@@ -135,7 +133,7 @@ class Trajectory:
             point.t += delta
         return self
 
-    def simplify_in_place(self: C) -> C:
+    def simplify_in_place(self) -> Self:
         """Simplifies the trajectory in-place by removing points that are
         identical to their predecessors and successors.
         """
