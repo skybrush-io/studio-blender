@@ -33,7 +33,6 @@ __all__ = (
 
 def ensure_animation_data_exists_for_object(
     object: Object,
-    name: str | None = None,
     *,
     clean: bool = False,
 ) -> AnimData:
@@ -52,10 +51,7 @@ def ensure_animation_data_exists_for_object(
     Returns:
         the animation data of the object
     """
-    if name is None:
-        name = f"Animation data for {object.name}"
-
-    _ensure_action_exists_for_object(object, name, clean=clean)
+    _ensure_action_exists_for_object(object, clean=clean)
 
     assert object.animation_data is not None
     return object.animation_data
