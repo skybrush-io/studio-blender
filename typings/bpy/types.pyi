@@ -349,6 +349,8 @@ class Scene:
 
     def frame_set(self, frame: int, subframe: float = 0.0) -> None: ...
 
+class Screen: ...
+
 class SceneEEVEE(bpy_struct):
     bloom_radius: float  # only for Blender <4.3
     bloom_intensity: float  # only for Blender <4.3
@@ -379,6 +381,7 @@ class Context(bpy_struct):
     region_data: RegionView3D
     region_popup: Region
     scene: Scene
+    screen: Screen
     space_data: Space
     window_manager: WindowManager
 
@@ -527,6 +530,7 @@ class BlendData(bpy_struct):
     meshes: bpy_prop_collection[Mesh]
     objects: BlendDataObjects
     scenes: bpy_prop_collection[Scene]
+    screens: bpy_prop_collection[Screen]
     textures: BlendDataTextures
     version: tuple[int, int, int]
 
