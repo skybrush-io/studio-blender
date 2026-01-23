@@ -376,6 +376,7 @@ class Context(bpy_struct):
 class Object(ID):
     active_material: Material
     animation_data: AnimData | None
+    color: RGBAColor
     constraints: ObjectConstraints
     vertex_groups: VertexGroups
 

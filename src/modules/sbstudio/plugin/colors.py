@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import bpy
 from bpy.types import Object
 
@@ -49,7 +51,7 @@ def create_keyframe_for_color_of_drone(
     set_keyframes(drone, "color", keyframes, interpolation="LINEAR")
 
 
-def get_color_of_drone(drone) -> RGBAColor:
+def get_color_of_drone(drone: Object) -> Sequence[float]:
     """Returns the color of the LED light on the given drone.
 
     Parameters:
@@ -62,7 +64,7 @@ def get_color_of_drone(drone) -> RGBAColor:
     return (0.0, 0.0, 0.0, 0.0)
 
 
-def set_color_of_drone(drone, color: RGBAColorLike):
+def set_color_of_drone(drone: Object, color: RGBAColorLike):
     """Sets the color of the LED light on the given drone.
 
     Parameters:
