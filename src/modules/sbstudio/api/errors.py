@@ -8,9 +8,7 @@ __all__ = ("SkybrushStudioAPIError",)
 class SkybrushStudioAPIError(SkybrushStudioError):
     """Superclass for all errors related to the Skybrush Studio API."""
 
-    def format_message(self) -> str:
-        """Returns a user-friendly error message for this error."""
-        return str(self)
+    pass
 
 
 class NoOnlineAccessAllowedError(SkybrushStudioAPIError):
