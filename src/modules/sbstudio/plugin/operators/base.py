@@ -17,7 +17,9 @@ from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point3D
 from sbstudio.model.trajectory import Trajectory
+from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.actions import (
+    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
@@ -275,18 +277,24 @@ class DynamicMarkerCreationOperator(FormationOperator):
 
         # create new markers for the points around cursor location
         center = Point3D(*context.scene.cursor.location)
-        trajectories = [
+        trajectories: list[Trajectory] = [
             item.trajectory.shift_in_place(center)
             for item in trajectories_and_lights.values()
         ]
-        first_points = [
-            trajectory.first_point.as_vector()  # type: ignore
-            for trajectory in trajectories
-        ]
+        first_points: list[Coordinate3D] = []
+        for trajectory in trajectories:
+            point = trajectory.first_point
+            assert point is not None
+
+            first_points.append(point.as_3d().as_tuple())
         markers = add_points_to_formation(formation, first_points)
 
+        # ensure that we have animation data for the markers and that it is clean
+        for marker in markers:
+            ensure_animation_data_exists_for_object(marker, clean=True)
+
         # update storyboard duration based on animation data
-        if self.update_duration and storyboard_entry:
+        if bool(getattr(self, "update_duration", False)) and storyboard_entry:
             duration = (
                 int(max(trajectory.duration for trajectory in trajectories) * fps) + 1
             )

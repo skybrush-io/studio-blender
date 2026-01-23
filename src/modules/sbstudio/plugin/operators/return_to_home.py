@@ -4,11 +4,12 @@ from math import ceil, sqrt
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
-from bpy.types import Context
+from bpy.types import Context, Object
 
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.actions import (
+    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.api import call_api_from_blender_operator
@@ -331,6 +332,11 @@ class ReturnToHomeOperator(StoryboardOperator):
         )
         assert entry is not None
         markers = get_markers_from_formation(entry.formation)
+
+        # ensure clean animation data for all markers
+        for marker in markers:
+            assert isinstance(marker, Object)
+            ensure_animation_data_exists_for_object(marker, clean=True)
 
         # generate smart RTH trajectories in the new formation
         for start_time, duration, inner_points, p, q, marker in zip(
