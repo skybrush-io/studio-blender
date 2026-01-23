@@ -124,7 +124,7 @@ class YawSetpointList:
 
         return self
 
-    def unwrap(self: C, *, threshold: float = 180, full_cycle: float = 360) -> Self:
+    def unwrap(self, *, threshold: float = 180, full_cycle: float = 360) -> Self:
         """Unwraps the yaw angles of the setpoint list "in-place" and ensures
         that consecutive sampled angles never have a difference of more than
         180 degrees.
