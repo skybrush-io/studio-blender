@@ -309,6 +309,7 @@ overlay_getters = (
 )
 """Getters for the overlays in this addon, used to disable them before unloading."""
 
+
 def register():
     register_translations(translations_dict)
     register_state()
