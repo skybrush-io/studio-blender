@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import MutableSequence, Sequence
 from contextlib import AbstractContextManager
-from typing import Literal, TypeVar, overload
+from typing import Iterable, Literal, TypeAlias, TypeVar, overload
 
 from mathutils import Matrix, Vector
 from sbstudio.plugin.model import DroneShowAddonProperties
@@ -10,7 +10,7 @@ from sbstudio.plugin.model import DroneShowAddonProperties
 T = TypeVar("T")
 U = TypeVar("U")
 
-IdType = Literal[
+IdType: TypeAlias = Literal[
     "ACTION",
     "ARMATURE",
     "BRUSH",
@@ -52,6 +52,10 @@ IdType = Literal[
     "WORLD",
 ]
 
+EmptyDisplayType: TypeAlias = Literal[
+    "PLAIN_AXES", "ARROWS", "SINGLE_ARROW", "CIRCLE", "CUBE", "SPHERE", "CONE", "IMAGE"
+]
+
 RGBAColor = MutableSequence[float]
 Vector3 = tuple[float, float, float]
 
@@ -69,7 +73,7 @@ class bpy_prop_collection(Sequence[T]):
     def get(self, key: str) -> T | None: ...
     @overload
     def get(self, key: str, default: U) -> T | U: ...
-    def __getitem__(self, key: int | str) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __getitem__(self, key: int | str) -> T: ...  # type: ignore[reportIncompatibleMethodOverride]
     def __len__(self) -> int: ...
 
 class bpy_struct:
@@ -103,7 +107,9 @@ class bpy_struct:
             "KEYFRAME", "BREAKDOWN", "MOVING_HOLD", "EXTREME", "JITTER", "GENERATED"
         ] = "KEYFRAME",
     ) -> bool: ...
+    def keys(self) -> Iterable: ...
     def path_resolve(self, path: str): ...
+    def values(self) -> Iterable: ...
 
 class AnimData(bpy_struct):
     action: Action | None
@@ -392,6 +398,9 @@ class Object(ID):
     location: Vector3
     scale: Vector3
 
+    empty_display_size: float
+    empty_display_type: EmptyDisplayType
+
     hide_render: bool
     hide_select: bool
     hide_viewport: bool
@@ -415,7 +424,7 @@ class ActionChannelbagFCurves(bpy_prop_collection[FCurve]):
     def ensure(
         self, data_path: str, *, index: int = 0, group_name: str = ""
     ) -> FCurve: ...
-    def find(self, data_path: str, *, index: int = 0) -> FCurve | None: ...  # pyright: ignore[reportIncompatibleMethodOverride]
+    def find(self, data_path: str, *, index: int = 0) -> FCurve | None: ...  # type: ignore[reportIncompatibleMethodOverride]
     def new(
         self, data_path: str, *, index: int = 0, group_name: str = ""
     ) -> FCurve: ...
@@ -502,6 +511,7 @@ class BlendDataTextures(bpy_prop_collection[Texture]):
     def new(self, name: str, type: str) -> Texture: ...
 
 class BlendDataObjects(bpy_prop_collection[Object]):
+    def new(self, name: str, object_data: ID | None) -> Object: ...
     def remove(
         self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
     ) -> None: ...
