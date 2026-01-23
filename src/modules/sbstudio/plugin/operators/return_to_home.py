@@ -265,8 +265,9 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         # Extend the duration of the last formation to the frame where we want
         # to start the RTH maneuver
-        if len(storyboard.entries) > 0:
-            storyboard.last_entry.extend_until(self.start_frame)
+        last_entry = storyboard.last_entry
+        if last_entry is not None:
+            last_entry.extend_until(self.start_frame)
 
         # Calculate when the RTH should end
         end_of_rth = self.start_frame + rth_duration
@@ -280,6 +281,8 @@ class ReturnToHomeOperator(StoryboardOperator):
             purpose=StoryboardEntryPurpose.LANDING,
             context=context,
         )
+
+        return True
 
     def _run_smart_rth(
         self,
