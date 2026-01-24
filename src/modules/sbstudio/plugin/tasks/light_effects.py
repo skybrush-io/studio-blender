@@ -10,12 +10,11 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import numpy as np
-import numpy.typing as npt
 
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
 from sbstudio.plugin.colors import get_colors_of_drones_fast, set_color_of_drone
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.utils.evaluator import get_positions_of_objects_fast
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 from .base import Task
 
@@ -77,7 +76,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
-            positions: npt.NDArray = get_positions_of_objects_fast(drones)
+            positions = [get_position_of_object(drone) for drone in drones]
             mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
