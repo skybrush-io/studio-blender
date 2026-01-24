@@ -528,6 +528,13 @@ class BlendDataObjects(bpy_prop_collection[Object]):
 
 ## Large top-level objects
 
+class Area(bpy_struct):
+    regions: bpy_prop_collection[Region]
+    height: int
+    width: int
+
+    def tag_redraw(self) -> None: ...
+
 class BlendData(bpy_struct):
     actions: BlendDataActions
     collections: BlendDataCollections
@@ -540,6 +547,27 @@ class BlendData(bpy_struct):
     screens: bpy_prop_collection[Screen]
     textures: BlendDataTextures
     version: tuple[int, int, int]
+
+class OperatorProperties(bpy_struct): ...
+
+class Panel(bpy_struct):
+    is_popover: bool
+    layout: UILayout
+    use_pin: bool
+
+    @classmethod
+    def poll(cls, context: Context) -> bool: ...
+    def draw(self, context: Context) -> None: ...
+    def draw_header(self, context: Context) -> None: ...
+    def draw_header_preset(self, context: Context) -> None: ...
+
+class Region(bpy_struct):
+    x: int
+    y: int
+    width: int
+    height: int
+
+class RegionView3D(bpy_struct): ...
 
 class Space(bpy_struct):
     show_locked_time: bool
@@ -566,24 +594,100 @@ class Space(bpy_struct):
         "PREFERENCES",
     ]
 
-class Area(bpy_struct):
-    regions: bpy_prop_collection[Region]
-    height: int
-    width: int
-
-    def tag_redraw(self) -> None: ...
-
-class Region(bpy_struct):
-    x: int
-    y: int
-    width: int
-    height: int
-
-class RegionView3D(bpy_struct): ...
-
 class SpaceView3D(Space):
     overlay: View3DOverlay
     shading: View3DShading
+
+class UILayout(bpy_struct):
+    active: bool
+    alert: bool
+    enabled: bool
+    use_property_decorate: bool
+    use_property_split: bool
+
+    def box(self) -> UILayout: ...
+    def column(
+        self,
+        *,
+        align: bool = False,
+        heading: str = "",
+        heading_ctxt: str = "",
+        translate: bool = True,
+    ) -> UILayout: ...
+    def label(
+        self,
+        *,
+        text: str = "",
+        text_ctct: str = "",
+        translate: bool = True,
+        icon: str = "NONE",
+        icon_value: int = 0,
+    ) -> None: ...
+    def menu(
+        self,
+        menu: str,
+        *,
+        text: str = "",
+        text_ctxt: str = "",
+        translate: bool = True,
+        icon: str = "NONE",
+        icon_value: int = 0,
+    ) -> None: ...
+    def operator(
+        self,
+        operator: str,
+        *,
+        text: str = "",
+        text_ctxt: str = "",
+        translate: bool = True,
+        icon: str = "NONE",
+        emboss: bool = True,
+        depress: bool = False,
+        icon_value: int = 0,
+        search_weight: float = 0.0,
+    ) -> OperatorProperties: ...
+    def operator_menu_enum(
+        self,
+        operator: str,
+        property: str,
+        *,
+        text: str = "",
+        text_ctxt: str = "",
+        translate: bool = True,
+        icon: str = "NONE",
+    ) -> OperatorProperties: ...
+    def prop(
+        self,
+        data: bpy_struct,
+        property: str,
+        *,
+        text: str = "",
+        text_ctxt: str = "",
+        translate: bool = True,
+        icon: str = "NONE",
+        placeholder: str = "",
+        expand: bool = False,
+        slider: bool = False,
+        toggle: int = -1,
+        icon_only: bool = False,
+        event: bool = False,
+        full_event: bool = False,
+        emboss: bool = True,
+        index: int = -1,
+        icon_value: int = 0,
+        invert_checkbox: bool = False,
+    ) -> None: ...
+    def row(
+        self,
+        *,
+        align: bool = False,
+        heading: str = "",
+        heading_ctxt: str = "",
+        translate: bool = True,
+    ) -> UILayout: ...
+    def separator(
+        self, *, factor: float = 1.0, type: Literal["AUTO", "SPACE", "LINE"] = "AUTO"
+    ) -> None: ...
 
 class View3DOverlay(bpy_struct):
     show_overlays: bool
