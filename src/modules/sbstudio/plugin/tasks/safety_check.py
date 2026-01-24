@@ -11,13 +11,12 @@ from math import hypot
 from typing import TYPE_CHECKING
 
 import bpy
-import numpy.typing as npt
 from bpy.types import Collection
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.utils.evaluator import get_positions_of_objects_fast
+from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.utils import LRUCache
 
 # from sbstudio.plugin.utils import debounced
@@ -63,9 +62,7 @@ def create_position_snapshot_for_drones_in_collection(
     """Create a dictionary mapping the names of the drones in the given
     collection to their positions.
     """
-    objects = collection.objects
-    positions: npt.NDArray = get_positions_of_objects_fast(objects)
-    return {drone.name: tuple(position) for drone, position in zip(objects, positions)}
+    return {drone.name: get_position_of_object(drone) for drone in collection.objects}
 
 
 def estimate_derivatives_at_frame(
