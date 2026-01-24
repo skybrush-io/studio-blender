@@ -5,8 +5,7 @@ constraints are satisfied in the current frame.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Mapping
 from math import hypot
 from typing import TYPE_CHECKING
 
@@ -19,12 +18,18 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.utils import LRUCache
 
-# from sbstudio.plugin.utils import debounced
 from .base import Task
+from .utils import Suspension
 
 if TYPE_CHECKING:
-    from bpy.types import Scene
+    from bpy.types import Depsgraph, Scene
 
+__all__ = (
+    "SafetyCheckTask",
+    "create_position_snapshot_for_drones_in_collection",
+    "suspended_safety_checks",
+    "invalidate_caches",
+)
 
 # TODO(ntamas): make the nearest-neighbor calculation debounced when we have
 # lots of drones, but currently we are good with even 5K drones
@@ -47,13 +52,13 @@ Velocities are estimated from the positions so this cache is probably even more
 sparsely populated than the position cache.
 """
 
-_suspension_counter = 0
-"""Suspension counter. Safety checks are suspended if this counter is positive."""
-
 _ZERO = (0.0, 0.0, 0.0)
 """Zero velocity tuple, used frequently in velocity estimations when no data is
 available.
 """
+
+suspension = Suspension()
+"""Object to manage the suspension logic for the safety check task."""
 
 
 def create_position_snapshot_for_drones_in_collection(
@@ -133,12 +138,8 @@ def estimate_derivatives_at_frame(
     return result, should_cache
 
 
-# @debounced(delay=0.1)
-def run_safety_check(scene: Scene, depsgraph) -> None:
-    global _suspension_counter
-    if _suspension_counter > 0:
-        return
-
+@suspension.wrap
+def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
     safety_check = scene.skybrush.safety_check
 
     if safety_check.enabled:
@@ -324,17 +325,10 @@ def run_tasks_post_load(*args):
     ensure_overlays_enabled()
 
 
-@contextmanager
-def suspended_safety_checks() -> Iterator[None]:
-    """Context manager that suspends safety checks when the context is entered
-    and re-enables them when the context is exited.
-    """
-    global _suspension_counter
-    _suspension_counter += 1
-    try:
-        yield
-    finally:
-        _suspension_counter -= 1
+suspended_safety_checks = suspension.use
+"""Context manager that suspends safety checks when the context is entered
+and re-enables them when the context is exited.
+"""
 
 
 class SafetyCheckTask(Task):

@@ -5,8 +5,6 @@ light effects.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -17,11 +15,12 @@ from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 from .base import Task
+from .utils import Suspension
 
 if TYPE_CHECKING:
     from bpy.types import Depsgraph, Scene
 
-__all__ = ("UpdateLightEffectsTask",)
+__all__ = ("UpdateLightEffectsTask", "suspended_light_effects")
 
 
 _base_color_cache: dict[int, RGBAColor] = {}
@@ -34,10 +33,8 @@ associated memory area."""
 _last_frame: int | None = None
 """Number of the last frame that was evaluated with `update_light_effects()`"""
 
-_suspension_counter: int = 0
-"""Suspension counter. Dynamic light effect evaluation is suspended if this
-counter is positive.
-"""
+suspension = Suspension()
+"""Object to manage the suspension logic for the light effect task."""
 
 WHITE: RGBAColor = (1, 1, 1, 1)
 """White color, used as a base color when no info is available for a newly added
@@ -45,16 +42,14 @@ drone.
 """
 
 
+@suspension.wrap
 def update_light_effects(scene: Scene, depsgraph: Depsgraph):
-    global _last_frame, _base_color_cache, _suspension_counter, WHITE
+    global _last_frame, _base_color_cache, WHITE
 
     # This function is going to be evaluated in every frame, so we should walk
     # the extra mile to ensure that the number of object allocations is as low
     # as possible -- therefore there are lots of in-place modifications of
     # already existing objects
-
-    if _suspension_counter > 0:
-        return
 
     light_effects = scene.skybrush.light_effects
     if not light_effects:
@@ -122,17 +117,10 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             set_color_of_drone(drone, color)
 
 
-@contextmanager
-def suspended_light_effects() -> Iterator[None]:
-    """Context manager that suspends the calculation of light effects when the
-    context is entered and re-enables them when the context is exited.
-    """
-    global _suspension_counter
-    _suspension_counter += 1
-    try:
-        yield
-    finally:
-        _suspension_counter -= 1
+suspended_light_effects = suspension.use
+"""Context manager that suspends the calculation of light effects when the
+context is entered and re-enables them when the context is exited.
+"""
 
 
 class UpdateLightEffectsTask(Task):
