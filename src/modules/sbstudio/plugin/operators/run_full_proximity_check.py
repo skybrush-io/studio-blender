@@ -37,10 +37,7 @@ class RunFullProximityCheckOperator(Operator):
         if not drones:
             return
 
-        frame = context.scene.frame_current
-        snapshot = create_position_snapshot_for_drones_in_collection(
-            drones, frame=frame
-        )
+        snapshot = create_position_snapshot_for_drones_in_collection(drones)
         positions = safety_check.get_positions_for_proximity_check(
             list(snapshot.values())
         )

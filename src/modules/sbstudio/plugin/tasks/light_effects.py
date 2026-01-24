@@ -9,10 +9,13 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
+import numpy as np
+import numpy.typing as npt
+
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
-from sbstudio.plugin.colors import get_color_of_drone, set_color_of_drone
+from sbstudio.plugin.colors import get_colors_of_drones_fast, set_color_of_drone
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.evaluator import get_positions_of_objects_fast
 
 from .base import Task
 
@@ -74,15 +77,15 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
-            positions = [get_position_of_object(drone) for drone in drones]
+            positions: npt.NDArray = get_positions_of_objects_fast(drones)
             mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
                 # the base color cache in parallel to the colors list
-                colors: list[MutableRGBAColor] = []
-                for drone in drones:
-                    color = list(get_color_of_drone(drone))
-                    colors.append(color)
+                arr = np.zeros((len(drones), 4), dtype=np.float32)
+                get_colors_of_drones_fast(drones, dest=arr.ravel())
+                colors: list[MutableRGBAColor] = arr.tolist()
+                for drone, color in zip(drones, colors):
                     _base_color_cache[id(drone)] = color
             else:
                 # Initialize the colors list from the cached base colors

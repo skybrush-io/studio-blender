@@ -3,9 +3,9 @@ from typing import Sequence
 import bpy
 import numpy as np
 import numpy.typing as npt
-from bpy.types import CollectionObjects, Object
+from bpy.types import Object
 
-from sbstudio.model.types import Color, RGBAColor, RGBAColorLike
+from sbstudio.model.types import Color, RGBAColor, RGBAColorLike, SupportsForEach
 from sbstudio.plugin.actions import ensure_animation_data_exists_for_object
 from sbstudio.plugin.keyframes import set_keyframes
 
@@ -67,17 +67,16 @@ def get_color_of_drone(drone: Object) -> Sequence[float]:
 
 
 def get_colors_of_drones_fast(
-    drones: CollectionObjects, *, dest: npt.NDArray | None = None
+    drones: SupportsForEach, *, dest: npt.NDArray | None = None
 ) -> npt.NDArray:
     """Fetches the colors of the LED lights of the drones in the given collection.
 
     This function uses Blender's optimized `foreach_get()` to fill the colors
     into the provided destination array.
 
-    The destination array must be _one-dimensional_ with length
-    `len(drones) * 4`. The colors will be written in RGBA order.
-
-    For best results, the destination array should have `dtype=np.float32`.
+    The destination array must have `len(drones) * 4` elements. The colors will be
+    written in RGBA order. For best results, the destination array should have
+    `dtype=np.float32`.
 
     Parameters:
         drones: the drones to query
@@ -88,8 +87,8 @@ def get_colors_of_drones_fast(
         the destination array filled with the colors of the drones
     """
     if dest is None:
-        dest = np.empty(len(drones) * 4, dtype=np.float32)
-    drones.foreach_get("color", dest)
+        dest = np.empty((len(drones), 4), dtype=np.float32)
+    drones.foreach_get("color", dest.ravel())
     return dest
 
 
@@ -106,7 +105,7 @@ def set_color_of_drone(drone: Object, color: RGBAColorLike):
         drone.color = color
 
 
-def set_colors_of_drones_fast(drones: CollectionObjects, colors: npt.NDArray) -> None:
+def set_colors_of_drones_fast(drones: SupportsForEach, colors: npt.NDArray) -> None:
     """Sets the colors of the LED lights of the drones in the given collection.
 
     This function uses Blender's optimized `foreach_set()` to set the colors

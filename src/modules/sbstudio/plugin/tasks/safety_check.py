@@ -11,11 +11,13 @@ from math import hypot
 from typing import TYPE_CHECKING
 
 import bpy
+import numpy.typing as npt
+from bpy.types import Collection
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.evaluator import get_positions_of_objects_fast
 from sbstudio.utils import LRUCache
 
 # from sbstudio.plugin.utils import debounced
@@ -26,7 +28,7 @@ if TYPE_CHECKING:
 
 
 # TODO(ntamas): make the nearest-neighbor calculation debounced when we have
-# lots of drones, but currently we are good with, say 100 drones
+# lots of drones, but currently we are good with even 5K drones
 
 VectorSnapshot = dict[str, Coordinate3D]
 PositionSnapshot = VectorSnapshot
@@ -56,12 +58,14 @@ available.
 
 
 def create_position_snapshot_for_drones_in_collection(
-    collection, *, frame: int
+    collection: Collection,
 ) -> PositionSnapshot:
     """Create a dictionary mapping the names of the drones in the given
     collection to their positions.
     """
-    return {drone.name: get_position_of_object(drone) for drone in collection.objects}
+    objects = collection.objects
+    positions: npt.NDArray = get_positions_of_objects_fast(objects)
+    return {drone.name: tuple(position) for drone, position in zip(objects, positions)}
 
 
 def estimate_derivatives_at_frame(
@@ -173,9 +177,7 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
 
     # Create a position snapshot for the current frame and cache it
     frame = scene.frame_current
-    position_snapshot = create_position_snapshot_for_drones_in_collection(
-        drones, frame=frame
-    )
+    position_snapshot = create_position_snapshot_for_drones_in_collection(drones)
     _position_snapshot_cache[frame] = position_snapshot
 
     # Prepare velocity snapshot
