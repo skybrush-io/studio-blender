@@ -596,7 +596,7 @@ class LightEffect(PropertyGroup):
                         outputs = [None if x is None else x / np_m1 for x in mapping]
                 else:
                     # if there is no mapping at all, we do not change color of drones
-                    outputs = [None] * num_positions  # type: ignore
+                    outputs = [None] * num_positions
 
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
@@ -841,9 +841,10 @@ class LightEffect(PropertyGroup):
         Returns:
             the created color image itself for easy chaining
         """
-        self.color_image = bpy.data.images.new(name=name, width=width, height=height)
-        self.color_image.colorspace_settings.name = color_space
-        return self.color_image
+        image = bpy.data.images.new(name=name, width=width, height=height)
+        image.colorspace_settings.name = color_space
+        self.color_image = image
+        return image
 
     @property
     def duration_offset(self) -> int:
