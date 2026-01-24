@@ -65,7 +65,7 @@ def create_position_snapshot_for_drones_in_collection(
     """
     objects = collection.objects
     positions: npt.NDArray = get_positions_of_objects_fast(objects)
-    return {drone.name: position for drone, position in zip(objects, positions)}
+    return {drone.name: tuple(position) for drone, position in zip(objects, positions)}
 
 
 def estimate_derivatives_at_frame(
