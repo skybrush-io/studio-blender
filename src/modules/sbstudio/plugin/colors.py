@@ -1,7 +1,9 @@
 from typing import Sequence
 
 import bpy
-from bpy.types import Object
+import numpy as np
+import numpy.typing as npt
+from bpy.types import CollectionObjects, Object
 
 from sbstudio.model.types import Color, RGBAColor, RGBAColorLike
 from sbstudio.plugin.actions import ensure_animation_data_exists_for_object
@@ -64,6 +66,33 @@ def get_color_of_drone(drone: Object) -> Sequence[float]:
     return (0.0, 0.0, 0.0, 0.0)
 
 
+def get_colors_of_drones_fast(
+    drones: CollectionObjects, *, dest: npt.NDArray | None = None
+) -> npt.NDArray:
+    """Fetches the colors of the LED lights of the drones in the given collection.
+
+    This function uses Blender's optimized `foreach_get()` to fill the colors
+    into the provided destination array.
+
+    The destination array must be _one-dimensional_ with length
+    `len(drones) * 4`. The colors will be written in RGBA order.
+
+    For best results, the destination array should have `dtype=np.float32`.
+
+    Parameters:
+        drones: the drones to query
+        dest: the destination array to write the colors into; `None` if a new array
+            should be created
+
+    Returns:
+        the destination array filled with the colors of the drones
+    """
+    if dest is None:
+        dest = np.empty(len(drones) * 4, dtype=np.float32)
+    drones.foreach_get("color", dest)
+    return dest
+
+
 def set_color_of_drone(drone: Object, color: RGBAColorLike):
     """Sets the color of the LED light on the given drone.
 
@@ -75,3 +104,24 @@ def set_color_of_drone(drone: Object, color: RGBAColorLike):
         abs(a - b) > 1e-3 for a, b in zip(color, get_color_of_drone(drone), strict=True)
     ):
         drone.color = color
+
+
+def set_colors_of_drones_fast(drones: CollectionObjects, colors: npt.NDArray) -> None:
+    """Sets the colors of the LED lights of the drones in the given collection.
+
+    This function uses Blender's optimized `foreach_set()` to set the colors
+    from the provided array.
+
+    The colors array must be _one-dimensional_ with length
+    `len(drones) * 4`. The colors must be provided in RGBA order.
+
+    For best results, the colors array should have `dtype=np.float32`.
+
+    Note that setting the color property this way will not force a scene update. You
+    need to force-update the scene by other means if needed.
+
+    Parameters:
+        drones: the drones to update
+        colors: the array containing the colors to apply to the drones
+    """
+    drones.foreach_set("color", colors)
