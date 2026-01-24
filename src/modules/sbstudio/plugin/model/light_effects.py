@@ -8,6 +8,7 @@ from typing import Any, cast
 from uuid import uuid4
 
 import bpy
+import numpy.typing as npt
 from bpy.path import abspath
 from bpy.props import (
     BoolProperty,
@@ -62,7 +63,7 @@ def object_has_mesh_data(self, obj) -> bool:
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
 """Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
-OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
+OUTPUT_TYPE_TO_AXIS_SORT_KEY_SPEC: dict[str, tuple[int, int, int]] = {
     "GRADIENT_XYZ": (0, 1, 2),
     "GRADIENT_XZY": (0, 2, 1),
     "GRADIENT_YXZ": (1, 0, 2),
@@ -73,8 +74,10 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
 }
 """Axis mapping for the gradient-based output types"""
 
-OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
-    key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY.items()
+OUTPUT_TYPE_TO_AXIS_SORT_KEY: dict[
+    str, Callable[[Coordinate3D], tuple[float, float, float]]
+] = {
+    key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY_SPEC.items()
 }
 
 OUTPUT_ITEMS = [
@@ -452,7 +455,7 @@ class LightEffect(PropertyGroup):
     def apply_on_colors(
         self,
         colors: Sequence[MutableRGBAColor],
-        positions: Sequence[Coordinate3D],
+        positions: npt.NDArray,
         mapping: list[int] | None,
         *,
         frame: int,
@@ -513,6 +516,7 @@ class LightEffect(PropertyGroup):
                 if output_type == "DISTANCE":
                     if self.mesh:
                         position_of_mesh = get_position_of_object(self.mesh)
+                        # TODO(ntamas): vectorize this for each row of "positions"?
                         sort_key = lambda index: distance_sq_of(
                             positions[index], position_of_mesh
                         )
@@ -528,13 +532,15 @@ class LightEffect(PropertyGroup):
                     if proportional:
                         # In proportional mode, we are using the primary axis only
                         # because we need a scalar
+                        # TODO(ntamas): vectorize this for each row of "positions"?
                         sort_key = lambda index: query_axes(positions[index])[0]
                     else:
                         # In non-proportional mode, we are sorting along multiple
                         # axes
+                        # TODO(ntamas): vectorize this for each row of "positions"?
                         sort_key = lambda index: query_axes(positions[index])
 
-                outputs = [1.0] * num_positions  # type: ignore
+                outputs = [1.0] * num_positions
                 order = list(range(num_positions))
                 if num_positions > 1:
                     if proportional and sort_key is not None:
@@ -649,7 +655,7 @@ class LightEffect(PropertyGroup):
         # will be applied at a given position
         condition = self._get_spatial_effect_predicate()
 
-        for index, position in enumerate(positions):
+        for index in range(num_positions):
             # Take the base color to modify
             color = colors[index]
 
@@ -688,8 +694,12 @@ class LightEffect(PropertyGroup):
 
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
+            # TODO(ntamas): vectorize this for each row of "positions"
             alpha = max(
-                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
+                min(
+                    self._evaluate_influence_at(positions, index, frame, condition), 1.0
+                ),
+                0.0,
             )
 
             if color_function_ref is not None:
@@ -701,7 +711,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=position,
+                        position=positions[index],
                         drone_count=num_positions,
                     )
                 except Exception as exc:
@@ -1039,19 +1049,24 @@ class LightEffect(PropertyGroup):
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
     def _evaluate_influence_at(
-        self, position, frame: int, condition: Callable[[Coordinate3D], bool] | None
+        self,
+        positions: npt.NDArray,
+        index: int,
+        frame: int,
+        condition: Callable[[Coordinate3D], bool] | None,
     ) -> float:
         """Eveluates the effective influence of the effect on the given position
         in space and at the given frame.
 
         Parameters:
-            position: the position to evaluate the influence at
+            positions: the position of the drones
+            index: index into the positions array to consider
             frame: the frame count
             condition: additional condition that must evaluate to true when called
                 with the position; otherwise the effect will not be applied at all
         """
         # Apply mesh containment constraint
-        if condition and not condition(position):
+        if condition and not condition(positions[index]):
             return 0.0
 
         influence = self.influence
