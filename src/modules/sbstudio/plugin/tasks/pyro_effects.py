@@ -1,5 +1,5 @@
-"""Background task that is invoked after every frame change and draws
-markers on drones when their pyro effect is active.
+"""Background task that is invoked after every frame change and that is responsible
+for drawing markers on drones when their pyro effect is active.
 """
 
 from __future__ import annotations

@@ -1,5 +1,5 @@
 """Background task that is invoked after every frame change and that
-performs different safety checks, such as whether the nearest-neighbor
+performs various safety checks, such as whether the nearest-neighbor
 constraints are satisfied in the current frame.
 """
 

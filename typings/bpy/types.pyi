@@ -216,6 +216,8 @@ class Addon(bpy_struct):
     preferences: AddonPreferences
 
 class AddonPreferences(bpy_struct): ...
+class Attribute(bpy_struct): ...
+class AttributeGroupPointCloud(bpy_prop_collection[Attribute]): ...
 
 class FCurve(bpy_struct):
     array_index: int
@@ -226,6 +228,11 @@ class FCurve(bpy_struct):
     select: bool
 
     def update(self) -> None: ...
+
+class IDMaterials(bpy_struct):
+    def append(self, material: Material) -> None: ...
+    def clear(self) -> None: ...
+    def pop(self, *, index: int = -1) -> Material: ...
 
 KeyframeHandleType = Literal["FREE", "ALIGNED", "VECTOR", "AUTO", "AUTO_CLAMPED"]
 
@@ -246,6 +253,11 @@ class MeshVertex(bpy_struct):
     groups: bpy_prop_collection[VertexGroupElement]
     index: int
     select: bool
+
+class Point(bpy_struct):
+    co: Vector
+    index: int
+    radius: float
 
 class PropertyGroup(bpy_struct):
     name: str
@@ -303,6 +315,13 @@ class Mesh(ID):
     vertices: bpy_prop_collection[MeshVertex]
 
     def transform(self, matrix: Matrix, shape_keys: bool = False) -> None: ...
+
+class PointCloud(ID):
+    anim_data: AnimData
+    attributes: AttributeGroupPointCloud
+    color_attributes: AttributeGroupPointCloud
+    materials: IDMaterials
+    points: bpy_prop_collection[Point]
 
 class Texture(ID):
     color_ramp: ColorRamp
@@ -537,6 +556,17 @@ class BlendDataObjects(bpy_prop_collection[Object]):
         self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
     ) -> None: ...
 
+class BlendDataPointClouds(bpy_prop_collection[PointCloud]):
+    def new(self, name: str) -> PointCloud: ...
+    def remove(
+        self,
+        pointcloud: PointCloud,
+        *,
+        do_unlink: bool = True,
+        do_id_user: bool = True,
+        do_ui_user: bool = True,
+    ) -> None: ...
+
 ## Large top-level objects
 
 class Area(bpy_struct):
@@ -554,6 +584,7 @@ class BlendData(bpy_struct):
     materials: bpy_prop_collection[Material]
     meshes: bpy_prop_collection[Mesh]
     objects: BlendDataObjects
+    pointclouds: BlendDataPointClouds
     scenes: bpy_prop_collection[Scene]
     screens: bpy_prop_collection[Screen]
     textures: BlendDataTextures
