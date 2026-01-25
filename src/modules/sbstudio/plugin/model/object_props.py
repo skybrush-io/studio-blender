@@ -20,13 +20,13 @@ class DroneShowAddonObjectProperties(PropertyGroup):
     that we attach to a Blender object.
     """
 
-    formation_vertex_group = StringProperty(
+    formation_vertex_group: str = StringProperty(
         name="Formation vertex group",
         description="Name of the vertex group designated for containing the vertices that the drones should occupy when their parent object is placed in the storyboard",
         default="",
     )
 
-    pyro_markers = StringProperty(
+    pyro_markers: str = StringProperty(
         name="Pyro markers",
         description="Pyro trigger events associated with an object, stored as a JSON string.",
         default="",

@@ -3,7 +3,7 @@ from collections.abc import Iterator, Mapping, Sequence
 __all__ = ("PixelCache",)
 
 
-class PixelCache(Mapping[str, list[float]]):
+class PixelCache(Mapping[str, Sequence[float]]):
     """Mapping that associates string keys (e.g. light effect UUIDs) to pixel
     data.
 

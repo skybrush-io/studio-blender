@@ -35,7 +35,7 @@ class DroneShowAddonProperties(PropertyGroup):
         type=DroneShowAddonFileSpecificSettings
     )
     storyboard: Storyboard = PointerProperty(type=Storyboard)
-    version: IntProperty = IntProperty(
+    version: int = IntProperty(
         name="Version",
         description=(
             "Current version of the show content stored in Blender. "

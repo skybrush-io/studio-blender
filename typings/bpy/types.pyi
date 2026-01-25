@@ -211,6 +211,12 @@ ActionStripType = Literal["KEYFRAME"]
 class ActionStrip(bpy_struct):
     type: ActionStripType
 
+class Addon(bpy_struct):
+    module: str
+    preferences: AddonPreferences
+
+class AddonPreferences(bpy_struct): ...
+
 class FCurve(bpy_struct):
     array_index: int
     data_path: str
@@ -335,6 +341,9 @@ class Operator(bpy_struct):
         message: str,
     ) -> None: ...
 
+class Preferences(bpy_struct):
+    addons: bpy_prop_collection[Addon]
+
 class Scene:
     frame_current: int
     frame_current_final: float
@@ -382,6 +391,7 @@ class WindowManager(ID):
 
 class Context(bpy_struct):
     area: Area
+    preferences: Preferences
     region: Region
     region_data: RegionView3D
     region_popup: Region
