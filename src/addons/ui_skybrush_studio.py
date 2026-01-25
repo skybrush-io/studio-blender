@@ -113,6 +113,7 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     ReorderFormationMarkersOperator,
     ReturnToHomeOperator,
+    RunAllMigrationOperators,
     RunFullProximityCheckOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
@@ -121,6 +122,7 @@ from sbstudio.plugin.operators import (
     SetServerURLOperator,
     SetStoryboardEntryEndFrameOperator,
     SetStoryboardEntryStartFrameOperator,
+    SetupSceneOperator,
     SkybrushCSVExportOperator,
     SkybrushExportOperator,
     SkybrushPDFExportOperator,
@@ -132,7 +134,6 @@ from sbstudio.plugin.operators import (
     UpdateFrameRangeFromStoryboardOperator,
     UpdateTimeMarkersFromStoryboardOperator,
     UseSelectedVertexGroupForFormationOperator,
-    UseSharedMaterialForAllDronesMigrationOperator,
     ValidateTrajectoriesOperator,
     VVIZExportOperator,
 )
@@ -144,6 +145,7 @@ from sbstudio.plugin.panels import (
     LightEffectsPanel,
     PyroControlPanel,
     SafetyCheckPanel,
+    SetupPanel,
     ShowPanel,
     StoryboardEditor,
     SwarmPanel,
@@ -261,7 +263,8 @@ operators = (
     AddMarkersFromQRCodeOperator,
     RefreshFileFormatsOperator,
     RunFullProximityCheckOperator,
-    UseSharedMaterialForAllDronesMigrationOperator,
+    RunAllMigrationOperators,
+    SetupSceneOperator,
 )
 """Operators in this addon; operators that require other operators must come
 later in the list than their dependencies."""
@@ -274,6 +277,7 @@ menus = (GenerateMarkersMenu,)
 """Menus in this addon."""
 
 panels = (
+    SetupPanel,
     ShowPanel,
     SwarmPanel,
     FormationsPanel,

@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 
 import bpy.app as app
+import bpy.path as path
 
 from .types import BlendData, Context, Object
 
-__all__ = ("app", "context", "data")
+__all__ = ("app", "context", "data", "path")
 
 class _Context(Context):
     selected_objects: Sequence[Object]

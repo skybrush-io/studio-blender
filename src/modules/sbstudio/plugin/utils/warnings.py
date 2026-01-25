@@ -1,6 +1,8 @@
-from bpy.types import Context
+from typing import cast
 
-from sbstudio.plugin.constants import LATEST_SKYBRUSH_PLUGIN_VERSION
+from bpy.types import Context, SpaceView3D, UILayout
+
+from sbstudio.plugin.migrations import get_migration_details
 from sbstudio.plugin.model.formation import count_markers_in_formation
 from sbstudio.plugin.stats import get_drone_count
 
@@ -17,9 +19,15 @@ def _draw_warning(layout, text: str) -> None:
     row.label(text=text, icon="ERROR")
 
 
-def draw_bad_shader_color_source_warning(context: Context, layout) -> None:
+def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
     """Draw a bad shader color source warning to a layout, if needed."""
-    shading = context.space_data.shading
+    space = context.space_data
+    if not space or space.type != "VIEW_3D":
+        return
+
+    space = cast(SpaceView3D, space)
+    shading = space.shading
+
     label = (
         "Set shader Wireframe Color to 'OBJECT'"
         if (shading.type == "WIREFRAME" and shading.wireframe_color_type != "OBJECT")
@@ -31,7 +39,7 @@ def draw_bad_shader_color_source_warning(context: Context, layout) -> None:
         _draw_warning(layout, text=label)
 
 
-def draw_formation_size_warning(context: Context, layout) -> None:
+def draw_formation_size_warning(context: Context, layout: UILayout) -> None:
     """Draw a formation size warning to a layout, if needed."""
     formations = context.scene.skybrush.formations
     if not formations:
@@ -56,11 +64,11 @@ def draw_formation_size_warning(context: Context, layout) -> None:
         )
 
 
-def draw_version_warning(context: Context, layout) -> None:
+def draw_version_warning(context: Context, layout: UILayout) -> None:
     """Draw a version warning to a layout, if needed."""
-    skybrush = context.scene.skybrush
-    if skybrush.version < LATEST_SKYBRUSH_PLUGIN_VERSION:
+    migration_needed, current_version, max_version = get_migration_details(context)
+    if migration_needed:
         _draw_warning(
             layout,
-            text=f"File format is old (version {skybrush.version} < {LATEST_SKYBRUSH_PLUGIN_VERSION})",
+            text=f"File format too old (version {current_version} < {max_version})",
         )

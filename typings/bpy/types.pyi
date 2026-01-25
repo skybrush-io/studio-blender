@@ -313,6 +313,7 @@ class Depsgraph(bpy_struct):
 class Event(bpy_struct): ...
 
 class Operator(bpy_struct):
+    bl_idname: str
     bl_label: str
     bl_description: str
 
@@ -694,3 +695,5 @@ class View3DOverlay(bpy_struct):
 
 class View3DShading(bpy_struct):
     type: Literal["WIREFRAME", "SOLID", "MATERIAL", "RENDERED"]
+    color_type: Literal["MATERIAL", "OBJECT", "RANDOM", "VERTEX", "TEXTURE", "SINGLE"]
+    wireframe_color_type: Literal["THEME", "OBJECT", "RANDOM"]
