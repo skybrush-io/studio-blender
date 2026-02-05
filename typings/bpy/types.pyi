@@ -5,7 +5,10 @@ from contextlib import AbstractContextManager
 from typing import Iterable, Literal, TypeAlias, TypeVar, overload
 
 from mathutils import Matrix, Vector
-from sbstudio.plugin.model import DroneShowAddonProperties
+from sbstudio.plugin.model import (
+    DroneShowAddonObjectProperties,
+    DroneShowAddonProperties,
+)
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -428,6 +431,8 @@ class Object(ID):
     matrix_parent_inverse: Matrix
     matrix_world: Matrix
 
+    skybrush: DroneShowAddonObjectProperties
+
     def select_get(self, view_layer: ViewLayer | None = None) -> bool: ...
     def select_set(self, state: bool, view_layer: ViewLayer | None = None) -> None: ...
 
@@ -559,6 +564,26 @@ class BlendData(bpy_struct):
     textures: BlendDataTextures
     version: tuple[int, int, int]
 
+class Header:
+    bl_idname: str
+    bl_space_type: str
+    bl_region_type: str
+    layout: UILayout
+
+    def draw(self, context: Context) -> None: ...
+
+class Menu(bpy_struct):
+    bl_idname: str
+    bl_label: str
+    bl_description: str
+    bl_owner_id: str
+    layout: UILayout
+
+    @classmethod
+    def poll(cls, context: Context) -> bool: ...
+    def draw(self, context: Context) -> None: ...
+    def draw_preset(self, context: Context) -> None: ...
+
 class OperatorProperties(bpy_struct): ...
 
 class Panel(bpy_struct):
@@ -608,6 +633,31 @@ class Space(bpy_struct):
 class SpaceView3D(Space):
     overlay: View3DOverlay
     shading: View3DShading
+
+class UIList(bpy_struct):
+    bl_idname: str
+    layout: UILayout
+    use_filter_show: bool
+    filter_name: str
+    use_filter_sort_reverse: bool
+    use_filter_sort_alpha: bool
+
+    def draw_item(
+        self,
+        context: Context,
+        layout: UILayout,
+        data: bpy_struct,
+        item: bpy_struct,
+        icon: int,
+        active_data: bpy_struct,
+        active_propname: str,
+        index: int = 0,
+        flt_flag: int = 0,
+    ) -> None: ...
+    def draw_filter(self, context: Context, layout: UILayout) -> None: ...
+    def filter_items(
+        self, context: Context, data: bpy_struct, propname: str
+    ) -> tuple[list[int], list[int]]: ...
 
 class UILayout(bpy_struct):
     active: bool

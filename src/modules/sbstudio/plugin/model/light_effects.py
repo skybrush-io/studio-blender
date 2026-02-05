@@ -534,7 +534,7 @@ class LightEffect(PropertyGroup):
                         # axes
                         sort_key = lambda index: query_axes(positions[index])
 
-                outputs = [1.0] * num_positions  # type: ignore
+                outputs = [1.0] * num_positions
                 order = list(range(num_positions))
                 if num_positions > 1:
                     if proportional and sort_key is not None:
