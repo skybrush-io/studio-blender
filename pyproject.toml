@@ -18,7 +18,7 @@ Pepository = "https://github.com/skybrush-io/studio-plugin-blender"
 Documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [dependency-groups]
-dev = ["pyclean>=2.0.0"]
+dev = ["numpy", "pyclean>=2.0.0"]
 
 [tool.uv.build-backend]
 module-root = "src/modules"
