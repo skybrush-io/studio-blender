@@ -15,5 +15,6 @@ class HandlerList(Generic[Func]):
 depsgraph_update_post: HandlerList[Callable[[Scene, Depsgraph], None]]
 frame_change_post: HandlerList[Callable[[Scene, Depsgraph], None]]
 load_post: HandlerList[Callable[[str], None]]
+save_pre: HandlerList[Callable[[str], None]]
 
 def persistent(func: Callable[P, T]) -> Callable[P, T]: ...

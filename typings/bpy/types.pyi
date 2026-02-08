@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import MutableSequence, Sequence
+from collections.abc import Callable, MutableSequence, Sequence
 from contextlib import AbstractContextManager
-from typing import Iterable, Literal, TypeAlias, TypeVar, overload
+from typing import Any, Iterable, Literal, TypeAlias, TypeVar, overload
 
 from mathutils import Matrix, Vector
 from sbstudio.plugin.model import (
@@ -63,6 +63,7 @@ RGBAColor = MutableSequence[float]
 Vector3 = tuple[float, float, float]
 
 class bpy_prop_collection(Sequence[T]):
+    def add(self, count: int = 1) -> T: ...
     def find(self, key: str) -> int: ...
     @overload
     def foreach_get(self, attr: str, seq: Sequence[float]) -> None: ...
@@ -72,11 +73,14 @@ class bpy_prop_collection(Sequence[T]):
     def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
     @overload
     def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def clear(self) -> None: ...
     @overload
     def get(self, key: str) -> T | None: ...
     @overload
     def get(self, key: str, default: U) -> T | U: ...
     def items(self) -> Iterable[tuple[str, T]]: ...
+    def link(self, object: Object) -> None: ...
+    def new(cls, *args, **kwargs) -> Any: ...
     def keys(self) -> Iterable[str]: ...
     def values(self) -> Iterable[T]: ...
     def __getitem__(self, key: int | str) -> T: ...  # type: ignore[reportIncompatibleMethodOverride]
@@ -174,6 +178,7 @@ class CopyLocationConstraint(Constraint):
 
 Self = TypeVar("Self", bound="ID")
 
+###############################################################################
 ## bpy_struct and ID subclasses
 
 class ID(bpy_struct):
@@ -218,7 +223,8 @@ class Addon(bpy_struct):
     module: str
     preferences: AddonPreferences
 
-class AddonPreferences(bpy_struct): ...
+class AddonPreferences(bpy_struct):
+    layout: UILayout
 
 class FCurve(bpy_struct):
     array_index: int
@@ -287,6 +293,10 @@ class Collection(ID):
     children: CollectionChildren
     objects: CollectionObjects
 
+    def link(self, obj: Object) -> None: ...
+    def unlink(self, obj: Object) -> None: ...
+    def remove(self, obj: Object) -> None: ...
+
 class ColorManagedInputColorspaceSettings(ID):
     is_data: bool
     name: str
@@ -300,12 +310,39 @@ class Image(ID):
 
     def pack(self) -> None: ...
 
-class Material(ID): ...
+class Material(ID):
+    node_tree: NodeTree
+
+class MaterialSlot(bpy_struct):
+    material: Material | None
 
 class Mesh(ID):
     vertices: bpy_prop_collection[MeshVertex]
 
     def transform(self, matrix: Matrix, shape_keys: bool = False) -> None: ...
+
+class NodeTree(ID):
+    nodes: bpy_prop_collection[Node]
+    links: bpy_prop_collection[NodeLink]
+    animation_data: AnimationData | None
+
+class Node(bpy_struct):
+    inputs: bpy_prop_collection[NodeSocket]
+    outputs: bpy_prop_collection[NodeSocket]
+    name: str
+
+class NodeLink(bpy_struct):
+    from_node: Node
+    to_node: Node
+    from_socket: NodeSocket
+    to_socket: NodeSocket
+
+class NodeSocket(bpy_struct):
+    name: str
+
+class AnimationData(bpy_struct):
+    action: Action | None
+    drivers: bpy_prop_collection[FCurve]
 
 class Texture(ID):
     color_ramp: ColorRamp
@@ -325,6 +362,7 @@ class Operator(bpy_struct):
     bl_idname: str
     bl_label: str
     bl_description: str
+    layout: UILayout
 
     def report(
         self,
@@ -344,8 +382,30 @@ class Operator(bpy_struct):
         message: str,
     ) -> None: ...
 
+class Particle(ID):
+    name: str
+    settings: ParticleSettings
+    seed: int
+
+class ParticleSettings(bpy_struct):
+    type: str
+    count: int
+    frame_start: int
+    frame_end: int
+    lifetime: int
+    emit_from: str
+    use_emit_random: bool
+    brownian_factor: float
+    render_type: str
+
+class ParticleSystem(bpy_struct):
+    name: str
+    seed: int
+    settings: ParticleSettings
+
 class Preferences(bpy_struct):
     addons: bpy_prop_collection[Addon]
+    system: System
 
 class Scene:
     frame_current: int
@@ -361,8 +421,10 @@ class Scene:
     collection: Collection
     cursor: View3DCursor
     eevee: SceneEEVEE
+    objects: bpy_prop_collection[Object]
     render: RenderSettings
     skybrush: DroneShowAddonProperties
+    timeline_markers: bpy_prop_collection[TimelineMarker]
 
     def frame_set(self, frame: int, subframe: float = 0.0) -> None: ...
 
@@ -372,6 +434,21 @@ class SceneEEVEE(bpy_struct):
     bloom_radius: float  # only for Blender <4.3
     bloom_intensity: float  # only for Blender <4.3
     use_bloom: bool  # only for Blender <4.3
+
+class System(bpy_struct):
+    ui_scale: float
+
+class TextLine(bpy_struct):
+    body: str
+
+class TimelineMarker(bpy_struct):
+    name: str
+    frame: int
+    select: bool
+    camera: Object | None
+
+class ToolSettings(bpy_struct):
+    mesh_select_mode: list[bool]
 
 class View3DCursor(bpy_struct):
     location: Vector
@@ -391,18 +468,29 @@ class WindowManager(ID):
         text_ctxt: str = "",
         translate: bool = True,
     ) -> None: ...
+    def invoke_props_dialog(
+        self,
+        operator: Operator,
+        width: int = 0,
+    ) -> None: ...
 
 class Context(bpy_struct):
     area: Area
+    active_object: Object
+    mode: str
+    object: Object
     preferences: Preferences
     region: Region
     region_data: RegionView3D
     region_popup: Region
     scene: Scene
     screen: Screen
+    selected_objects: list[Object]
     space_data: Space
+    tool_settings: ToolSettings
     window_manager: WindowManager
 
+    def copy(self) -> Context: ...
     def evaluated_depsgraph_get(self) -> Depsgraph: ...
     def temp_override(
         self, *, window=None, area=None, region=None, **kwds
@@ -411,8 +499,11 @@ class Context(bpy_struct):
 class Object(ID):
     active_material: Material
     animation_data: AnimData | None
+    bound_box: tuple[tuple[float, float, float], ...]
     color: RGBAColor
     constraints: ObjectConstraints
+    mode: str
+    type: str
     vertex_groups: VertexGroups
 
     data: ID
@@ -426,16 +517,30 @@ class Object(ID):
     hide_select: bool
     hide_viewport: bool
 
+    material_slots: bpy_prop_collection[MaterialSlot]
+
     matrix_basis: Matrix
     matrix_local: Matrix
     matrix_parent_inverse: Matrix
     matrix_world: Matrix
 
+    modifiers: bpy_prop_collection[Modifier]
+
+    particle_systems: list[ParticleSystem]
+
     skybrush: DroneShowAddonObjectProperties
 
+    def evaluated_get(self, depsgraph: Depsgraph) -> Object: ...
     def select_get(self, view_layer: ViewLayer | None = None) -> bool: ...
     def select_set(self, state: bool, view_layer: ViewLayer | None = None) -> None: ...
 
+class Modifier(bpy_struct):
+    name: str
+    type: str
+    show_viewport: bool
+    show_render: bool
+
+###############################################################################
 ## Collection types
 
 class ActionChannelbags(bpy_prop_collection[ActionChannelbag]):
@@ -475,7 +580,6 @@ class CollectionObjects(bpy_struct, bpy_prop_collection[Object]):
     def unlink(self, object: Object) -> None: ...
 
 class FCurveKeyframePoints(bpy_prop_collection[Keyframe]):
-    def add(self, count: int) -> None: ...
     def clear(self) -> None: ...
     def deduplicate(self) -> None: ...
     def handles_recalc(self) -> None: ...
@@ -542,6 +646,7 @@ class BlendDataObjects(bpy_prop_collection[Object]):
         self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
     ) -> None: ...
 
+###############################################################################
 ## Large top-level objects
 
 class Area(bpy_struct):
@@ -559,8 +664,10 @@ class BlendData(bpy_struct):
     materials: bpy_prop_collection[Material]
     meshes: bpy_prop_collection[Mesh]
     objects: BlendDataObjects
+    particles: bpy_prop_collection[Particle]
     scenes: bpy_prop_collection[Scene]
     screens: bpy_prop_collection[Screen]
+    texts: bpy_prop_collection[Text]
     textures: BlendDataTextures
     version: tuple[int, int, int]
 
@@ -587,6 +694,7 @@ class Menu(bpy_struct):
 class OperatorProperties(bpy_struct): ...
 
 class Panel(bpy_struct):
+    bl_idname: str
     is_popover: bool
     layout: UILayout
     use_pin: bool
@@ -634,9 +742,30 @@ class SpaceView3D(Space):
     overlay: View3DOverlay
     shading: View3DShading
 
+    @classmethod
+    def draw_handler_add(
+        cls,
+        callback: Callable[..., Any],
+        args: tuple[Any, ...],
+        region_type: str,
+        draw_type: str,
+    ) -> int: ...
+    @classmethod
+    def draw_handler_remove(cls, handle: Any, region_type: str) -> None: ...
+
+class Text(ID):
+    name: str
+    lines: bpy_prop_collection[TextLine]
+    is_in_memory: bool
+
+    @classmethod
+    def from_string(cls, name: str) -> Text: ...
+    def as_string(self) -> str: ...
+
 class UIList(bpy_struct):
     bl_idname: str
     layout: UILayout
+    layout_type: str
     use_filter_show: bool
     filter_name: str
     use_filter_sort_reverse: bool
@@ -662,6 +791,7 @@ class UIList(bpy_struct):
 class UILayout(bpy_struct):
     active: bool
     alert: bool
+    emboss: str
     enabled: bool
     use_property_decorate: bool
     use_property_split: bool
@@ -706,6 +836,7 @@ class UILayout(bpy_struct):
         depress: bool = False,
         icon_value: int = 0,
         search_weight: float = 0.0,
+        url: str = "",
     ) -> OperatorProperties: ...
     def operator_menu_enum(
         self,
@@ -717,6 +848,12 @@ class UILayout(bpy_struct):
         translate: bool = True,
         icon: str = "NONE",
     ) -> OperatorProperties: ...
+    def popover(
+        self,
+        operator: Operator | str,
+        text: str = "",
+        icon: str = "NONE",
+    ) -> None: ...
     def prop(
         self,
         data: bpy_struct,
@@ -738,6 +875,7 @@ class UILayout(bpy_struct):
         icon_value: int = 0,
         invert_checkbox: bool = False,
     ) -> None: ...
+    def prop_search(self, *args, **kwargs) -> None: ...
     def row(
         self,
         *,
@@ -749,6 +887,8 @@ class UILayout(bpy_struct):
     def separator(
         self, *, factor: float = 1.0, type: Literal["AUTO", "SPACE", "LINE"] = "AUTO"
     ) -> None: ...
+    def template_color_ramp(self, *args, **kwargs) -> None: ...
+    def template_list(self, *args, **kwargs) -> None: ...
 
 class View3DOverlay(bpy_struct):
     show_overlays: bool
