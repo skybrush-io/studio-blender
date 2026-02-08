@@ -90,7 +90,7 @@ def sample_positions_of_objects(
     by_name: bool = False,
     simplify: bool = False,
     context: Context | None = None,
-) -> dict[Object, Trajectory]:
+) -> dict[Object, Trajectory] | dict[str, Trajectory]:
     """Samples the positions of the given Blender objects at the given frames,
     returning a dictionary mapping the objects to their trajectories.
 
@@ -379,7 +379,7 @@ def sample_positions_of_objects_in_frame_range(
     by_name: bool = False,
     simplify: bool = False,
     context: Context | None = None,
-) -> dict[Object, Trajectory]:
+) -> dict[Object, Trajectory] | dict[str, Trajectory]:
     """Samples the positions of the given Blender objects in the given range
     of frames, ensuring that the given minimum frames-per-second requirement
     is satisfied and that both the start and the end frames are sampled.

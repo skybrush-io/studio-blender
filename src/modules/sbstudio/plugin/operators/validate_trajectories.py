@@ -1,8 +1,11 @@
+from typing import cast
+
 import bpy
 from bpy.props import BoolProperty
 from bpy.types import Operator
 
 from sbstudio.model.safety_check import SafetyCheckParams
+from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
@@ -94,13 +97,16 @@ class ValidateTrajectoriesOperator(Operator):
             return {"CANCELLED"}
 
         with suspended_safety_checks(), suspended_light_effects():
-            trajectories = sample_positions_of_objects_in_frame_range(
-                drones,
-                frame_range,
-                fps=4,
-                context=context,
-                by_name=True,
-                simplify=True,
+            trajectories = cast(
+                dict[str, Trajectory],
+                sample_positions_of_objects_in_frame_range(
+                    drones,
+                    frame_range,
+                    fps=4,
+                    context=context,
+                    by_name=True,
+                    simplify=True,
+                ),
             )
 
         # Calculate the start time of the validated range, in seconds

@@ -53,6 +53,9 @@ class FormationOperator(Operator):
     def execute(self, context: Context):
         return self.execute_on_formation(self.get_formation(context), context)
 
+    def execute_on_formation(self, formation, context):
+        raise NotImplementedError
+
     def get_formation(self, context: Context) -> Collection:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
@@ -78,6 +81,9 @@ class LightEffectOperator(Operator):
     def execute(self, context: Context):
         light_effects = context.scene.skybrush.light_effects
         return self.execute_on_light_effect_collection(light_effects, context)
+
+    def execute_on_light_effect_collection(self, light_effects, context):
+        raise NotImplementedError
 
 
 class StoryboardOperator(Operator):
@@ -105,6 +111,9 @@ class StoryboardOperator(Operator):
         else:
             return self.execute_on_storyboard(storyboard, context)
 
+    def execute_on_storyboard(self, storyboard, *args, **kwargs):
+        raise NotImplementedError
+
 
 class StoryboardEntryOperator(Operator):
     """Operator mixin that allows an operator to be executed if we have a
@@ -122,6 +131,9 @@ class StoryboardEntryOperator(Operator):
     def execute(self, context: Context):
         entry = get_storyboard(context=context).active_entry
         return self.execute_on_storyboard_entry(entry, context)
+
+    def execute_on_storyboard_entry(self, entry, context):
+        raise NotImplementedError
 
 
 class ExportOperator(Operator, ExportHelper):
