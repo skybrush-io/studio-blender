@@ -4,9 +4,6 @@
 # Skybrush Studio for Blender so it can simply be extracted in the
 # Blender addons folder.
 #
-# It also creates standalone executables for Blender if the Skybrush Studio
-# bootloader is accessible on your system.
-#
 # You need to install Python 3 and uv in order to use this script; both
 # of them must be accessible on the system path in order for the script to
 # succeed.
