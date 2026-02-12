@@ -37,7 +37,7 @@ GENERIC_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
 PROXIMITY_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
 VELOCITY_WARNING_COLOR: RGBColor = (1, 1, 0)  # yellow
 ACCELERATION_WARNING_COLOR: RGBColor = (1, 0, 1)  # magenta
-YAW_WARNING_COLOR: RGBColor = (0, 1, 1)  # orange
+YAW_WARNING_COLOR: RGBColor = (0, 1, 1)  # light blue
 
 _group_to_color_map: dict[str, RGBColor] = {
     "generic": GENERIC_WARNING_COLOR,
