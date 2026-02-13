@@ -7,6 +7,8 @@ _PT = TypeVar("_PT")
 
 _PropertyDeferred: TypeAlias = tuple
 
+# TODO: better (more precise) type annotations
+
 def BoolProperty(**kwargs: Any) -> bool: ...
 def CollectionProperty(
     type: Type[_T], **kwargs: Any
