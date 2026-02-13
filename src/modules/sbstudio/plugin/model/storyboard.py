@@ -16,7 +16,7 @@ from bpy.props import (
     IntProperty,
     StringProperty,
 )
-from bpy.types import PropertyGroup
+from bpy.types import PropertyGroup, bpy_prop_collection_idprop
 
 from sbstudio.api.types import Mapping
 from sbstudio.plugin.constants import (
@@ -451,12 +451,12 @@ class StoryboardEntryOrTransition(PropertyGroup):
         self.frame_end = other.frame_end
 
 
-class Storyboard(PropertyGroup, ListMixin):
+class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
     """Blender property group representing the entire storyboard of the
     drone show.
     """
 
-    entries: bpy_prop_collection[StoryboardEntry] = CollectionProperty(
+    entries: bpy_prop_collection_idprop[StoryboardEntry] = CollectionProperty(
         type=StoryboardEntry
     )
     """The entries in this storyboard"""

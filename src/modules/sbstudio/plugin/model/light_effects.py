@@ -1155,7 +1155,7 @@ class LightEffect(PropertyGroup):
         remove_if_unused(self.texture, from_=bpy.data.textures)
 
 
-class LightEffectCollection(PropertyGroup, ListMixin):
+class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     """Blender property group representing the list of light effects to apply
     on the drones in the drone show.
     """
@@ -1163,7 +1163,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
     entries = CollectionProperty(type=LightEffect)
     """The entries in the collection."""
 
-    active_entry_index = IntProperty(
+    active_entry_index: int = IntProperty(
         name="Selected index",
         description="Index of the light effect currently being edited",
     )
