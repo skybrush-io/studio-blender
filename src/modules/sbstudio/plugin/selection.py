@@ -190,6 +190,7 @@ def ensure_vertex_select_mode_enabled(
     """Ensures that thevertex selection mode is enabled in Blender's edit
     mode (even if the edit mode itself is not enabled.)
     """
+    assert context is not None
     msm = context.tool_settings.mesh_select_mode
     if msm[0] != bool(enabled):
         msm = list(msm)

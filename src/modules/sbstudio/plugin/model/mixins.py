@@ -1,10 +1,21 @@
-class ListMixin:
+from typing import Generic, TypeVar
+
+from bpy.types import bpy_prop_collection_idprop
+
+T = TypeVar("T")
+
+
+class ListMixin(Generic[T]):
     """Mixin that contains some common functions for property groups that
     represent a list.
 
-    The requirement for using this mixin is that the class must have a property
-    named `entries` and a property named `active_entry_index`.
+    The requirement for using this mixin is that the class must have properties
+    named `entries`, `active_entry` and `active_entry_index`.
     """
+
+    entries: bpy_prop_collection_idprop[T]
+    active_entry: T
+    active_entry_index: int
 
     def move_active_entry_down(self) -> None:
         """Moves the active entry one slot down in the collection and adjusts the

@@ -534,7 +534,7 @@ class LightEffect(PropertyGroup):
                         # axes
                         sort_key = lambda index: query_axes(positions[index])
 
-                outputs = [1.0] * num_positions  # type: ignore
+                outputs = [1.0] * num_positions
                 order = list(range(num_positions))
                 if num_positions > 1:
                     if proportional and sort_key is not None:
@@ -1155,7 +1155,7 @@ class LightEffect(PropertyGroup):
         remove_if_unused(self.texture, from_=bpy.data.textures)
 
 
-class LightEffectCollection(PropertyGroup, ListMixin):
+class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     """Blender property group representing the list of light effects to apply
     on the drones in the drone show.
     """
@@ -1163,7 +1163,7 @@ class LightEffectCollection(PropertyGroup, ListMixin):
     entries = CollectionProperty(type=LightEffect)
     """The entries in the collection."""
 
-    active_entry_index = IntProperty(
+    active_entry_index: int = IntProperty(
         name="Selected index",
         description="Index of the light effect currently being edited",
     )

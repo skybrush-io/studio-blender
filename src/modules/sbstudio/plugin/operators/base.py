@@ -27,7 +27,8 @@ from sbstudio.plugin.model.formation import (
     add_points_to_formation,
     get_markers_from_formation,
 )
-from sbstudio.plugin.model.storyboard import get_storyboard
+from sbstudio.plugin.model.light_effects import LightEffectCollection
+from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry, get_storyboard
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 from sbstudio.plugin.selection import Collections, select_only
 
@@ -51,9 +52,14 @@ class FormationOperator(Operator):
         )
 
     def execute(self, context: Context):
-        return self.execute_on_formation(self.get_formation(context), context)
+        formation = self.get_formation(context)
+        if formation is not None:
+            return self.execute_on_formation(formation, context)
 
-    def get_formation(self, context: Context) -> Collection:
+    def execute_on_formation(self, formation: Collection, context: Context):
+        raise NotImplementedError
+
+    def get_formation(self, context: Context) -> Collection | None:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
     @staticmethod
@@ -78,6 +84,11 @@ class LightEffectOperator(Operator):
     def execute(self, context: Context):
         light_effects = context.scene.skybrush.light_effects
         return self.execute_on_light_effect_collection(light_effects, context)
+
+    def execute_on_light_effect_collection(
+        self, light_effects: LightEffectCollection, context: Context
+    ):
+        raise NotImplementedError
 
 
 class StoryboardOperator(Operator):
@@ -105,6 +116,9 @@ class StoryboardOperator(Operator):
         else:
             return self.execute_on_storyboard(storyboard, context)
 
+    def execute_on_storyboard(self, storyboard: Storyboard, *args, **kwargs):
+        raise NotImplementedError
+
 
 class StoryboardEntryOperator(Operator):
     """Operator mixin that allows an operator to be executed if we have a
@@ -121,7 +135,11 @@ class StoryboardEntryOperator(Operator):
 
     def execute(self, context: Context):
         entry = get_storyboard(context=context).active_entry
-        return self.execute_on_storyboard_entry(entry, context)
+        if entry is not None:
+            return self.execute_on_storyboard_entry(entry, context)
+
+    def execute_on_storyboard_entry(self, entry: StoryboardEntry, context: Context):
+        raise NotImplementedError
 
 
 class ExportOperator(Operator, ExportHelper):
@@ -254,7 +272,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
     formation, with light animation corresponding to the formation.
     """
 
-    def execute_on_formation(self, formation: Object, context: Context):
+    def execute_on_formation(self, formation: Collection, context: Context):
         # Construct the trajectory and light program to set
         try:
             trajectories_and_lights = self._create_trajectories(context)
@@ -413,7 +431,7 @@ class StaticMarkerCreationOperator(FormationOperator):
     optionally extended with a list of colors corresponding to the points.
     """
 
-    def execute_on_formation(self, formation: Object, context: Context):
+    def execute_on_formation(self, formation: Collection, context: Context):
         # Construct the point set
         try:
             points_and_colors = self._create_points(context)

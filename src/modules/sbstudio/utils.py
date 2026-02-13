@@ -153,7 +153,7 @@ def simplify_path(
         input sequence. It is assumed that an instance of the sequence may be
         constructed from a list of items.
     """
-    factory = points.__class__  # type: ignore
+    factory = points.__class__
 
     if len(points) < 2:
         return factory(points)  # type: ignore
@@ -167,7 +167,7 @@ def simplify_path(
     to_keep = np.full(len(points), False)
     to_keep[0] = True
     to_keep[-1] = True
-    to_keep[np.diff(eq_with_next).nonzero()[0] + 1] = True  # type: ignore
+    to_keep[np.diff(eq_with_next).nonzero()[0] + 1] = True
 
     result = []
 

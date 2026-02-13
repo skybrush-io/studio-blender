@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from functools import partial
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeGuard
 
 import bpy
 from bpy.types import Collection
@@ -102,7 +102,7 @@ def create_marker(
 
 
 def add_objects_to_formation(
-    formation,
+    formation: Collection,
     objects: Iterable[Object] | None,
 ) -> None:
     """Adds the given objects to a formation object as children as-is, _without_
@@ -118,7 +118,7 @@ def add_objects_to_formation(
 
 
 def add_points_to_formation(
-    formation,
+    formation: Collection,
     points: Iterable[Coordinate3D] | None,
     *,
     name: str | None = None,
@@ -367,7 +367,7 @@ def get_world_coordinates_of_markers_from_formation(
     return result
 
 
-def is_formation(object: Object) -> bool:
+def is_formation(object: Object) -> TypeGuard[Collection]:
     """Returns whether the given Blender object is a formation object."""
     if not isinstance(object, Collection):
         return False

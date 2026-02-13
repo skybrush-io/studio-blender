@@ -18,7 +18,7 @@ Pepository = "https://github.com/skybrush-io/studio-plugin-blender"
 Documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [dependency-groups]
-dev = ["pyclean>=2.0.0"]
+dev = ["numpy", "pyclean>=2.0.0"]
 
 [tool.uv.build-backend]
 module-root = "src/modules"
@@ -34,6 +34,13 @@ extend-exclude = [
 
 [tool.ty.environment]
 extra-paths = ["./typings"]
+
+[tool.ty.src]
+exclude = [
+  "vendor", 
+  "src/modules/sbstudio/vendor",
+  "src/addons/io_import_skybrush_*.py",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.0"]

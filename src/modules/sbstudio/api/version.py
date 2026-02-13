@@ -50,8 +50,6 @@ def ensure_backend_version(api: SkybrushStudioAPI):
     Raises:
         BackendVersionMismatchError: if the backend version is not suitable
     """
-    global _backend_version
-
     version = _get_or_query_backend_version(api)
     if version < MINIMUM_BACKEND_VERSION:
         raise BackendVersionMismatchError(version)
