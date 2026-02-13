@@ -3,7 +3,7 @@
 import re
 from collections.abc import Set
 from contextlib import contextmanager
-from typing import ContextManager
+from typing import Iterator
 
 import bpy
 
@@ -164,7 +164,7 @@ def is_online_access_allowed() -> bool:
 
 
 @contextmanager
-def temporarily_exit_edit_mode(context=None) -> ContextManager[None]:
+def temporarily_exit_edit_mode(context=None) -> Iterator[None]:
     """Context manager that temporarily exits edit mode if the context is in
     edit mode, and restores it upon exiting the context.
 
@@ -194,7 +194,7 @@ def use_menu(menu, func):
 
 
 @contextmanager
-def use_mode_for_object(mode) -> ContextManager[str]:
+def use_mode_for_object(mode) -> Iterator[str]:
     """Context manager that temporarily switches the mode of the active object
     to a new one and then switches the object back to the original mode when
     exiting the context.

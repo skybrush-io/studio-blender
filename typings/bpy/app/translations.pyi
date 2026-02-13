@@ -1,0 +1,6 @@
+from typing import TypeAlias
+
+TranslationDict: TypeAlias = dict[str, dict[str, str]]
+
+def register(module_name: str, translations_dict: TranslationDict) -> None: ...
+def unregister(module_name: str) -> None: ...
