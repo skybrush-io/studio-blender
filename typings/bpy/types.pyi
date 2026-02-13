@@ -226,6 +226,9 @@ class Addon(bpy_struct):
 class AddonPreferences(bpy_struct):
     layout: UILayout
 
+class Attribute(bpy_struct): ...
+class AttributeGroupPointCloud(bpy_prop_collection[Attribute]): ...
+
 class FCurve(bpy_struct):
     array_index: int
     data_path: str
@@ -235,6 +238,11 @@ class FCurve(bpy_struct):
     select: bool
 
     def update(self) -> None: ...
+
+class IDMaterials(bpy_struct):
+    def append(self, material: Material) -> None: ...
+    def clear(self) -> None: ...
+    def pop(self, *, index: int = -1) -> Material: ...
 
 KeyframeHandleType = Literal["FREE", "ALIGNED", "VECTOR", "AUTO", "AUTO_CLAMPED"]
 
@@ -255,6 +263,11 @@ class MeshVertex(bpy_struct):
     groups: bpy_prop_collection[VertexGroupElement]
     index: int
     select: bool
+
+class Point(bpy_struct):
+    co: Vector
+    index: int
+    radius: float
 
 class PropertyGroup(bpy_struct):
     name: str
@@ -343,6 +356,13 @@ class NodeSocket(bpy_struct):
 class AnimationData(bpy_struct):
     action: Action | None
     drivers: bpy_prop_collection[FCurve]
+
+class PointCloud(ID):
+    anim_data: AnimData
+    attributes: AttributeGroupPointCloud
+    color_attributes: AttributeGroupPointCloud
+    materials: IDMaterials
+    points: bpy_prop_collection[Point]
 
 class Texture(ID):
     color_ramp: ColorRamp
@@ -646,6 +666,17 @@ class BlendDataObjects(bpy_prop_collection[Object]):
         self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
     ) -> None: ...
 
+class BlendDataPointClouds(bpy_prop_collection[PointCloud]):
+    def new(self, name: str) -> PointCloud: ...
+    def remove(
+        self,
+        pointcloud: PointCloud,
+        *,
+        do_unlink: bool = True,
+        do_id_user: bool = True,
+        do_ui_user: bool = True,
+    ) -> None: ...
+
 ###############################################################################
 ## Large top-level objects
 
@@ -665,6 +696,7 @@ class BlendData(bpy_struct):
     meshes: bpy_prop_collection[Mesh]
     objects: BlendDataObjects
     particles: bpy_prop_collection[Particle]
+    pointclouds: BlendDataPointClouds
     scenes: bpy_prop_collection[Scene]
     screens: bpy_prop_collection[Screen]
     texts: bpy_prop_collection[Text]

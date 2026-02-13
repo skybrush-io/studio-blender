@@ -510,6 +510,7 @@ def export_show_to_file_using_api(
         max_acceleration=(
             safety_check.acceleration_warning_threshold if safety_check else 4
         ),
+        max_yaw_rate=safety_check.yaw_rate_warning_threshold if safety_check else 30,
         max_altitude=safety_check.altitude_warning_threshold if safety_check else 150,
         min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
     )
