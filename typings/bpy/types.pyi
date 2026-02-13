@@ -656,17 +656,20 @@ class BlendDataImage(bpy_prop_collection[Image]):
         tiled=False,
     ) -> Image: ...
 
-class BlendDataTextures(bpy_prop_collection[Texture]):
-    @overload
-    def new(self, name: str, type: Literal["IMAGE"]) -> ImageTexture: ...
-    @overload
-    def new(self, name: str, type: str) -> Texture: ...
+class BlendDataMaterials(bpy_prop_collection[Material]):
+    def new(self, name: str, type: str) -> Material: ...
+
+class BlendDataMeshes(bpy_prop_collection[Mesh]):
+    def new(self, name: str = "") -> Mesh: ...
 
 class BlendDataObjects(bpy_prop_collection[Object]):
     def new(self, name: str, object_data: ID | None) -> Object: ...
     def remove(
         self, object: Object, do_unlink=True, do_id_user=True, do_ui_user=True
     ) -> None: ...
+
+class BlendDataParticles(bpy_prop_collection[Particle]):
+    def new(self, name: str = "") -> Particle: ...
 
 class BlendDataPointClouds(bpy_prop_collection[PointCloud]):
     def new(self, name: str) -> PointCloud: ...
@@ -678,6 +681,15 @@ class BlendDataPointClouds(bpy_prop_collection[PointCloud]):
         do_id_user: bool = True,
         do_ui_user: bool = True,
     ) -> None: ...
+
+class BlendDataTexts(bpy_prop_collection[Text]):
+    def new(self, name: str = "") -> Text: ...
+
+class BlendDataTextures(bpy_prop_collection[Texture]):
+    @overload
+    def new(self, name: str, type: Literal["IMAGE"]) -> ImageTexture: ...
+    @overload
+    def new(self, name: str, type: str) -> Texture: ...
 
 ###############################################################################
 ## Large top-level objects
@@ -694,14 +706,14 @@ class BlendData(bpy_struct):
     collections: BlendDataCollections
     filepath: str
     images: BlendDataImage
-    materials: bpy_prop_collection[Material]
-    meshes: bpy_prop_collection[Mesh]
+    materials: BlendDataMaterials
+    meshes: BlendDataMeshes
     objects: BlendDataObjects
-    particles: bpy_prop_collection[Particle]
+    particles: BlendDataParticles
     pointclouds: BlendDataPointClouds
     scenes: bpy_prop_collection[Scene]
     screens: bpy_prop_collection[Screen]
-    texts: bpy_prop_collection[Text]
+    texts: BlendDataTexts
     textures: BlendDataTextures
     version: tuple[int, int, int]
 

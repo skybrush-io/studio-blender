@@ -1,3 +1,5 @@
+from typing import Any
+
 from bpy.props import PointerProperty
 from bpy.types import Collection
 
@@ -14,7 +16,7 @@ def FormationProperty(**kwds):
     """Factory function disguised as a class; creates a Blender property that
     is suitable for storing a pointer to a formation.
     """
-    props = {
+    props: dict[str, Any] = {
         "name": "Formation",
         "type": Collection,
         "poll": _is_formation,
