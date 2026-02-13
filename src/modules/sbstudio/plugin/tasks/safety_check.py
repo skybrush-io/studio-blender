@@ -15,7 +15,10 @@ from bpy.types import Collection
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.evaluator import (
+    get_position_of_object,
+    get_xyz_euler_rotation_of_object,
+)
 from sbstudio.utils import LRUCache
 
 from .base import Task
@@ -37,7 +40,7 @@ __all__ = (
 VectorSnapshot = dict[str, Coordinate3D]
 PositionSnapshot = VectorSnapshot
 VelocitySnapshot = VectorSnapshot
-
+RotationSnapshot = VectorSnapshot
 
 _position_snapshot_cache: LRUCache[int, PositionSnapshot] = LRUCache(5)
 """Cache that stores the positions in the last few frames visited by the user
@@ -50,6 +53,11 @@ in the hope that we can estimate the accelerations from it in the current frame.
 
 Velocities are estimated from the positions so this cache is probably even more
 sparsely populated than the position cache.
+"""
+
+_rotation_snapshot_cache: LRUCache[int, RotationSnapshot] = LRUCache(5)
+"""Cache that stores the Euler rotation angles in the last few frames visited by the user
+in the hope that we can estimate the yaw rates from it in the current frame.
 """
 
 _ZERO = (0.0, 0.0, 0.0)
@@ -68,6 +76,18 @@ def create_position_snapshot_for_drones_in_collection(
     collection to their positions.
     """
     return {drone.name: get_position_of_object(drone) for drone in collection.objects}
+
+
+def create_rotation_snapshot_for_drones_in_collection(
+    collection, *, frame: int
+) -> RotationSnapshot:
+    """Create a dictionary mapping the names of the drones in the given
+    collection to their rotations.
+    """
+    return {
+        drone.name: get_xyz_euler_rotation_of_object(drone)
+        for drone in collection.objects
+    }
 
 
 def estimate_derivatives_at_frame(
@@ -173,6 +193,12 @@ def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
     else:
         max_acceleration = None
 
+    # Get the yaw_rate threshold
+    if safety_check.yaw_rate_warning_enabled:
+        max_yaw_rate = safety_check.yaw_rate_warning_threshold
+    else:
+        max_yaw_rate = None
+
     # Create a position snapshot for the current frame and cache it
     frame = scene.frame_current
     position_snapshot = create_position_snapshot_for_drones_in_collection(drones)
@@ -190,17 +216,31 @@ def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
         velocity_snapshot, _velocity_snapshot_cache, frame=frame, scene=scene
     )
 
+    # Prepare rotation and rotation rate snapshots
+    rotation_snapshot = create_rotation_snapshot_for_drones_in_collection(
+        drones, frame=frame
+    )
+    _rotation_snapshot_cache[frame] = rotation_snapshot
+    rotation_rate_snapshot, rotation_rate_snapshot_valid = (
+        estimate_derivatives_at_frame(
+            rotation_snapshot, _rotation_snapshot_cache, frame=frame, scene=scene
+        )
+    )
+
     # Get formation status as a string
     storyboard = scene.skybrush.storyboard
     formation_status = storyboard.get_formation_status_at_frame(frame)
 
-    # Extract positions and velocities from the snapshots
+    # Extract positions, velocities, accelerations and rotations from the snapshots
     positions = list(position_snapshot.values())
     velocities = list(velocity_snapshot.values()) if velocity_snapshot_valid else []
     accelerations = (
         [hypot(*vec) for vec in acceleration_snapshot.values()]
         if acceleration_snapshot_valid
         else []
+    )
+    rotation_rates = (
+        list(rotation_rate_snapshot.values()) if rotation_rate_snapshot_valid else []
     )
 
     # Find min/max altitude for reporting purposes
@@ -268,6 +308,22 @@ def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
         else []
     )
 
+    # Check yaw rates
+    max_yaw_rate_found = (
+        round(max(abs(rate[2]) for rate in rotation_rates), ndigits=2)
+        if rotation_rates
+        else 0.0
+    )
+    drones_over_max_yaw_rate = (
+        [
+            position_snapshot.get(name, _ZERO)
+            for name, rate in rotation_rate_snapshot.items()
+            if round(abs(rate[2]), ndigits=2) > max_yaw_rate
+        ]
+        if max_yaw_rate is not None
+        else []
+    )
+
     # Find drones moving horizontally below min navigation altitude
     drones_below_min_nav_altitude = (
         [
@@ -293,6 +349,8 @@ def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
         drones_over_max_velocity_z=drones_over_max_velocity_z,
         max_acceleration=max_acceleration_found,
         drones_over_max_acceleration=drones_over_max_acceleration,
+        max_yaw_rate=max_yaw_rate_found,
+        drones_over_max_yaw_rate=drones_over_max_yaw_rate,
         drones_below_min_nav_altitude=drones_below_min_nav_altitude,
         all_close_pairs=[],
     )
@@ -310,9 +368,10 @@ def invalidate_caches(clear_result: bool = False):
     This function should be called when the plugin makes radical changes to the
     current scene; for instance, after re-planning transitions.
     """
-    global _position_snapshot_cache, _velocity_snapshot_cache
+    global _position_snapshot_cache, _velocity_snapshot_cache, _rotation_snapshot_cache
     _position_snapshot_cache.clear()
     _velocity_snapshot_cache.clear()
+    _rotation_snapshot_cache.clear()
 
     if clear_result:
         safety_check = bpy.context.scene.skybrush.safety_check

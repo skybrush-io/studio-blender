@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 
 __all__ = ("SafetyCheckOverlay",)
 
-MarkerGroup = Literal["altitude", "proximity", "velocity", "acceleration", "generic"]
+MarkerGroup = Literal[
+    "altitude", "proximity", "velocity", "acceleration", "yaw", "generic"
+]
 """Currently supported marker groups."""
 
 Marker = tuple[Sequence[Coordinate3D], MarkerGroup]
@@ -35,6 +37,7 @@ GENERIC_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
 PROXIMITY_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
 VELOCITY_WARNING_COLOR: RGBColor = (1, 1, 0)  # yellow
 ACCELERATION_WARNING_COLOR: RGBColor = (1, 0, 1)  # magenta
+YAW_WARNING_COLOR: RGBColor = (0, 1, 1)  # light blue
 
 _group_to_color_map: dict[str, RGBColor] = {
     "generic": GENERIC_WARNING_COLOR,
@@ -42,6 +45,7 @@ _group_to_color_map: dict[str, RGBColor] = {
     "proximity": PROXIMITY_WARNING_COLOR,
     "velocity": VELOCITY_WARNING_COLOR,
     "acceleration": ACCELERATION_WARNING_COLOR,
+    "yaw": YAW_WARNING_COLOR,
 }
 """Mapping from marker group names to the corresponding colors on the overlay."""
 
@@ -186,6 +190,16 @@ class SafetyCheckOverlay(ShaderOverlay):
             blf.draw(
                 font_id, f"Max acceleration: {safety_check.max_acceleration:.1f} m/s/s"
             )
+            y -= line_height
+
+        if safety_check.yaw_rate_warning_enabled and safety_check.max_yaw_rate_is_valid:
+            set_warning_color_iff(
+                safety_check.should_show_yaw_rate_warning,
+                font_id,
+                YAW_WARNING_COLOR,
+            )
+            blf.position(font_id, left_margin, y, 0)
+            blf.draw(font_id, f"Max yaw rate: {safety_check.max_yaw_rate:.1f} deg/s")
             y -= line_height
 
     def draw_3d(self) -> None:

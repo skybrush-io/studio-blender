@@ -50,6 +50,14 @@ The text-based acceleration warning on the left side of the 3D Viewport editor a
 
 To enable or disable acceleration warnings, use the btn:[Show acceleration warnings] checkbox.
 
+== Yaw rate warnings
+
+This option lets you define a maximum yaw rate for drones in your drone show. If there are drones above the yaw rate limit, you get real-time yaw rate warnings.
+
+The text-based yaw rate warning on the left side of the 3D Viewport editor always shows you the maximum yaw rate of drones on the current frame, irrespectively of the direction of rotation (CW or CCW). Note that yaw rate is treated as an unsigned quantity: CW and CCW yaw rates are not distinguished. Drones above the yaw rate threshold at a given frame are highlighted in light blue.
+
+To enable or disable yaw rate warnings, use the btn:[Show yaw rate warnings] checkbox.
+
 
 .Technical details
 ****
