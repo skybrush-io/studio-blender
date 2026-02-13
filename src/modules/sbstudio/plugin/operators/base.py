@@ -51,12 +51,14 @@ class FormationOperator(Operator):
         )
 
     def execute(self, context: Context):
-        return self.execute_on_formation(self.get_formation(context), context)
+        formation = self.get_formation(context)
+        if formation is not None:
+            return self.execute_on_formation(formation, context)
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection, context: Context):
         raise NotImplementedError
 
-    def get_formation(self, context: Context) -> Collection:
+    def get_formation(self, context: Context) -> Collection | None:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
     @staticmethod
@@ -266,7 +268,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
     formation, with light animation corresponding to the formation.
     """
 
-    def execute_on_formation(self, formation: Object, context: Context):
+    def execute_on_formation(self, formation: Collection, context: Context):
         # Construct the trajectory and light program to set
         try:
             trajectories_and_lights = self._create_trajectories(context)
@@ -425,7 +427,7 @@ class StaticMarkerCreationOperator(FormationOperator):
     optionally extended with a list of colors corresponding to the points.
     """
 
-    def execute_on_formation(self, formation: Object, context: Context):
+    def execute_on_formation(self, formation: Collection, context: Context):
         # Construct the point set
         try:
             points_and_colors = self._create_points(context)
