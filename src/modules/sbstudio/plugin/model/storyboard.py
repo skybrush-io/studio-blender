@@ -16,7 +16,7 @@ from bpy.props import (
     IntProperty,
     StringProperty,
 )
-from bpy.types import PropertyGroup, bpy_prop_collection_idprop
+from bpy.types import PropertyGroup
 
 from sbstudio.api.types import Mapping
 from sbstudio.plugin.constants import (
@@ -33,7 +33,11 @@ from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
 if TYPE_CHECKING:
-    from bpy.types import Collection, Context, bpy_prop_collection
+    from bpy.types import (
+        Collection,
+        Context,
+        bpy_prop_collection,
+    )
 
 __all__ = (
     "ScheduleOverride",
@@ -456,9 +460,7 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
     drone show.
     """
 
-    entries: bpy_prop_collection_idprop[StoryboardEntry] = CollectionProperty(
-        type=StoryboardEntry
-    )
+    entries = CollectionProperty(type=StoryboardEntry)
     """The entries in this storyboard"""
 
     entries_or_transitions: bpy_prop_collection[StoryboardEntryOrTransition] = (

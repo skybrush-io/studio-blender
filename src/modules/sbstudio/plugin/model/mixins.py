@@ -1,6 +1,9 @@
-from typing import Generic, TypeVar
+from __future__ import annotations
 
-from bpy.types import bpy_prop_collection_idprop
+from typing import TYPE_CHECKING, Generic, Sequence, TypeVar, cast
+
+if TYPE_CHECKING:
+    from bpy.types import bpy_prop_collection_idprop  # exists only for type checking
 
 T = TypeVar("T")
 
@@ -13,7 +16,7 @@ class ListMixin(Generic[T]):
     named `entries`, `active_entry` and `active_entry_index`.
     """
 
-    entries: bpy_prop_collection_idprop[T]
+    entries: Sequence[T]  # bpy_prop_collection_idprop[T], but it confuses Blender
     active_entry: T
     active_entry_index: int
 
@@ -28,7 +31,9 @@ class ListMixin(Generic[T]):
             next_entry = self.entries[index + 1]
 
             if self._on_active_entry_moving_down(this_entry, next_entry):
-                self.entries.move(index, index + 1)
+                cast("bpy_prop_collection_idprop[T]", self.entries).move(
+                    index, index + 1
+                )
                 self.active_entry_index = index + 1
 
     def move_active_entry_up(self) -> None:
@@ -41,7 +46,9 @@ class ListMixin(Generic[T]):
             this_entry = self.entries[index]
 
             if self._on_active_entry_moving_up(this_entry, prev_entry):
-                self.entries.move(index, index - 1)
+                cast("bpy_prop_collection_idprop[T]", self.entries).move(
+                    index, index - 1
+                )
                 self.active_entry_index = index - 1
 
     def _on_active_entry_moving_down(self, this_entry, next_entry) -> bool:
