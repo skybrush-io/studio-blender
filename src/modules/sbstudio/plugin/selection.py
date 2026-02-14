@@ -25,6 +25,7 @@ def deselect_all(*, context: Context | None = None):
     """Deselects all objects in the given context (defaults to the current
     context).
     """
+    assert context is not None
     if context.mode == "EDIT_MESH":
         # In edit mode, we simply run the "Deselect All" action
         bpy.ops.mesh.select_all(action="DESELECT")
@@ -55,6 +56,7 @@ def get_selected_objects(*, context: Context | None = None):
     Returns:
         the list of selected objects, taking into account the current mode
     """
+    assert context is not None
     if context.mode == "OBJECT":
         return context.selected_objects
     else:
@@ -82,6 +84,7 @@ def get_selected_vertices(*, context: Context | None = None):
     are currently selected in the mesh. When Blender is in object mode (or any
     other mode), this will return all the vertices in the selected object(s).
     """
+    assert context is not None
     if context.mode == "OBJECT":
         # In object mode, we want to get the vertices in all the selected
         # objects, no matter whether they are selected or not.
@@ -111,6 +114,7 @@ def get_selected_vertices_grouped_by_objects(*, context: Context | None = None):
     modes, only the object being edited (the one that is designated as the
     active object in the context) will be considered.
     """
+    assert context is not None
     if context.mode == "OBJECT":
         # In object mode, we want to get the vertices in all the selected
         # objects, no matter whether they are selected or not.
@@ -138,6 +142,7 @@ def has_selection(*, context: Context | None = None) -> bool:
     context. In all other modes, we check the vertices of the `active_object`
     to see if there is at least one vertex selected.
     """
+    assert context is not None
     if context.mode == "EDIT_MODE":
         # We need to switch to object mode temporarily so the vertex selection
         # gets updated; the edit mode works in a temporary copy of the mesh
@@ -169,6 +174,7 @@ def add_to_selection(objects, *, context: Context | None = None):
     Can also handle collections; when a collection is added to the selection,
     it will select all the objects and sub-collections in the collection.
     """
+    assert context is not None
     _set_selected_state_of_objects(objects, True, context=context)
 
 
@@ -180,6 +186,7 @@ def remove_from_selection(objects, *, context: Context | None = None):
     Can also handle collections; when a collection is removed from the selection,
     it will remove all the objects and sub-collections in the collection.
     """
+    assert context is not None
     _set_selected_state_of_objects(objects, False, context=context)
 
 

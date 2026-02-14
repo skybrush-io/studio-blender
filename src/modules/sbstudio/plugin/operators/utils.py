@@ -112,6 +112,7 @@ def _get_segments(context: Context | None = None) -> dict[str, tuple[float, floa
     If invalid configuration is found for a segment, then the segment will be omitted
     from the result.
     """
+    assert context is not None
     result: dict[str, tuple[float, float]] = {}
     storyboard = get_storyboard(context=context)
     fps = context.scene.render.fps
