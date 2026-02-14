@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sbstudio.api.types import Version
-
 from .constants import MINIMUM_BACKEND_VERSION
 from .errors import BackendVersionMismatchError
+from .types import Version
 
 if TYPE_CHECKING:
     from sbstudio.plugin.api import SkybrushStudioAPI
