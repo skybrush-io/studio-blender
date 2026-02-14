@@ -326,6 +326,7 @@ class Image(ID):
     def pack(self) -> None: ...
 
 class Material(ID):
+    use_nodes: bool
     node_tree: NodeTree
 
 class MaterialSlot(bpy_struct):
@@ -408,6 +409,7 @@ class Particle(ID):
     name: str
     settings: ParticleSettings
     seed: int
+    material: int
 
 class ParticleSettings(bpy_struct):
     type: str
@@ -737,7 +739,17 @@ class Menu(bpy_struct):
     def draw(self, context: Context) -> None: ...
     def draw_preset(self, context: Context) -> None: ...
 
-class OperatorProperties(bpy_struct): ...
+# TODO: note that this class is a union of all props from all
+# operators used; could be separated to proper subclasses with
+# a lot of work and minimal advantages
+class OperatorProperties(bpy_struct):
+    # SetServerURLOperator
+    url: str
+    # ApplyColors
+    color: str
+    fade: bool
+    # RecalculateTransitionsOperator
+    scope: str
 
 class Panel(bpy_struct):
     bl_idname: str
@@ -882,7 +894,6 @@ class UILayout(bpy_struct):
         depress: bool = False,
         icon_value: int = 0,
         search_weight: float = 0.0,
-        url: str = "",
     ) -> OperatorProperties: ...
     def operator_menu_enum(
         self,
