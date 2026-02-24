@@ -1160,6 +1160,14 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     on the drones in the drone show.
     """
 
+    enabled = BoolProperty(
+        name="Light Effects",
+        description="Enable or disable all light effects globally. Disabling them should increase framerate significantly",
+        default=True,
+        options=set(),
+    )
+    """Global toggle for all light effects."""
+
     entries = CollectionProperty(type=LightEffect)
     """The entries in the collection."""
 
@@ -1316,6 +1324,8 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         """Iterates over all effects that are active in the given frame."""
         # TODO(ntamas): use an interval tree if this becomes a performance
         # bottleneck
+        if not self.enabled:
+            return
         for entry in self.entries:
             if entry.enabled and entry.influence > 0 and entry.contains_frame(frame):
                 yield entry
