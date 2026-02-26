@@ -84,6 +84,10 @@ Plot positions:: Include position-related plots in the safety report, such as an
 
 Plot velocities:: Include velocity-related plots in the safety report including horizontal and vertical velocity timelines focusing on maximum velocity breach warnings.
 
+Plot accelerations:: Include acceleration-related plots in the safety report including horizontal and vertical acceleration timelines focusing on maximum acceleration breach warnings.
+
+Plot yaw and yaw rate:: Include yaw-related plots in the safety report including yaw and yaw rate timelines focusing on maximum yaw rate breach warnings.
+
 Plot projected drift:: Include projected drift plots in the safety report. The drift plot is a complex output for checking integral predicted deviations from show trajectories due to maximum velocity or maximum acceleration threshold breach events.
 
 Plot nearest neighbor:: Include a unified nearest neighbor plot in the safety report to check for minimum distance between drones throughout the entire show.
