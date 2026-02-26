@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Yaw rate safety check has been added with a maximum yaw rate threshold.
 
+- Optional yaw and yaw rate plot is added to the validation PDF file (PRO only).
+
+- Added toggle to be able to disable light effect calculation temporarily,
+  which might speed up render rate substantially during the motion design phase.
+
+### Changed
+
+- The minimum backend version required for this version of the add-on is now
+  2.35.0.
+
 ### Fixed
 
 - Fixed when acceleration warnings appear as a safety check.
@@ -44,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The add-on now expllcitly declares that the minimum required Blender version is 4.4.
+- The add-on now explicitly declares that the minimum required Blender version is 4.4.
 
 ### Fixed
 
