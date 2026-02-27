@@ -53,8 +53,11 @@ class FormationOperator(Operator):
 
     def execute(self, context: Context):
         formation = self.get_formation(context)
-        if formation is not None:
-            return self.execute_on_formation(formation, context)
+
+        if formation is None:
+            return {"FINISHED"}
+
+        return self.execute_on_formation(formation, context)
 
     def execute_on_formation(self, formation: Collection, context: Context):
         raise NotImplementedError
@@ -83,6 +86,10 @@ class LightEffectOperator(Operator):
 
     def execute(self, context: Context):
         light_effects = context.scene.skybrush.light_effects
+
+        if light_effects is None:
+            return {"FINISHED"}
+
         return self.execute_on_light_effect_collection(light_effects, context)
 
     def execute_on_light_effect_collection(
@@ -135,8 +142,11 @@ class StoryboardEntryOperator(Operator):
 
     def execute(self, context: Context):
         entry = get_storyboard(context=context).active_entry
-        if entry is not None:
-            return self.execute_on_storyboard_entry(entry, context)
+
+        if entry is None:
+            return {"FINISHED"}
+
+        return self.execute_on_storyboard_entry(entry, context)
 
     def execute_on_storyboard_entry(self, entry: StoryboardEntry, context: Context):
         raise NotImplementedError
