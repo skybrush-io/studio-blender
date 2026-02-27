@@ -8,7 +8,7 @@ from typing import Any
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty
-from bpy.types import Collection, Context, FCurve, Object, Operator
+from bpy.types import Collection, Context, FCurve, Operator
 from bpy_extras.io_utils import ExportHelper
 from numpy import array, floating
 from numpy.typing import NDArray
@@ -53,20 +53,16 @@ class FormationOperator(Operator):
 
     def execute(self, context: Context):
         formation = self.get_formation(context)
-
-        if formation is None:
-            return {"FINISHED"}
-
         return self.execute_on_formation(formation, context)
 
-    def execute_on_formation(self, formation: Collection, context: Context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
         raise NotImplementedError
 
     def get_formation(self, context: Context) -> Collection | None:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
     @staticmethod
-    def select_formation(formation: Object, context: Context) -> None:
+    def select_formation(formation: Collection, context: Context) -> None:
         """Selects the given formation, both in the scene and in the formations
         panel.
         """
@@ -86,10 +82,6 @@ class LightEffectOperator(Operator):
 
     def execute(self, context: Context):
         light_effects = context.scene.skybrush.light_effects
-
-        if light_effects is None:
-            return {"FINISHED"}
-
         return self.execute_on_light_effect_collection(light_effects, context)
 
     def execute_on_light_effect_collection(
@@ -142,13 +134,11 @@ class StoryboardEntryOperator(Operator):
 
     def execute(self, context: Context):
         entry = get_storyboard(context=context).active_entry
-
-        if entry is None:
-            return {"FINISHED"}
-
         return self.execute_on_storyboard_entry(entry, context)
 
-    def execute_on_storyboard_entry(self, entry: StoryboardEntry, context: Context):
+    def execute_on_storyboard_entry(
+        self, entry: StoryboardEntry | None, context: Context
+    ):
         raise NotImplementedError
 
 
@@ -282,7 +272,8 @@ class DynamicMarkerCreationOperator(FormationOperator):
     formation, with light animation corresponding to the formation.
     """
 
-    def execute_on_formation(self, formation: Collection, context: Context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         # Construct the trajectory and light program to set
         try:
             trajectories_and_lights = self._create_trajectories(context)
@@ -441,7 +432,8 @@ class StaticMarkerCreationOperator(FormationOperator):
     optionally extended with a list of colors corresponding to the points.
     """
 
-    def execute_on_formation(self, formation: Collection, context: Context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         # Construct the point set
         try:
             points_and_colors = self._create_points(context)

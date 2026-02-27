@@ -2,6 +2,7 @@ from random import shuffle
 
 import bpy
 from bpy.props import EnumProperty
+from bpy.types import Collection, Context
 from natsort import index_natsorted, order_by_index
 from numpy import array, logical_or
 from numpy.linalg import norm
@@ -41,7 +42,8 @@ class ReorderFormationMarkersOperator(FormationOperator):
         default="NAME",
     )
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         # TODO(ntamas): currently this works only for formations that consist
         # of empties. Formations based on vertex groups and formations that
         # consist of a mixture of empties _and_ vertex groups do not work.

@@ -1,5 +1,5 @@
 from bpy.props import EnumProperty
-from bpy.types import Context, Scene
+from bpy.types import Collection, Context, Scene
 from mathutils import Vector
 
 from sbstudio.plugin.constants import Collections
@@ -140,7 +140,8 @@ class UpdateFormationOperator(FormationOperator):
         self.update_with = propose_mode_for_formation_update(context)
         return context.window_manager.invoke_props_dialog(self)
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         objects_in_formation = formation.objects
 
         new_objects, new_points = collect_objects_and_points_for_formation_update(

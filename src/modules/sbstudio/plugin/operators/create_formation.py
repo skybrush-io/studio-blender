@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import EnumProperty, StringProperty
+from bpy.types import Collection, Context
 
 from sbstudio.plugin.model.formation import add_objects_to_formation, create_formation
 from sbstudio.plugin.utils import propose_name
@@ -48,7 +49,7 @@ class CreateFormationOperator(FormationOperator):
         self.contents = propose_mode_for_formation_update(context)
         return context.window_manager.invoke_props_dialog(self)
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
         bpy.ops.skybrush.prepare()
 
         name = propose_name(self.name, for_collection=True)

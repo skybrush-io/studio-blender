@@ -26,5 +26,6 @@ class RemoveScheduleOverrideEntryOperator(StoryboardEntryOperator):
         return entry.active_schedule_override_entry is not None
 
     def execute_on_storyboard_entry(self, entry, context):
-        entry.remove_active_schedule_override_entry()
+        if entry is not None:
+            entry.remove_active_schedule_override_entry()
         return {"FINISHED"}
