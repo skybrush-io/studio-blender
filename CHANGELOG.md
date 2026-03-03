@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added toggle to be able to disable light effect calculation temporarily,
   which might speed up render rate substantially during the motion design phase.
 
+- Added Google Earth `.kmz` exporter as a new Studio X (pro) feature.
+
 ### Changed
 
 - The minimum backend version required for this version of the add-on is now
