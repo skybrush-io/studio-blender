@@ -8,6 +8,7 @@ from sbstudio.plugin.operators import (
     DSSPath3ExportOperator,
     DSSPathExportOperator,
     EVSKYExportOperator,
+    KMZExportOperator,
     LitebeeExportOperator,
     RefreshFileFormatsOperator,
     SkybrushCSVExportOperator,
@@ -98,6 +99,11 @@ class ExportPanel(Panel):
         if FileFormat.DDSF in formats:
             layout.operator(
                 DDSFExportOperator.bl_idname, text="Export to Depence .ddsf"
+            )
+            needs_separator = True
+        if FileFormat.KMZ in formats:
+            layout.operator(
+                KMZExportOperator.bl_idname, text="Export to Google Earth .kmz"
             )
             needs_separator = True
 

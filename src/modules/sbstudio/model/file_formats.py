@@ -29,6 +29,9 @@ class FileFormat(Enum):
     DDSF = "ddsf"
     VVIZ = "vviz"
 
+    # Other visualization formats
+    KMZ = "kmz"
+
 
 _file_formats: tuple[FileFormat, ...] = ()
 
@@ -60,6 +63,8 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
             formats.append(FileFormat.DROTEK)
         elif feature == "export:evsky":
             formats.append(FileFormat.EVSKY)
+        elif feature == "export:kmz":
+            formats.append(FileFormat.KMZ)
         elif feature == "export:litebee":
             formats.append(FileFormat.LITEBEE)
         elif feature == "export:plot":
