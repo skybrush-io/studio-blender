@@ -75,7 +75,6 @@ class AppendFormationToStoryboardOperator(FormationOperator):
                 else None
             ),
             "max_acceleration": settings.max_acceleration if settings else 4,
-            "max_yaw_rate": settings.max_yaw_rate if settings else 30,
         }
 
         with create_position_evaluator() as get_positions_of:
