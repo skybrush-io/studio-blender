@@ -38,6 +38,8 @@ include::pages/panels/skybrush.adoc[]
 
 :leveloffset: +1
 
+include::pages/panels/skybrush/setup.adoc[]
+
 include::pages/panels/skybrush/show.adoc[]
 
 include::pages/panels/skybrush/swarm.adoc[]
