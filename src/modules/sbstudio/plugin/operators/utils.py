@@ -46,8 +46,9 @@ from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
 from sbstudio.utils import get_ends
 
 __all__ = (
-    "get_drones_to_export",
     "export_show_to_file_using_api",
+    "get_drones_to_export",
+    "get_show_location",
 )
 
 
@@ -62,6 +63,258 @@ class _default_settings:
 
 ################################################################################
 # Helper functions for exporter operators
+
+
+def export_show_to_file_using_api(
+    api: SkybrushStudioAPI,
+    context: Context,
+    settings: dict[str, Any],
+    filepath: str | Path,
+    format: FileFormat,
+) -> None:
+    """Creates Skybrush-compatible output from Blender trajectories and color
+    animation.
+
+    This is a helper function for Skybrush export operators.
+
+    Parameters:
+        api: the Skybrush Studio API object
+        context: the main Blender context
+        settings: export settings dictionary
+        filepath: the output path where the export should write
+        format: the format that the API should produce
+
+    Raises:
+        SkybrushStudioExportWarning: when a local check failed and the export
+            operation did not start. These are converted into warnings on the
+            Blender UI.
+        SkybrushStudioAPIError: for server-side export errors. These are
+            converted into errors on the Blender UI.
+    """
+
+    log.info(f"Exporting show content to {filepath}")
+
+    # get framerange
+    log.info(f"Getting frame range from {settings.get('frame_range')}")
+    frame_range = _get_frame_range_from_export_settings(settings, context=context)
+    if frame_range is None:
+        raise SkybrushStudioExportWarning("Selected frame range is empty")
+
+    # determine list of drones to export
+    export_selected_only: bool = settings.get("export_selected", False)
+    drones = list(get_drones_to_export(selected_only=export_selected_only))
+    if not drones:
+        if export_selected_only:
+            raise SkybrushStudioExportWarning(
+                "No objects were selected; export cancelled"
+            )
+        else:
+            raise SkybrushStudioExportWarning(
+                "There are no objects to export; export cancelled"
+            )
+
+    # get yaw control enabled state
+    use_yaw_control: bool = settings.get("use_yaw_control", False)
+
+    # get trajectories, light programs and yaw setpoints
+    if use_yaw_control:
+        log.info("Getting object trajectories, light programs and yaw setpoints")
+        (
+            trajectories,
+            lights,
+            yaw_setpoints,
+        ) = _get_trajectories_lights_and_yaw_setpoints(
+            drones,
+            settings,
+            frame_range,
+            context=context,
+            progress=_show_progress_during_export,
+        )
+    else:
+        log.info("Getting object trajectories and light programs")
+        (
+            trajectories,
+            lights,
+        ) = _get_trajectories_and_lights(
+            drones,
+            settings,
+            frame_range,
+            context=context,
+            progress=_show_progress_during_export,
+        )
+        yaw_setpoints = None
+
+    # get pyro control enabled state
+    use_pyro_control: bool = settings.get("use_pyro_control", False)
+
+    if use_pyro_control:
+        pyro_programs = {
+            drone.name: get_pyro_markers_of_object(drone) for drone in drones
+        }
+    else:
+        pyro_programs = None
+
+    # get automatic show title
+    show_title = str(basename(filepath).split(".")[0])
+
+    # get show type and location
+    scene_settings = getattr(context.scene.skybrush, "settings", None)
+    show_type = (scene_settings.show_type if scene_settings else "OUTDOOR").lower()
+    show_location = get_show_location(context)
+
+    # get time markers (cues)
+    time_markers = get_time_markers_from_context(context)
+
+    # get cameras
+    export_cameras = settings.get("export_cameras", False)
+    if export_cameras:
+        cameras = get_cameras_from_context(context)
+    else:
+        cameras = None
+
+    # get validation parameters
+    safety_check = getattr(context.scene.skybrush, "safety_check", None)
+    validation = SafetyCheckParams(
+        max_velocity_xy=(
+            safety_check.velocity_xy_warning_threshold if safety_check else 8
+        ),
+        max_velocity_z=safety_check.velocity_z_warning_threshold if safety_check else 2,
+        max_velocity_z_up=(
+            safety_check.velocity_z_warning_threshold_up_or_none
+            if safety_check
+            else None
+        ),
+        max_acceleration=(
+            safety_check.acceleration_warning_threshold if safety_check else 4
+        ),
+        max_yaw_rate=safety_check.yaw_rate_warning_threshold if safety_check else 30,
+        max_altitude=safety_check.altitude_warning_threshold if safety_check else 150,
+        min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
+    )
+
+    # get show segments
+    show_segments = _get_segments(context=context)
+
+    # shift all time-dependent items so that the time axis of the exported show
+    # starts at 0
+    delta = -frame_range[0] / context.scene.render.fps
+    if delta != 0:
+        for trajectory in trajectories.values():
+            trajectory.shift_time_in_place(delta)
+        for light_program in lights.values():
+            light_program.shift_time_in_place(delta)
+        if pyro_programs:
+            for pyro_program in pyro_programs.values():
+                pyro_program.shift_time_in_place(-frame_range[0])
+        if yaw_setpoints:
+            for yaw_setpoint in yaw_setpoints.values():
+                yaw_setpoint.shift_time_in_place(delta)
+        time_markers.shift_time_in_place(delta)
+        show_segments = {
+            k: (v[0] + delta, v[1] + delta) for k, v in show_segments.items()
+        }
+
+    renderer_params = {}
+
+    # create Skybrush converter object
+    if format is FileFormat.SKYC:
+        log.info("Exporting show to Skybrush .skyc format")
+        renderer = "skyc"
+    elif format is FileFormat.PDF:
+        log.info("Exporting validation plots to .pdf")
+        renderer = "plot"
+        plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
+        fps = settings.get("output_fps", _default_settings.output_fps)
+        renderer_params = {"plots": ",".join(plots), "fps": fps, "single_file": True}
+    elif format is FileFormat.SKYC_AND_PDF:
+        log.info("Exporting show to .skyc and .pdf formats")
+        plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
+        fps = settings.get("output_fps", _default_settings.output_fps)
+        renderer = ["skyc", "plot"]
+        renderer_params = [
+            None,
+            {"plots": ",".join(plots), "fps": fps, "single_file": True},
+        ]
+    elif format is FileFormat.CSV:
+        log.info("Exporting show to Skybrush .csv format")
+        renderer = "csv"
+        renderer_params = {
+            "fps": settings["output_fps"],
+        }
+    elif format is FileFormat.DAC:
+        log.info("Exporting show to HG .dac format")
+        renderer = "dac"
+        renderer_params = {
+            "show_id": 1555,
+            "title": "Skybrush show",
+            "model": settings["drone_model"],
+            "gcs": settings["gcs_type"],
+        }
+    elif format is FileFormat.DDSF:
+        log.info("Exporting show to Depence .ddsf format")
+        renderer = "ddsf"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    elif format is FileFormat.DROTEK:
+        log.info("Exporting show to Drotek .json format")
+        renderer = "drotek"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            # TODO(ntamas): takeoff_angle?
+        }
+    elif format is FileFormat.DSS:
+        log.info("Exporting show to DSS .path format")
+        renderer = "dss"
+    elif format is FileFormat.DSS3:
+        log.info("Exporting show to DSS .path3 format")
+        renderer = "dss3"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    elif format is FileFormat.EVSKY:
+        log.info("Exporting show to EVSKY .essp format")
+        renderer = "evsky"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    elif format is FileFormat.KMZ:
+        log.info("Exporting show to Google Earth .kmz format")
+        renderer = "kmz"
+    elif format is FileFormat.LITEBEE:
+        log.info("Exporting show to Litebee .bin format")
+        renderer = "litebee"
+    elif format is FileFormat.VVIZ:
+        log.info("Exporting show to Finale 3D .vviz format")
+        renderer = "vviz"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
+    else:
+        raise RuntimeError(f"Unhandled format: {format!r}")
+
+    api.export(
+        show_title=show_title,
+        show_type=show_type,
+        show_location=show_location,
+        show_segments=show_segments,
+        validation=validation,
+        trajectories=trajectories,
+        lights=lights,
+        pyro_programs=pyro_programs,
+        yaw_setpoints=yaw_setpoints,
+        output=filepath,
+        time_markers=time_markers,
+        cameras=cameras,
+        renderer=renderer,
+        renderer_params=renderer_params,
+    )
+
+    log.info("Export finished")
 
 
 def get_drones_to_export(selected_only: bool = False):
@@ -85,6 +338,32 @@ def get_drones_to_export(selected_only: bool = False):
     ]
 
     return natsorted(to_export, key=attrgetter("name"))
+
+
+def get_show_location(context: Context) -> ShowLocation | None:
+    """Returns the current show location.
+
+    Parameters:
+        context: the main Blender context
+
+    Returns:
+        the current show location or None if it is not set
+    """
+    scene_settings = getattr(context.scene.skybrush, "settings", None)
+
+    return (
+        ShowLocation(
+            latitude=parse_latitude(scene_settings.latitude_of_show_origin),
+            longitude=parse_longitude(scene_settings.longitude_of_show_origin),
+            orientation=degrees(scene_settings.show_orientation),
+        )
+        if scene_settings and scene_settings.use_show_origin_and_orientation
+        else None
+    )
+
+
+################################################################################
+# Private helper functions
 
 
 @with_context
@@ -379,260 +658,3 @@ def _get_trajectories_lights_and_yaw_setpoints(
 
 def _show_progress_during_export(progress: FrameProgressReport) -> None:
     print(progress.format())
-
-
-def export_show_to_file_using_api(
-    api: SkybrushStudioAPI,
-    context: Context,
-    settings: dict[str, Any],
-    filepath: str | Path,
-    format: FileFormat,
-) -> None:
-    """Creates Skybrush-compatible output from Blender trajectories and color
-    animation.
-
-    This is a helper function for Skybrush export operators.
-
-    Parameters:
-        api: the Skybrush Studio API object
-        context: the main Blender context
-        settings: export settings dictionary
-        filepath: the output path where the export should write
-        format: the format that the API should produce
-
-    Raises:
-        SkybrushStudioExportWarning: when a local check failed and the export
-            operation did not start. These are converted into warnings on the
-            Blender UI.
-        SkybrushStudioAPIError: for server-side export errors. These are
-            converted into errors on the Blender UI.
-    """
-
-    log.info(f"Exporting show content to {filepath}")
-
-    # get framerange
-    log.info(f"Getting frame range from {settings.get('frame_range')}")
-    frame_range = _get_frame_range_from_export_settings(settings, context=context)
-    if frame_range is None:
-        raise SkybrushStudioExportWarning("Selected frame range is empty")
-
-    # determine list of drones to export
-    export_selected_only: bool = settings.get("export_selected", False)
-    drones = list(get_drones_to_export(selected_only=export_selected_only))
-    if not drones:
-        if export_selected_only:
-            raise SkybrushStudioExportWarning(
-                "No objects were selected; export cancelled"
-            )
-        else:
-            raise SkybrushStudioExportWarning(
-                "There are no objects to export; export cancelled"
-            )
-
-    # get yaw control enabled state
-    use_yaw_control: bool = settings.get("use_yaw_control", False)
-
-    # get trajectories, light programs and yaw setpoints
-    if use_yaw_control:
-        log.info("Getting object trajectories, light programs and yaw setpoints")
-        (
-            trajectories,
-            lights,
-            yaw_setpoints,
-        ) = _get_trajectories_lights_and_yaw_setpoints(
-            drones,
-            settings,
-            frame_range,
-            context=context,
-            progress=_show_progress_during_export,
-        )
-    else:
-        log.info("Getting object trajectories and light programs")
-        (
-            trajectories,
-            lights,
-        ) = _get_trajectories_and_lights(
-            drones,
-            settings,
-            frame_range,
-            context=context,
-            progress=_show_progress_during_export,
-        )
-        yaw_setpoints = None
-
-    # get pyro control enabled state
-    use_pyro_control: bool = settings.get("use_pyro_control", False)
-
-    if use_pyro_control:
-        pyro_programs = {
-            drone.name: get_pyro_markers_of_object(drone) for drone in drones
-        }
-    else:
-        pyro_programs = None
-
-    # get automatic show title
-    show_title = str(basename(filepath).split(".")[0])
-
-    # get show type and location
-    scene_settings = getattr(context.scene.skybrush, "settings", None)
-    show_type = (scene_settings.show_type if scene_settings else "OUTDOOR").lower()
-    show_location = (
-        ShowLocation(
-            latitude=parse_latitude(scene_settings.latitude_of_show_origin),
-            longitude=parse_longitude(scene_settings.longitude_of_show_origin),
-            orientation=degrees(scene_settings.show_orientation),
-        )
-        if scene_settings and scene_settings.use_show_origin_and_orientation
-        else None
-    )
-
-    # get time markers (cues)
-    time_markers = get_time_markers_from_context(context)
-
-    # get cameras
-    export_cameras = settings.get("export_cameras", False)
-    if export_cameras:
-        cameras = get_cameras_from_context(context)
-    else:
-        cameras = None
-
-    # get validation parameters
-    safety_check = getattr(context.scene.skybrush, "safety_check", None)
-    validation = SafetyCheckParams(
-        max_velocity_xy=(
-            safety_check.velocity_xy_warning_threshold if safety_check else 8
-        ),
-        max_velocity_z=safety_check.velocity_z_warning_threshold if safety_check else 2,
-        max_velocity_z_up=(
-            safety_check.velocity_z_warning_threshold_up_or_none
-            if safety_check
-            else None
-        ),
-        max_acceleration=(
-            safety_check.acceleration_warning_threshold if safety_check else 4
-        ),
-        max_yaw_rate=safety_check.yaw_rate_warning_threshold if safety_check else 30,
-        max_altitude=safety_check.altitude_warning_threshold if safety_check else 150,
-        min_distance=safety_check.proximity_warning_threshold if safety_check else 3,
-    )
-
-    # get show segments
-    show_segments = _get_segments(context=context)
-
-    # shift all time-dependent items so that the time axis of the exported show
-    # starts at 0
-    delta = -frame_range[0] / context.scene.render.fps
-    if delta != 0:
-        for trajectory in trajectories.values():
-            trajectory.shift_time_in_place(delta)
-        for light_program in lights.values():
-            light_program.shift_time_in_place(delta)
-        if pyro_programs:
-            for pyro_program in pyro_programs.values():
-                pyro_program.shift_time_in_place(-frame_range[0])
-        if yaw_setpoints:
-            for yaw_setpoint in yaw_setpoints.values():
-                yaw_setpoint.shift_time_in_place(delta)
-        time_markers.shift_time_in_place(delta)
-        show_segments = {
-            k: (v[0] + delta, v[1] + delta) for k, v in show_segments.items()
-        }
-
-    renderer_params = {}
-
-    # create Skybrush converter object
-    if format is FileFormat.SKYC:
-        log.info("Exporting show to Skybrush .skyc format")
-        renderer = "skyc"
-    elif format is FileFormat.PDF:
-        log.info("Exporting validation plots to .pdf")
-        renderer = "plot"
-        plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
-        fps = settings.get("output_fps", _default_settings.output_fps)
-        renderer_params = {"plots": ",".join(plots), "fps": fps, "single_file": True}
-    elif format is FileFormat.SKYC_AND_PDF:
-        log.info("Exporting show to .skyc and .pdf formats")
-        plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
-        fps = settings.get("output_fps", _default_settings.output_fps)
-        renderer = ["skyc", "plot"]
-        renderer_params = [
-            None,
-            {"plots": ",".join(plots), "fps": fps, "single_file": True},
-        ]
-    elif format is FileFormat.CSV:
-        log.info("Exporting show to Skybrush .csv format")
-        renderer = "csv"
-        renderer_params = {
-            "fps": settings["output_fps"],
-        }
-    elif format is FileFormat.DAC:
-        log.info("Exporting show to HG .dac format")
-        renderer = "dac"
-        renderer_params = {
-            "show_id": 1555,
-            "title": "Skybrush show",
-            "model": settings["drone_model"],
-            "gcs": settings["gcs_type"],
-        }
-    elif format is FileFormat.DDSF:
-        log.info("Exporting show to Depence .ddsf format")
-        renderer = "ddsf"
-        renderer_params = {
-            "fps": settings["output_fps"],
-            "light_fps": settings["light_output_fps"],
-        }
-    elif format is FileFormat.DROTEK:
-        log.info("Exporting show to Drotek .json format")
-        renderer = "drotek"
-        renderer_params = {
-            "fps": settings["output_fps"],
-            # TODO(ntamas): takeoff_angle?
-        }
-    elif format is FileFormat.DSS:
-        log.info("Exporting show to DSS .path format")
-        renderer = "dss"
-    elif format is FileFormat.DSS3:
-        log.info("Exporting show to DSS .path3 format")
-        renderer = "dss3"
-        renderer_params = {
-            "fps": settings["output_fps"],
-            "light_fps": settings["light_output_fps"],
-        }
-    elif format is FileFormat.EVSKY:
-        log.info("Exporting show to EVSKY .essp format")
-        renderer = "evsky"
-        renderer_params = {
-            "fps": settings["output_fps"],
-            "light_fps": settings["light_output_fps"],
-        }
-    elif format is FileFormat.LITEBEE:
-        log.info("Exporting show to Litebee .bin format")
-        renderer = "litebee"
-    elif format is FileFormat.VVIZ:
-        log.info("Exporting show to Finale 3D .vviz format")
-        renderer = "vviz"
-        renderer_params = {
-            "fps": settings["output_fps"],
-            "light_fps": settings["light_output_fps"],
-        }
-    else:
-        raise RuntimeError(f"Unhandled format: {format!r}")
-
-    api.export(
-        show_title=show_title,
-        show_type=show_type,
-        show_location=show_location,
-        show_segments=show_segments,
-        validation=validation,
-        trajectories=trajectories,
-        lights=lights,
-        pyro_programs=pyro_programs,
-        yaw_setpoints=yaw_setpoints,
-        output=filepath,
-        time_markers=time_markers,
-        cameras=cameras,
-        renderer=renderer,
-        renderer_params=renderer_params,
-    )
-
-    log.info("Export finished")
