@@ -28,6 +28,7 @@ class FileFormat(Enum):
     # Fireworks visualization formats
     DDSF = "ddsf"
     VVIZ = "vviz"
+    FINALE_CSV = "finale-csv"
 
     # Other visualization formats
     KMZ = "kmz"
@@ -63,6 +64,8 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
             formats.append(FileFormat.DROTEK)
         elif feature == "export:evsky":
             formats.append(FileFormat.EVSKY)
+        elif feature == "export:finale-csv":
+            formats.append(FileFormat.FINALE_CSV)
         elif feature == "export:kmz":
             formats.append(FileFormat.KMZ)
         elif feature == "export:litebee":
