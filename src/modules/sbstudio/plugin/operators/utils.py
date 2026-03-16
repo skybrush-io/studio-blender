@@ -281,6 +281,13 @@ def export_show_to_file_using_api(
             "fps": settings["output_fps"],
             "light_fps": settings["light_output_fps"],
         }
+    elif format is FileFormat.FINALE_CSV:
+        log.info("Exporting show to Finale 3D Do-It-Yourself .csv format")
+        renderer = "finale-csv"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "light_fps": settings["light_output_fps"],
+        }
     elif format is FileFormat.KMZ:
         log.info("Exporting show to Google Earth .kmz format")
         renderer = "kmz"
