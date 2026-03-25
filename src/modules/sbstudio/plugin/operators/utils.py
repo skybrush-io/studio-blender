@@ -291,6 +291,10 @@ def export_show_to_file_using_api(
     elif format is FileFormat.KMZ:
         log.info("Exporting show to Google Earth .kmz format")
         renderer = "kmz"
+        renderer_params = {
+            "fps": settings["output_fps"],
+            "export_mode": str(settings["export_mode"]).lower(),
+        }
     elif format is FileFormat.LITEBEE:
         log.info("Exporting show to Litebee .bin format")
         renderer = "litebee"

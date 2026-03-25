@@ -3,12 +3,11 @@ animation to a Google Earth KMZ file."""
 
 from typing import Any
 
-from bpy.props import FloatProperty, StringProperty
+from bpy.props import EnumProperty, FloatProperty, StringProperty
 from bpy.types import Context
 
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.plugin.operators.utils import get_show_location
-from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
 
 from .base import ExportOperator
 
@@ -38,6 +37,20 @@ class KMZExportOperator(ExportOperator):
         description="Number of samples to take from trajectories and lights per second",
     )
 
+    export_mode = EnumProperty(
+        name="Export mode",
+        description="List of supported export modes",
+        items=[
+            ("POINT", "Point", "Visualize drone objects as points"),
+            (
+                "TRAJECTORY",
+                "Trajectory",
+                "Visualize drone objects and their trajectories",
+            ),
+        ],
+        default="TRAJECTORY",
+    )
+
     def execute(self, context: Context):
         if get_show_location(context) is None:
             self.report(
@@ -58,6 +71,7 @@ class KMZExportOperator(ExportOperator):
         return {
             "output_fps": self.output_fps,
             "light_output_fps": self.output_fps,
+            "export_mode": self.export_mode,
         }
 
     def invoke(self, context: Context, event):
