@@ -979,20 +979,17 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
         for prev, next in consecutive_pairs(self.entries):
             # add entry
             item = self.entries_or_transitions.add()
-            item.id = prev.id
             item.name = prev.name
             item.frame_start = prev.frame_start
             item.frame_end = prev.frame_end
             # add transition
             item = self.entries_or_transitions.add()
-            item.id = f"{prev.id}..{next.id}"
             item.name = f"{prev.name} -> {next.name}"
             item.frame_start = prev.frame_end
             item.frame_end = next.frame_start
         # add last entry
         if self.last_entry:
             item = self.entries_or_transitions.add()
-            item.id = self.last_entry.id
             item.name = self.last_entry.name
             item.frame_start = self.last_entry.frame_start
             item.frame_end = self.last_entry.frame_end
