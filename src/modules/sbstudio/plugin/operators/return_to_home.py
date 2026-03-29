@@ -299,8 +299,9 @@ class ReturnToHomeOperator(StoryboardOperator):
         # TODO: get them as explicit parameter if needed
         settings = getattr(context.scene.skybrush, "settings", None)
         max_acceleration = settings.max_acceleration if settings else 4
-        land_speed = min(self.velocity_z, 0.5)
         to_aerial_grid = self._should_return_to_aerial_grid()
+        land_speed = min(self.velocity_z, 0.5)
+        land_duration = 0 if to_aerial_grid else self.altitude / land_speed
 
         # call API to create smart RTH plan
         eps = 2e-3
@@ -325,7 +326,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         entry = storyboard.add_new_entry(
             formation=create_formation("Smart return to home", source),
             frame_start=self.start_frame,
-            duration=int(ceil((plan.duration + self.altitude / land_speed) * fps)),
+            duration=int(ceil((plan.duration + land_duration) * fps)),
             select=True,
             purpose=StoryboardEntryPurpose.LANDING,
             context=context,
@@ -367,7 +368,7 @@ class ReturnToHomeOperator(StoryboardOperator):
             if not to_aerial_grid:
                 path_points.append(
                     (
-                        start_time + duration + self.altitude / land_speed,
+                        start_time + duration + land_duration,
                         q[0],
                         q[1],
                         0,  # TODO: starting position would be better than explicit 0
