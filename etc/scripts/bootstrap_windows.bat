@@ -34,13 +34,9 @@ cd %REPO_ROOT%
 
 if "%1"=="standalone" (
     set SKYBRUSH_ROOT=%REPO_ROOT%\..\skybrush
-    call poetry install -E standalone
-) else (
-    call poetry install
 )
 
-
-
+call uv sync
 rmdir /Q /S dev\
 mkdir dev\vendor\skybrush
 mklink /D dev\addons %REPO_ROOT%\src\addons
