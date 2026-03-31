@@ -62,6 +62,12 @@ sky. Define this duration here and put your trigger events exactly at the desire
 when they should start to be visible. Skybrush will make sure your pyro payloads will be
 triggered this time earlier to have your spectacles right on time.
 
+Yaw:: Defines the yaw angle of the pyro payload relative to the body frame of the drone, in degrees.
+(0° points towards the yaw of the drone, 90° to the right, -90° to the left etc.)
+
+Pitch:: Defines the pitch angle of the pyro payload relative to the body frame of the drone, in degrees.
+(0° points ahead (towards the yaw of the payload), 90° points up, -90° points down etc.)
+
 == Trigger
 
 When you have setup the pyro channel and all your payload parameters, select the drones

@@ -1,3 +1,4 @@
+from math import radians
 from typing import overload
 
 from bpy.props import EnumProperty, FloatProperty, IntProperty, StringProperty
@@ -95,7 +96,25 @@ class PyroControlPanelProperties(PropertyGroup):
         step=100,  # button step is 1/100th of step
     )
 
-    # TODO: add yaw and pitch angle relative to the drone, if needed
+    yaw = FloatProperty(
+        name="Yaw",
+        description="The yaw (pan) angle of the payload, relative to the body frame of the drone",
+        default=radians(0),
+        soft_min=radians(-180),
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
+
+    pitch = FloatProperty(
+        name="Pitch",
+        description="The pitch (tilt) angle of the payload, relative to the body frame of the drone",
+        default=radians(-90),
+        soft_min=radians(-180),
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
 
     def clear_pyro_overlay_markers(self) -> None:
         """Clears the pyro overlay markers."""
