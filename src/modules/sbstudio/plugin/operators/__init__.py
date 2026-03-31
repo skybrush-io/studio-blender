@@ -68,6 +68,7 @@ from .takeoff import TakeoffOperator
 from .trigger_pyro import TriggerPyroOnSelectedDronesOperator
 from .update_formation import UpdateFormationOperator
 from .update_frame_range_from_storyboard import UpdateFrameRangeFromStoryboardOperator
+from .update_pyro_params import UpdatePyroParamsFromSelectedDroneOperator
 from .update_time_markers_from_storyboard import UpdateTimeMarkersFromStoryboardOperator
 from .use_vgroup_for_formation import UseSelectedVertexGroupForFormationOperator
 from .validate_trajectories import ValidateTrajectoriesOperator
@@ -134,6 +135,7 @@ __all__ = (
     "TriggerPyroOnSelectedDronesOperator",
     "UpdateFormationOperator",
     "UpdateFrameRangeFromStoryboardOperator",
+    "UpdatePyroParamsFromSelectedDroneOperator",
     "UpdateTimeMarkersFromStoryboardOperator",
     "UseSelectedVertexGroupForFormationOperator",
     "ValidateTrajectoriesOperator",
