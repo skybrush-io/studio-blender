@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Added
+
+- Added yaw and pitch to pyro payload parameters.
+
+- Added a button to the pyro panel to retrieve pyro payload parameters from 
+  the currently selected drone and channel.
+
 ### Fixed
 
 - Removed superfluous static hover part from the end of smart RTH to aerial grid formation.
