@@ -10,7 +10,7 @@ image::panels/pyro_control/pyro_control.jpg[Pyro Control panel]
 
 == Render
 
-There are three visualization types for pyro effects you can choose dynamically:
+There are several visualization types for pyro effects from which you can choose dynamically:
 
 None::
 Select this option to skip pyro visualization completely
@@ -45,6 +45,10 @@ before pressing the btn:[Trigger] button.
 
 Note that only a single event is supported per channel on each drone, so consecutive
 triggering on the same channel will overwrite previous events.
+
+== Upload params from selection
+
+Press this button to retrieve pyro payload parameters from the currently selected drone on the current channel.
 
 == Payload parameters
 
