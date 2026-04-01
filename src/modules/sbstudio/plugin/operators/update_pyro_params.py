@@ -28,7 +28,7 @@ class UpdatePyroParamsFromSelectedDroneOperator(Operator):
         # get selected drone
         selection = get_selected_drones()
         if len(selection) != 1:
-            self.report({"INFO"}, "Select a single drone to update pyro params")
+            self.report({"ERROR"}, "Select a single drone to update pyro params")
             return False
         drone = selection[0]
 
@@ -40,7 +40,7 @@ class UpdatePyroParamsFromSelectedDroneOperator(Operator):
         marker = get_pyro_markers_of_object(drone).markers.get(channel)
         if marker is None:
             self.report(
-                {"INFO"},
+                {"ERROR"},
                 f"The selected drone does not trigger pyro on channel {channel}",
             )
             return False

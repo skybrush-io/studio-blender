@@ -100,7 +100,7 @@ class TriggerPyroOnSelectedDronesOperator(Operator):
         selection = get_selected_drones()
         num_selected = len(selection)
         if not num_selected:
-            self.report({"INFO"}, "Select some drones first to trigger pyro")
+            self.report({"ERROR"}, "Select some drones first to trigger pyro")
             return False
 
         frame = context.scene.frame_current
