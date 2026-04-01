@@ -5,14 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.2.2] - 2026-04-01
+## [4.3.0] - 2026-04-01
 
 ### Added
 
 - Added yaw and pitch to pyro payload parameters.
 
-- Added a button to the pyro panel to retrieve pyro payload parameters from 
+- Added a button to the pyro panel to retrieve pyro payload parameters from
   the currently selected drone and channel.
+
+## [4.2.2] - 2026-04-01
 
 ### Fixed
 
