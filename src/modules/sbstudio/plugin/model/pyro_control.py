@@ -1,8 +1,10 @@
+from math import radians
 from typing import overload
 
 from bpy.props import EnumProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Context, PropertyGroup
 
+from sbstudio.model.pyro_markers import PyroPayload
 from sbstudio.plugin.constants import NUM_PYRO_CHANNELS, Collections
 from sbstudio.plugin.overlays.pyro import (
     PyroOverlay,
@@ -95,7 +97,25 @@ class PyroControlPanelProperties(PropertyGroup):
         step=100,  # button step is 1/100th of step
     )
 
-    # TODO: add yaw and pitch angle relative to the drone, if needed
+    yaw = FloatProperty(
+        name="Yaw",
+        description="The yaw (pan) angle of the payload, relative to the body frame of the drone",
+        default=radians(0),
+        soft_min=radians(-180),
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
+
+    pitch = FloatProperty(
+        name="Pitch",
+        description="The pitch (tilt) angle of the payload, relative to the body frame of the drone",
+        default=radians(-90),
+        soft_min=radians(-180),
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
 
     def clear_pyro_overlay_markers(self) -> None:
         """Clears the pyro overlay markers."""
@@ -107,6 +127,15 @@ class PyroControlPanelProperties(PropertyGroup):
 
     def ensure_overlays_enabled_if_needed(self) -> None:
         get_overlay().enabled = self.visualization in ["MARKERS", "INFO"]
+
+    def update_params_from_pyro_payload(self, payload: PyroPayload) -> None:
+        """Updates the parameters of the pyro control panel from
+        an existing pyro payload."""
+        self.name = payload.name
+        self.duration = payload.duration
+        self.prefire_time = payload.prefire_time
+        self.yaw = radians(payload.yaw)
+        self.pitch = radians(payload.pitch)
 
     def update_pyro_overlay_markers(self, markers: list[PyroOverlayMarker]) -> None:
         """Updates the pyro overlay markers."""
