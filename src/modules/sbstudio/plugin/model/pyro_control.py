@@ -4,6 +4,7 @@ from typing import overload
 from bpy.props import EnumProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Context, PropertyGroup
 
+from sbstudio.model.pyro_markers import PyroPayload
 from sbstudio.plugin.constants import NUM_PYRO_CHANNELS, Collections
 from sbstudio.plugin.overlays.pyro import (
     PyroOverlay,
@@ -126,6 +127,15 @@ class PyroControlPanelProperties(PropertyGroup):
 
     def ensure_overlays_enabled_if_needed(self) -> None:
         get_overlay().enabled = self.visualization in ["MARKERS", "INFO"]
+
+    def update_params_from_pyro_payload(self, payload: PyroPayload) -> None:
+        """Updates the parameters of the pyro control panel from
+        an existing pyro payload."""
+        self.name = payload.name
+        self.duration = payload.duration
+        self.prefire_time = payload.prefire_time
+        self.yaw = radians(payload.yaw)
+        self.pitch = radians(payload.pitch)
 
     def update_pyro_overlay_markers(self, markers: list[PyroOverlayMarker]) -> None:
         """Updates the pyro overlay markers."""

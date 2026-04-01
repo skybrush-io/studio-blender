@@ -1,5 +1,3 @@
-from math import radians
-
 from bpy.types import Operator
 
 from sbstudio.plugin.selection import get_selected_drones
@@ -46,12 +44,7 @@ class UpdatePyroParamsFromSelectedDroneOperator(Operator):
             return False
 
         # update pyro control params
-        payload = marker.payload
-        pyro_control.name = payload.name
-        pyro_control.duration = payload.duration
-        pyro_control.prefire_time = payload.prefire_time
-        pyro_control.yaw = radians(payload.yaw)
-        pyro_control.pitch = radians(payload.pitch)
+        pyro_control.update_params_from_pyro_payload(marker.payload)
 
         # Mark all the 3D views to be redrawn
         for _, area in find_all_3d_views_and_their_areas():
