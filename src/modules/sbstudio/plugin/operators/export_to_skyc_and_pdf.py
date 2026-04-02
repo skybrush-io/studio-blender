@@ -61,6 +61,11 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
     #####################################################
     # properties inherited from SkybrushPDFExportOperator
 
+    plot_stats = BoolProperty(
+        name="Plot flight report",
+        default=True,
+        description=("Include flight statistics and validation report (required)."),
+    )
     plot_pos = BoolProperty(
         name="Plot positions",
         default=True,
@@ -73,6 +78,13 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
         default=True,
         description=(
             "Include velocity plot. Uncheck to exclude velocity plot from the output."
+        ),
+    )
+    plot_acc = BoolProperty(
+        name="Plot accelerations",
+        default=False,
+        description=(
+            "Include acceleration plot. Uncheck to exclude acceleration plot from the output."
         ),
     )
     plot_drift = BoolProperty(
@@ -125,8 +137,12 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
 
         column = layout.column(align=True)
         column.label(text="PDF export features:")
+        row = column.row()
+        row.prop(self, "plot_stats")
+        row.enabled = False
         column.prop(self, "plot_pos")
         column.prop(self, "plot_vel")
+        column.prop(self, "plot_acc")
         column.prop(self, "plot_drift")
         column.prop(self, "plot_nn")
         column.prop(self, "plot_nnall")
@@ -140,14 +156,16 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
 
     def get_settings(self) -> dict[str, Any]:
         plots = {
+            "stats": self.plot_stats,
             "pos": self.plot_pos,
             "vel": self.plot_vel,
+            "acc": self.plot_acc,
             "drift": self.plot_drift,
             "nn": self.plot_nn,
             "nnall": self.plot_nnall,
             "indiv": self.plot_indiv,
         }
-        plots = ["stats"] + [key for key, value in plots.items() if value]
+        plots = [key for key, value in plots.items() if value]
 
         return {
             "output_fps": self.output_fps,

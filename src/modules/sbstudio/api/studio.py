@@ -439,6 +439,8 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             time_markers: temporal cues to use in the plots
         """
 
+        log.warning("api.generate_plots() is deprecated, use api.export() instead")
+
         if time_markers is None:
             time_markers = TimeMarkers()
 

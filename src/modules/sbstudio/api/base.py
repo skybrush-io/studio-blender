@@ -1,4 +1,5 @@
 import json
+import logging
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -22,6 +23,8 @@ __all__ = (
     "SkybrushStudioResponse",
     "SkybrushStudioBaseAPI",
 )
+
+log = logging.getLogger(__name__)
 
 
 class SkybrushStudioResponse:

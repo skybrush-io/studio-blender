@@ -266,11 +266,16 @@ class Collection(ID):
     children: CollectionChildren
     objects: CollectionObjects
 
+class ColorManagedInputColorspaceSettings(ID):
+    is_data: bool
+    name: str
+
 class Image(ID):
     depth: int
     frame_duration: int
     size: tuple[int, int]
     pixels: Sequence[float]
+    colorspace_settings: ColorManagedInputColorspaceSettings
 
     def pack(self) -> None: ...
 

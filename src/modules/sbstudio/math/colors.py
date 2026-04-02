@@ -1,5 +1,7 @@
+from collections.abc import Callable
 from enum import auto, IntEnum
-from typing import Callable, List, MutableSequence, Sequence
+
+from sbstudio.model.types import RGBAColor, MutableRGBAColor
 
 __all__ = ("blend_in_place", "BlendMode")
 
@@ -26,42 +28,42 @@ class BlendMode(IntEnum):
 
 
 def _blend_normal(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         backdrop[i] = a * source[i] + b * backdrop[i]
 
 
 def _blend_multiply(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         backdrop[i] = a * backdrop[i] * source[i] + b * backdrop[i]
 
 
 def _blend_screen(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         backdrop[i] = a * (1 - (1 - backdrop[i]) * (1 - source[i])) + b * backdrop[i]
 
 
 def _blend_darken(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         backdrop[i] = a * min(backdrop[i], source[i]) + b * backdrop[i]
 
 
 def _blend_lighten(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         backdrop[i] = a * max(backdrop[i], source[i]) + b * backdrop[i]
 
 
 def _blend_overlay(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         if backdrop[i] >= 0.5:
@@ -73,7 +75,7 @@ def _blend_overlay(
 
 
 def _blend_hard_light(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     for i in range(3):
         if source[i] <= 0.5:
@@ -85,7 +87,7 @@ def _blend_hard_light(
 
 
 def _blend_soft_light(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     # There are multiple variants for this mode; the variant below is the W3C
     # recommendation, _not_ the one in Photoshop.
@@ -109,14 +111,12 @@ def _blend_soft_light(
 
 
 def _blend_nop(
-    source: Sequence[float], backdrop: MutableSequence[float], a: float, b: float
+    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
 ) -> None:
     pass
 
 
-_blend_funcs: List[
-    Callable[[Sequence[float], MutableSequence[float], float, float], None]
-] = [
+_blend_funcs: list[Callable[[RGBAColor, MutableRGBAColor, float, float], None]] = [
     _blend_nop,
     _blend_normal,
     _blend_multiply,
@@ -134,8 +134,8 @@ if len(_blend_funcs) != len(BlendMode) + 1:
 
 
 def blend_in_place(
-    source: Sequence[float],
-    backdrop: MutableSequence[float],
+    source: RGBAColor,
+    backdrop: MutableRGBAColor,
     mode: BlendMode = BlendMode.NORMAL,
 ) -> None:
     """Blends two colors according to standard alpha compositing rules, using
