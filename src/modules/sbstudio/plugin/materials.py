@@ -1,7 +1,5 @@
 import bpy
-
 from bpy.types import Material
-from typing import Optional
 
 from sbstudio.model.types import RGBAColor
 
@@ -15,7 +13,6 @@ __all__ = (
     "set_emission_strength_of_material",
 )
 
-is_blender_4_or_later = bpy.app.version >= (4, 0, 0)
 is_blender_6_or_later = bpy.app.version >= (6, 0, 0)
 
 
@@ -116,7 +113,7 @@ def create_glowing_material(
     return mat
 
 
-def get_material_for_led_light_color(drone) -> Optional[Material]:
+def get_material_for_led_light_color(drone) -> Material | None:
     """Returns the material of the given drone object that is supposed to
     correspond to the LED light.
 
@@ -130,7 +127,7 @@ def get_material_for_led_light_color(drone) -> Optional[Material]:
         return None
 
 
-def get_material_for_pyro(drone) -> Optional[Material]:
+def get_material_for_pyro(drone) -> Material | None:
     """Returns the material of the given drone object that is supposed to
     correspond to the pyro.
 
@@ -208,9 +205,7 @@ def _get_shader_node_and_input_for_diffuse_color_of_material(material):
                 node = _find_shader_node_by_name_and_type(
                     material, "Principled BSDF", "BSDF_PRINCIPLED"
                 )
-                input = node.inputs[
-                    "Emission Color" if is_blender_4_or_later else "Emission"
-                ]
+                input = node.inputs["Emission Color"]
                 return node, input
             except KeyError:
                 raise SkybrushStudioAddonError(
@@ -231,6 +226,4 @@ def _set_specular_reflection_intensity_of_material(material, intensity):
     node = _find_shader_node_by_name_and_type(
         material, "Principled BSDF", "BSDF_PRINCIPLED"
     )
-    node.inputs[
-        "Specular IOR Level" if is_blender_4_or_later else "Specular"
-    ].default_value = intensity
+    node.inputs["Specular IOR Level"].default_value = intensity

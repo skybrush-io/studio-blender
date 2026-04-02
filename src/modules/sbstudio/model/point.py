@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from mathutils import Vector
 
 __all__ = ("Point3D", "Point4D")

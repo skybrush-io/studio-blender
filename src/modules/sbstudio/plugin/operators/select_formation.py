@@ -1,8 +1,8 @@
 from bpy.types import MeshVertex
 
 from sbstudio.plugin.model.formation import get_markers_from_formation
-from sbstudio.plugin.plugin_helpers import enter_edit_mode, temporarily_exit_edit_mode
 from sbstudio.plugin.objects import object_contains_vertex
+from sbstudio.plugin.plugin_helpers import enter_edit_mode, temporarily_exit_edit_mode
 from sbstudio.plugin.selection import (
     add_to_selection,
     ensure_vertex_select_mode_enabled,

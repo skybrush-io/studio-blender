@@ -1,7 +1,8 @@
 """Functions related to the handling of keyframes in animation actions."""
 
 from collections import defaultdict
-from typing import Callable, Sequence, overload
+from collections.abc import Callable, Sequence
+from typing import overload
 
 from bpy.types import FCurve, Object
 

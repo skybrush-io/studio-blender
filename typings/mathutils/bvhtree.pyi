@@ -1,7 +1,5 @@
 import sys
 
-from typing import Union
-
 from bmesh.types import BMesh
 from bpy.types import Depsgraph, Object
 from mathutils import Vector
@@ -21,7 +19,7 @@ class BVHTree:
     ): ...
     def ray_cast(
         self,
-        origin: Union[Vector, tuple[float, ...]],
-        direction: Union[Vector, tuple[float, ...]],
+        origin: Vector | tuple[float, ...],
+        direction: Vector | tuple[float, ...],
         distance: float = sys.float_info.max,
     ) -> tuple[Vector, Vector, int, float]: ...

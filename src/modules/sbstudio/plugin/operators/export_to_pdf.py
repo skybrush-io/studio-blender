@@ -1,6 +1,6 @@
 from typing import Any
 
-from bpy.props import BoolProperty, StringProperty, IntProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty
 
 from sbstudio.model.file_formats import FileFormat
 

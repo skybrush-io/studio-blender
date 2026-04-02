@@ -24,4 +24,4 @@ https://skybrush.io/[*Skybrush*] is a modular software suite, consisting of the 
 
 In this manual our focus is on *Skybrush Studio for Blender*, which is an implementation of *Skybrush Studio* modules and functions in https://www.blender.org/[Blender], an open-source 3D creation suite.
 
-If you are interested in working with *Skybrush Studio* but you prefer to use another animation software, please mailto:support@collmot.com[contact us].
+If you are interested in working with *Skybrush Studio* but you prefer to use another animation software, please mailto:{contact-email}[contact us].

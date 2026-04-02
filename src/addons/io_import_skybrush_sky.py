@@ -20,25 +20,21 @@ __license__ = "GPLv3"
 #############################################################################
 # imports needed to set up the Python path properly
 
-import bpy
 import sys
-
-from bpy.path import abspath
 from pathlib import Path
 
+import bpy
+from bpy.path import abspath
 
 #############################################################################
 # Note: This code needs to be harmonized with the plugin installer to have
 # the same target directory for all add-on specific dependencies.
 
 
-if bpy.app.version >= (3, 6, 0):
-    candidates = [
-        abspath(script_directory.directory)
-        for script_directory in bpy.context.preferences.filepaths.script_directories
-    ]
-else:
-    candidates = [abspath(bpy.context.preferences.filepaths.script_directory)]
+candidates = [
+    abspath(script_directory.directory)
+    for script_directory in bpy.context.preferences.filepaths.script_directories
+]
 candidates.append(Path(sys.modules[__name__].__file__).parent.parent)
 
 for candidate in candidates:
@@ -52,8 +48,8 @@ for candidate in candidates:
 # imports needed by the addon
 
 import logging
+from copy import deepcopy
 
-from bpy_extras.io_utils import ImportHelper
 from bpy.path import ensure_ext
 from bpy.props import (
     BoolProperty,
@@ -63,20 +59,17 @@ from bpy.props import (
     StringProperty,
 )
 from bpy.types import Operator
-from copy import deepcopy
-
-from skybrush.io.sky.runner import SkybrushScriptRunner
-from skybrush.io.blender.renderer import render
-from skybrush.io.base.renderer import RenderContext, RenderMode
-from skybrush.utils.filesystem import working_directory
-
+from bpy_extras.io_utils import ImportHelper
 from sbstudio.plugin.plugin_helpers import (
     register_in_menu,
     register_operator,
     unregister_from_menu,
     unregister_operator,
 )
-
+from skybrush.io.base.renderer import RenderContext, RenderMode
+from skybrush.io.blender.renderer import render
+from skybrush.io.sky.runner import SkybrushScriptRunner
+from skybrush.utils.filesystem import working_directory
 
 #############################################################################
 # configure logger
@@ -267,16 +260,14 @@ def register():
     register_operator(SkybrushImportOperator)
     register_operator(SkybrushReimportOperator)
     register_in_menu("File / Import", menu_func_import)
-    if bpy.app.version >= (3, 0, 0):
-        register_in_menu("Blender / System", menu_func_reimport)
+    register_in_menu("Blender / System", menu_func_reimport)
 
 
 def unregister():
     unregister_operator(SkybrushReimportOperator)
     unregister_operator(SkybrushImportOperator)
     unregister_from_menu("File / Import", menu_func_import)
-    if bpy.app.version >= (3, 0, 0):
-        unregister_from_menu("Blender / System", menu_func_reimport)
+    unregister_from_menu("Blender / System", menu_func_reimport)
 
 
 if __name__ == "__main__":

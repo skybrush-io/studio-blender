@@ -1,11 +1,10 @@
-import bpy
-
-from bpy.types import Object, ParticleSystem
-
 from random import randint
 
-from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
+import bpy
+from bpy.types import Object, ParticleSystem
+
 from sbstudio.model.pyro_markers import PyroMarker, PyroMarkers
+from sbstudio.plugin.constants import NUM_PYRO_CHANNELS
 from sbstudio.plugin.materials import get_material_for_pyro
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_pyro_material_from_drone_template,

@@ -1,7 +1,5 @@
 import csv
 import logging
-
-from natsort import natsorted
 from pathlib import Path
 from typing import IO
 from zipfile import ZipFile
@@ -9,6 +7,7 @@ from zipfile import ZipFile
 from bpy.path import ensure_ext
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
+from natsort import natsorted
 
 from sbstudio.model.color import Color4D
 from sbstudio.model.point import Point4D

@@ -1,7 +1,6 @@
-import bpy
-
 from itertools import count as count_from
-from typing import List
+
+import bpy
 
 __all__ = ("create_internal_id", "is_internal_id", "propose_name", "propose_names")
 
@@ -46,7 +45,7 @@ def propose_name(template: str, *, for_collection: bool = False) -> str:
 
 def propose_names(
     template: str, count: int, *, for_collection: bool = False
-) -> List[str]:
+) -> list[str]:
     """Proposes new names for a given number of objects such that the names of
     the objects are similar to the given template. The template should include a
     marker (`{}`) that is replaced with consecutive integers starting from 1.

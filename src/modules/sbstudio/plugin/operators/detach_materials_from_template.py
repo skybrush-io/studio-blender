@@ -1,5 +1,4 @@
 from bpy.types import Material, Operator
-from typing import Optional
 
 from sbstudio.plugin.constants import Collections, Templates
 from sbstudio.plugin.materials import (
@@ -11,7 +10,7 @@ __all__ = ("DetachMaterialsFromDroneTemplateOperator",)
 
 
 def detach_pyro_material_from_drone_template(
-    drone, template_material: Optional[Material] = None
+    drone, template_material: Material | None = None
 ) -> None:
     if template_material is None:
         template = Templates.find_drone(create=False)

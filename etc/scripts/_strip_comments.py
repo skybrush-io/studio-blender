@@ -6,11 +6,10 @@ obfuscation.
 
 import sys
 import token
-
 from argparse import ArgumentParser
 from contextlib import ExitStack
 from pathlib import Path
-from tokenize import generate_tokens, COMMENT
+from tokenize import COMMENT, generate_tokens
 from typing import IO
 
 

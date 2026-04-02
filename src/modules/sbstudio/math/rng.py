@@ -1,9 +1,9 @@
 """Classes and functions related to random number generation."""
 
+from collections.abc import Callable, Sequence
 from random import Random
 from threading import Lock
-from typing import Callable, List, Optional, Sequence, TypeVar
-
+from typing import TypeVar
 
 C = TypeVar("C", bound="RandomSequence")
 
@@ -13,7 +13,7 @@ class RandomSequence(Sequence[int]):
     can be accessed by indexing.
     """
 
-    _cache: List[int]
+    _cache: list[int]
     """Cached items of the sequence that were already generated."""
 
     _max: int
@@ -22,7 +22,7 @@ class RandomSequence(Sequence[int]):
     _rng: Random
     """Internal RNG that generates the sequence."""
 
-    _rng_factory: Callable[[Optional[int]], Random]
+    _rng_factory: Callable[[int | None], Random]
     """Factory function that created the internal RNG of this sequence, used
     for forking.
     """
@@ -35,9 +35,9 @@ class RandomSequence(Sequence[int]):
     def __init__(
         self,
         *,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         max: int = 0xFFFFFFFF,
-        rng_factory: Callable[[Optional[int]], Random] = Random,
+        rng_factory: Callable[[int | None], Random] = Random,
     ):
         """Constructor.
 

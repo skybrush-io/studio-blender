@@ -1,15 +1,14 @@
 """Utility functions related to Blender textures."""
 
-from bpy.types import Texture, ImageTexture
-
 from typing import Any
+
+from bpy.types import ImageTexture, Texture
 
 from sbstudio.plugin.utils.color_ramp import (
     color_ramp_as_dict,
     update_color_ramp_from_dict,
 )
 from sbstudio.plugin.utils.image import find_image_by_name
-
 
 __all__ = (
     "texture_as_dict",

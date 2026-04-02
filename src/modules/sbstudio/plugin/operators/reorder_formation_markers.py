@@ -1,12 +1,10 @@
-from numpy import array, logical_or
-from numpy.linalg import norm
-from natsort import index_natsorted, order_by_index
 from random import shuffle
-from typing import List
 
 import bpy
-
 from bpy.props import EnumProperty
+from natsort import index_natsorted, order_by_index
+from numpy import array, logical_or
+from numpy.linalg import norm
 
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.utils.collections import sort_collection
@@ -56,7 +54,7 @@ class ReorderFormationMarkersOperator(FormationOperator):
         markers = formation.objects
         func = getattr(self, f"_execute_on_formation_{self.type}", None)
         if callable(func):
-            index_vector: List[int] = func(markers, context)
+            index_vector: list[int] = func(markers, context)
             reversed_mapping = {
                 markers[marker_index]: slot_index
                 for slot_index, marker_index in enumerate(index_vector)
@@ -69,7 +67,7 @@ class ReorderFormationMarkersOperator(FormationOperator):
             self.report({"ERROR"}, f"{self.type} method not implemented yet")
             return {"CANCELLED"}
 
-    def _execute_on_formation_NAME(self, markers, context) -> List[int]:
+    def _execute_on_formation_NAME(self, markers, context) -> list[int]:
         """Sort markers by their names. This essentially allows the user to
         specify a custom order by naming the markers appropriately.
 
@@ -80,43 +78,43 @@ class ReorderFormationMarkersOperator(FormationOperator):
         index = index_natsorted(names)
         return order_by_index(list(range(len(markers))), index)  # type: ignore
 
-    def _execute_on_formation_SHUFFLE(self, markers, context) -> List[int]:
+    def _execute_on_formation_SHUFFLE(self, markers, context) -> list[int]:
         """Shuffle markers in random order."""
         mapping = list(range(len(markers)))
         shuffle(mapping)
         return mapping
 
-    def _execute_on_formation_REVERSE(self, markers, context) -> List[int]:
+    def _execute_on_formation_REVERSE(self, markers, context) -> list[int]:
         """Reverse the current order of the markers."""
         return list(reversed(range(len(markers))))
 
-    def _execute_on_formation_X(self, markers, context) -> List[int]:
+    def _execute_on_formation_X(self, markers, context) -> list[int]:
         """Stable-sort markers by their X coordinates."""
         return self._sort_by_axis(markers, axis=0)
 
-    def _execute_on_formation_Y(self, markers, context) -> List[int]:
+    def _execute_on_formation_Y(self, markers, context) -> list[int]:
         """Stable-sort markers by their Y coordinates."""
         return self._sort_by_axis(markers, axis=1)
 
-    def _execute_on_formation_Z(self, markers, context) -> List[int]:
+    def _execute_on_formation_Z(self, markers, context) -> list[int]:
         """Stable-sort markers by their Z coordinates."""
         return self._sort_by_axis(markers, axis=2)
 
-    def _execute_on_formation_EVERY_2(self, markers, context) -> List[int]:
+    def _execute_on_formation_EVERY_2(self, markers, context) -> list[int]:
         """Step to every second marker."""
         return self._sweep(markers, step=2)
 
-    def _execute_on_formation_EVERY_3(self, markers, context) -> List[int]:
+    def _execute_on_formation_EVERY_3(self, markers, context) -> list[int]:
         """Step to every third marker."""
         return self._sweep(markers, step=3)
 
-    def _execute_on_formation_EVERY_4(self, markers, context) -> List[int]:
+    def _execute_on_formation_EVERY_4(self, markers, context) -> list[int]:
         """Step to every fourth marker."""
         return self._sweep(markers, step=4)
 
     def _execute_on_formation_ENSURE_SAFETY_DISTANCE(
         self, markers, context
-    ) -> List[int]:
+    ) -> list[int]:
         """Traverse the markers in the current order, skipping over markers
         that are closer to any of the previous markers in the current sweep than
         the safety distance. Start new sweeps until all markers are selected.
@@ -128,10 +126,10 @@ class ReorderFormationMarkersOperator(FormationOperator):
         with create_position_evaluator() as get_positions_of:
             coords = array(get_positions_of(markers))
 
-        queue: List[int] = list(range(num_markers))
+        queue: list[int] = list(range(num_markers))
         masked = array([False] * num_markers, dtype=bool)
-        skipped: List[int] = []
-        result: List[int] = []
+        skipped: list[int] = []
+        result: list[int] = []
 
         dist_threshold: float = get_proximity_warning_threshold(context)
 
@@ -162,7 +160,7 @@ class ReorderFormationMarkersOperator(FormationOperator):
         return result
 
     @staticmethod
-    def _sort_by_axis(markers, *, axis: int) -> List[int]:
+    def _sort_by_axis(markers, *, axis: int) -> list[int]:
         """Stable-sort markers by a given axis."""
         with create_position_evaluator() as get_positions_of:
             coords = get_positions_of(markers)
@@ -173,7 +171,7 @@ class ReorderFormationMarkersOperator(FormationOperator):
         return sorted(range(len(markers)), key=key_func)
 
     @staticmethod
-    def _sweep(markers, *, step: int) -> List[int]:
+    def _sweep(markers, *, step: int) -> list[int]:
         """Take the current order and start jumping to every n-th marker from
         the beginning, looping back to the first unused marker when reaching
         the end of the sequence.

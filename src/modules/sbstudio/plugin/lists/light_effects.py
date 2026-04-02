@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import bpy
-
-from bpy.types import UIList
-
 from typing import TYPE_CHECKING
+
+import bpy
+from bpy.types import UIList
 
 if TYPE_CHECKING:
     from bpy.types import Context
+
     from sbstudio.plugin.model.light_effects import LightEffect
 
 __all__ = ("SKYBRUSH_UL_lightfxlist",)

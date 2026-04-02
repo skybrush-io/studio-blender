@@ -1,6 +1,7 @@
 """Functions to enable or disable a bloom effect on the 3D view."""
 
 from functools import lru_cache
+
 import bpy
 
 from sbstudio.plugin.constants import Collections, Templates

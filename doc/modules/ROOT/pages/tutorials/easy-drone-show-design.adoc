@@ -179,4 +179,4 @@ If you are a professional license holder, please press the btn:[Refresh file for
 
 == 11. Enjoy
 
-We are done. Check out your show in *Skybrush Viewer* or execute it with *Skybrush Live*. Enjoy, mailto:support@collmot.com[send us feedback or ask us] if you have any questions!
+We are done. Check out your show in *Skybrush Viewer* or execute it with *Skybrush Live*. Enjoy, mailto:{contact-email}[send us feedback or ask us] if you have any questions!

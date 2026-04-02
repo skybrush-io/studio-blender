@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from bpy.props import BoolProperty
 from bpy.types import Context, PropertyGroup
 
@@ -20,7 +18,7 @@ def get_overlay() -> FormationOrderOverlay:
 
 
 def order_overlay_enabled_updated(
-    self: "FormationsPanelProperties", context: Optional[Context] = None
+    self: "FormationsPanelProperties", context: Context | None = None
 ):
     """Called when user toggles the visibility of the formation order overlay."""
     _formation_order_overlay.enabled = self.order_overlay_enabled

@@ -1,8 +1,10 @@
-from bpy.types import Context, Object
+from collections.abc import Callable, Sequence
 from contextlib import contextmanager
 from functools import partial
 from math import degrees
-from typing import Callable, Optional, Sequence, overload
+from typing import overload
+
+from bpy.types import Context, Object
 
 from sbstudio.model.types import Coordinate3D, Rotation3D
 
@@ -18,7 +20,7 @@ __all__ = (
 
 @contextmanager
 @with_context
-def create_position_evaluator(context: Optional[Context] = None):
+def create_position_evaluator(context: Context | None = None):
     """Context manager that yields a function that allows the user to evaluate
     the position of any Blender object or objects at any given frame.
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from sbstudio.model.types import Coordinate3D, Quaternion
+
 __all__ = ("Camera",)
 
 
@@ -18,10 +20,10 @@ class Camera:
     name: str
     """The name of the camera."""
 
-    position: tuple[float, float, float]
+    position: Coordinate3D
     """The position of the camera in 3D space."""
 
-    orientation: tuple[float, float, float, float]
+    orientation: Quaternion
     """The orientation of the camera using Blender quaternions."""
 
     def as_dict(self, ndigits: int = 3):

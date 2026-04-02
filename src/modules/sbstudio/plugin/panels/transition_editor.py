@@ -1,8 +1,6 @@
 from bpy.types import Panel
 
-from typing import List, Optional
-
-from sbstudio.plugin.model.storyboard import get_storyboard, Storyboard, StoryboardEntry
+from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry, get_storyboard
 from sbstudio.plugin.operators import (
     CreateNewScheduleOverrideEntryOperator,
     RecalculateTransitionsOperator,
@@ -30,7 +28,7 @@ class TransitionEditorBase(Panel):
     bl_options = {"INSTANCED"}
 
     @classmethod
-    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+    def _get_entry(cls, storyboard: Storyboard) -> StoryboardEntry | None:
         """Returns the entry that the transition editor will edit."""
         return None
 
@@ -45,7 +43,7 @@ class TransitionEditorBase(Panel):
     @classmethod
     def _get_info_labels(
         cls, storyboard: Storyboard, entry: StoryboardEntry
-    ) -> List[str]:
+    ) -> list[str]:
         return []
 
     @classmethod
@@ -120,14 +118,14 @@ class TransitionEditorIntoCurrentFormation(TransitionEditorBase):
     bl_description = "Edits the transition into the currently selected formation"
 
     @classmethod
-    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+    def _get_entry(cls, storyboard: Storyboard) -> StoryboardEntry | None:
         entry = storyboard.active_entry
         return entry if entry != storyboard.first_entry else None
 
     @classmethod
     def _get_info_labels(
         cls, storyboard: Storyboard, entry: StoryboardEntry
-    ) -> List[str]:
+    ) -> list[str]:
         duration = storyboard.get_transition_duration_into_current_entry()
         return [format_transition_duration(duration)]
 
@@ -146,13 +144,13 @@ class TransitionEditorFromCurrentFormation(TransitionEditorBase):
     bl_description = "Edits the transition to the formation that follows the currently selected formation"
 
     @classmethod
-    def _get_entry(cls, storyboard: Storyboard) -> Optional[StoryboardEntry]:
+    def _get_entry(cls, storyboard: Storyboard) -> StoryboardEntry | None:
         return storyboard.entry_after_active_entry if storyboard else None
 
     @classmethod
     def _get_info_labels(
         cls, storyboard: Storyboard, entry: StoryboardEntry
-    ) -> List[str]:
+    ) -> list[str]:
         duration = storyboard.get_transition_duration_from_current_entry()
         return [format_transition_duration(duration)]
 

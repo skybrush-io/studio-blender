@@ -3,7 +3,6 @@ to certain events such as a frame change.
 """
 
 import bpy
-
 from bpy.app.handlers import persistent
 
 __all__ = ("Task",)
@@ -39,8 +38,8 @@ class Task:
     to certain events such as a frame change.
     """
 
-    #: Override this property in subclasses to define the handlers to register
     functions = {}
+    """Override this property in subclasses to define the handlers to register."""
 
     def register(cls):
         """Registers this task instance in Blender."""

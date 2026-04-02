@@ -1,15 +1,13 @@
 import csv
 import logging
 
-from numpy import array, zeros
-from numpy.typing import NDArray
-from typing import Dict, Tuple
-
 from bpy.path import ensure_ext
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
+from numpy import array, zeros
+from numpy.typing import NDArray
 
-from .base import StaticMarkerCreationOperator, PointsAndColors
+from .base import PointsAndColors, StaticMarkerCreationOperator
 
 __all__ = ("AddMarkersFromStaticCSVOperator",)
 
@@ -57,10 +55,10 @@ class AddMarkersFromStaticCSVOperator(StaticMarkerCreationOperator, ImportHelper
         return PointsAndColors(points, colors)
 
 
-Item = Tuple[NDArray[float], NDArray[int]]
+Item = tuple[NDArray[float], NDArray[int]]
 
 
-def parse_static_csv_zip(filename: str) -> Dict[str, Item]:
+def parse_static_csv_zip(filename: str) -> dict[str, Item]:
     """Parse a Skybrush static .csv file (containing a list of static positions
     and colors)
 
@@ -75,7 +73,7 @@ def parse_static_csv_zip(filename: str) -> Dict[str, Item]:
     Raises:
         RuntimeError: on parse errors
     """
-    result: Dict[str, Item] = {}
+    result: dict[str, Item] = {}
     header_passed: bool = False
 
     with open(filename, "r") as csv_file:

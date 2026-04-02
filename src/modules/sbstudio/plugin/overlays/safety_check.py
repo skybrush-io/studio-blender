@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal, cast
+
 import blf
 import bpy
-from bpy.types import SpaceView3D
 import gpu
 import gpu.state
-
+from bpy.types import SpaceView3D
 from gpu_extras.batch import batch_for_shader
-from typing import List, Literal, Optional, Sequence, Tuple, TYPE_CHECKING, cast
 
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import Coordinate3D, RGBColor
 from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
 from .base import ShaderOverlay
@@ -20,26 +21,22 @@ if TYPE_CHECKING:
 
 __all__ = ("SafetyCheckOverlay",)
 
-
-Color = Tuple[float, float, float]
-"""Type alias for RGB colors in this module."""
-
 MarkerGroup = Literal["altitude", "proximity", "velocity", "acceleration", "generic"]
 """Currently supported marker groups."""
 
-Marker = Tuple[Sequence[Coordinate3D], MarkerGroup]
+Marker = tuple[Sequence[Coordinate3D], MarkerGroup]
 """Type specification for a single marker on the overlay. A marker is a sequence
 of coordinates that are interconnected with lines and have an optional
 group name. Markers in the same group are colored with the same color.
 """
 
-ALTITUDE_WARNING_COLOR: Color = (0.47, 0.65, 1.0)  # "Blender blue"
-GENERIC_WARNING_COLOR: Color = (1, 0, 0)  # red
-PROXIMITY_WARNING_COLOR: Color = (1, 0, 0)  # red
-VELOCITY_WARNING_COLOR: Color = (1, 1, 0)  # yellow
-ACCELERATION_WARNING_COLOR: Color = (1, 0, 1)  # magenta
+ALTITUDE_WARNING_COLOR: RGBColor = (0.47, 0.65, 1.0)  # "Blender blue"
+GENERIC_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
+PROXIMITY_WARNING_COLOR: RGBColor = (1, 0, 0)  # red
+VELOCITY_WARNING_COLOR: RGBColor = (1, 1, 0)  # yellow
+ACCELERATION_WARNING_COLOR: RGBColor = (1, 0, 1)  # magenta
 
-_group_to_color_map: dict[str, Color] = {
+_group_to_color_map: dict[str, RGBColor] = {
     "generic": GENERIC_WARNING_COLOR,
     "altitude": ALTITUDE_WARNING_COLOR,
     "proximity": PROXIMITY_WARNING_COLOR,
@@ -50,7 +47,7 @@ _group_to_color_map: dict[str, Color] = {
 
 
 def set_warning_color_iff(
-    condition: bool, font_id: int, color: Tuple[float, float, float]
+    condition: bool, font_id: int, color: tuple[float, float, float]
 ) -> None:
     if condition:
         blf.color(font_id, *color, 1)
@@ -65,15 +62,15 @@ class SafetyCheckOverlay(ShaderOverlay):
 
     shader_type = "FLAT_COLOR"
 
-    _markers: Optional[List[Marker]] = None
-    _shader_batches: Optional[List[GPUBatch]] = None
+    _markers: list[Marker] | None = None
+    _shader_batches: list[GPUBatch] | None = None
 
     @property
-    def markers(self) -> Optional[List[Marker]]:
+    def markers(self) -> list[Marker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: Optional[List[Marker]]):
+    def markers(self, value: list[Marker] | None):
         if value is not None:
             self._markers = []
             for marker_points, group in value:
@@ -89,7 +86,7 @@ class SafetyCheckOverlay(ShaderOverlay):
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
-        safety_check: Optional[SafetyCheckProperties] = getattr(
+        safety_check: SafetyCheckProperties | None = getattr(
             skybrush, "safety_check", None
         )
         if not safety_check:
@@ -108,23 +105,15 @@ class SafetyCheckOverlay(ShaderOverlay):
         ):
             return
 
-        if bpy.app.version >= (4, 0, 0):
-            left_panel_width = context.area.regions[4].width
-        else:
-            left_panel_width = context.area.regions[2].width
+        left_panel_width = context.area.regions[4].width
         total_height = context.area.height
 
         ui_scale = self.get_ui_scale()
 
-        # Margin width was changed between Blender 2.83 and Blender 2.90
-        if bpy.app.version < (2, 90):
-            left_margin = left_panel_width + 19 * ui_scale
-        else:
-            left_margin = left_panel_width + 10 * ui_scale
+        left_margin = left_panel_width + 10 * ui_scale
 
         y = total_height - 72 * ui_scale
         if space_data.type == "VIEW_3D":
-            space_data = cast(SpaceView3D, space_data)
             if getattr(space_data.overlay, "show_text", False):
                 y -= 36 * ui_scale
             if getattr(space_data.overlay, "show_stats", False):
@@ -132,11 +121,7 @@ class SafetyCheckOverlay(ShaderOverlay):
 
         line_height = 18 * ui_scale
 
-        if bpy.app.version >= (4, 0, 0):
-            # DPI argument was removed in Blender 4.0
-            blf.size(font_id, int(11 * ui_scale))
-        else:
-            blf.size(font_id, int(11 * ui_scale), 72)
+        blf.size(font_id, int(11 * ui_scale))
         blf.enable(font_id, blf.SHADOW)
 
         blf.color(font_id, 1, 1, 1, 1)
@@ -223,14 +208,14 @@ class SafetyCheckOverlay(ShaderOverlay):
         super().dispose()
         self._shader_batches = None
 
-    def _create_shader_batches(self) -> List[GPUBatch]:
+    def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
-        batches: List[GPUBatch] = []
-        points: List[Coordinate3D] = []
-        lines: List[Coordinate3D] = []
-        point_colors: List[Tuple[float, ...]] = []
-        line_colors: List[Tuple[float, ...]] = []
+        batches: list[GPUBatch] = []
+        points: list[Coordinate3D] = []
+        lines: list[Coordinate3D] = []
+        point_colors: list[tuple[float, ...]] = []
+        line_colors: list[tuple[float, ...]] = []
 
         RED = _group_to_color_map["generic"]
 

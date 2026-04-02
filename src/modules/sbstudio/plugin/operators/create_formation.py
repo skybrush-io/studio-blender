@@ -1,9 +1,7 @@
 import bpy
-
 from bpy.props import EnumProperty, StringProperty
 
 from sbstudio.plugin.model.formation import add_objects_to_formation, create_formation
-
 from sbstudio.plugin.utils import propose_name
 
 from .base import FormationOperator

@@ -3,3 +3,8 @@ title: Skybrush Studio for Blender
 version: latest
 nav:
   - modules/ROOT/nav.adoc
+asciidoc:
+  attributes:
+    company-name: CollMot Robotics Ltd.
+    contact-email: hello@skybrush.io
+    doc-root-url: https://doc.collmot.com

@@ -1,42 +1,40 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 import blf
 import bpy
 import gpu
 import gpu.state
-
-from bpy_extras.view3d_utils import location_3d_to_region_2d
 from bpy.types import SpaceView3D
+from bpy_extras.view3d_utils import location_3d_to_region_2d
 from gpu_extras.batch import batch_for_shader
-from typing import TYPE_CHECKING, cast
 
-from sbstudio.model.types import Coordinate3D
+from sbstudio.model.types import Coordinate3D, RGBColor
 
 from .base import ShaderOverlay
 
 if TYPE_CHECKING:
-    from sbstudio.plugin.model.pyro_control import PyroControlPanelProperties
     from gpu.types import GPUBatch
+
+    from sbstudio.plugin.model.pyro_control import PyroControlPanelProperties
 
 __all__ = (
     "PyroOverlay",
     "PyroOverlayMarker",
 )
 
-Color = tuple[float, float, float]
-"""Type alias for RGB colors in this module."""
-
 PyroOverlayInfo = tuple[Coordinate3D, list[str]]
 """Type specification for a single info block on the overlay. An info block requires
 a single coordinate and a list of text strings (one per line).
 """
 
-PyroOverlayMarker = tuple[Coordinate3D, Color]
+PyroOverlayMarker = tuple[Coordinate3D, RGBColor]
 """Type specification for a single marker on the overlay. A marker requires
 a single coordinate and a Color.
 """
 
-DEFAULT_PYRO_OVERLAY_MARKER_COLOR: Color = (0.5, 0.5, 0.5)
+DEFAULT_PYRO_OVERLAY_MARKER_COLOR: RGBColor = (0.5, 0.5, 0.5)
 """Default color for pyro marker overlays."""
 
 
@@ -119,17 +117,17 @@ class PyroOverlay(ShaderOverlay):
         font_size = int(11 * ui_scale)
         line_height = font_size + 2
 
-        if bpy.app.version >= (4, 0, 0):
-            # DPI argument was removed in Blender 4.0
-            blf.size(font_id, font_size)
-        else:
-            blf.size(font_id, font_size, 72)
+        blf.size(font_id, font_size)
         blf.enable(font_id, blf.SHADOW)
         blf.color(font_id, 1, 1, 1, 1)
 
         for info_block in self._info_blocks:
             num_lines = len(info_block[1])
-            x, y = location_3d_to_region_2d(region, region_3d, info_block[0])
+            vec = location_3d_to_region_2d(region, region_3d, info_block[0])
+            if vec is None:
+                continue
+
+            x, y = vec
             y += (num_lines - 3 / 2) * font_size / 2
             for line in info_block[1]:
                 blf.position(font_id, x, y, 0)

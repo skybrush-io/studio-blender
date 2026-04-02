@@ -1,14 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import MutableSequence, Sequence
 from contextlib import AbstractContextManager
-from typing import (
-    Literal,
-    MutableSequence,
-    Sequence,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Literal, TypeVar, overload
 
 from mathutils import Matrix, Vector
 from sbstudio.plugin.model import DroneShowAddonProperties
@@ -66,8 +60,8 @@ class bpy_prop_collection(Sequence[T]):
     @overload
     def get(self, key: str) -> T | None: ...
     @overload
-    def get(self, key: str, default: U) -> Union[T, U]: ...
-    def __getitem__(self, key: Union[int, str]) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
+    def get(self, key: str, default: U) -> T | U: ...
+    def __getitem__(self, key: int | str) -> T: ...  # pyright: ignore[reportIncompatibleMethodOverride]
     def __len__(self) -> int: ...
 
 class bpy_struct:
@@ -367,6 +361,9 @@ class WindowManager(ID):
 
 class Context(bpy_struct):
     area: Area
+    region: Region
+    region_data: RegionView3D
+    region_popup: Region
     scene: Scene
     space_data: Space
     window_manager: WindowManager
@@ -551,6 +548,8 @@ class Region(bpy_struct):
     y: int
     width: int
     height: int
+
+class RegionView3D(bpy_struct): ...
 
 class SpaceView3D(Space):
     overlay: View3DOverlay

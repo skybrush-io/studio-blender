@@ -1,6 +1,7 @@
+from random import shuffle
+
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
-from random import shuffle
 
 from sbstudio.plugin.colors import create_keyframe_for_color_of_drone
 from sbstudio.plugin.props import ColorProperty

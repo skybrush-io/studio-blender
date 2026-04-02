@@ -12,8 +12,7 @@ class RemoveScheduleOverrideEntryOperator(StoryboardEntryOperator):
     bl_idname = "skybrush.remove_schedule_override_entry"
     bl_label = "Remove Selected Schedule Override Entry"
     bl_description = (
-        "Remove the selected schedule override entry from the selected "
-        "storyboard entry"
+        "Remove the selected schedule override entry from the selected storyboard entry"
     )
 
     @classmethod

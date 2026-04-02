@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable, Iterator
 from itertools import chain
 from time import time
-from typing import Callable, Iterable, Iterator, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 from sbstudio.plugin.errors import TaskCancelled
 

@@ -2,6 +2,7 @@ from bpy.types import Panel
 
 from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.operators import (
+    AppendFormationToStoryboardOperator,
     CreateFormationOperator,
     CreateTakeoffGridOperator,
     DeselectFormationOperator,
@@ -13,7 +14,6 @@ from sbstudio.plugin.operators import (
     SelectFormationOperator,
     TakeoffOperator,
     UpdateFormationOperator,
-    AppendFormationToStoryboardOperator,
 )
 from sbstudio.plugin.utils.warnings import (
     draw_bad_shader_color_source_warning,

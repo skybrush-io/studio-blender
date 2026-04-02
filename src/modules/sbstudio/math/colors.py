@@ -1,7 +1,7 @@
 from collections.abc import Callable
-from enum import auto, IntEnum
+from enum import IntEnum, auto
 
-from sbstudio.model.types import RGBAColor, MutableRGBAColor
+from sbstudio.model.types import MutableRGBAColor, RGBAColor
 
 __all__ = ("blend_in_place", "BlendMode")
 

@@ -4,10 +4,11 @@ markers on drones when their pyro effect is active.
 
 from __future__ import annotations
 
-import bpy
-
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+import bpy
 
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.overlays.pyro import (
@@ -19,7 +20,6 @@ from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
 
 # from sbstudio.plugin.utils import debounced
-
 from .base import Task
 
 if TYPE_CHECKING:

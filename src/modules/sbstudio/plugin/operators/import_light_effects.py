@@ -1,16 +1,14 @@
-import bpy
 import os
+from json import load
 
+import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ImportHelper
-
-from json import load
 
 from sbstudio.plugin.model.light_effects import LightEffectCollection
 from sbstudio.plugin.props.light_effects import LightEffectSelectionProperty
 
 from .base import LightEffectOperator
-
 
 __all__ = ("ImportLightEffectsOperator",)
 

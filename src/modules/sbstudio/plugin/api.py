@@ -1,8 +1,9 @@
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import Iterator, TypeVar
+from typing import TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI

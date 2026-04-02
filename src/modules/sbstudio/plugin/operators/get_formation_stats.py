@@ -1,7 +1,7 @@
+from math import inf
+
 from bpy.props import FloatProperty, FloatVectorProperty, IntProperty
 from bpy.types import MeshVertex
-
-from math import inf
 from numpy import ptp
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
@@ -9,6 +9,7 @@ from sbstudio.plugin.model.formation import (
     get_markers_from_formation,
     get_world_coordinates_of_markers_from_formation,
 )
+
 from .base import FormationOperator
 
 __all__ = ("GetFormationStatisticsOperator",)

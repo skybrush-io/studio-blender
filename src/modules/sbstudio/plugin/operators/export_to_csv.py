@@ -11,7 +11,7 @@ post-processing.
 
 from typing import Any
 
-from bpy.props import StringProperty, FloatProperty
+from bpy.props import FloatProperty, StringProperty
 
 from sbstudio.model.file_formats import FileFormat
 

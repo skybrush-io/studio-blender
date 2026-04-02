@@ -1,5 +1,4 @@
 import json
-
 from collections.abc import Iterator
 from contextlib import contextmanager
 from gzip import compress
@@ -8,7 +7,7 @@ from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
 from pathlib import Path
 from shutil import copyfileobj
-from ssl import create_default_context, CERT_NONE
+from ssl import CERT_NONE, create_default_context
 from typing import Any
 from urllib.error import HTTPError
 from urllib.parse import urljoin, urlparse, urlunparse

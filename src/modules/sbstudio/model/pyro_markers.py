@@ -1,6 +1,5 @@
 from dataclasses import asdict, dataclass, field
 from json import dumps, loads
-
 from typing import Any, TypeVar
 
 __all__ = ("PyroMarkers", "PyroPayload")

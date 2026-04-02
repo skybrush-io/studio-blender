@@ -1,7 +1,6 @@
 import bpy
 import gpu
 import gpu.state
-
 from gpu_extras.batch import batch_for_shader
 from numpy import linspace
 

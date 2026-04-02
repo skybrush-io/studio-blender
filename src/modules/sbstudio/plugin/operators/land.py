@@ -1,7 +1,6 @@
 from math import ceil, floor
 
 import bpy
-
 from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context
 

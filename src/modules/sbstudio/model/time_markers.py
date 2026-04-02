@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Dict
 
 __all__ = ("TimeMarkers",)
 
@@ -8,7 +7,7 @@ __all__ = ("TimeMarkers",)
 class TimeMarkers:
     """Time marker list."""
 
-    markers: Dict[str, float] = field(default_factory=dict)
+    markers: dict[str, float] = field(default_factory=dict)
     """The dictionary of time markers where keys represent marker names and
     values represent time in seconds."""
 
