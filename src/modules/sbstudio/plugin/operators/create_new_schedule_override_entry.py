@@ -14,5 +14,6 @@ class CreateNewScheduleOverrideEntryOperator(StoryboardEntryOperator):
     )
 
     def execute_on_storyboard_entry(self, entry, context):
-        entry.add_new_schedule_override()
+        if entry is not None:
+            entry.add_new_schedule_override()
         return {"FINISHED"}

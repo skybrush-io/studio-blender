@@ -1,8 +1,11 @@
+from typing import cast
+
 import bpy
 from bpy.props import BoolProperty
-from bpy.types import Operator
+from bpy.types import Context, Operator
 
 from sbstudio.model.safety_check import SafetyCheckParams
+from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.props.frame_range import FrameRangeProperty, resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
@@ -42,14 +45,14 @@ class ValidateTrajectoriesOperator(Operator):
     # frame range source
     frame_range = FrameRangeProperty()
 
-    def execute(self, context):
+    def execute(self, context: Context):
         drones = get_drones_to_export(selected_only=self.selected_only)
         frame_range = resolve_frame_range(self.frame_range)
         if frame_range is None:
             self.report({"ERROR"}, "Selected frame range is empty")
             return {"CANCELLED"}
 
-        safety_check = getattr(context.scene.skybrush, "safety_check", None)
+        safety_check = context.scene.skybrush.safety_check
         validation = SafetyCheckParams(
             max_velocity_xy=(
                 safety_check.velocity_xy_warning_threshold if safety_check else 8
@@ -65,6 +68,9 @@ class ValidateTrajectoriesOperator(Operator):
             max_acceleration=(
                 safety_check.acceleration_warning_threshold if safety_check else 4
             ),
+            max_yaw_rate=safety_check.yaw_rate_warning_threshold
+            if safety_check
+            else 30,
             max_altitude=(
                 safety_check.altitude_warning_threshold if safety_check else 150
             ),
@@ -94,12 +100,16 @@ class ValidateTrajectoriesOperator(Operator):
             return {"CANCELLED"}
 
         with suspended_safety_checks(), suspended_light_effects():
-            trajectories = sample_positions_of_objects_in_frame_range(
-                drones,
-                frame_range,
-                fps=4,
-                context=context,
-                simplify=True,
+            trajectories = cast(
+                dict[str, Trajectory],
+                sample_positions_of_objects_in_frame_range(
+                    drones,
+                    frame_range,
+                    fps=4,
+                    context=context,
+                    by_name=True,
+                    simplify=True,
+                ),
             )
 
         # Calculate the start time of the validated range, in seconds
@@ -146,5 +156,5 @@ class ValidateTrajectoriesOperator(Operator):
 
         return {"CANCELLED"}
 
-    def invoke(self, context, event):
+    def invoke(self, context: Context, event):
         return context.window_manager.invoke_props_dialog(self)

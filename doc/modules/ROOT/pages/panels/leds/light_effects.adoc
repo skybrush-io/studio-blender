@@ -8,6 +8,8 @@ image::panels/light_effects/light_effects.jpg[Light Effects panel]
 
 Light effects are parametrized and they are not baked in as color keyframes, so it is very easy to adjust them if the timing of the animation changes -- you only need to adjust the start frame and the duration of the light effect. However, this means that Blender calculates the light effects on-the-fly when you change frames, thus it comes with a slight performance cost.
 
+If you are still in the motion design phase, we suggest you to uncheck the btn:[Enable light effects] checkbox to avoid slowing down Blender rendering superfluously.
+
 == Anatomy of a light effect
 
 Every light effect builds on a user-defined color space: a one dimensional _color ramp_, a two dimensional _color image_ or a _custom function_:

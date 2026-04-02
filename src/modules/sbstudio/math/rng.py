@@ -3,9 +3,7 @@
 from collections.abc import Callable, Sequence
 from random import Random
 from threading import Lock
-from typing import TypeVar
-
-C = TypeVar("C", bound="RandomSequence")
+from typing import Self
 
 
 class RandomSequence(Sequence[int]):
@@ -67,7 +65,7 @@ class RandomSequence(Sequence[int]):
             while len(self._cache) < length:
                 self._cache.append(self._rng.randint(0, self._max))
 
-    def fork(self: C, index: int) -> C:
+    def fork(self, index: int) -> Self:
         """Forks off a new random sequence from the given index such that the
         new sequence is seeded by the number at the given index in this sequence.
         """

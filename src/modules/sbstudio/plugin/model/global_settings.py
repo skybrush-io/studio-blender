@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import AddonPreferences, Context
 
-from sbstudio.plugin.operators.register_hardware_id import RegisterHardwareIDOperator
-from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
-from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
 from sbstudio.plugin.gateway import get_gateway
+from sbstudio.plugin.operators.register_hardware_id import RegisterHardwareIDOperator
+from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
+from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
 from sbstudio.plugin.utils import with_context
-
 
 __all__ = ("DroneShowAddonGlobalSettings",)
 
@@ -46,7 +46,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
     bl_idname = "ui_skybrush_studio"
 
-    license_file = StringProperty(
+    license_file: str = StringProperty(
         name="License file",
         description=(
             "Full path to the license file to be used as the API Key "
@@ -55,17 +55,17 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         subtype="FILE_PATH",
     )
 
-    hardware_id = StringProperty(
+    hardware_id: str = StringProperty(
         name="Hardware ID",
         description="Hardware ID of the computer running Skybrush Studio for Blender",
     )
 
-    api_key = StringProperty(
+    api_key: str = StringProperty(
         name="API Key",
         description="API Key that is used when communicating with the Skybrush Studio server",
     )
 
-    server_url = StringProperty(
+    server_url: str = StringProperty(
         name="Server URL",
         description=(
             "URL of a dedicated Skybrush Studio server if you are using a "
@@ -74,7 +74,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         ),
     )
 
-    gateway_url = StringProperty(
+    gateway_url: str = StringProperty(
         name="Gateway URL",
         description=(
             "URL of a dedicated Skybrush Studio Gateway for using the online "
@@ -84,7 +84,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         update=gateway_url_updated,
     )
 
-    enable_experimental_features = BoolProperty(
+    enable_experimental_features: bool = BoolProperty(
         name="Enable experimental features",
         description=(
             "Whether to enable experimental features in the add-on. Experimental "
@@ -94,7 +94,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         default=False,
     )
 
-    def draw(self, context):
+    def draw(self, context: Context) -> None:
         layout = self.layout
 
         row = layout.row()
@@ -137,4 +137,5 @@ def get_preferences(context: Context | None = None) -> DroneShowAddonGlobalSetti
     """
     assert context is not None
     prefs = context.preferences
-    return prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
+    addon_prefs = prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
+    return cast(DroneShowAddonGlobalSettings, addon_prefs)

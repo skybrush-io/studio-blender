@@ -33,7 +33,11 @@ from .formation import count_markers_in_formation
 from .mixins import ListMixin
 
 if TYPE_CHECKING:
-    from bpy.types import Collection, Context, bpy_prop_collection
+    from bpy.types import (
+        Collection,
+        Context,
+        bpy_prop_collection,
+    )
 
 __all__ = (
     "ScheduleOverride",
@@ -451,14 +455,12 @@ class StoryboardEntryOrTransition(PropertyGroup):
         self.frame_end = other.frame_end
 
 
-class Storyboard(PropertyGroup, ListMixin):
+class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
     """Blender property group representing the entire storyboard of the
     drone show.
     """
 
-    entries: bpy_prop_collection[StoryboardEntry] = CollectionProperty(
-        type=StoryboardEntry
-    )
+    entries = CollectionProperty(type=StoryboardEntry)
     """The entries in this storyboard"""
 
     entries_or_transitions: bpy_prop_collection[StoryboardEntryOrTransition] = (
@@ -977,20 +979,17 @@ class Storyboard(PropertyGroup, ListMixin):
         for prev, next in consecutive_pairs(self.entries):
             # add entry
             item = self.entries_or_transitions.add()
-            item.id = prev.id
             item.name = prev.name
             item.frame_start = prev.frame_start
             item.frame_end = prev.frame_end
             # add transition
             item = self.entries_or_transitions.add()
-            item.id = f"{prev.id}..{next.id}"
             item.name = f"{prev.name} -> {next.name}"
             item.frame_start = prev.frame_end
             item.frame_end = next.frame_start
         # add last entry
         if self.last_entry:
             item = self.entries_or_transitions.add()
-            item.id = self.last_entry.id
             item.name = self.last_entry.name
             item.frame_start = self.last_entry.frame_start
             item.frame_end = self.last_entry.frame_end

@@ -39,11 +39,13 @@ def create_object_in_collection(
     collection: bpy_prop_collection[T],
     name: str,
     factory: Callable[[], T] | None = None,
-    remover: Callable[[T], None] | None = None,
+    remover: Callable[[T], None]
+    | Callable[[T, bpy_prop_collection[T]], None]
+    | None = None,
     internal: bool = False,
     *args,
     **kwds,
-):
+) -> T:
     """Creates a new Blender object in the given collection with the given
     name. Removes any previous objects in the collection that exist with
     the given name.
@@ -74,9 +76,9 @@ def create_object_in_collection(
         if callable(remover):
             sig = signature(remover)
             if len(sig.parameters) > 1:
-                remover(existing, collection)  # type: ignore
+                remover(existing, collection)  # type: ignore[too-many-positional-arguments]
             else:
-                remover(existing)
+                remover(existing)  # type: ignore[missing-argument]
         elif hasattr(collection, "remove"):
             collection.remove(existing)  # type: ignore
         elif hasattr(collection, "unlink"):

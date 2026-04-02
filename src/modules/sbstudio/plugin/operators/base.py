@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, IntProperty
-from bpy.types import Collection, Context, FCurve, Object, Operator
+from bpy.props import BoolProperty, EnumProperty
+from bpy.types import Collection, Context, FCurve, Operator
 from bpy_extras.io_utils import ExportHelper
 from numpy import array, floating
 from numpy.typing import NDArray
@@ -17,7 +17,9 @@ from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point3D
 from sbstudio.model.trajectory import Trajectory
+from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.actions import (
+    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
@@ -25,7 +27,8 @@ from sbstudio.plugin.model.formation import (
     add_points_to_formation,
     get_markers_from_formation,
 )
-from sbstudio.plugin.model.storyboard import get_storyboard
+from sbstudio.plugin.model.light_effects import LightEffectCollection
+from sbstudio.plugin.model.storyboard import Storyboard, StoryboardEntry, get_storyboard
 from sbstudio.plugin.props.frame_range import FrameRangeProperty
 from sbstudio.plugin.selection import Collections, select_only
 
@@ -49,13 +52,17 @@ class FormationOperator(Operator):
         )
 
     def execute(self, context: Context):
-        return self.execute_on_formation(self.get_formation(context), context)
+        formation = self.get_formation(context)
+        return self.execute_on_formation(formation, context)
 
-    def get_formation(self, context: Context) -> Collection:
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        raise NotImplementedError
+
+    def get_formation(self, context: Context) -> Collection | None:
         return getattr(context.scene.skybrush.formations, "selected", None)
 
     @staticmethod
-    def select_formation(formation: Object, context: Context) -> None:
+    def select_formation(formation: Collection, context: Context) -> None:
         """Selects the given formation, both in the scene and in the formations
         panel.
         """
@@ -76,6 +83,11 @@ class LightEffectOperator(Operator):
     def execute(self, context: Context):
         light_effects = context.scene.skybrush.light_effects
         return self.execute_on_light_effect_collection(light_effects, context)
+
+    def execute_on_light_effect_collection(
+        self, light_effects: LightEffectCollection, context: Context
+    ):
+        raise NotImplementedError
 
 
 class StoryboardOperator(Operator):
@@ -103,6 +115,9 @@ class StoryboardOperator(Operator):
         else:
             return self.execute_on_storyboard(storyboard, context)
 
+    def execute_on_storyboard(self, storyboard: Storyboard, *args, **kwargs):
+        raise NotImplementedError
+
 
 class StoryboardEntryOperator(Operator):
     """Operator mixin that allows an operator to be executed if we have a
@@ -120,6 +135,11 @@ class StoryboardEntryOperator(Operator):
     def execute(self, context: Context):
         entry = get_storyboard(context=context).active_entry
         return self.execute_on_storyboard_entry(entry, context)
+
+    def execute_on_storyboard_entry(
+        self, entry: StoryboardEntry | None, context: Context
+    ):
+        raise NotImplementedError
 
 
 class ExportOperator(Operator, ExportHelper):
@@ -252,7 +272,8 @@ class DynamicMarkerCreationOperator(FormationOperator):
     formation, with light animation corresponding to the formation.
     """
 
-    def execute_on_formation(self, formation: Object, context: Context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         # Construct the trajectory and light program to set
         try:
             trajectories_and_lights = self._create_trajectories(context)
@@ -275,18 +296,24 @@ class DynamicMarkerCreationOperator(FormationOperator):
 
         # create new markers for the points around cursor location
         center = Point3D(*context.scene.cursor.location)
-        trajectories = [
+        trajectories: list[Trajectory] = [
             item.trajectory.shift_in_place(center)
             for item in trajectories_and_lights.values()
         ]
-        first_points = [
-            trajectory.first_point.as_vector()  # type: ignore
-            for trajectory in trajectories
-        ]
+        first_points: list[Coordinate3D] = []
+        for trajectory in trajectories:
+            point = trajectory.first_point
+            assert point is not None
+
+            first_points.append(point.as_3d().as_tuple())
         markers = add_points_to_formation(formation, first_points)
 
+        # ensure that we have animation data for the markers and that it is clean
+        for marker in markers:
+            ensure_animation_data_exists_for_object(marker, clean=True)
+
         # update storyboard duration based on animation data
-        if self.update_duration and storyboard_entry:
+        if bool(getattr(self, "update_duration", False)) and storyboard_entry:
             duration = (
                 int(max(trajectory.duration for trajectory in trajectories) * fps) + 1
             )
@@ -405,7 +432,8 @@ class StaticMarkerCreationOperator(FormationOperator):
     optionally extended with a list of colors corresponding to the points.
     """
 
-    def execute_on_formation(self, formation: Object, context: Context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         # Construct the point set
         try:
             points_and_colors = self._create_points(context)
@@ -492,62 +520,3 @@ class StaticMarkerCreationOperator(FormationOperator):
         else:
             num_existing_markers = 0
         return max(0, num_drones - num_existing_markers)
-
-
-class MigrationOperator(Operator):
-    """Operator mixin for migrations/upgrades for files created in earlier
-    versions of the Skybrush Studio for Blender plugin."""
-
-    version_from = IntProperty(name="Input format version", options={"HIDDEN"})
-    version_to = IntProperty(name="Output format version", options={"HIDDEN"})
-
-    @classmethod
-    def poll(cls, context: Context):
-        return context.scene.skybrush
-
-    def execute(self, context: Context):
-        if context.scene.skybrush.version < self.version_from:
-            raise RuntimeError(
-                f"Input format version should be {self.version_from}, "
-                f"not {context.scene.skybrush.version}"
-            )
-        elif context.scene.skybrush.version == self.version_from:
-            retval = (
-                self.execute_migration(context)
-                if self.needs_migration()
-                else {"FINISHED"}
-            )
-            if retval == {"FINISHED"}:
-                context.scene.skybrush.version = self.version_to
-
-            return retval
-
-        return {"FINISHED"}
-
-    def invoke(self, context: Context, event):
-        self.initialize_migration()
-
-        if context.scene.skybrush.version >= self.version_to:
-            return {"CANCELLED"}
-
-        if self.needs_migration():
-            return context.window_manager.invoke_confirm(
-                self, event, title=self.bl_label, message=self.bl_description
-            )
-        else:
-            return self.execute(context)
-
-    def execute_migration(self, context: Context):
-        """Executes the migration/upgrade on the current Blender content."""
-        raise NotImplementedError
-
-    def initialize_migration(self) -> None:
-        """Initializes the operator by setting up the from/to versions."""
-        raise NotImplementedError
-
-    def needs_migration(self) -> bool:
-        """Returns whether the current Blender content needs migration.
-
-        Note that return value is checked based on actual content,
-        irrespective of the current plugin version."""
-        raise NotImplementedError

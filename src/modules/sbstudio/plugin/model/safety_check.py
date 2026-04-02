@@ -90,6 +90,15 @@ def acceleration_warning_threshold_updated(self, context: Context | None = None)
     self._refresh_overlay()
 
 
+def yaw_rate_warning_enabled_updated(self, context: Context | None = None):
+    self.ensure_overlays_enabled_if_needed()
+    self._refresh_overlay()
+
+
+def yaw_rate_warning_threshold_updated(self, context: Context | None = None):
+    self._refresh_overlay()
+
+
 class SafetyCheckProperties(PropertyGroup):
     """Property group that stores the parameters and calculated values of the
     real-time flight safety checks.
@@ -165,6 +174,13 @@ class SafetyCheckProperties(PropertyGroup):
         default=0.0,
     )
 
+    max_yaw_rate = FloatProperty(
+        name="Max yaw rate",
+        description="Maximum yaw rate of all drones in the current frame, in deg/s",
+        unit="NONE",
+        default=0.0,
+    )
+
     proximity_warning_enabled = BoolProperty(
         name="Show proximity warnings",
         description=(
@@ -227,6 +243,16 @@ class SafetyCheckProperties(PropertyGroup):
         default=True,
     )
 
+    yaw_rate_warning_enabled = BoolProperty(
+        name="Show yaw rate warnings",
+        description=(
+            "Specifies whether Blender should show a warning when the yaw rate of a "
+            "drone is larger than the yaw rate warning threshold"
+        ),
+        update=yaw_rate_warning_enabled_updated,
+        default=True,
+    )
+
     velocity_xy_warning_threshold = FloatProperty(
         name="Maximum XY velocity",
         description="Maximum velocity allowed in the horizontal plane",
@@ -281,6 +307,17 @@ class SafetyCheckProperties(PropertyGroup):
         update=acceleration_warning_threshold_updated,
     )
 
+    yaw_rate_warning_threshold = FloatProperty(
+        name="Maximum yaw rate",
+        description="Maximum yaw rate allowed, in deg/s",
+        default=30,
+        min=0.1,
+        soft_min=0.1,
+        soft_max=180,
+        unit="NONE",
+        update=yaw_rate_warning_threshold_updated,
+    )
+
     min_navigation_altitude = FloatProperty(
         name="Minimum navigation altitude",
         description="Altitude below which drones are not allowed to move sideways",
@@ -333,7 +370,7 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def min_navigation_altitude_is_valid(self) -> bool:
-        """Retuns whether the minimum navigation altitude property can be
+        """Returns whether the minimum navigation altitude property can be
         considered valid. Right now we use zero to denote cases when there are
         no drones in the scene at all.
         """
@@ -341,7 +378,7 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def max_altitude_is_valid(self) -> bool:
-        """Retuns whether the maximum altitude property can be considered valid.
+        """Returns whether the maximum altitude property can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
@@ -349,7 +386,7 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def max_velocities_are_valid(self) -> bool:
-        """Retuns whether the maximum velocity property can be considered valid.
+        """Returns whether the maximum velocity property can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
@@ -361,11 +398,19 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def max_acceleration_is_valid(self) -> bool:
-        """Retuns whether the maximum acceleration property can be considered valid.
+        """Returns whether the maximum acceleration property can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
         return self.max_acceleration > 0
+
+    @property
+    def max_yaw_rate_is_valid(self) -> bool:
+        """Returns whether the maximum yaw rate property can be considered valid.
+        Right now we use zero to denote cases when there are no drones in the
+        scene at all.
+        """
+        return self.max_yaw_rate > 0
 
     @property
     def should_show_altitude_warning(self) -> bool:
@@ -448,6 +493,17 @@ class SafetyCheckProperties(PropertyGroup):
         )
 
     @property
+    def should_show_yaw_rate_warning(self) -> bool:
+        """Returns whether the yaw_rate warning should be drawn in the 3D view
+        _right now_, given the current values of the properties.
+        """
+        return (
+            self.yaw_rate_warning_enabled
+            and self.max_yaw_rate_is_valid
+            and self.max_yaw_rate > self.yaw_rate_warning_threshold
+        )
+
+    @property
     def velocity_z_warning_threshold_up_or_none(self) -> float | None:
         """Returns the velocity warning threshold in the Z direction upwards
         if there is one, or ``None`` if it is the same as the warning threshold
@@ -471,6 +527,7 @@ class SafetyCheckProperties(PropertyGroup):
         self.max_velocity_z_down = 0
         self.max_velocity_z_up = 0
         self.max_acceleration = 0
+        self.max_yaw_rate = 0
 
         _safety_check_result.clear()
 
@@ -482,6 +539,7 @@ class SafetyCheckProperties(PropertyGroup):
             or self.proximity_warning_enabled
             or self.velocity_warning_enabled
             or self.acceleration_warning_enabled
+            or self.yaw_rate_warning_enabled
         )
 
     def get_positions_for_proximity_check(
@@ -517,6 +575,8 @@ class SafetyCheckProperties(PropertyGroup):
         drones_over_max_velocity_z: list[Coordinate3D] | None = None,
         max_acceleration: float | None = None,
         drones_over_max_acceleration: list[Coordinate3D] | None = None,
+        max_yaw_rate: float | None = None,
+        drones_over_max_yaw_rate: list[Coordinate3D] | None = None,
         drones_below_min_nav_altitude: list[Coordinate3D] | None = None,
         all_close_pairs: list[tuple[Coordinate3D, Coordinate3D]] | None = None,
     ) -> None:
@@ -580,6 +640,14 @@ class SafetyCheckProperties(PropertyGroup):
             _safety_check_result.drones_over_max_acceleration = (
                 drones_over_max_acceleration
             )
+            refresh = True
+
+        if max_yaw_rate is not None:
+            self.max_yaw_rate = max_yaw_rate
+            refresh = True
+
+        if drones_over_max_yaw_rate is not None:
+            _safety_check_result.drones_over_max_yaw_rate = drones_over_max_yaw_rate
             refresh = True
 
         if drones_below_min_nav_altitude is not None:
@@ -652,6 +720,12 @@ class SafetyCheckProperties(PropertyGroup):
                 markers.extend(
                     ([point], "acceleration")
                     for point in _safety_check_result.drones_over_max_acceleration
+                )
+
+            if self.should_show_yaw_rate_warning:
+                markers.extend(
+                    ([point], "yaw")
+                    for point in _safety_check_result.drones_over_max_yaw_rate
                 )
 
             overlay.markers = markers

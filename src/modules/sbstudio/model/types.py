@@ -1,5 +1,5 @@
 from collections.abc import MutableSequence
-from typing import TypeAlias
+from typing import Protocol, Sequence, TypeAlias, overload
 
 __all__ = ("Coordinate3D", "RGBAColor", "Rotation3D")
 
@@ -36,3 +36,21 @@ Rotation3D: TypeAlias = tuple[float, float, float]
 
 Quaternion: TypeAlias = tuple[float, float, float, float]
 """Type alias for 4D quaternions."""
+
+
+class SupportsForEach(Protocol):
+    """Protocol for objects that support the `foreach_get()` and `foreach_set()`
+    methods.
+
+    Used only in type annotations.
+    """
+
+    @overload
+    def foreach_get(self, attr: str, seq: Sequence[float]) -> None: ...
+    @overload
+    def foreach_get(self, attr: str, seq: Sequence[bool]) -> None: ...
+    @overload
+    def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
+    @overload
+    def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def __len__(self) -> int: ...

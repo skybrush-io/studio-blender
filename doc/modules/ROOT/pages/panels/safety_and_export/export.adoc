@@ -84,6 +84,10 @@ Plot positions:: Include position-related plots in the safety report, such as an
 
 Plot velocities:: Include velocity-related plots in the safety report including horizontal and vertical velocity timelines focusing on maximum velocity breach warnings.
 
+Plot accelerations:: Include acceleration-related plots in the safety report including horizontal and vertical acceleration timelines focusing on maximum acceleration breach warnings.
+
+Plot yaw and yaw rate:: Include yaw-related plots in the safety report including yaw and yaw rate timelines focusing on maximum yaw rate breach warnings.
+
 Plot projected drift:: Include projected drift plots in the safety report. The drift plot is a complex output for checking integral predicted deviations from show trajectories due to maximum velocity or maximum acceleration threshold breach events.
 
 Plot nearest neighbor:: Include a unified nearest neighbor plot in the safety report to check for minimum distance between drones throughout the entire show.
@@ -124,3 +128,9 @@ WARNING: Even though yaw control and pyro triggering is part of the official .dd
 Note that our exporters that provide compatibility with these software require a professional license that can be purchased from https://shop.skybrush.io[Skybrush Store].
 
 If you press one of the btn:[Export to Finale 3D .vviz] or btn:[Export to Depence .ddsf] buttons, you have to choose the path and filename of your output file. The btn:[Export selected drones only], btn:[Frame range], btn:[Trajectory FPS], btn:[Light FPS] and btn:[Export yaw] options will be available for these export types as well.
+
+== Export to Google Earth KMZ format
+
+We also provide an exporter to Google Earth `.kmz` format. This export option lets you validate the spatial requirements of your show in a real 3D terrain context provided by Google Earth.
+
+After defining the render range and FPS of the output, a static `.kmz` file is created showing all the linearized trajectories of the drones selected for export. The color of the line segments indicate the color of the given drone at that moment.

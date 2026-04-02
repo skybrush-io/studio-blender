@@ -1,11 +1,9 @@
-"""Background task that is invoked after every frame change and draws
-markers on drones when their pyro effect is active.
+"""Background task that is invoked after every frame change and that is responsible
+for drawing markers on drones when their pyro effect is active.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import bpy
@@ -19,22 +17,20 @@ from sbstudio.plugin.overlays.pyro import (
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
 
-# from sbstudio.plugin.utils import debounced
 from .base import Task
+from .utils import Suspension
 
 if TYPE_CHECKING:
-    from bpy.types import Scene
+    from bpy.types import Depsgraph, Scene
 
-_suspension_counter = 0
-"""Suspension counter. Pyro marker overlay is suspended if this counter is positive."""
+__all__ = ("PyroEffectsTask", "suspended_pyro_effects")
+
+suspension = Suspension()
+"""Object to manage the suspension logic for the pyro effect task."""
 
 
-# @debounced(delay=0.1)
-def run_update_pyro_overlay_markers(scene: Scene, depsgraph) -> None:
-    global _suspension_counter
-    if _suspension_counter > 0:
-        return
-
+@suspension.wrap
+def run_update_pyro_overlay_markers(scene: Scene, depsgraph: Depsgraph) -> None:
     pyro_control = scene.skybrush.pyro_control
 
     if pyro_control.visualization in ["MARKERS", "INFO"]:
@@ -85,17 +81,10 @@ def run_tasks_post_load(*args):
     ensure_overlays_enabled()
 
 
-@contextmanager
-def suspended_pyro_effects() -> Iterator[None]:
-    """Context manager that suspends pyro marker overlay when the context is entered
-    and re-enables them when the context is exited.
-    """
-    global _suspension_counter
-    _suspension_counter += 1
-    try:
-        yield
-    finally:
-        _suspension_counter -= 1
+suspended_pyro_effects = suspension.use
+"""Context manager that suspends pyro marker overlay when the context is entered
+and re-enables them when the context is exited.
+"""
 
 
 class PyroEffectsTask(Task):

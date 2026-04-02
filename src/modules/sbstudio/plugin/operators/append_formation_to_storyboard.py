@@ -1,5 +1,7 @@
 from math import ceil
 
+from bpy.types import Collection, Context
+
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import (
@@ -37,7 +39,9 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         else:
             return False
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
+
         storyboard = getattr(context.scene.skybrush, "storyboard", None)
         if not storyboard or (
             storyboard.entries and storyboard.entries[-1].formation == formation

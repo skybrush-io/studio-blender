@@ -1,7 +1,7 @@
 from math import inf
 
 from bpy.props import FloatProperty, FloatVectorProperty, IntProperty
-from bpy.types import MeshVertex
+from bpy.types import Collection, Context, MeshVertex
 from numpy import ptp
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
@@ -94,6 +94,6 @@ class GetFormationStatisticsOperator(FormationOperator):
 
         return context.window_manager.invoke_props_dialog(self)
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
         # Nothing to do, the operator is display-only
         return {"FINISHED"}

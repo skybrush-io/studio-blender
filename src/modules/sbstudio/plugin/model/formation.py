@@ -3,14 +3,14 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from functools import partial
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeGuard
 
 import bpy
 from bpy.types import Collection
-from mathutils import Vector
 from numpy import array, c_, dot, float64, ones, zeros
 from numpy.typing import NDArray
 
+from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.objects import (
     get_derived_object_after_applying_modifiers,
@@ -20,7 +20,7 @@ from sbstudio.plugin.utils import create_object_in_collection
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 if TYPE_CHECKING:
-    from bpy.types import MeshVertex, Object
+    from bpy.types import EmptyDisplayType, MeshVertex, Object
 
 __all__ = (
     "add_objects_to_formation",
@@ -43,7 +43,9 @@ def _get_marker_name(formation: str, index: int) -> str:
     return f"{formation} - {index + 1}"
 
 
-def create_formation(name: str, points: Iterable[Vector] | None = None) -> Collection:
+def create_formation(
+    name: str, points: Iterable[Coordinate3D] | None = None
+) -> Collection:
     """Creates a new static formation object with the given name and the given
     points.
 
@@ -68,10 +70,10 @@ def create_formation(name: str, points: Iterable[Vector] | None = None) -> Colle
 
 
 def create_marker(
-    location,
+    location: Coordinate3D,
     name: str,
     *,
-    type: str = "PLAIN_AXES",
+    type: EmptyDisplayType = "PLAIN_AXES",
     size: float = 1,
     collection: Collection | None = None,
 ) -> Object:
@@ -86,7 +88,7 @@ def create_marker(
         collection: the collection that the new marker should be a part of;
             use `None` to add it to the scene collection
     """
-    collection = collection or bpy.context.scene.scene_collection
+    collection = collection or bpy.context.scene.collection
     assert collection is not None
 
     marker = bpy.data.objects.new(name, None)
@@ -100,7 +102,7 @@ def create_marker(
 
 
 def add_objects_to_formation(
-    formation,
+    formation: Collection,
     objects: Iterable[Object] | None,
 ) -> None:
     """Adds the given objects to a formation object as children as-is, _without_
@@ -110,13 +112,14 @@ def add_objects_to_formation(
         formation: the formation to add the objects to
         objects: the objects to add to the formation
     """
-    for obj in objects:
-        formation.objects.link(obj)
+    if objects:
+        for obj in objects:
+            formation.objects.link(obj)
 
 
 def add_points_to_formation(
-    formation,
-    points: Iterable[Vector] | None,
+    formation: Collection,
+    points: Iterable[Coordinate3D] | None,
     *,
     name: str | None = None,
 ) -> list[Object]:
@@ -258,7 +261,7 @@ def get_markers_from_formation(
 
 
 def ensure_formation_consists_of_points(
-    formation: Collection, points: Sequence[Vector]
+    formation: Collection, points: Sequence[Coordinate3D]
 ) -> None:
     """Ensures that the given formation consists of only empty meshes placed
     at the given points in world coordinates.
@@ -282,7 +285,7 @@ def ensure_formation_consists_of_points(
     # Move the empties to the points
     num_empties = len(formation.objects)
     for obj, point in zip(formation.objects, points):
-        obj.location = point  # type: ignore
+        obj.location = point
 
     # Add any remaining empties if needed
     if num_empties < len(points):
@@ -364,7 +367,7 @@ def get_world_coordinates_of_markers_from_formation(
     return result
 
 
-def is_formation(object) -> bool:
+def is_formation(object: Object) -> TypeGuard[Collection]:
     """Returns whether the given Blender object is a formation object."""
     if not isinstance(object, Collection):
         return False
@@ -372,7 +375,7 @@ def is_formation(object) -> bool:
     # We cannot move upwards in the Blender collection hierarchy so we proceed
     # downwards instead
     formations = Collections.find_formations(create=False)
-    return formations and object in formations.children.values()
+    return formations is not None and object in formations.children.values()
 
 
 def remove_formation(formation: Collection) -> None:

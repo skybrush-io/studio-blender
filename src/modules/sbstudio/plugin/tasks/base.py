@@ -2,13 +2,15 @@
 to certain events such as a frame change.
 """
 
+from typing import Callable, ClassVar, Iterable, Iterator
+
 import bpy
 from bpy.app.handlers import persistent
 
 __all__ = ("Task",)
 
 
-_handler_names = [
+_handler_names: list[str] = [
     "depsgraph_update_pre",
     "depsgraph_update_post",
     "frame_change_pre",
@@ -38,8 +40,10 @@ class Task:
     to certain events such as a frame change.
     """
 
-    functions = {}
+    functions: ClassVar[dict[str, Callable[..., None] | Iterable[Callable[..., None]]]]
     """Override this property in subclasses to define the handlers to register."""
+
+    _registered_handlers: list[tuple[str, Callable[..., None]]]
 
     def register(cls):
         """Registers this task instance in Blender."""
@@ -47,10 +51,16 @@ class Task:
 
         for name in _handler_names:
             funcs = cls.functions.get(name)
-            if not hasattr(funcs, "__iter__"):
-                funcs = [funcs]
+            if funcs is None:
+                continue
 
-            for func in funcs:
+            func_iter: Iterator[Callable[..., None]]
+            try:
+                func_iter = iter(funcs)  # ty:ignore[no-matching-overload]
+            except TypeError:
+                func_iter = iter([funcs])
+
+            for func in func_iter:
                 if callable(func):
                     func = persistent(func)
                     getattr(bpy.app.handlers, name).append(func)

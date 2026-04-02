@@ -77,6 +77,13 @@ class SkybrushPDFExportOperator(ExportOperator):
             "Include acceleration plot. Uncheck to exclude acceleration plot from the output."
         ),
     )
+    plot_yaw = BoolProperty(
+        name="Plot yaw and yaw rate",
+        default=True,
+        description=(
+            "Include yaw and yaw rate plot. Uncheck to exclude yaw-related plots from the output."
+        ),
+    )
     plot_drift = BoolProperty(
         name="Plot projected drift",
         default=True,
@@ -132,6 +139,7 @@ class SkybrushPDFExportOperator(ExportOperator):
         column.prop(self, "plot_pos")
         column.prop(self, "plot_vel")
         column.prop(self, "plot_acc")
+        column.prop(self, "plot_yaw")
         column.prop(self, "plot_drift")
         column.prop(self, "plot_nn")
         column.prop(self, "plot_nnall")
@@ -149,6 +157,7 @@ class SkybrushPDFExportOperator(ExportOperator):
             "pos": self.plot_pos,
             "vel": self.plot_vel,
             "acc": self.plot_acc,
+            "yaw": self.plot_yaw,
             "drift": self.plot_drift,
             "nn": self.plot_nn,
             "nnall": self.plot_nnall,

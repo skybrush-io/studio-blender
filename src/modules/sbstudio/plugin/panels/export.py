@@ -8,6 +8,8 @@ from sbstudio.plugin.operators import (
     DSSPath3ExportOperator,
     DSSPathExportOperator,
     EVSKYExportOperator,
+    FinaleCSVExportOperator,
+    KMZExportOperator,
     LitebeeExportOperator,
     RefreshFileFormatsOperator,
     SkybrushCSVExportOperator,
@@ -95,9 +97,19 @@ class ExportPanel(Panel):
                 VVIZExportOperator.bl_idname, text="Export to Finale 3D .vviz"
             )
             needs_separator = True
+        if FileFormat.FINALE_CSV in formats:
+            layout.operator(
+                FinaleCSVExportOperator.bl_idname, text="Export to Finale 3D .csv"
+            )
+            needs_separator = True
         if FileFormat.DDSF in formats:
             layout.operator(
                 DDSFExportOperator.bl_idname, text="Export to Depence .ddsf"
+            )
+            needs_separator = True
+        if FileFormat.KMZ in formats:
+            layout.operator(
+                KMZExportOperator.bl_idname, text="Export to Google Earth .kmz"
             )
             needs_separator = True
 

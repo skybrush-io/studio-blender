@@ -64,7 +64,6 @@ def parse_static_csv_zip(filename: str) -> dict[str, Item]:
 
     Args:
         filename: the name of the .csv input file
-        context: the Blender context
 
     Returns:
         dictionary mapping the imported object names to the corresponding

@@ -534,7 +534,7 @@ class LightEffect(PropertyGroup):
                         # axes
                         sort_key = lambda index: query_axes(positions[index])
 
-                outputs = [1.0] * num_positions  # type: ignore
+                outputs = [1.0] * num_positions
                 order = list(range(num_positions))
                 if num_positions > 1:
                     if proportional and sort_key is not None:
@@ -596,7 +596,7 @@ class LightEffect(PropertyGroup):
                         outputs = [None if x is None else x / np_m1 for x in mapping]
                 else:
                     # if there is no mapping at all, we do not change color of drones
-                    outputs = [None] * num_positions  # type: ignore
+                    outputs = [None] * num_positions
 
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
@@ -841,9 +841,10 @@ class LightEffect(PropertyGroup):
         Returns:
             the created color image itself for easy chaining
         """
-        self.color_image = bpy.data.images.new(name=name, width=width, height=height)
-        self.color_image.colorspace_settings.name = color_space
-        return self.color_image
+        image = bpy.data.images.new(name=name, width=width, height=height)
+        image.colorspace_settings.name = color_space
+        self.color_image = image
+        return image
 
     @property
     def duration_offset(self) -> int:
@@ -1154,15 +1155,23 @@ class LightEffect(PropertyGroup):
         remove_if_unused(self.texture, from_=bpy.data.textures)
 
 
-class LightEffectCollection(PropertyGroup, ListMixin):
+class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     """Blender property group representing the list of light effects to apply
     on the drones in the drone show.
     """
 
+    enabled = BoolProperty(
+        name="Light Effects",
+        description="Enable or disable all light effects globally. Disabling them should increase framerate significantly",
+        default=True,
+        options=set(),
+    )
+    """Global toggle for all light effects."""
+
     entries = CollectionProperty(type=LightEffect)
     """The entries in the collection."""
 
-    active_entry_index = IntProperty(
+    active_entry_index: int = IntProperty(
         name="Selected index",
         description="Index of the light effect currently being edited",
     )
@@ -1315,6 +1324,8 @@ class LightEffectCollection(PropertyGroup, ListMixin):
         """Iterates over all effects that are active in the given frame."""
         # TODO(ntamas): use an interval tree if this becomes a performance
         # bottleneck
+        if not self.enabled:
+            return
         for entry in self.entries:
             if entry.enabled and entry.influence > 0 and entry.contains_frame(frame):
                 yield entry

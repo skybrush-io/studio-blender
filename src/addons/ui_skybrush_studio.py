@@ -2,7 +2,7 @@ bl_info = {
     "name": "Skybrush Studio",
     "author": "CollMot Robotics Ltd.",
     "description": "Extends Blender with UI components for drone show design",
-    "version": (4, 1, 1),
+    "version": (4, 2, 0),
     "blender": (4, 4, 0),
     "category": "Interface",
     "doc_url": "https://doc.collmot.com/public/skybrush-studio-for-blender/latest/",
@@ -95,9 +95,11 @@ from sbstudio.plugin.operators import (
     DuplicateLightEffectOperator,
     EVSKYExportOperator,
     ExportLightEffectsOperator,
+    FinaleCSVExportOperator,
     FixConstraintOrderingOperator,
     GetFormationStatisticsOperator,
     ImportLightEffectsOperator,
+    KMZExportOperator,
     LandOperator,
     LitebeeExportOperator,
     MoveLightEffectDownOperator,
@@ -114,6 +116,7 @@ from sbstudio.plugin.operators import (
     RemoveStoryboardEntryOperator,
     ReorderFormationMarkersOperator,
     ReturnToHomeOperator,
+    RunAllMigrationOperators,
     RunFullProximityCheckOperator,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
@@ -123,6 +126,7 @@ from sbstudio.plugin.operators import (
     SetServerURLOperator,
     SetStoryboardEntryEndFrameOperator,
     SetStoryboardEntryStartFrameOperator,
+    SetupSceneOperator,
     SkybrushCSVExportOperator,
     SkybrushExportOperator,
     SkybrushPDFExportOperator,
@@ -134,7 +138,6 @@ from sbstudio.plugin.operators import (
     UpdateFrameRangeFromStoryboardOperator,
     UpdateTimeMarkersFromStoryboardOperator,
     UseSelectedVertexGroupForFormationOperator,
-    UseSharedMaterialForAllDronesMigrationOperator,
     ValidateTrajectoriesOperator,
     VVIZExportOperator,
 )
@@ -146,6 +149,7 @@ from sbstudio.plugin.panels import (
     LightEffectsPanel,
     PyroControlPanel,
     SafetyCheckPanel,
+    SetupPanel,
     ShowPanel,
     StoryboardEditor,
     SwarmPanel,
@@ -249,6 +253,8 @@ operators = (
     DSSPathExportOperator,
     DSSPath3ExportOperator,
     EVSKYExportOperator,
+    FinaleCSVExportOperator,
+    KMZExportOperator,
     LitebeeExportOperator,
     VVIZExportOperator,
     UseSelectedVertexGroupForFormationOperator,
@@ -263,9 +269,10 @@ operators = (
     AddMarkersFromQRCodeOperator,
     RefreshFileFormatsOperator,
     RunFullProximityCheckOperator,
-    UseSharedMaterialForAllDronesMigrationOperator,
     SetGatewayURLOperator,
     RegisterHardwareIDOperator,
+    RunAllMigrationOperators,
+    SetupSceneOperator,
 )
 """Operators in this addon; operators that require other operators must come
 later in the list than their dependencies."""
@@ -278,6 +285,7 @@ menus = (GenerateMarkersMenu,)
 """Menus in this addon."""
 
 panels = (
+    SetupPanel,
     ShowPanel,
     SwarmPanel,
     FormationsPanel,

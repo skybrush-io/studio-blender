@@ -1,3 +1,5 @@
+from typing import Literal
+
 from bpy.props import (
     BoolProperty,
     EnumProperty,
@@ -89,13 +91,13 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
     addon that do not belong elsewhere.
     """
 
-    drone_collection = PointerProperty(
+    drone_collection: Collection = PointerProperty(
         type=Collection,
         name="Drone collection",
         description="The collection that contains all the objects that are to be treated as drones",
     )
 
-    drone_radius = FloatProperty(
+    drone_radius: float = FloatProperty(
         name="Drone radius",
         description="The radius of the drone template to create.",
         default=DEFAULT_OUTDOOR_DRONE_RADIUS,
@@ -105,7 +107,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         update=drone_radius_updated,
     )
 
-    drone_template = EnumProperty(
+    drone_template: Literal["SPHERE", "CONE", "SELECTED"] = EnumProperty(
         items=[
             ("SPHERE", "Sphere", "", 1),
             ("CONE", "Cone", "", 2),
@@ -125,21 +127,21 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
     # Note that Blender does not have enough floating point precision for lat/lon,
     # so we store them as strings and validate in a custom update function
 
-    latitude_of_show_origin = StringProperty(
+    latitude_of_show_origin: str = StringProperty(
         name="Latitude of show origin",
         description="Proposed latitude of the origin of the show coordinate system, in degrees",
         default="N 0.0\u00b0",
         update=latitude_of_show_origin_updated,
     )
 
-    longitude_of_show_origin = StringProperty(
+    longitude_of_show_origin: str = StringProperty(
         name="Longitude of show origin",
         description="Proposed longitude of the origin of the show coordinate system, in degrees",
         default="E 0.0\u00b0",
         update=longitude_of_show_origin_updated,
     )
 
-    max_acceleration = FloatProperty(
+    max_acceleration: float = FloatProperty(
         name="Preferred acceleration",
         description="Preferred acceleration for drones when planning the duration of transitions between fixed points",
         default=4,
@@ -149,7 +151,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         soft_max=10,
     )
 
-    random_seed = IntProperty(
+    random_seed: int = IntProperty(
         name="Random seed",
         description="Root random seed value used to generate randomized stuff in this show file",
         default=0,
@@ -158,7 +160,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         soft_max=RANDOM_SEED_MAX,
     )
 
-    show_orientation = FloatProperty(
+    show_orientation: float = FloatProperty(
         name="Show orientation",
         description="Proposed orientation of the X+ axis of the show coordinate system relative to North (towards East)",
         default=0.0,
@@ -166,7 +168,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         precision=3,
     )
 
-    show_type = EnumProperty(
+    show_type: Literal["OUTDOOR", "INDOOR"] = EnumProperty(
         name="Show type",
         description="Specifies whether the drone show is an outdoor or an indoor show",
         default="OUTDOOR",
@@ -187,21 +189,21 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         update=show_type_updated,
     )
 
-    use_bloom_effect = BoolProperty(
+    use_bloom_effect: bool = BoolProperty(
         name="Use bloom effect",
         description="Specifies whether the bloom effect should automatically be enabled on the 3D View when the show is loaded",
         default=True,
         update=use_bloom_effect_updated,
     )
 
-    use_show_origin_and_orientation = BoolProperty(
+    use_show_origin_and_orientation: bool = BoolProperty(
         name="Use show origin and orientation",
         description="Specifies whether to have a proposed show origin and orientation, e.g., used in .skyc export",
         default=False,
         update=use_bloom_effect_updated,
     )
 
-    time_markers = StringProperty(
+    time_markers: str = StringProperty(
         name="Time markers",
         description=(
             "Names of the timeline markers that were created by the plugin and "
@@ -212,7 +214,7 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         options={"HIDDEN"},
     )
 
-    emission_strength = FloatProperty(
+    emission_strength: float = FloatProperty(
         name="Emission",
         description="Specifies the light emission strength of the drone meshes",
         default=float(DEFAULT_EMISSION_STRENGTH),

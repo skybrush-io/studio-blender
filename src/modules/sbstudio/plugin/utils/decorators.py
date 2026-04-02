@@ -1,11 +1,15 @@
 from functools import wraps
+from typing import Callable, ParamSpec, TypeVar
 
 import bpy
 
 __all__ = ("with_context", "with_scene", "with_screen")
 
+P = ParamSpec("P")
+T = TypeVar("T")
 
-def with_context(func):
+
+def with_context(func: Callable[P, T]) -> Callable[P, T]:
     """Decorator that can be applied to a function that takes a keyword
     argument named `context` and that fills the scene automatically from the
     current Blender context if it is `None` or not given.
@@ -23,7 +27,7 @@ def with_context(func):
     return wrapper
 
 
-def with_scene(func):
+def with_scene(func: Callable[P, T]) -> Callable[P, T]:
     """Decorator that can be applied to a function that takes a keyword
     argument named `scene` and that fills the scene automatically from the
     current Blender scene if it is `None` or not given.
@@ -44,7 +48,7 @@ def with_scene(func):
     return wrapper
 
 
-def with_screen(func):
+def with_screen(func: Callable[P, T]) -> Callable[P, T]:
     """Decorator that can be applied to a function that takes a keyword
     argument named `screen` and that fills the screen automatically from the
     current Blender screen if it is `None` or not given.

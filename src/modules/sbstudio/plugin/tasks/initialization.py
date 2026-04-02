@@ -91,8 +91,10 @@ def _config_logging(*args):
 
 
 def perform_migrations(*args):
-    # version 1 -> 2
-    bpy.ops.skybrush.use_shared_material_for_all_drones_migration("INVOKE_DEFAULT")
+    from sbstudio.plugin.operators import RunAllMigrationOperators
+
+    if RunAllMigrationOperators.poll(bpy.context):
+        bpy.ops.skybrush.run_all_migrations("INVOKE_DEFAULT")
 
 
 class InitializationTask(Task):

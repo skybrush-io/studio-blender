@@ -4,11 +4,12 @@ from math import ceil, sqrt
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
-from bpy.types import Context
+from bpy.types import Context, Object
 
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.actions import (
+    ensure_animation_data_exists_for_object,
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.api import call_api_from_blender_operator
@@ -265,8 +266,9 @@ class ReturnToHomeOperator(StoryboardOperator):
 
         # Extend the duration of the last formation to the frame where we want
         # to start the RTH maneuver
-        if len(storyboard.entries) > 0:
-            storyboard.last_entry.extend_until(self.start_frame)
+        last_entry = storyboard.last_entry
+        if last_entry is not None:
+            last_entry.extend_until(self.start_frame)
 
         # Calculate when the RTH should end
         end_of_rth = self.start_frame + rth_duration
@@ -280,6 +282,8 @@ class ReturnToHomeOperator(StoryboardOperator):
             purpose=StoryboardEntryPurpose.LANDING,
             context=context,
         )
+
+        return True
 
     def _run_smart_rth(
         self,
@@ -328,6 +332,11 @@ class ReturnToHomeOperator(StoryboardOperator):
         )
         assert entry is not None
         markers = get_markers_from_formation(entry.formation)
+
+        # ensure clean animation data for all markers
+        for marker in markers:
+            assert isinstance(marker, Object)
+            ensure_animation_data_exists_for_object(marker, clean=True)
 
         # generate smart RTH trajectories in the new formation
         for start_time, duration, inner_points, p, q, marker in zip(

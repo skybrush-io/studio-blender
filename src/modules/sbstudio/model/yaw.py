@@ -1,15 +1,12 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from operator import attrgetter
-from typing import TypeVar
+from typing import Self
 
 __all__ = (
     "YawSetpointList",
     "YawSetpoint",
 )
-
-
-C = TypeVar("C", bound="YawSetpointList")
 
 
 @dataclass
@@ -60,10 +57,7 @@ class YawSetpointList:
             "version": 1,
         }
 
-    def shift_in_place(
-        self: C,
-        delta: float,
-    ) -> C:
+    def shift_in_place(self, delta: float) -> Self:
         """Translates the yaw setpoints with the given delta angle. The
         setpoint list will be manipulated in-place.
 
@@ -77,7 +71,7 @@ class YawSetpointList:
             setpoint.angle += delta
         return self
 
-    def shift_time_in_place(self: C, delta: float) -> C:
+    def shift_time_in_place(self, delta: float) -> Self:
         """Shifts all timestamps of the yaw setpoints in-place.
 
         Parameters:
@@ -87,7 +81,7 @@ class YawSetpointList:
             setpoint.time += delta
         return self
 
-    def simplify(self: C) -> C:
+    def simplify(self) -> Self:
         """Simplify yaw setpoints in place.
 
         Returns:
@@ -130,7 +124,7 @@ class YawSetpointList:
 
         return self
 
-    def unwrap(self: C, *, threshold: float = 180, full_cycle: float = 360) -> C:
+    def unwrap(self, *, threshold: float = 180, full_cycle: float = 360) -> Self:
         """Unwraps the yaw angles of the setpoint list "in-place" and ensures
         that consecutive sampled angles never have a difference of more than
         180 degrees.

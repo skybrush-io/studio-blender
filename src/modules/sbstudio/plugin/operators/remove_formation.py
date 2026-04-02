@@ -1,3 +1,5 @@
+from bpy.types import Collection, Context
+
 from sbstudio.plugin.model.storyboard import get_storyboard
 from sbstudio.plugin.objects import remove_objects
 
@@ -14,7 +16,8 @@ class RemoveFormationOperator(FormationOperator):
     bl_label = "Remove Selected Formation"
     bl_description = "Remove the selected formation from the show"
 
-    def execute_on_formation(self, formation, context):
+    def execute_on_formation(self, formation: Collection | None, context: Context):
+        assert formation is not None
         storyboard = get_storyboard(context=context)
 
         for entry in storyboard.entries:

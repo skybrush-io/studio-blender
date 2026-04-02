@@ -1,5 +1,7 @@
-import logging
+from logging import Logger
 from time import time
+
+from bpy.types import Context
 
 from sbstudio.plugin.actions import ensure_animation_data_exists_for_object
 from sbstudio.plugin.constants import Collections, Templates
@@ -9,12 +11,11 @@ from sbstudio.plugin.materials import (
     _get_shader_node_and_input_for_diffuse_color_of_material,
     get_material_for_led_light_color,
 )
-from sbstudio.plugin.operators.base import MigrationOperator
 from sbstudio.plugin.views import find_all_3d_views
 
-__all__ = ("UseSharedMaterialForAllDronesMigrationOperator",)
+from .base import Migration
 
-log = logging.getLogger(__name__)
+__all__ = ("UseSharedMaterialForAllDronesMigration",)
 
 
 def add_object_info_to_shader_node_tree_of_drone_template() -> None:
@@ -46,7 +47,7 @@ def set_all_shading_color_types_to_object() -> None:
         space.shading.wireframe_color_type = "OBJECT"
 
 
-def upgrade_drone_color_animations_and_drone_materials() -> None:
+def upgrade_drone_color_animations_and_drone_materials(log: Logger) -> None:
     """Moves drone color animation from shader nodes to object colors
     and replaces drone material with template material."""
     template = Templates.find_drone(create=False)
@@ -81,76 +82,60 @@ def upgrade_drone_color_animations_and_drone_materials() -> None:
                 last_log = time()
 
 
-def needs_migration():
-    """Returns whether the current Blender content needs migration.
-
-    Note that return value is checked based on actual content,
-    irrespective of the current plugin version."""
-    # TODO: what should be the optimal method to check if file
-    # needs migration or not? We check the template material now
-    # as it is most probably not modified by the users frequently
-    templates = Collections.find_templates(create=False)
-    if templates is None:
-        return False
-
-    template = Templates.find_drone(create=False)
-    if template is None:
-        return False
-
-    template_material = get_material_for_led_light_color(template)
-    if template_material is None:
-        return False
-
-    _, input = _get_shader_node_and_input_for_diffuse_color_of_material(
-        template_material
-    )
-
-    return not input.is_linked
-
-
-class UseSharedMaterialForAllDronesMigrationOperator(MigrationOperator):
+class UseSharedMaterialForAllDronesMigration(Migration):
     """Upgrades old Skybrush Studio for Blender file content (<=3.13.2)
     that uses a separate material for all drone objects to a new version
     in which all drones share a common material. This speeds up light effect
     handling substantially.
     """
 
-    bl_idname = "skybrush.use_shared_material_for_all_drones_migration"
-    bl_label = "Update file content to speed up light effect rendering"
-    bl_description = (
+    label = "Update file content to speed up light effect rendering"
+    description = (
         "Upgrade your old (<4.0) Skybrush Studio for Blender file content\n"
         "to speed up light effect playback and show export, by replacing all\n"
         "drone object materials to a shared template material, modifying its shader\n"
         "node tree and storing color animations in the drone object's 'color' property.\n"
         "The upgrade also changes active 3D Viewport wireframe and object color to 'OBJECT'."
     )
+    version_range = (1, 2)
 
-    def initialize_migration(self) -> None:
-        """Initializes the operator by setting up the from/to versions."""
-        self.version_from = 1
-        self.version_to = 2
-
-    def needs_migration(self) -> bool:
+    @classmethod
+    def needs_migration(cls, context: Context) -> bool:
         """Returns whether the current Blender content needs migration.
 
         Note that return value is checked based on actual content,
         irrespective of the current plugin version."""
-        return needs_migration()
+        # TODO: what should be the optimal method to check if file
+        # needs migration or not? We check the template material now
+        # as it is most probably not modified by the users frequently
+        templates = Collections.find_templates(create=False)
+        if templates is None:
+            return False
 
-    def execute_migration(self, context):
+        template = Templates.find_drone(create=False)
+        if template is None:
+            return False
+
+        template_material = get_material_for_led_light_color(template)
+        if template_material is None:
+            return False
+
+        _, input = _get_shader_node_and_input_for_diffuse_color_of_material(
+            template_material
+        )
+
+        return not input.is_linked
+
+    def execute(self, context: Context, *, log: Logger):
         """Executes the migration/upgrade on the current Blender content."""
-
-        log.info("Upgrade started.")
 
         log.info("Modifying shader node tree of drone template...")
         add_object_info_to_shader_node_tree_of_drone_template()
 
         log.info("Simplifying drone color animation storage...")
-        upgrade_drone_color_animations_and_drone_materials()
+        upgrade_drone_color_animations_and_drone_materials(log)
 
-        log.info("Changing 3D Viewport shader color types to 'OBJECT'...")
+        log.info("Changing 3D viewport shader color types to 'OBJECT'...")
         set_all_shading_color_types_to_object()
-
-        log.info("Upgrade successful.")
 
         return {"FINISHED"}

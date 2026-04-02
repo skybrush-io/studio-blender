@@ -140,12 +140,12 @@ def use_b_mesh() -> Iterator[bmesh.types.BMesh]:
         result.free()
 
 
-def subdivide_edges(obj, cuts=1):
+def subdivide_edges(obj, cuts: int = 1):
     """Subdivides the edges of the mesh of the given object.
 
     Parameters:
         obj (object): the Blender object whose mesh is to be subdivided
-        cuts (int): the number of cuts to apply per edge
+        cuts: the number of cuts to apply per edge
     """
     if cuts <= 0:
         return

@@ -1,3 +1,5 @@
+from typing import Any
+
 from bpy.props import EnumProperty
 from bpy.types import Context
 
@@ -10,7 +12,7 @@ def FrameRangeProperty(**kwds):
     """Factory function disguised as a class; creates a Blender property that
     is suitable for selecting a typical frame range.
     """
-    props = {
+    props: dict[str, Any] = {
         "name": "Frame range",
         "description": "Choose a frame range to use for this operation",
         "items": (

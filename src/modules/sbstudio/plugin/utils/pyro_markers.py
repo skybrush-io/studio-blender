@@ -137,7 +137,7 @@ def update_pyro_particles_of_object(ob: Object) -> None:
                 marker.payload.duration * 50
             )  # 50 particles/sec
             particle_settings.frame_start = marker.frame
-            particle_settings.frame_end = (
+            particle_settings.frame_end = int(
                 marker.frame + (marker.payload.duration + randint(-4, 4)) * fps
             )
             particle_settings.lifetime = randint(1 * fps, 2 * fps)

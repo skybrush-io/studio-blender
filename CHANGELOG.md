@@ -5,11 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2026-03-29
+
+### Added
+
+- Yaw rate safety check has been added with a maximum yaw rate threshold.
+
+- Optional yaw and yaw rate plot is added to the validation PDF file (PRO only).
+
+- Added toggle to be able to disable light effect calculation temporarily,
+  which might speed up render rate substantially during the motion design phase.
+
+- Added Google Earth `.kmz` exporter as a new Studio X (pro) feature.
+
+### Changed
+
+- The minimum backend version required for this version of the add-on is now
+  2.35.0.
+
+### Fixed
+
+- Fixed when acceleration warnings appear as a safety check.
+
 ## [4.1.0] - 2026-01-14
 
 ### Added
 
-- Optional acceleration plot is added to the validation PDF file (PRO only)
+- Optional acceleration plot is added to the validation PDF file (PRO only).
 
 ### Changed
 
@@ -18,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Yaw and pyro information can now be part of the validation PDF file (PRO only)
+- Yaw and pyro information can now be part of the validation PDF file (PRO only).
 
 - A warning is now printed when importing a formation from an external file that
   contains no trajectories or light programs, instead of failing with an error.
@@ -34,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The add-on now expllcitly declares that the minimum required Blender version is 4.4.
+- The add-on now explicitly declares that the minimum required Blender version is 4.4.
 
 ### Fixed
 

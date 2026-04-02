@@ -7,8 +7,9 @@ from typing import TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
-from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
+from sbstudio.api.errors import NoOnlineAccessAllowedError
 from sbstudio.api.version import ensure_backend_version
+from sbstudio.errors import SkybrushStudioError
 from sbstudio.plugin.errors import SkybrushStudioExportWarning, TaskCancelled
 
 __all__ = ("get_api",)
@@ -108,7 +109,7 @@ def call_api_from_blender_operator(
     except SkybrushStudioExportWarning as ex:
         operator.report({"WARNING"}, str(ex))
         raise
-    except SkybrushStudioAPIError as ex:
+    except SkybrushStudioError as ex:
         operator.report({"ERROR"}, ex.format_message() or default_message)
         raise
     except URLError as ex:

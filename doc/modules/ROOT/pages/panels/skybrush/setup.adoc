@@ -1,0 +1,15 @@
+= Setup Panel
+:imagesdir: ../../../assets/images
+:experimental:
+
+The setup panel helps you setup your Blender environment for the latest version of **Skybrush Studio**.
+
+image::panels/setup/setup.jpg[Setup panel]
+
+== Initialize Add-On
+
+There are certain standard Blender settings (e.g. the Viewport shading color and wireless color option in the 3D View panel) that need to be setup properly to make the **Skybrush Studio for Blender** addon fully functional. With pressing this button, all necessary Blender settings are updated to support the latest version of **Skybrush**.
+
+== Update to Latest File Format
+
+If you load a previous Blender file created with an older version of **Skybrush Studio for Blender**, press this button to initiate a migration to the latest version.

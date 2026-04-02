@@ -1,5 +1,4 @@
-Skybrush Studio for Blender
-===========================
+# Skybrush Studio for Blender
 
 ![Skybrush Studio for Blender screenshot](/doc/screenshot_small.jpg)
 
@@ -13,8 +12,7 @@ Using `.skyc` files together with the [Skybrush suite](https://skybrush.io)
 allows you to preview, validate, verify, analyze, plot and execute drone shows
 with a few clicks.
 
-Installation
-------------
+## Installation
 
 [Skybrush Studio for Blender](https://skybrush.io) is distributed as a
 ZIP file that can be installed in Blender according to the official
@@ -27,8 +25,7 @@ yourself](#building-the-plugin). Once you obtained the ZIP version of the
 plugin, follow the installation guide in our [online
 documentation](https://doc.collmot.com/public/skybrush-studio-for-blender/latest/install.html)
 
-Building the plugin
--------------------
+## Building the plugin
 
 The build process is tested on macOS at the moment. It is very likely to work
 on Linux as well. On Windows, you can try building inside Cygwin or Windows
@@ -38,21 +35,20 @@ definitely need an environment that provides `bash`.
 The build script can be executed as follows:
 
 ```sh
-$ bash etc/scripts/create_blender_dist.sh
+bash etc/scripts/create_blender_dist.sh
 ```
 
 When successful, the script creates the ZIP bundle of the addon in the `dist/`
 folder.
 
-Development
------------
+## Development
 
 If you want to modify the plugin and add your own functionality, the easiest is
 to set up a folder that can be used directly as an entry in the Blender addon
 path. This way you can modify the source code of the plugin without having to
 build a ZIP after every modification.
 
-First, run `poetry install` in the root folder of the repository to install the
+First, run `uv install` in the root folder of the repository to install the
 dependencies of the plugin.
 
 Next, on Linux or macOS, you can run `etc/scripts/bootstrap.sh` to create a folder
@@ -65,13 +61,11 @@ Note that you might still need to exit Blender and restart it again if you
 make a modification to the plugin code to ensure that your modifications are
 picked up by Blender.
 
-Support
--------
+## Support
 
 For any support questions please contact us on our [Discord server](https://skybrush.io/r/discord).
 
-License
--------
+## License
 
 Copyright 2020-2025 CollMot Robotics Ltd.
 

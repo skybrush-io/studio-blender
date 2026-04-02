@@ -21,6 +21,8 @@ from .export_to_ddsf import DDSFExportOperator
 from .export_to_drotek import DrotekExportOperator
 from .export_to_dss import DSSPath3ExportOperator, DSSPathExportOperator
 from .export_to_evsky import EVSKYExportOperator
+from .export_to_finale_csv import FinaleCSVExportOperator
+from .export_to_kmz import KMZExportOperator
 from .export_to_litebee import LitebeeExportOperator
 from .export_to_pdf import SkybrushPDFExportOperator
 from .export_to_skyc import SkybrushExportOperator
@@ -30,9 +32,6 @@ from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
 from .import_light_effects import ImportLightEffectsOperator
 from .land import LandOperator
-from .migrations.use_common_material_for_all_drones import (
-    UseSharedMaterialForAllDronesMigrationOperator,
-)
 from .move_light_effect import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
@@ -51,6 +50,7 @@ from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
 from .remove_storyboard_entry import RemoveStoryboardEntryOperator
 from .reorder_formation_markers import ReorderFormationMarkersOperator
 from .return_to_home import ReturnToHomeOperator
+from .run_all_migrations import RunAllMigrationOperators
 from .run_full_proximity_check import RunFullProximityCheckOperator
 from .select_formation import DeselectFormationOperator, SelectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
@@ -64,6 +64,7 @@ from .set_time_of_storyboard_entry import (
     SetStoryboardEntryEndFrameOperator,
     SetStoryboardEntryStartFrameOperator,
 )
+from .setup_scene import SetupSceneOperator
 from .swap_colors import SwapColorsInLEDControlPanelOperator
 from .takeoff import TakeoffOperator
 from .trigger_pyro import TriggerPyroOnSelectedDronesOperator
@@ -96,10 +97,12 @@ __all__ = (
     "DuplicateLightEffectOperator",
     "EVSKYExportOperator",
     "ExportLightEffectsOperator",
+    "FinaleCSVExportOperator",
     "FixConstraintOrderingOperator",
     "GetFormationStatisticsOperator",
     "ImportLightEffectsOperator",
     "LandOperator",
+    "KMZExportOperator",
     "LitebeeExportOperator",
     "MoveLightEffectDownOperator",
     "MoveLightEffectUpOperator",
@@ -115,6 +118,7 @@ __all__ = (
     "RemoveStoryboardEntryOperator",
     "ReorderFormationMarkersOperator",
     "ReturnToHomeOperator",
+    "RunAllMigrationOperators",
     "RunFullProximityCheckOperator",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",
@@ -124,6 +128,7 @@ __all__ = (
     "SetStoryboardEntryStartFrameOperator",
     "SetServerURLOperator",
     "SetGatewayURLOperator",
+    "SetupSceneOperator",
     "SkybrushCSVExportOperator",
     "SkybrushExportOperator",
     "SkybrushPDFExportOperator",
@@ -135,7 +140,6 @@ __all__ = (
     "UpdateFrameRangeFromStoryboardOperator",
     "UpdateTimeMarkersFromStoryboardOperator",
     "UseSelectedVertexGroupForFormationOperator",
-    "UseSharedMaterialForAllDronesMigrationOperator",
     "ValidateTrajectoriesOperator",
     "VVIZExportOperator",
 )

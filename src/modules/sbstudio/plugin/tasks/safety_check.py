@@ -1,37 +1,46 @@
 """Background task that is invoked after every frame change and that
-performs different safety checks, such as whether the nearest-neighbor
+performs various safety checks, such as whether the nearest-neighbor
 constraints are satisfied in the current frame.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Mapping
 from math import hypot
 from typing import TYPE_CHECKING
 
 import bpy
+from bpy.types import Collection
 
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.evaluator import (
+    get_position_of_object,
+    get_xyz_euler_rotation_of_object,
+)
 from sbstudio.utils import LRUCache
 
-# from sbstudio.plugin.utils import debounced
 from .base import Task
+from .utils import Suspension
 
 if TYPE_CHECKING:
-    from bpy.types import Scene
+    from bpy.types import Depsgraph, Scene
 
+__all__ = (
+    "SafetyCheckTask",
+    "create_position_snapshot_for_drones_in_collection",
+    "suspended_safety_checks",
+    "invalidate_caches",
+)
 
 # TODO(ntamas): make the nearest-neighbor calculation debounced when we have
-# lots of drones, but currently we are good with, say 100 drones
+# lots of drones, but currently we are good with even 5K drones
 
 VectorSnapshot = dict[str, Coordinate3D]
 PositionSnapshot = VectorSnapshot
 VelocitySnapshot = VectorSnapshot
-
+RotationSnapshot = VectorSnapshot
 
 _position_snapshot_cache: LRUCache[int, PositionSnapshot] = LRUCache(5)
 """Cache that stores the positions in the last few frames visited by the user
@@ -46,22 +55,39 @@ Velocities are estimated from the positions so this cache is probably even more
 sparsely populated than the position cache.
 """
 
-_suspension_counter = 0
-"""Suspension counter. Safety checks are suspended if this counter is positive."""
+_rotation_snapshot_cache: LRUCache[int, RotationSnapshot] = LRUCache(5)
+"""Cache that stores the Euler rotation angles in the last few frames visited by the user
+in the hope that we can estimate the yaw rates from it in the current frame.
+"""
 
 _ZERO = (0.0, 0.0, 0.0)
 """Zero velocity tuple, used frequently in velocity estimations when no data is
 available.
 """
 
+suspension = Suspension()
+"""Object to manage the suspension logic for the safety check task."""
+
 
 def create_position_snapshot_for_drones_in_collection(
-    collection, *, frame: int
+    collection: Collection,
 ) -> PositionSnapshot:
     """Create a dictionary mapping the names of the drones in the given
     collection to their positions.
     """
     return {drone.name: get_position_of_object(drone) for drone in collection.objects}
+
+
+def create_rotation_snapshot_for_drones_in_collection(
+    collection, *, frame: int
+) -> RotationSnapshot:
+    """Create a dictionary mapping the names of the drones in the given
+    collection to their rotations.
+    """
+    return {
+        drone.name: get_xyz_euler_rotation_of_object(drone)
+        for drone in collection.objects
+    }
 
 
 def estimate_derivatives_at_frame(
@@ -132,12 +158,8 @@ def estimate_derivatives_at_frame(
     return result, should_cache
 
 
-# @debounced(delay=0.1)
-def run_safety_check(scene: Scene, depsgraph) -> None:
-    global _suspension_counter
-    if _suspension_counter > 0:
-        return
-
+@suspension.wrap
+def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
     safety_check = scene.skybrush.safety_check
 
     if safety_check.enabled:
@@ -171,11 +193,15 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
     else:
         max_acceleration = None
 
+    # Get the yaw_rate threshold
+    if safety_check.yaw_rate_warning_enabled:
+        max_yaw_rate = safety_check.yaw_rate_warning_threshold
+    else:
+        max_yaw_rate = None
+
     # Create a position snapshot for the current frame and cache it
     frame = scene.frame_current
-    position_snapshot = create_position_snapshot_for_drones_in_collection(
-        drones, frame=frame
-    )
+    position_snapshot = create_position_snapshot_for_drones_in_collection(drones)
     _position_snapshot_cache[frame] = position_snapshot
 
     # Prepare velocity snapshot
@@ -190,17 +216,31 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
         velocity_snapshot, _velocity_snapshot_cache, frame=frame, scene=scene
     )
 
+    # Prepare rotation and rotation rate snapshots
+    rotation_snapshot = create_rotation_snapshot_for_drones_in_collection(
+        drones, frame=frame
+    )
+    _rotation_snapshot_cache[frame] = rotation_snapshot
+    rotation_rate_snapshot, rotation_rate_snapshot_valid = (
+        estimate_derivatives_at_frame(
+            rotation_snapshot, _rotation_snapshot_cache, frame=frame, scene=scene
+        )
+    )
+
     # Get formation status as a string
     storyboard = scene.skybrush.storyboard
     formation_status = storyboard.get_formation_status_at_frame(frame)
 
-    # Extract positions and velocities from the snapshots
+    # Extract positions, velocities, accelerations and rotations from the snapshots
     positions = list(position_snapshot.values())
     velocities = list(velocity_snapshot.values()) if velocity_snapshot_valid else []
     accelerations = (
         [hypot(*vec) for vec in acceleration_snapshot.values()]
         if acceleration_snapshot_valid
         else []
+    )
+    rotation_rates = (
+        list(rotation_rate_snapshot.values()) if rotation_rate_snapshot_valid else []
     )
 
     # Find min/max altitude for reporting purposes
@@ -268,6 +308,22 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
         else []
     )
 
+    # Check yaw rates
+    max_yaw_rate_found = (
+        round(max(abs(rate[2]) for rate in rotation_rates), ndigits=2)
+        if rotation_rates
+        else 0.0
+    )
+    drones_over_max_yaw_rate = (
+        [
+            position_snapshot.get(name, _ZERO)
+            for name, rate in rotation_rate_snapshot.items()
+            if round(abs(rate[2]), ndigits=2) > max_yaw_rate
+        ]
+        if max_yaw_rate is not None
+        else []
+    )
+
     # Find drones moving horizontally below min navigation altitude
     drones_below_min_nav_altitude = (
         [
@@ -293,6 +349,8 @@ def run_safety_check(scene: Scene, depsgraph) -> None:
         drones_over_max_velocity_z=drones_over_max_velocity_z,
         max_acceleration=max_acceleration_found,
         drones_over_max_acceleration=drones_over_max_acceleration,
+        max_yaw_rate=max_yaw_rate_found,
+        drones_over_max_yaw_rate=drones_over_max_yaw_rate,
         drones_below_min_nav_altitude=drones_below_min_nav_altitude,
         all_close_pairs=[],
     )
@@ -310,9 +368,10 @@ def invalidate_caches(clear_result: bool = False):
     This function should be called when the plugin makes radical changes to the
     current scene; for instance, after re-planning transitions.
     """
-    global _position_snapshot_cache, _velocity_snapshot_cache
+    global _position_snapshot_cache, _velocity_snapshot_cache, _rotation_snapshot_cache
     _position_snapshot_cache.clear()
     _velocity_snapshot_cache.clear()
+    _rotation_snapshot_cache.clear()
 
     if clear_result:
         safety_check = bpy.context.scene.skybrush.safety_check
@@ -325,17 +384,10 @@ def run_tasks_post_load(*args):
     ensure_overlays_enabled()
 
 
-@contextmanager
-def suspended_safety_checks() -> Iterator[None]:
-    """Context manager that suspends safety checks when the context is entered
-    and re-enables them when the context is exited.
-    """
-    global _suspension_counter
-    _suspension_counter += 1
-    try:
-        yield
-    finally:
-        _suspension_counter -= 1
+suspended_safety_checks = suspension.use
+"""Context manager that suspends safety checks when the context is entered
+and re-enables them when the context is exited.
+"""
 
 
 class SafetyCheckTask(Task):

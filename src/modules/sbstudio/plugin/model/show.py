@@ -1,8 +1,6 @@
 from bpy.props import IntProperty, PointerProperty
 from bpy.types import PropertyGroup
 
-from sbstudio.plugin.constants import LATEST_SKYBRUSH_PLUGIN_VERSION
-
 from .formations_panel import FormationsPanelProperties
 from .led_control import LEDControlPanelProperties
 from .light_effects import LightEffectCollection
@@ -37,7 +35,7 @@ class DroneShowAddonProperties(PropertyGroup):
         type=DroneShowAddonFileSpecificSettings
     )
     storyboard: Storyboard = PointerProperty(type=Storyboard)
-    version: IntProperty = IntProperty(
+    version: int = IntProperty(
         name="Version",
         description=(
             "Current version of the show content stored in Blender. "
@@ -45,6 +43,5 @@ class DroneShowAddonProperties(PropertyGroup):
             "Version 2 uses a shared material for all drones to speed up light effects."
         ),
         min=1,
-        max=LATEST_SKYBRUSH_PLUGIN_VERSION,
         default=1,
     )

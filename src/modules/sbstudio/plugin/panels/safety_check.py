@@ -93,12 +93,19 @@ class SafetyCheckPanel(Panel):
         col2.enabled = safety_check.velocity_z_warning_different_up
         row.enabled = safety_check.velocity_warning_enabled
 
-        # Aceleration warning widgets
+        # Acceleration warning widgets
 
         col.prop(safety_check, "acceleration_warning_enabled")
         row = col.row()
         row.prop(safety_check, "acceleration_warning_threshold", text="", slider=True)
-        row.enabled = safety_check.proximity_warning_enabled
+        row.enabled = safety_check.acceleration_warning_enabled
+
+        # Yaw rate warning widgets
+
+        col.prop(safety_check, "yaw_rate_warning_enabled")
+        row = col.row()
+        row.prop(safety_check, "yaw_rate_warning_threshold", text="", slider=True)
+        row.enabled = safety_check.yaw_rate_warning_enabled
 
         # Miscellaneous
         layout.separator()

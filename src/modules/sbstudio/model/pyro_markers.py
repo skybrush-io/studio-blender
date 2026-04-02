@@ -1,10 +1,8 @@
 from dataclasses import asdict, dataclass, field
 from json import dumps, loads
-from typing import Any, TypeVar
+from typing import Any, Self
 
 __all__ = ("PyroMarkers", "PyroPayload")
-
-C = TypeVar("C", bound="PyroMarkers")
 
 
 @dataclass
@@ -114,7 +112,7 @@ class PyroMarkers:
         stored for a single drone."""
         return dumps(self.as_dict())
 
-    def shift_time_in_place(self: C, frame_delta: int) -> C:
+    def shift_time_in_place(self, frame_delta: int) -> Self:
         """Shifts all timestamps of the pyro markers in-place.
 
         Parameters:
