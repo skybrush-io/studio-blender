@@ -579,7 +579,7 @@ def export_show_to_file_using_api(
     if format is FileFormat.SKYC:
         message = "Exporting show to Skybrush .skyc format"
         renderer = "skyc"
-    if format is FileFormat.PDF:
+    elif format is FileFormat.PDF:
         message = "Exporting validation plots to .pdf"
         renderer = "plot"
         plots = settings.get("plots", ["stats", "pos", "vel", "drift", "nn"])
