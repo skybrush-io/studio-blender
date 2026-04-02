@@ -43,6 +43,7 @@ from .move_storyboard_entry import (
 from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .refresh_file_formats import RefreshFileFormatsOperator
+from .register_hardware_id import RegisterHardwareIDOperator
 from .remove_formation import RemoveFormationOperator
 from .remove_light_effect import RemoveLightEffectOperator
 from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
@@ -53,6 +54,7 @@ from .run_all_migrations import RunAllMigrationOperators
 from .run_full_proximity_check import RunFullProximityCheckOperator
 from .select_formation import DeselectFormationOperator, SelectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
+from .set_gateway_url import SetGatewayURLOperator
 from .set_server_url import SetServerURLOperator
 from .set_time_of_light_effect import (
     SetLightEffectEndFrameOperator,
@@ -110,6 +112,7 @@ __all__ = (
     "PrepareSceneOperator",
     "RecalculateTransitionsOperator",
     "RefreshFileFormatsOperator",
+    "RegisterHardwareIDOperator",
     "RemoveFormationOperator",
     "RemoveLightEffectOperator",
     "RemoveScheduleOverrideEntryOperator",
@@ -125,6 +128,7 @@ __all__ = (
     "SetStoryboardEntryEndFrameOperator",
     "SetStoryboardEntryStartFrameOperator",
     "SetServerURLOperator",
+    "SetGatewayURLOperator",
     "SetupSceneOperator",
     "SkybrushCSVExportOperator",
     "SkybrushExportOperator",
