@@ -10,7 +10,7 @@ image::panels/pyro_control/pyro_control.jpg[Pyro Control panel]
 
 == Render
 
-There are three visualization types for pyro effects you can choose dynamically:
+There are several visualization types for pyro effects from which you can choose dynamically:
 
 None::
 Select this option to skip pyro visualization completely
@@ -46,6 +46,10 @@ before pressing the btn:[Trigger] button.
 Note that only a single event is supported per channel on each drone, so consecutive
 triggering on the same channel will overwrite previous events.
 
+== Upload params from selection
+
+Press this button to retrieve pyro payload parameters from the currently selected drone on the current channel.
+
 == Payload parameters
 
 There are several payload parameters that can be setup for each pyro trigger event.
@@ -61,6 +65,12 @@ Prefire time:: Pyro payloads usually need some time after triggering to light up
 sky. Define this duration here and put your trigger events exactly at the desired moments
 when they should start to be visible. Skybrush will make sure your pyro payloads will be
 triggered this time earlier to have your spectacles right on time.
+
+Yaw:: Defines the yaw angle of the pyro payload relative to the body frame of the drone, in degrees.
+(0° points towards the yaw of the drone, 90° to the right, -90° to the left etc.)
+
+Pitch:: Defines the pitch angle of the pyro payload relative to the body frame of the drone, in degrees.
+(0° points ahead (towards the yaw of the payload), 90° points up, -90° points down etc.)
 
 == Trigger
 

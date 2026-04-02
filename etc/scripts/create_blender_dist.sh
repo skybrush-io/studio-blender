@@ -29,7 +29,7 @@ VERSION=$(cat pyproject.toml | grep ^version | head -1 | cut -d '"' -f 2)
 rm -f requirements*.txt
 
 # Generate requirements.txt from uv
-uv export --no-hashes --no-emit-project --format requirements-txt >requirements.txt
+uv export --no-dev --no-hashes --no-emit-project --format requirements-txt >requirements.txt
 trap "rm -f requirements.txt" EXIT
 
 # Log requirements for debugging purposes

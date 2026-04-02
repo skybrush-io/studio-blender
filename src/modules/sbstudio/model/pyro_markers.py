@@ -18,12 +18,22 @@ class PyroPayload:
     prefire_time: float = 0
     """Time needed for the pyro payload to show up after ignition, in seconds."""
 
+    yaw: float = 0
+    """The yaw (pan) angle of the payload, relative to the body frame of the drone, in degrees.
+    (0° points towards the yaw of the drone, 90° to the right, -90° to the left etc.)"""
+
+    pitch: float = -90
+    """The pitch (tilt) angle of the payload, relative to the body frame of the drone, in degrees.
+    (0° points ahead (towards the yaw of the payload), 90° points up, -90° points down etc.)"""
+
     def as_api_dict(self) -> dict[str, Any]:
         """Returns the pyro payload as a dictionary compatible with the Skybrush API."""
         return {
             "name": self.name,
             "duration": self.duration,
             "prefireTime": self.prefire_time,
+            "yaw": round(self.yaw, 3),
+            "pitch": round(self.pitch, 3),
         }
 
 

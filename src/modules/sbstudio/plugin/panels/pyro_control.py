@@ -1,7 +1,8 @@
 from bpy.types import Panel
 
 from sbstudio.plugin.operators import (
-    TriggerPyroOnSelectedDronesOperator as TriggerPyro,
+    TriggerPyroOnSelectedDronesOperator,
+    UpdatePyroParamsFromSelectedDroneOperator,
 )
 
 
@@ -36,13 +37,19 @@ class PyroControlPanel(Panel):
         layout.separator()
 
         layout.prop(pyro_control, "channel")
+        layout.operator(
+            UpdatePyroParamsFromSelectedDroneOperator.bl_idname,
+            text="Update params from selection",
+        )
 
         layout.separator()
 
         layout.prop(pyro_control, "name")
         layout.prop(pyro_control, "duration")
         layout.prop(pyro_control, "prefire_time")
+        layout.prop(pyro_control, "yaw")
+        layout.prop(pyro_control, "pitch")
 
         layout.separator()
 
-        layout.operator(TriggerPyro.bl_idname, text="Trigger")
+        layout.operator(TriggerPyroOnSelectedDronesOperator.bl_idname, text="Trigger")
