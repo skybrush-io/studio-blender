@@ -99,7 +99,7 @@ class PyroControlPanelProperties(PropertyGroup):
 
     yaw = FloatProperty(
         name="Yaw",
-        description="The yaw (pan) angle of the payload, relative to the body frame of the drone",
+        description="The yaw (pan) angle of the payload, relative to the body frame of the drone (+CW, -CCW)",
         default=radians(0),
         soft_min=radians(-180),
         soft_max=radians(180),
@@ -109,7 +109,7 @@ class PyroControlPanelProperties(PropertyGroup):
 
     pitch = FloatProperty(
         name="Pitch",
-        description="The pitch (tilt) angle of the payload, relative to the body frame of the drone",
+        description="The pitch (tilt) angle of the payload, relative to the body frame of the drone (+up, -down)",
         default=radians(-90),
         soft_min=radians(-180),
         soft_max=radians(180),
