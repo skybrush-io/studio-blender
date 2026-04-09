@@ -304,6 +304,7 @@ def export_show_to_file_using_api(
         renderer_params = {
             "fps": settings["output_fps"],
             "light_fps": settings["light_output_fps"],
+            "time_offset": settings["time_offset"],
         }
     else:
         raise RuntimeError(f"Unhandled format: {format!r}")
