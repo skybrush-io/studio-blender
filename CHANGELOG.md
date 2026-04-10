@@ -9,16 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The `.vviz` exporter got enhanced in several ways. It received a new time offset 
-  parameter to be able to move the drone show time axis relative to the time axis 
-  of the software importing the `.vviz`. It also encodes a pan and tilt angle for
-  the pyro payloads now, based on the yaw and pitch parameters introduced lately 
-  for pyro trigger events (note the slight difference between the definition of yaw 
-  and pan, and pitch and tilt). The drone numbering in the `.vviz` files was also
-  changed to start from 1 instead of 0. Finally, the size of the `.vviz` file is 
-  now reduced to some extent with proper rounding of inner values stored. The
-  new features of the exporter are introduced in **Skybrush Studio Server**
-  version 2.39.0.
+- The `.vviz` exporter received a new time offset parameter to be able to move the
+  drone show time axis relative to the time axis of the software importing the
+  `.vviz` file. It also encodes pan and tilt angles for the pyro payloads now, based
+  on the yaw and pitch parameters introduced lately for pyro trigger events (note
+  the slight difference between the definition of yaw and pan, and pitch and tilt).
+  The drone numbering in the `.vviz` files was also changed to start from 1 instead
+  of 0. Finally, the size of the `.vviz` file is now reduced to some extent with
+  proper rounding of inner values stored. The new features of the exporter are
+  introduced in **Skybrush Studio Server** version 2.39.0.
 
 ## [4.3.0] - 2026-04-01
 
