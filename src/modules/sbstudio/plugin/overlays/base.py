@@ -96,7 +96,7 @@ class Overlay(metaclass=ABCMeta):
 class ShaderOverlay(Overlay):
     """Overlay subclass that works with a Blender built-in shader."""
 
-    shader_type: ClassVar[str] = "UNIFORM_COLOR"
+    shader_type: ClassVar[str] = "POINT_UNIFORM_COLOR"
 
     _shader: gpu.types.GPUShader | None = None
 
