@@ -1,6 +1,6 @@
 from typing import Any
 
-from bpy.props import BoolProperty, IntProperty, StringProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 
 from sbstudio.model.file_formats import FileFormat
 
@@ -39,6 +39,12 @@ class VVIZExportOperator(ExportOperator):
         description="Number of samples to take from light programs per second",
     )
 
+    time_offset = FloatProperty(
+        name="Time offset",
+        default=0,
+        description="Time offset to add to the output relative to Finale 3D time, in seconds",
+    )
+
     # pyro control enable/disable
     use_pyro_control = BoolProperty(
         name="Export pyro (PRO)",
@@ -62,6 +68,7 @@ class VVIZExportOperator(ExportOperator):
         layout.prop(self, "redraw")
         layout.prop(self, "output_fps")
         layout.prop(self, "light_output_fps")
+        layout.prop(self, "time_offset")
 
         layout.separator()
 
@@ -81,4 +88,5 @@ class VVIZExportOperator(ExportOperator):
             "light_output_fps": self.light_output_fps,
             "use_pyro_control": self.use_pyro_control,
             "use_yaw_control": self.use_yaw_control,
+            "time_offset": self.time_offset,
         }
