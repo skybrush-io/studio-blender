@@ -127,7 +127,13 @@ TIP: If you are in Object mode _and_ the formation being selected contains verti
 
 == Generating markers for a formation
 
-Once a formation is created (and preferably appended to the storybard), use the btn:[Generate Markers] button to generate extra static or dynamic markers into that formation from different sources:
+It is possible to import static formations or animation snippets into **Skybrush Studio for Blender** from external sources, using the btn:[Generate Markers] button applied to empty formation placeholders created beforehand.
+
+Depending on your external data source, importing formations this way might also create a new baked image-based light effect that is automatically applied on the imported formation to preserve its original color animation.
+
+IMPORTANT: Make sure to append your empty formation to the storyboard before generating markers into it! This ensures that the start end end frames of the the imported animation and its color animation will be set up properly.
+
+The following external data sources are available for your new formation:
 
 From static CSV file:: Use this option to import a previously created static formation from an external .csv file, in which each line contains the following values in order (colors are optional and assumed to have linear color space): `Name`, `x_m`, `y_m`, `z_m`, `Red`, `Green`, `Blue`
 
