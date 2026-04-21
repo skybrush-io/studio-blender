@@ -142,6 +142,6 @@ def call_api_from_blender_operator(
     except (TaskCancelled, KeyboardInterrupt):
         operator.report({"ERROR"}, "Operation cancelled by user.")
         raise
-    except Exception:
-        operator.report({"ERROR"}, default_message)
+    except Exception as ex:
+        operator.report({"ERROR"}, f"{default_message}: Unexpected error ({ex})")
         raise
