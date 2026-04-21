@@ -1,20 +1,20 @@
 import json
 import logging
 import re
-
 from base64 import b64encode
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from gzip import compress
-from natsort import natsorted
 from pathlib import Path
 from typing import Any
 
+from natsort import natsorted
+
 from sbstudio.model.cameras import Camera
 from sbstudio.model.color import Color3D
-from sbstudio.model.point import Point3D
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation
+from sbstudio.model.point import Point3D
 from sbstudio.model.pyro_markers import PyroMarkers
 from sbstudio.model.safety_check import SafetyCheckParams
 from sbstudio.model.time_markers import TimeMarkers
@@ -23,7 +23,7 @@ from sbstudio.model.types import Coordinate3D
 from sbstudio.model.yaw import YawSetpointList
 from sbstudio.plugin.gateway import get_gateway
 
-from .base import SkybrushStudioResponse, SkybrushStudioBaseAPI
+from .base import SkybrushStudioBaseAPI, SkybrushStudioResponse
 from .constants import SKYBRUSH_STUDIO_SERVER_URL
 from .errors import SkybrushStudioAPIError
 from .types import Limits, Mapping, SmartRTHPlan, TransitionPlan, Version
@@ -312,7 +312,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         if isinstance(renderer, (list, tuple)):
             operation = "multi-render"
             if renderer_params is None:
-                renderer_params = [None] * len(renderer)  # type: ignore
+                renderer_params = [None] * len(renderer)
             assert isinstance(renderer_params, (list, tuple))
             data["outputs"] = [
                 {"format": format, "parameters": parameters or {}}

@@ -7,7 +7,6 @@ from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
 from .base import SkybrushStudioBaseAPI
 from .errors import SkybrushStudioAPIError
 
-
 __all__ = ("SkybrushGatewayAPI",)
 
 
