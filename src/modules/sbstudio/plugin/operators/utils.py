@@ -11,6 +11,7 @@ from typing import Any, cast
 
 from bpy.path import basename
 from bpy.types import Context
+from natsort import natsorted
 
 from sbstudio.api import SkybrushStudioAPI
 from sbstudio.model.file_formats import FileFormat
