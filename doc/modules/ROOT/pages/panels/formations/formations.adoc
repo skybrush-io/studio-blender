@@ -2,7 +2,7 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-With the Formations panel of the Formations tab you can import, generate, create, update or remove formations, select, deselect and sort drones in formations, and you can also add formations to your storyboard.
+With the Formations panel of the Formations tab, you can import, generate, create, update or remove formations, select, deselect and sort drones in formations, and you can also add formations to your storyboard.
 
 image::panels/formations/formations.jpg[Formations panel]
 
@@ -19,11 +19,11 @@ For advanced settings enable the btn:[Advanced] checkbox.
 If you wish to have a separate column and row spacing for your basic takeoff grid, enable the btn:[Use separate column spacing] checkbox and
 setup a separate column spacing.
 
-If you wish to takeoff (and land) in layers, you can also define a more complex takeoff grid with slots, where each slot contains more than one drone with typically, but not necessarily smaller spacing (see the *Intra-slot* parameters). With such a takeoff grid it will be guaranteed that only one drone will takeoff from (and land to) every slot at a time, using layered takeoff and land operations automatically.
+If you wish to take off (and land) in layers, you can also define a more complex takeoff grid with slots, where each slot contains more than one drone with typically, but not necessarily smaller spacing (see the *Intra-slot* parameters). With such a takeoff grid it will be guaranteed that only one drone will takeoff from (and land to) every slot at a time, using layered takeoff and land operations automatically.
 
-The *Create takeoff grid* operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you will need for your drone show, it adds the first "Takeoff grid" entry to the storyboard and also initializes your drones in the 3D Viewport editor.
+The *Create takeoff grid* operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you need for your drone show, adds the first "Takeoff grid" entry to the storyboard and initializes your drones in the 3D Viewport editor.
 
-TIP: Once the takeoff grid is created, you are free to modify the created "Takeoff grid" formation to re-arrange the placement of the drones using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions by simply changing the takeoff positions in the "Takeoff grid" formation.
+TIP: Once the takeoff grid is created, you are free to modify the "Takeoff grid" formation to rearrange the placement of the drones using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions by simply changing the takeoff positions in the "Takeoff grid" formation.
 
 == Takeoff
 
@@ -131,7 +131,7 @@ It is possible to import static formations or animation snippets into **Skybrush
 
 Depending on your external data source, importing formations this way might also create a new baked image-based light effect that is automatically applied on the imported formation to preserve its original color animation.
 
-IMPORTANT: Make sure to append your empty formation to the storyboard before generating markers into it! This ensures that the start end end frames of the the imported animation and its color animation will be set up properly.
+IMPORTANT: Make sure to append your empty formation to the storyboard before generating markers into it! This ensures that the start and end frames of the imported animation and its color animation will be set up properly.
 
 The following external data sources are available for your new formation:
 

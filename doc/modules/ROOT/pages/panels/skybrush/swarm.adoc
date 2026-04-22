@@ -2,7 +2,7 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-The swarm panel helps you setup your drone show with fleet-level configuration options.
+The swarm panel helps you set up your drone show with fleet-level configuration options.
 
 image::panels/swarm/swarm.jpg[Swarm panel]
 
@@ -18,16 +18,16 @@ The btn:[Preferred acceleration] button sets up a preferred acceleration (in all
 
 == Drone template
 
-Before creating your first takeoff grid that initializes your drone objects, you can select a template object for your future drones. There are three options to select from, given by the btn:[Drone template] drop down menu.
+Before creating your first takeoff grid that initializes your drone objects, you can select a template object for your future drones. There are three options to select from, given by the btn:[Drone template] dropdown menu.
 
 image::panels/swarm/drone_template.jpg[Drone template]
 
-The default option is an isotropic *Sphere*. Select *Cone* to have a simple anisotropic object (suitable for yaw-controlled shows), or select *Selected Object* for any custom object that will be used as your drone template.
+The default option is an isotropic *Sphere*. Select *Cone* to have a simple anisotropic object (suitable for yaw-controlled shows), or select *Selected Object* for any custom object to be used as your drone template.
 
 If *Selected Object* is chosen, make sure you have your template object selected before pressing the btn:[Create takeoff grid] button. Note that this object will disappear after the creation of the swarm as it shall be used for the template only.
 
 == Drone radius
 
-If you select a "Sphere" or "Cone" type drone template, you can also setup a radius for your template object before creating your first takeoff grid. Similarly to the btn:[Drone template] option, this setting will also disappear after creating the takeoff grid.
+If you select a "Sphere" or "Cone" type drone template, you can also set up a radius for your template object before creating your first takeoff grid. Similarly to the btn:[Drone template] option, this setting will disappear after creating the takeoff grid.
 
-If you wish to change your drone size at a later stage, you can use standard Blender tools for this. First select all your drone objects you wish to resize, then set the "Transform Pivot Point" to "Individual Origins" and the simply scale up all objects around their own origins with kbd:[s].
+If you wish to change your drone size at a later stage, you can use standard Blender tools for this. First select all your drone objects you wish to resize, then set the "Transform Pivot Point" to "Individual Origins" and simply scale up all objects around their own origins with kbd:[s].

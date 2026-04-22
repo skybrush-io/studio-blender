@@ -11,7 +11,7 @@ Formations::
 Import & Compatibility::
 * Modular import of external formations or animation snippets using `.csv` and third-party formats
 * Optimal sampling of drones onto imported SVG drawings
-* QR code generation based on a simple url
+* QR code generation based on a simple URL
 
 Lights::
 * Dedicated color animation design tools
@@ -27,7 +27,7 @@ Event synchronization::
 * Easy integration and synchronization with music
 
 Safety::
-* Smooth velocity and acceleration limited path planning
+* Smooth velocity and acceleration-limited path planning
 * Real-time altitude, velocity, acceleration and proximity checks
 * Integrated visual feedback on real-time safety warnings
 * Flight validation report for a final show-level check

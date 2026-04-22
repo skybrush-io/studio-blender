@@ -10,17 +10,17 @@ Please follow the steps below.
 
 === 1. Check hardware requirements
 
-We suggest to follow the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio for Blender*.
+We suggest following the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio for Blender*.
 
-An additional requirement is that you need to have active Internet connection on your computer as *Skybrush Studio* needs to communicate with the *Skybrush Studio Server* for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. You may use the software without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
+An additional requirement is that you need an active Internet connection on your computer as *Skybrush Studio* needs to communicate with the *Skybrush Studio Server* for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. You may use the software without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
 
 === 2. Install Blender
 
-There are many Blender versions out there, we aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is version 4.5 at the time of writing. if you are unsure, check the version number of the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release] on the Blender site.
+There are many Blender versions available. We aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is version 4.5 at the time of writing. If you are unsure, check the version number of the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release] on the Blender site.
 
 === 3. Install Skybrush Studio for Blender
 
-*Skybrush Studio for Blender* can be downloaded from https://skybrush.io as a single `.zip` file. Please download it to your computer first, then follow the instructions below.
+*Skybrush Studio for Blender* can be downloaded from https://skybrush.io as a single `.zip` file. Please download it to your computer first and then follow the instructions below.
 
 WARNING: Safari on macOS automatically unzips all `.zip` files by default, which will prevent you from selecting the `.zip` file itself when installing the plugin. If you are using Safari on macOS, hold down the kbd:[Option] key when clicking on the download link to prevent this from happening, or turn off the unzipping of "safe" files permanently in menu:Safari[Preferences > General].
 
@@ -49,15 +49,15 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 === 4. Enable Online Access in Blender
 
-Starting from Blender 4.2, the preferences dialog in Blender provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Skybrush Studio for Blender* uses an online resource (either a https://studio.skybrush.io[community server] or a locally hosted instance of that server) to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. If you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
+Starting from Blender 4.2, the preferences dialog provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Skybrush Studio for Blender* uses an online resource (either a https://studio.skybrush.io[community server] or a locally hosted instance of that server) to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. If you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
 
 To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
 
 === 5. Setup network timeout in Blender
 
-If you use large fleets and/or long and fine-grained shows, make sure that the "Network timeout" setting right below the "Allow Online Access" checkbox is large enough to handle your requests towards your local *Skybrush Studio Server* or towards the online community server.
+If you use large fleets and/or long and fine-grained shows, make sure that the "Network timeout" setting right below the "Allow Online Access" checkbox is large enough to handle your requests to your local *Skybrush Studio Server* or to the online community server.
 
-The longest action is usually the show export. During export most time is taken by the sampling of your show within Blender to form the input of the requests towards *Skybrush Studio Server*. Even though this procedure is _not_ part of the request time, with large shows you may run into cases where you do need more processing time than the default 10 seconds. If such timeout occurs, raise the value as convenient.
+The longest action is usually the show export. During export, most time is taken by the sampling of your show within Blender to form the input of the requests towards *Skybrush Studio Server*. Even though this procedure is _not_ part of the request time, with large shows you may run into cases where you do need more processing time than the default 10 seconds. If such timeout occurs, raise the value as convenient.
 
 === 6. Install Skybrush Studio Server
 
@@ -80,7 +80,7 @@ NOTE: If you wish to use your new local server, do not forget to press the btn:[
 
 == Installing updates
 
-*Skybrush Studio for Blender* consists of multiple modules that are interpreted by the Python interpreter built into Blender. In order to perform an upgrade of the add-on, the previous version needs to be unloaded completely before the new version is installed. Due to how Python's module system works, this is very hard to do without unloading the plugin manually. Therefore, the preferred sequence to update the add-on is as follows:
+*Skybrush Studio for Blender* consists of multiple modules that are interpreted by the Python interpreter built into Blender. To perform an upgrade of the add-on, the previous version needs to be unloaded completely before the new version is installed. Due to how Python's module system works, this is very hard to do without unloading the plugin manually. Therefore, the preferred sequence to update the add-on is as follows:
 
 1. Deactivate the add-on in Edit -> Preferences -> Add-ons by unticking the checkbox in front of the btn:[Skybrush Studio] add-on.
 
@@ -96,7 +96,7 @@ NOTE: If the update still fails after following the steps outlined above, try to
 
 == Uninstallation
 
-If you decide to uninstall *Skybrush Studio for Blender* for any reasons, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
+If you decide to uninstall *Skybrush Studio for Blender* for any reason, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
 
 1. Deactivate the add-on first in Blender's add-on manager.
 2. Open the file manager of your operating system and navigate to the folder containing the Blender add-ons. Refer to https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html[Blender's documentation] to find the add-ons folder.

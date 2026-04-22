@@ -2,7 +2,7 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-The Safety Check panel lets you perform real-time frame-level or full post-processed verification of your drone animation to aid you towards completely safe drone flighs.
+The Safety Check panel lets you perform real-time frame-level or full post-processed verification of your drone animation to aid you towards completely safe drone flights.
 
 image::panels/safety_check/safety_check.jpg[Safety Check panel]
 
@@ -18,7 +18,7 @@ The checkbox at the top left corner of the panel allows you to disable the safet
 
 This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.
 
-By default, the proximity warning is limited to drones above the minimum navigation altitude only (see below in the section about altitude warnings). This is to prevent spurious warnings about drones being too close in the takeoff grid. You can change this in the panel by choosing between the "All drones" and "Drones abouve min altitude" setting.
+By default, the proximity warning is limited to drones above the minimum navigation altitude only (see below in the section about altitude warnings). This is to prevent spurious warnings about drones being too close in the takeoff grid. You can change this in the panel by choosing between the "All drones" and "Drones above min altitude" setting.
 
 The text-based proximity warning on the left side of the 3D Viewport editor always shows you the minimum distance between all drone pairs on the current frame. This drone pair is also highlighted with red, along with a red line connecting them.
 
@@ -46,7 +46,7 @@ To enable or disable velocity warnings, use the btn:[Show velocity warnings] che
 
 This option lets you define a maximum acceleration for drones in your drone show. If there are drones above the acceleration limit, you get real-time acceleration warnings.
 
-The text-based acceleration warning on the left side of the 3D Viewport editor always shows you the maximum acceleration of drones on the current frame, irrespectively of the direction (horizontal or vertical). Note that acceleration is treated as an unsigned quantity: accelerations and decelerations are not distinguished. Drones above the acceleration threshold at a given frame are highlighted in magenta.
+The text-based acceleration warning on the left side of the 3D Viewport editor always shows you the maximum acceleration of drones on the current frame, irrespective of the direction (horizontal or vertical). Note that acceleration is treated as an unsigned quantity: accelerations and decelerations are not distinguished. Drones above the acceleration threshold at a given frame are highlighted in magenta.
 
 To enable or disable acceleration warnings, use the btn:[Show acceleration warnings] checkbox.
 
@@ -54,7 +54,7 @@ To enable or disable acceleration warnings, use the btn:[Show acceleration warni
 
 This option lets you define a maximum yaw rate for drones in your drone show. If there are drones above the yaw rate limit, you get real-time yaw rate warnings.
 
-The text-based yaw rate warning on the left side of the 3D Viewport editor always shows you the maximum yaw rate of drones on the current frame, irrespectively of the direction of rotation (CW or CCW). Note that yaw rate is treated as an unsigned quantity: CW and CCW yaw rates are not distinguished. Drones above the yaw rate threshold at a given frame are highlighted in light blue.
+The text-based yaw rate warning on the left side of the 3D Viewport editor always shows you the maximum yaw rate of drones on the current frame, irrespective of the direction of rotation (CW or CCW). Note that yaw rate is treated as an unsigned quantity: CW and CCW yaw rates are not distinguished. Drones above the yaw rate threshold at a given frame are highlighted in light blue.
 
 To enable or disable yaw rate warnings, use the btn:[Show yaw rate warnings] checkbox.
 

@@ -1,9 +1,9 @@
 = Tabs and Panels
 :imagesdir: ../../assets/images
 
-*Skybrush Studio for Blender* creates several new panels in three new tabs in the sidebar of the 3D Viewport editor. These tabs and panels contain all the main operations that you will need specifically for your drone show design.
+*Skybrush Studio for Blender* creates several new panels in three new tabs in the sidebar of the 3D Viewport editor. These tabs and panels contain all the main operations you will need specifically for your drone show design.
 
-We encourage you to exploit the standard possibilities of Blender to create your animation scenes, and use these features to setup your drone show based on them, conveniently, in short time.
+We encourage you to use the standard possibilities of Blender to create your animation scenes and use these features to set up your drone show based on them conveniently in a short time.
 
 To aid your drone show design, the following tabs are available currently, each containing one or more related panels:
 
