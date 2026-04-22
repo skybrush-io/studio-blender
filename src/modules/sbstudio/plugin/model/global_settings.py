@@ -1,12 +1,40 @@
+from __future__ import annotations
+
+import logging
 from typing import cast
 
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import AddonPreferences, Context
 
+from sbstudio.plugin.gateway import get_gateway
+from sbstudio.plugin.operators.register_hardware_id import RegisterHardwareIDOperator
+from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
 from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
 from sbstudio.plugin.utils import with_context
 
 __all__ = ("DroneShowAddonGlobalSettings",)
+
+#############################################################################
+# configure logger
+
+log = logging.getLogger(__name__)
+
+
+def gateway_url_updated(
+    self: DroneShowAddonGlobalSettings, context: Optional[Context] = None
+):
+    hardware_id: str = ""
+    if self.gateway_url:
+        try:
+            gateway = get_gateway()
+            hardware_id = gateway.get_hardware_id()
+            log.info(f"Hardware ID: {hardware_id}")
+        except Exception as ex:
+            log.warning(
+                f"Studio gateway could not be reached at {self.gateway_url}: {ex}"
+            )
+
+    self.hardware_id = hardware_id
 
 
 class DroneShowAddonGlobalSettings(AddonPreferences):
@@ -27,6 +55,11 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         subtype="FILE_PATH",
     )
 
+    hardware_id: str = StringProperty(
+        name="Hardware ID",
+        description="Hardware ID of the computer running Skybrush Studio for Blender",
+    )
+
     api_key: str = StringProperty(
         name="API Key",
         description="API Key that is used when communicating with the Skybrush Studio server",
@@ -36,9 +69,19 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         name="Server URL",
         description=(
             "URL of a dedicated Skybrush Studio server if you are using a "
-            "dedicated server. Leave it empty to use the server provided for "
-            "the community for free"
+            "local server. Leave it empty to use the cloud server provided "
+            "for the community for free and for pro users with signed requests"
         ),
+    )
+
+    gateway_url: str = StringProperty(
+        name="Gateway URL",
+        description=(
+            "URL of a dedicated Skybrush Studio Gateway for using the online "
+            "cloud server with pro features. Leave it empty if you have a local "
+            "server or if you wish to use the free community cloud server"
+        ),
+        update=gateway_url_updated,
     )
 
     enable_experimental_features: bool = BoolProperty(
@@ -53,6 +96,25 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
     def draw(self, context: Context) -> None:
         layout = self.layout
+
+        row = layout.row()
+        col = row.column()
+        col.enabled = False
+        col.prop(self, "hardware_id")
+
+        col = row.column()
+        col.scale_x = 0.75
+        col.enabled = bool(self.hardware_id)
+        op = col.operator(RegisterHardwareIDOperator.bl_idname)
+
+        layout.prop(self, "gateway_url")
+
+        row = layout.row()
+        op = row.operator(SetGatewayURLOperator.bl_idname, text="Use local gateway")
+        op.url = "http://localhost:7999"
+
+        op = row.operator(SetGatewayURLOperator.bl_idname, text="Do not use gateway")
+        op.url = ""
 
         layout.prop(self, "api_key")
         # layout.prop(self, "license_file")
