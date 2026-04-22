@@ -12,8 +12,7 @@ that is placed at the first material slot in the material list of the drone
 mesh. The name of the material starts with `LED color of ...` by convention,
 but this is not enforced -- you can rename the material, but you need to keep
 in mind that *Skybrush Studio for Blender* will always adjust the first material.
-If the material is not an emissive material, Skybrush will fall back to
-adjusting the diffuse color of the material instead.
+If the material is not an emissive material, Skybrush falls back to adjusting the diffuse color of the material instead.
 
 All the operations in this panel insert or modify keyframes on a Blender action
 that is attached to the color of the material as outlined above. You can achieve
@@ -38,7 +37,7 @@ The btn:[Apply] and btn:[Fade to] buttons below the selected primary and
 secondary colors open a popup window that looks like the one on the screenshot
 below. Both buttons insert color animation keyframes at the given frame for the
 _selected_ drones, according to the settings in the popup window. They have no
-effect if none of the drones are seleced.
+effect if none of the drones are selected.
 
 image::panels/led_control/apply_colors_to_selected_drones.jpg[Apply colors to selected drones]
 
@@ -61,7 +60,7 @@ to some criterion. The first drone gets the primary color, the last drone gets
 the secondary color, and all the drones in between them get assigned to a mix
 of the two colors according to where they are in the ordered sequence. The
 "Order in gradient" option defines what the sorting criteria should be. The
-followig options are available:
+following options are available:
 
 Default:: Drones are ordered in exactly the same way they appear in the `Drones` collection.
 
@@ -91,5 +90,5 @@ the RGB color that you see in the 3D view is not _exactly_ the same as the RGB
 color that you apply to the drones but a brighter variant of it. On one hand, the
 bloom effect can be misleading during a fade-out to black because the fade-out
 seems to start later (and fade-ins seem to start earlier). On the other hand,
-this behaviour is in fact a good approximation of how the LED lights behave on
+this behavior is in fact a good approximation of how the LED lights behave on
 a typical show drone.

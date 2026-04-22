@@ -64,7 +64,7 @@ class SafetyCheckOverlay(ShaderOverlay):
     altitude threshold in the 3D view.
     """
 
-    shader_type = "FLAT_COLOR"
+    shader_type = "POINT_FLAT_COLOR"
 
     _markers: list[Marker] | None = None
     _shader_batches: list[GPUBatch] | None = None

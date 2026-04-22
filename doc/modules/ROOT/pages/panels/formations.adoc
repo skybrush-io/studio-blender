@@ -2,7 +2,7 @@
 :imagesdir: ../../assets/images
 :experimental:
 
-The Formations tab in the sidebar of the 3D Viewport editor helps you to organize your animations and formations into a drone show.
+The Formations tab in the sidebar of the 3D Viewport editor helps you organize your animations and formations into a drone show.
 
 image::panels/formations.jpg[Formations tab]
 

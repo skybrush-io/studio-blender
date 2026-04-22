@@ -41,7 +41,7 @@ DEFAULT_PYRO_OVERLAY_MARKER_COLOR: RGBColor = (0.5, 0.5, 0.5)
 class PyroOverlay(ShaderOverlay):
     """Overlay that marks pyro drones in the 3D view."""
 
-    shader_type = "FLAT_COLOR"
+    shader_type = "POINT_FLAT_COLOR"
 
     _info_blocks: list[PyroOverlayInfo] | None = None
     _markers: list[PyroOverlayMarker] | None = None

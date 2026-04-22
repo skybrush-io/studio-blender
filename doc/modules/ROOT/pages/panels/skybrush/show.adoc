@@ -2,13 +2,13 @@
 :imagesdir: ../../../assets/images
 :experimental:
 
-The show panel helps you setup general drone show configuration options.
+The show panel helps you set up general drone show configuration options.
 
 image::panels/show/show.jpg[Show panel]
 
 == Show type
 
-Please specify whether you designed a show for outdoor or indoor settings. This will help setup drone size, exporters and possibly other parameters adaptively.
+Please specify whether you designed a show for outdoor or indoor settings. This will help set up drone size, exporters and possibly other parameters adaptively.
 
 == Specify location
 
