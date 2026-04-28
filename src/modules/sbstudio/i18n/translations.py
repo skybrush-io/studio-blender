@@ -12142,7 +12142,7 @@ translations_tuple = (
         ("hu_HU", "Fényeffektusok", (False, ())),
         ("id_ID", "", (False, ())),
         ("it_IT", "", (False, ())),
-        ("ja_JP", "ライトエフェクトを作成", (True, ())),
+        ("ja_JP", "ライトエフェクトを作成", (False, ())),
         ("ka", "", (False, ())),
         ("km", "", (False, ())),
         ("ko_KR", "", (False, ())),
@@ -26531,7 +26531,7 @@ translations_tuple = (
         (
             (),
             (
-=                "bpy.types.DroneShowAddonFileSpecificSettings.use_show_origin_and_orientation",
+                "bpy.types.DroneShowAddonFileSpecificSettings.use_show_origin_and_orientation",
             ),
         ),
         ("ab", "", (False, ())),
