@@ -848,6 +848,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         try:
             with call_api_from_blender_operator(self, "transition planner"):
                 recalculate_transitions(tasks, start_of_scene=start_of_scene)
+            bpy.ops.skybrush.update_time_markers_from_storyboard()
             success = True
         except Exception:
             success = False
