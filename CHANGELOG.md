@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   proper rounding of inner values stored. The new features of the exporter are
   introduced in **Skybrush Studio Server** version 2.39.0.
 
+- From now on time markers created by the Skybrush plugin update automatically 
+  when recalculating transitions.
+
 ## [4.3.0] - 2026-04-01
 
 ### Added
