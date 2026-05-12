@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [main]
+## [4.4.0] - 2026-05-12
+
+### Added
+
+- Added an option to resample imported CSV and DSS trajectories to the frame
+  resolution of the project to avoid acceleration spike artifacts.
 
 ### Changed
 
@@ -19,8 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   proper rounding of inner values stored. The new features of the exporter are
   introduced in **Skybrush Studio Server** version 2.39.0.
 
-- From now on time markers created by the Skybrush plugin update automatically 
+- From now on the time markers created by the Skybrush plugin update automatically
   when recalculating transitions.
+
+### Fixed
+
+- Fixed the size of safety warning markers on Blender 5.1 and later by switching
+  the underlying `FLAT_COLOR` shader to `POINT_FLAT_COLOR`.
+
+- Fixed some of the rounding issues during CSV imports that sometimes created
+  artificial acceleration spikes.
 
 ## [4.3.0] - 2026-04-01
 
