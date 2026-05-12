@@ -27,9 +27,9 @@ class ShowLocation:
     @property
     def json(self):
         """Returns the JSON representation of the show location."""
-        origin = [int(self.latitude * 1e7), int(self.longitude * 1e7)]
+        origin = [round(self.latitude * 1e7), round(self.longitude * 1e7)]
         if self.amsl is not None:
-            origin.append(int(self.amsl * 1e3))
+            origin.append(round(self.amsl * 1e3))
 
         return {
             "origin": origin,

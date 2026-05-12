@@ -315,7 +315,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
         # update storyboard duration based on animation data
         if bool(getattr(self, "update_duration", False)) and storyboard_entry:
             duration = (
-                int(max(trajectory.duration for trajectory in trajectories) * fps) + 1
+                round(max(trajectory.duration for trajectory in trajectories) * fps) + 1
             )
             storyboard_entry.duration = duration
 
@@ -336,7 +336,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
 
             # add keypoints to f-curves in low level mode
             t0 = trajectory.points[0].t
-            frames = [frame_start + int((p.t - t0) * fps) for p in trajectory.points]
+            frames = [frame_start + round((p.t - t0) * fps) for p in trajectory.points]
             values_x = [p.x for p in trajectory.points]
             values_y = [p.y for p in trajectory.points]
             values_z = [p.z for p in trajectory.points]
@@ -361,7 +361,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
         ]
         if light_effects and light_programs:
             duration = (
-                int(
+                round(
                     (light_programs[0].colors[-1].t - light_programs[0].colors[0].t)
                     * fps
                 )
@@ -390,7 +390,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
                 t0 = color.t
                 j_last = 0
                 for next_color in light_program.colors[1:]:
-                    j_next = int((next_color.t - t0) * fps)
+                    j_next = round((next_color.t - t0) * fps)
                     pixels.extend(list(color.as_vector()) * (j_next - j_last))
                     j_last = j_next
                     color = next_color

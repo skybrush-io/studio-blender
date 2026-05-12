@@ -63,7 +63,7 @@ class PyroMarker:
 
     def is_active_at_frame(self, frame: int, fps: float) -> bool:
         """Returns whether the pyro is active at the given frame"""
-        if self.frame <= frame <= self.frame + self.payload.duration * fps:
+        if self.frame <= frame <= self.frame + round(self.payload.duration * fps):
             return True
 
         return False

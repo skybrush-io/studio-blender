@@ -182,7 +182,7 @@ class LandOperator(StoryboardOperator):
             durations = [diff / self.velocity for diff in diffs]
 
         delays = [int(ceil(delay * fps)) for delay in delays]
-        durations = [int(floor(duration * fps)) for duration in durations]
+        durations = [int(ceil(duration * fps)) for duration in durations]
         max_duration = max(
             delay + duration for delay, duration in zip(delays, durations)
         )
