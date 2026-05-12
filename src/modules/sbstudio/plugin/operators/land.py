@@ -1,4 +1,4 @@
-from math import ceil, floor
+from math import ceil
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
