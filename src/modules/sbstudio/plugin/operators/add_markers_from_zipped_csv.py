@@ -51,8 +51,8 @@ class AddMarkersFromZippedCSVOperator(DynamicMarkerCreationOperator, ImportHelpe
 
     def _create_trajectories(self, context) -> dict[str, TrajectoryAndLightProgram]:
         filename = ensure_ext(self.filepath, self.filename_ext)
-        resample_fps = context.scene.render.fps if self.resample_trajectories else None
-        return parse_compressed_csv_zip(filename, resample_fps)
+        output_fps = context.scene.render.fps if self.resample_trajectories else None
+        return parse_compressed_csv_zip(filename, output_fps)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -61,14 +61,14 @@ class AddMarkersFromZippedCSVOperator(DynamicMarkerCreationOperator, ImportHelpe
 
 def parse_compressed_csv_zip(
     filename: str | IO[bytes],
-    resample_fps: float | None = None,
+    output_fps: float | None = None,
 ) -> dict[str, TrajectoryAndLightProgram]:
     """Parse a .zip file containing Skybrush .csv files (one file per drone,
     each containing baked animation with timestamped positions and colors).
 
     Args:
         filename: the name of the .zip input file
-        resample_fps: optional FPS value to resample imported trajectories to
+        output_fps: optional FPS value to resample imported trajectories to
 
     Returns:
         dictionary mapping the imported object names to the corresponding
@@ -124,8 +124,8 @@ def parse_compressed_csv_zip(
                     trajectory.append(Point4D(t, x, y, z))
                     light_program.append(Color4D(t, r, g, b))
 
-            if resample_fps:
-                trajectory.resample_in_place(resample_fps)
+            if output_fps:
+                trajectory.resample_in_place(output_fps)
 
             # store the result only if there is at least one point, otherwise
             # there's nothing we can construct

@@ -122,7 +122,6 @@ class Trajectory:
 
         Parameters:
             fps: the new fps value to resample the trajectories to, in [1/s]
-
         """
 
         if not self.points:

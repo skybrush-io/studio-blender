@@ -315,7 +315,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
         # update storyboard duration based on animation data
         if bool(getattr(self, "update_duration", False)) and storyboard_entry:
             duration = (
-                round(max(trajectory.duration for trajectory in trajectories) * fps) + 1
+                int(max(trajectory.duration for trajectory in trajectories) * fps) + 1
             )
             storyboard_entry.duration = duration
 
@@ -361,7 +361,7 @@ class DynamicMarkerCreationOperator(FormationOperator):
         ]
         if light_effects and light_programs:
             duration = (
-                round(
+                int(
                     (light_programs[0].colors[-1].t - light_programs[0].colors[0].t)
                     * fps
                 )
