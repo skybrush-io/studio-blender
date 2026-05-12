@@ -28,7 +28,6 @@ dst = src.parent / "translations_sorted.py"
 
 
 def main() -> int:
-
     if not src.exists():
         print(f"Error: Source file not found: {src}", file=sys.stderr)
         return 1
