@@ -262,7 +262,7 @@ class ReturnToHomeOperator(StoryboardOperator):
         # Calculate RTH duration from max distance to travel and the
         # average velocity
         max_distance = max(diffs)
-        rth_duration = ceil((max_distance / self.velocity) * fps)
+        rth_duration = int(ceil((max_distance / self.velocity) * fps))
 
         # Extend the duration of the last formation to the frame where we want
         # to start the RTH maneuver
@@ -375,7 +375,7 @@ class ReturnToHomeOperator(StoryboardOperator):
                     )
                 )
             for point in path_points:
-                frame = int(self.start_frame + point[0] * fps)
+                frame = round(self.start_frame + point[0] * fps)
                 keyframes = (
                     insert[0](frame, point[1]),
                     insert[1](frame, point[2]),

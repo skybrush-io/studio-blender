@@ -37,6 +37,12 @@ class AddMarkersFromZippedDSSOperator(DynamicMarkerCreationOperator, ImportHelpe
         description="Update the duration of the storyboard entry based on animation length",
     )
 
+    resample_trajectories = BoolProperty(
+        name="Resample to render FPS",
+        default=True,
+        description="Resample the imported trajectories to the render FPS value used in Blender",
+    )
+
     # List of file extensions that correspond to DSS files
     filter_glob = StringProperty(default="*.zip", options={"HIDDEN"})
     filename_ext = ".zip"
@@ -44,9 +50,12 @@ class AddMarkersFromZippedDSSOperator(DynamicMarkerCreationOperator, ImportHelpe
     def _create_trajectories(self, context) -> dict[str, TrajectoryAndLightProgram]:
         from sbstudio.plugin.api import call_api_from_blender_operator
 
-        filepath = ensure_ext(self.filepath, self.filename_ext)
+        filename = ensure_ext(self.filepath, self.filename_ext)
+        output_fps = context.scene.render.fps if self.resample_trajectories else None
         with call_api_from_blender_operator(self, "import DSS") as api:
-            return parse_compressed_dss_zip(filepath, context, api)
+            return parse_compressed_dss_zip(
+                filename, context, api, output_fps=output_fps
+            )
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -54,7 +63,11 @@ class AddMarkersFromZippedDSSOperator(DynamicMarkerCreationOperator, ImportHelpe
 
 
 def parse_compressed_dss_zip(
-    filename: str, context, api: SkybrushStudioAPI
+    filename: str,
+    context,
+    api: SkybrushStudioAPI,
+    *,
+    output_fps: float | None = None,
 ) -> dict[str, TrajectoryAndLightProgram]:
     """Parse a .zip file containing DSS PATH/PATH3 files (one file per drone,
     each containing baked animation with timestamped positions and colors),
@@ -64,6 +77,7 @@ def parse_compressed_dss_zip(
         filename: the name of the .zip input file
         context: the Blender context
         api: the Skybrush Studio API object to call for show file format conversion
+        output_fps: optional FPS value to resample imported trajectories to
 
     Returns:
         dictionary mapping the imported object names to the corresponding
@@ -91,6 +105,6 @@ def parse_compressed_dss_zip(
     )
 
     log.info("Parsing CSV files...")
-    result = parse_compressed_csv_zip(BytesIO(show_data))
+    result = parse_compressed_csv_zip(BytesIO(show_data), output_fps)
 
     return result

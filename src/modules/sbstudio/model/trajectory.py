@@ -4,7 +4,7 @@ from itertools import chain
 from operator import attrgetter
 from typing import Self
 
-from numpy import array
+from numpy import arange, array, interp
 
 from .point import Point3D, Point4D
 
@@ -28,6 +28,14 @@ class Trajectory:
     @property
     def first_time(self) -> float | None:
         return self.points[0].t if self.points else None
+
+    @property
+    def last_point(self) -> Point4D | None:
+        return self.points[-1] if self.points else None
+
+    @property
+    def last_time(self) -> float | None:
+        return self.points[-1].t if self.points else None
 
     def append(self, point: Point4D) -> None:
         """Add a point to the end of the trajectory."""
@@ -108,6 +116,32 @@ class Trajectory:
             return 0
 
         return self.points[-1].t - self.points[0].t
+
+    def resample_in_place(self, fps: float) -> Self:
+        """Resamples the trajectory to the given FPS value in-place.
+
+        Parameters:
+            fps: the new fps value to resample the trajectories to, in [1/s]
+        """
+
+        if not self.points:
+            return self
+        assert self.first_time is not None
+        assert self.last_time is not None
+
+        source_times = [p.t for p in self.points]
+        target_times = arange(self.first_time, self.last_time, 1 / fps)
+
+        resampled_x = interp(target_times, source_times, [p.x for p in self.points])
+        resampled_y = interp(target_times, source_times, [p.y for p in self.points])
+        resampled_z = interp(target_times, source_times, [p.z for p in self.points])
+
+        self.points = [
+            Point4D(t, x, y, z)
+            for t, x, y, z in zip(target_times, resampled_x, resampled_y, resampled_z)
+        ]
+
+        return self
 
     def shift_in_place(self, offset: Point3D) -> Self:
         """Shifts all points of the trajectory in-place.
