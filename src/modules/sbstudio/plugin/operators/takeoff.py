@@ -23,6 +23,7 @@ from sbstudio.plugin.operators.recalculate_transitions import (
     recalculate_transitions,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
+from sbstudio.plugin.utils.transition import get_bezier_inverse_smoothstep
 
 from .base import StoryboardOperator
 
@@ -196,14 +197,32 @@ class TakeoffOperator(StoryboardOperator):
             )
             return False
 
-        # Calculate takeoff durations from distances to travel and the
-        # average velocity
+        # Since Blender uses Bezier interpolation on the takeoff segment, we need to
+        # calculate explicitly when the layer above reaches the layer distance for each
+        # drone and use that value as the delay for its own takeoff, reverse-recursively
         fps = context.scene.render.fps
-        takeoff_durations = [int(ceil((diff / self.velocity) * fps)) for diff in diffs]
+        layer_indices = [
+            round((diff - self.altitude) / self.altitude_shift) for diff in diffs
+        ]
+        takeoff_durations = [0.0] * len(layer_indices)
+        takeoff_duration = 0
+        for layer_index in range(max(layer_indices) + 1):
+            diff = layer_index * self.altitude_shift + self.altitude
+            if layer_index == 0:
+                # if it is the lowest layer, calculate takeoff durations directly
+                takeoff_duration = int(ceil((diff / self.velocity) * fps))
+            else:
+                # calculate delay needed for current layer to let layer above
+                # reach altitude shift
+                x = get_bezier_inverse_smoothstep(self.altitude_shift, diff)
+                takeoff_duration += int(ceil(x / (1 - x) * takeoff_duration))
+            # change takeoff duration of drones in the given layer
+            for i in range(len(drones)):
+                if layer_indices[i] == layer_index:
+                    takeoff_durations[i] = takeoff_duration
 
         # We ensure that drones arrive at the same time, so calculate the
         # takeoff delays for those drones that take off to lower altitudes
-        takeoff_duration = max(takeoff_durations)
         delays = [takeoff_duration - d for d in takeoff_durations]
 
         # Calculate when the takeoff should end

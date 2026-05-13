@@ -66,6 +66,55 @@ def find_transition_constraint_between(
     return None
 
 
+def get_bezier_inverse_smoothstep(
+    x: float, length: float, *, iterations: int = 20
+) -> float:
+    """Returns the (approximated) inverse smoothstep function of the standard
+    cubic Bezier interpolation used by Blender as the Easing function (3u^2-2u^3).
+
+    The approximation is used by a simple binary search.
+
+    Args:
+        x: the partial distance of the transition at which we query
+        length: the total length of the transition
+
+    Returns:
+        the inverse smoothstep function of the cubic Bezier curve
+    """
+    r = x / length
+
+    lo, hi = 0.0, 1.0
+
+    for _ in range(iterations):
+        mid = (lo + hi) / 2
+        s = 3 * mid * mid - 2 * mid * mid * mid
+
+        if s < r:
+            lo = mid
+        else:
+            hi = mid
+
+    return (lo + hi) / 2
+
+
+def get_time_of_partial_bezier_transition(x, length: float, speed: float) -> float:
+    """Returns the time needed to travel only part of a transition, assuming
+    standard cubic Bezier interpolation of the transition.
+
+    Args:
+        x: the partial distance at which we query the time when it is reached
+        length: the total length of the transition
+        speed: the averate speed of the transition
+
+    Returns:
+        the time needed to reach the given point as part of the transition
+    """
+    if x < 0 or x > length or speed <= 0:
+        raise ValueError("Invalid input parameters")
+
+    return (length / speed) * get_bezier_inverse_smoothstep(x, length)
+
+
 def is_transition_constraint(constraint: Constraint) -> bool:
     """Returns whether the given constraint object is a transition constraint,
     judging from its name and type.
