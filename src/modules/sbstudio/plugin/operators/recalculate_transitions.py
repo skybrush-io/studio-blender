@@ -47,6 +47,13 @@ class InfluenceCurveTransitionType(Enum):
     SMOOTH_FROM_RIGHT = "smoothFromRight"
     SMOOTH = "smooth"
 
+    @classmethod
+    def from_enum_property(cls, value: str):
+        """Create an influence curve transition type from its
+        representation as a Blender EnumProperty."""
+        parts = value.lower().replace("_", " ").split()
+        return cls(parts[0] + "".join(p.capitalize() for p in parts[1:]))
+
 
 @dataclass
 class InfluenceCurveDescriptor:
@@ -610,6 +617,9 @@ def update_transition_for_storyboard_entry(
             # windup_start_frame can be later than end_of_previous for
             # staggered departures.
 
+            windup_type = InfluenceCurveTransitionType.from_enum_property(
+                entry.windup_type
+            )
             windup_start_frame = end_of_previous
             start_frame = entry.frame_start
             departure_delay = 0
@@ -678,6 +688,7 @@ def update_transition_for_storyboard_entry(
                 windup_start_frame=windup_start_frame,
                 start_frame=start_frame,
                 end_frame=start_of_next,
+                windup_type=windup_type,
             )
 
             # Do not update the influence curve now in case we have problems
