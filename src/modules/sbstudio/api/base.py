@@ -18,6 +18,7 @@ from urllib.request import Request, urlopen
 
 from natsort import natsorted
 
+from sbstudio.model.audio import Audio
 from sbstudio.model.cameras import Camera
 from sbstudio.model.color import Color3D
 from sbstudio.model.light_program import LightProgram
@@ -370,6 +371,7 @@ class SkybrushStudioAPI:
         ndigits: int = 3,
         timestamp_offset: float | None = None,
         time_markers: TimeMarkers | None = None,
+        audio: Audio | None = None,
         cameras: list[Camera] | None = None,
         renderer: str | list[str] = "skyc",
         renderer_params: dict[str, Any] | list[dict[str, Any]] | None = None,
@@ -397,6 +399,7 @@ class SkybrushStudioAPI:
                 Skybrush Viewer.
             time_markers: When specified, time markers will be exported as
                 temporal cues.
+            audio: when specified, a single audio file to include in the output
             cameras: When specified, list of cameras to include in the environment.
             renderer: The renderer(s) to use to export the show.
             renderer_params: Extra parameters for the renderer(s).
@@ -408,7 +411,7 @@ class SkybrushStudioAPI:
             was specified.
         """
 
-        meta = {}
+        meta: dict[str, Any] = {}
         if show_title is not None:
             meta["title"] = show_title
 
@@ -434,7 +437,10 @@ class SkybrushStudioAPI:
         if time_markers is None:
             time_markers = TimeMarkers()
 
-        # TODO: add music to the "media" key
+        media: dict[str, Any] = {}
+
+        if audio:
+            media["audio"] = audio.as_dict(ndigits=ndigits)
 
         def format_drone(name: str):
             settings = {
@@ -473,6 +479,7 @@ class SkybrushStudioAPI:
                         ]
                     },
                     "meta": meta,
+                    "media": media,
                 },
             },
         }

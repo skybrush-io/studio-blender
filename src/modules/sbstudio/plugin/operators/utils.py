@@ -30,6 +30,7 @@ from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
+from sbstudio.plugin.utils.audio import get_audio_from_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
 from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
 from sbstudio.plugin.utils.progress import FrameProgressReport
@@ -164,6 +165,13 @@ def export_show_to_file_using_api(
 
     # get time markers (cues)
     time_markers = get_time_markers_from_context(context)
+
+    # get audio
+    export_audio = settings.get("export_audio", False)
+    if export_audio:
+        audio = get_audio_from_context(context)
+    else:
+        audio = None
 
     # get cameras
     export_cameras = settings.get("export_cameras", False)
@@ -321,6 +329,7 @@ def export_show_to_file_using_api(
         yaw_setpoints=yaw_setpoints,
         output=filepath,
         time_markers=time_markers,
+        audio=audio,
         cameras=cameras,
         renderer=renderer,
         renderer_params=renderer_params,
