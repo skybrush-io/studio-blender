@@ -18,7 +18,7 @@ from sbstudio.plugin.actions import (
 )
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.keyframes import set_keyframes
+from sbstudio.plugin.keyframes import set_keyframes, update_fcurves
 from sbstudio.plugin.model.formation import (
     get_markers_and_related_objects_from_formation,
     get_world_coordinates_of_markers_from_formation,
@@ -150,6 +150,7 @@ class InfluenceCurveDescriptor:
         frame = max(self.start_frame, keyframes[-1][0] + 1)
         start_of_transition = len(keyframes) - 1
         keyframes.append((frame, 1.0))
+        end_of_transition = len(keyframes) - 1
 
         # Add a keyframe at the end frame
         if self.end_frame is not None:
@@ -172,16 +173,15 @@ class InfluenceCurveDescriptor:
         )
 
         if self.windup_type != InfluenceCurveTransitionType.LINEAR:
-            kf = keyframe_objs[start_of_transition]
-            kf.interpolation = "BEZIER"
+            kf_start = keyframe_objs[start_of_transition]
+            kf_start.interpolation = "BEZIER"
             if self.windup_type == InfluenceCurveTransitionType.SMOOTH_FROM_RIGHT:
-                kf.handle_right_type = "VECTOR"
-            else:
-                kf.handle_right_type = "AUTO_CLAMPED"
+                kf_start.handle_right_type = "VECTOR"
+                update_fcurves(object, data_path)
             if self.windup_type == InfluenceCurveTransitionType.SMOOTH_FROM_LEFT:
-                kf.handle_left_type = "VECTOR"
-            else:
-                kf.handle_left_type = "AUTO_CLAMPED"
+                kf_end = keyframe_objs[end_of_transition]
+                kf_end.handle_left_type = "VECTOR"
+                update_fcurves(object, data_path)
 
 
 class _LazyFormationTargetList:
