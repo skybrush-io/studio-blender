@@ -367,6 +367,9 @@ class PointCloud(ID):
     materials: IDMaterials
     points: bpy_prop_collection[Point]
 
+class Sound(ID):
+    filepath: str
+
 class Texture(ID):
     color_ramp: ColorRamp
     use_color_ramp: bool
@@ -461,6 +464,7 @@ class Scene:
     render: RenderSettings
     skybrush: DroneShowAddonProperties
     timeline_markers: bpy_prop_collection[TimelineMarker]
+    sequence_editor: SequenceEditor | None
 
     def frame_set(self, frame: int, subframe: float = 0.0) -> None: ...
 
@@ -470,6 +474,20 @@ class SceneEEVEE(bpy_struct):
     bloom_radius: float  # only for Blender <4.3
     bloom_intensity: float  # only for Blender <4.3
     use_bloom: bool  # only for Blender <4.3
+
+class SequenceEditor(bpy_struct):
+    strips: bpy_prop_collection[Strip]
+
+class Strip(bpy_struct):
+    channel: int
+    frame_duration: int
+    frame_end: int
+    frame_start: int
+    mute: bool
+    name: str
+    select: bool
+    sound: Sound | None
+    type: str
 
 class System(bpy_struct):
     ui_scale: float
