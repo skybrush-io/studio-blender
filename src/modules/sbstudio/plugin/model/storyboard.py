@@ -562,11 +562,20 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
         if duration is None or duration < 0:
             duration = fps * DEFAULT_STORYBOARD_ENTRY_DURATION
 
+        previous_entry = self.last_entry
         entry: StoryboardEntry = self.entries.add()
         entry.frame_start = frame_start
         entry.duration = duration
         entry.name = name
         entry.purpose = purpose.name
+        entry.windup_type = (
+            "SMOOTH_FROM_RIGHT"
+            if previous_entry is not None
+            and previous_entry.purpose == "TAKEOFF"
+            and entry.purpose == "SHOW"
+            and previous_entry.windup_type in ["LINEAR", "SMOOTH_FROM_LEFT"]
+            else "SMOOTH"
+        )
 
         if (
             formation is None
