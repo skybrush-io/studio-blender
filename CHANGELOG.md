@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [main]
+
+### Added
+
+- Added audio export option to the .skyc exporter, requiring a single .mp3 music
+  file to be added as an audio strip in the VSE.
+
+### Changed
+
+- The minimum backend version required for this version of the add-on is now
+  2.40.0.
+
 ## [4.4.0] - 2026-05-12
 
 ### Added
