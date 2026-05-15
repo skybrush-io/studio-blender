@@ -225,15 +225,15 @@ class StoryboardEntry(PropertyGroup):
         default="SYNCHRONIZED",
         options=set(),
     )
-    windup_type = EnumProperty(
+    transition_profile = EnumProperty(
         items=[
             ("LINEAR", "Linear", "", 1),
             ("SMOOTH_FROM_LEFT", "Smooth from left", "", 2),
             ("SMOOTH_FROM_RIGHT", "Smooth from right", "", 3),
             ("SMOOTH", "Smooth", "", 4),
         ],
-        name="Windup",
-        description="Windup type of the transition between the previous formation and this one. "
+        name="Profile",
+        description="Velocity profile of the transition between the previous formation and this one. "
         "Linear transitions have constant speed, smooth transitions are Bezier-interpolated "
         "from left, from right or from both sides (default).",
         default="SMOOTH",
@@ -568,12 +568,12 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
         entry.duration = duration
         entry.name = name
         entry.purpose = purpose.name
-        entry.windup_type = (
+        entry.transition_profile = (
             "SMOOTH_FROM_RIGHT"
             if previous_entry is not None
             and previous_entry.purpose == "TAKEOFF"
             and entry.purpose == "SHOW"
-            and previous_entry.windup_type in ["LINEAR", "SMOOTH_FROM_LEFT"]
+            and previous_entry.transition_profile in ["LINEAR", "SMOOTH_FROM_LEFT"]
             else "SMOOTH"
         )
 

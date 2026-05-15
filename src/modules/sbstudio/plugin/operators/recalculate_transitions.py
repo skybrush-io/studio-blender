@@ -51,7 +51,7 @@ class InfluenceCurveTransitionType(Enum):
     def from_enum_property(cls, value: str):
         """Create an influence curve transition type from its
         representation as a Blender EnumProperty."""
-        parts = value.lower().replace("_", " ").split()
+        parts = value.lower().split("_")
         return cls(parts[0] + "".join(p.capitalize() for p in parts[1:]))
 
 
@@ -98,7 +98,7 @@ class InfluenceCurveDescriptor:
     """
 
     windup_type: InfluenceCurveTransitionType = InfluenceCurveTransitionType.SMOOTH
-    """The type of the windup transition."""
+    """The type of the windup transition that defines its velocity profile."""
 
     def __init__(
         self,
@@ -618,7 +618,7 @@ def update_transition_for_storyboard_entry(
             # staggered departures.
 
             windup_type = InfluenceCurveTransitionType.from_enum_property(
-                entry.windup_type
+                entry.transition_profile
             )
             windup_start_frame = end_of_previous
             start_frame = entry.frame_start
