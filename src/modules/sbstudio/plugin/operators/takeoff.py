@@ -256,6 +256,7 @@ class TakeoffOperator(StoryboardOperator):
         )
         assert entry is not None
         entry.transition_type = "MANUAL"
+        entry.transition_velocity_profile = "LINEAR"
 
         # Set up the custom departure delays for the drones
         if delays and max(delays) > 0:
