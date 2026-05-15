@@ -490,7 +490,11 @@ class SkybrushStudioAPI:
                 renderer_params = [None] * len(renderer)  # type: ignore
             assert isinstance(renderer_params, (list, tuple))
             data["outputs"] = [
-                {"format": format, "parameters": parameters or {}}
+                {
+                    "format": format,
+                    "mode": "production" if media and format == "skyc" else "draft",
+                    "parameters": parameters or {},
+                }
                 for format, parameters in zip(renderer, renderer_params, strict=True)
             ]
         else:
@@ -499,6 +503,8 @@ class SkybrushStudioAPI:
             data["output"]["format"] = renderer
             if renderer_params is not None:
                 data["output"]["parameters"] = renderer_params
+            if media and renderer == "skyc":
+                data["output"]["mode"] = "production"
 
         with self._send_request(f"operations/{operation}", data) as response:
             if output:
