@@ -225,7 +225,7 @@ class StoryboardEntry(PropertyGroup):
         default="SYNCHRONIZED",
         options=set(),
     )
-    transition_profile = EnumProperty(
+    transition_velocity_profile = EnumProperty(
         items=[
             ("LINEAR", "Linear", "", 1),
             ("SMOOTH_FROM_LEFT", "Smooth from left", "", 2),
@@ -568,12 +568,13 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
         entry.duration = duration
         entry.name = name
         entry.purpose = purpose.name
-        entry.transition_profile = (
+        entry.transition_velocity_profile = (
             "SMOOTH_FROM_RIGHT"
             if previous_entry is not None
             and previous_entry.purpose == "TAKEOFF"
             and entry.purpose == "SHOW"
-            and previous_entry.transition_profile in ["LINEAR", "SMOOTH_FROM_LEFT"]
+            and previous_entry.transition_velocity_profile
+            in ["LINEAR", "SMOOTH_FROM_LEFT"]
             else "SMOOTH"
         )
 

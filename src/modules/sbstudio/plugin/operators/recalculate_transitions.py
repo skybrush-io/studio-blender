@@ -618,7 +618,7 @@ def update_transition_for_storyboard_entry(
             # staggered departures.
 
             windup_type = InfluenceCurveTransitionType.from_enum_property(
-                entry.transition_profile
+                entry.transition_velocity_profile
             )
             windup_start_frame = end_of_previous
             start_frame = entry.frame_start
