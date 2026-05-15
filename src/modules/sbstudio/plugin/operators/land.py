@@ -216,6 +216,7 @@ class LandOperator(StoryboardOperator):
         )
         assert entry is not None
         entry.transition_type = "MANUAL"
+        entry.transition_velocity_profile = "SMOOTH"
 
         # The addition of the new entry invalidated our reference to the last
         # entry so we need to query it again
