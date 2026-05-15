@@ -32,6 +32,8 @@ Custom Name:: Ticking this check box allows you to keep the label of the storybo
 
 Transition from previous:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Skybrush Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order (note that you need to turn off alphabetic ordering in the Outliner first). Blender will then map the nth marker in the initial formation to the nth marker in the target formation.
 +
+The velocity profile of the transition can be selected by the "Profile" setting. Four velocity profiles are supported for each transition: the `Linear` profile keeps a constant speed throughout the entire transition (most probably resulting in a very short acceleration spike at the start and end of the transition); the `Smooth` profile plans an optimal cubic Bézier profile with zero velocity at both edge and a smooth acceleration and deceleration in between; the `Smooth from left` and `Smooth from right` profiles are smooth from left/right and linear on the other side.
++
 You can also select between two fundamental _temporal_ schedules for the transition: `Synchronized` and `Staggered`. In `Synchronized` mode all drones depart from and arrive to the formations at the same time. In `Staggered` mode drones depart and arrive at different times, with a specific delay value between each of them set by the *Departure delay* and *Arrival delay* parameters (see image below).
 +
 image::panels/storyboard/staggered_transition.jpg[Staggered transition]

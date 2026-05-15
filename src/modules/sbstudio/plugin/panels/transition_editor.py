@@ -62,6 +62,7 @@ class TransitionEditorBase(Panel):
             layout.label(text=label)
 
         layout.prop(entry, "transition_type")
+        layout.prop(entry, "transition_velocity_profile")
         layout.prop(entry, "transition_schedule")
         if entry.is_staggered:
             layout.prop(entry, "pre_delay_per_drone_in_frames")
