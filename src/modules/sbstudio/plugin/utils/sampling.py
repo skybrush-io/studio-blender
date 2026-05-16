@@ -1,7 +1,6 @@
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Iterable, Sequence
 
-import bpy
 from bpy.types import Context, Object
 
 from sbstudio.model.color import Color4D
@@ -14,7 +13,7 @@ from sbstudio.plugin.utils.evaluator import (
     get_position_of_object,
     get_xyz_euler_rotation_of_object,
 )
-from sbstudio.plugin.utils.progress import FrameIterator, FrameProgressReport
+from sbstudio.plugin.utils.progress import FrameRange
 
 from .decorators import with_context
 
@@ -40,19 +39,15 @@ def frame_range(
     start: int,
     end: int,
     *,
-    fps: int,
     context: Context | None = None,
-    operation: str | None = None,
-    progress: Callable[[FrameProgressReport], None] | None = None,
-) -> Iterator[int]:
+) -> FrameRange:
     """Generator that iterates from the given start frame to the given end frame
     with the given number of frames per second.
     """
     assert context is not None  # injected
 
     scene_fps = context.scene.render.fps
-    frame_step = max(1, int(scene_fps // fps))
-    return FrameIterator(start, end, frame_step, operation=operation, progress=progress)
+    return FrameRange(start, end, scene_fps)
 
 
 @with_context
@@ -87,18 +82,15 @@ def sample_positions_of_objects(
     objects: Sequence[Object],
     frames: Iterable[int],
     *,
-    by_name: bool = False,
     simplify: bool = False,
     context: Context | None = None,
-) -> dict[Object, Trajectory] | dict[str, Trajectory]:
+) -> dict[str, Trajectory]:
     """Samples the positions of the given Blender objects at the given frames,
-    returning a dictionary mapping the objects to their trajectories.
+    returning a dictionary mapping names of the objects to their trajectories.
 
     Parameters:
         objects: the Blender objects to process
         frames: an iterable yielding the indices of the frames to process
-        by_name: whether the result dictionary should be keyed by the _names_
-            of the objects
         context: the Blender execution context; `None` means the current
             Blender context
         simplify: whether to simplify the trajectories. If this option is
@@ -107,13 +99,13 @@ def sample_positions_of_objects(
             ones will be removed.
 
     Returns:
-        a dictionary mapping the objects to their trajectories
+        a dictionary mapping the names of the objects to their trajectories
     """
     trajectories = defaultdict(Trajectory)
 
     for _, time in each_frame_in(frames, context=context):
         for obj in objects:
-            key = obj.name if by_name else obj
+            key = obj.name
             trajectories[key].append(Point4D(time, *get_position_of_object(obj)))
 
     if simplify:
@@ -127,18 +119,16 @@ def sample_positions_and_yaw_of_objects(
     objects: Sequence[Object],
     frames: Iterable[int],
     *,
-    by_name: bool = False,
     simplify: bool = False,
     context: Context | None = None,
-) -> dict[Object, tuple[Trajectory, YawSetpointList]]:
+) -> dict[str, tuple[Trajectory, YawSetpointList]]:
     """Samples the positions of the given Blender objects at the given frames,
-    returning a dictionary mapping the objects to their trajectories.
+    returning a dictionary mapping the names of the objects to their
+    trajectories and yaw setpoints.
 
     Parameters:
         objects: the Blender objects to process
         frames: an iterable yielding the indices of the frames to process
-        by_name: whether the result dictionary should be keyed by the _names_
-            of the objects
         context: the Blender execution context; `None` means the current
             Blender context
         simplify: whether to simplify the trajectories. If this option is
@@ -147,14 +137,14 @@ def sample_positions_and_yaw_of_objects(
             ones will be removed.
 
     Returns:
-        a dictionaries mapping the objects to their trajectories and yaw setpoints
+        a dictionaries mapping the names of the objects to their trajectories and yaw setpoints
     """
     trajectories = defaultdict(Trajectory)
     yaw_setpoints = defaultdict(YawSetpointList)
 
     for _, time in each_frame_in(frames, context=context):
         for obj in objects:
-            key = obj.name if by_name else obj
+            key = obj.name
             trajectories[key].append(Point4D(time, *get_position_of_object(obj)))
             rotation = get_xyz_euler_rotation_of_object(obj)
             # note the conversion from Blender CCW to Skybrush CW representation
@@ -186,19 +176,17 @@ def sample_colors_of_objects(
     objects: Sequence[Object],
     frames: Iterable[int],
     *,
-    by_name: bool = False,
     simplify: bool = False,
     redraw: bool = False,
     context: Context | None = None,
-) -> dict[Object | str, LightProgram]:
+) -> dict[str, LightProgram]:
     """Samples the colors of the given Blender objects at the given frames,
-    returning a dictionary mapping the objects to their light programs.
+    returning a dictionary mapping the names of the objects to their light
+    programs.
 
     Parameters:
         objects: the Blender objects to process
         frames: an iterable yielding the indices of the frames to process
-        by_name: whether the result dictionary should be keyed by the _names_
-            of the objects
         simplify: whether to simplify the light programs. If this option is
             enabled, the resulting light program might not contain samples
             for all the input frames; excess samples that are identical to
@@ -210,13 +198,13 @@ def sample_colors_of_objects(
             Blender context
 
     Returns:
-        a dictionary mapping the objects to their light programs
+        a dictionary mapping the names of the objects to their light programs
     """
     lights = defaultdict(LightProgram)
 
     for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
-            key = obj.name if by_name else obj
+            key = obj.name
             color = get_color_of_drone(obj)
             lights[key].append(
                 Color4D(
@@ -238,14 +226,13 @@ def sample_positions_and_colors_of_objects(
     objects: Sequence[Object],
     frames: Iterable[int],
     *,
-    by_name: bool = False,
     simplify: bool = False,
     redraw: bool = False,
     context: Context | None = None,
-) -> dict[Object, tuple[Trajectory, LightProgram]]:
+) -> dict[str, tuple[Trajectory, LightProgram]]:
     """Samples the positions and colors of the given Blender objects at the
-    given frames, returning a dictionary mapping the objects to their
-    trajectories and light programs.
+    given frames, returning a dictionary mapping the names of the objects to
+    their trajectories and light programs.
 
     Parameters:
         objects: the Blender objects to process
@@ -263,14 +250,15 @@ def sample_positions_and_colors_of_objects(
             Blender context
 
     Returns:
-        a dictionary mapping the objects to their trajectories and light programs
+        a dictionary mapping the names of the objects to their trajectories
+        and light programs
     """
     trajectories = defaultdict(Trajectory)
     lights = defaultdict(LightProgram)
 
     for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
-            key = obj.name if by_name else obj
+            key = obj.name
             pos = get_position_of_object(obj)
             color = get_color_of_drone(obj)
             trajectories[key].append(Point4D(time, *pos))
@@ -299,14 +287,13 @@ def sample_positions_colors_and_yaw_of_objects(
     objects: Sequence[Object],
     frames: Iterable[int],
     *,
-    by_name: bool = False,
     simplify: bool = False,
     redraw: bool = False,
     context: Context | None = None,
-) -> dict[Object, tuple[Trajectory, LightProgram, YawSetpointList]]:
+) -> dict[str, tuple[Trajectory, LightProgram, YawSetpointList]]:
     """Samples the positions, colors and yaw angles of the given Blender objects
-    at the given frames, returning a dictionary mapping the objects to their
-    trajectories, light programs and yaw setpoints.
+    at the given frames, returning a dictionary mapping the names of the objects
+    to their trajectories, light programs and yaw setpoints.
 
     Parameters:
         objects: the Blender objects to process
@@ -325,7 +312,8 @@ def sample_positions_colors_and_yaw_of_objects(
             Blender context
 
     Returns:
-        a dictionary mapping the objects to their trajectories and light programs
+        a dictionary mapping the names of the objects to their trajectories and
+        light programs
     """
     trajectories = defaultdict(Trajectory)
     lights = defaultdict(LightProgram)
@@ -333,7 +321,7 @@ def sample_positions_colors_and_yaw_of_objects(
 
     for _, time in each_frame_in(frames, context=context, redraw=redraw):
         for obj in objects:
-            key = obj.name if by_name else obj
+            key = obj.name
             pos = get_position_of_object(obj)
             color = get_color_of_drone(obj)
             rotation = get_xyz_euler_rotation_of_object(obj)
@@ -376,10 +364,9 @@ def sample_positions_of_objects_in_frame_range(
     bounds: tuple[int, int],
     *,
     fps: int,
-    by_name: bool = False,
     simplify: bool = False,
     context: Context | None = None,
-) -> dict[Object, Trajectory] | dict[str, Trajectory]:
+) -> dict[str, Trajectory]:
     """Samples the positions of the given Blender objects in the given range
     of frames, ensuring that the given minimum frames-per-second requirement
     is satisfied and that both the start and the end frames are sampled.
@@ -390,8 +377,6 @@ def sample_positions_of_objects_in_frame_range(
         fps: the desired number of frames per second; the result may contain
             more samples per frame if the scene FPS is not an exact multiple
             of the desired FPS
-        by_name: whether the result dictionary should be keyed by the _names_
-            of the objects
         simplify: whether to simplify the trajectories. If this option is
             enabled, the resulting trajectories might not contain samples for
             all the input frames; excess samples that are identical to previous
@@ -400,12 +385,13 @@ def sample_positions_of_objects_in_frame_range(
             Blender context
 
     Returns:
-        a dictionary mapping the objects (or their names) to their trajectories
+        a dictionary mapping the names of the objects to their trajectories
     """
+    frames = frame_range(bounds[0], bounds[1], context=context)
+    frame_iter = frames.iter(fps=fps)
     return sample_positions_of_objects(
         objects,
-        frame_range(bounds[0], bounds[1], fps=fps, context=context),
-        by_name=by_name,
+        frame_iter,
         simplify=simplify,
         context=context,
     )
