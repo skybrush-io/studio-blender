@@ -176,10 +176,9 @@ def export_show_to_file_using_api(
         if is_backend_version_ge(api, minimum_version):
             audio = get_audio_from_context(context)
         else:
-            log.warning(
+            raise SkybrushStudioExportWarning(
                 f"Please update Skybrush Studio Server to version {minimum_version} or above to export audio"
             )
-            audio = None
     else:
         audio = None
 

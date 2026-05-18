@@ -30,6 +30,7 @@ from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.model.yaw import YawSetpointList
+from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.utils import create_path_and_open
 
 from .constants import COMMUNITY_SERVER_URL
@@ -409,6 +410,11 @@ class SkybrushStudioAPI:
         Returns:
             The exported drone show data or `None` if an `output` filename
             was specified.
+
+        Raises:
+            SkybrushStudioExportWarning when a local check failed and the export
+            operation did not start. These are converted into warnings on the
+            Blender UI.
         """
 
         meta: dict[str, Any] = {}
@@ -440,7 +446,12 @@ class SkybrushStudioAPI:
         media: dict[str, Any] = {}
 
         if audio:
-            media["audio"] = audio.as_dict(ndigits=ndigits)
+            try:
+                media["audio"] = audio.as_dict(ndigits=ndigits)
+            except Exception as ex:
+                raise SkybrushStudioExportWarning(
+                    f"Could not parse audio file {audio.file_path!r}"
+                ) from ex
 
         def format_drone(name: str):
             settings = {
