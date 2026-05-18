@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added audio export option to the .skyc exporter, requiring a single .mp3 music
+  file to be added as an audio strip in the VSE.
+
 - The velocity profile of each transitions can now be setup individually through the
   new "Profile" setting in the "Transition from previos" / "Transition to next" popups.
   Available profiles: "smooth" (previous default), "linear", "smooth from left", and

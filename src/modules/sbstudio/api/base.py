@@ -18,6 +18,7 @@ from urllib.request import Request, urlopen
 
 from natsort import natsorted
 
+from sbstudio.model.audio import Audio
 from sbstudio.model.cameras import Camera
 from sbstudio.model.color import Color3D
 from sbstudio.model.light_program import LightProgram
@@ -29,6 +30,7 @@ from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.model.yaw import YawSetpointList
+from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.utils import create_path_and_open
 
 from .constants import COMMUNITY_SERVER_URL
@@ -370,6 +372,7 @@ class SkybrushStudioAPI:
         ndigits: int = 3,
         timestamp_offset: float | None = None,
         time_markers: TimeMarkers | None = None,
+        audio: Audio | None = None,
         cameras: list[Camera] | None = None,
         renderer: str | list[str] = "skyc",
         renderer_params: dict[str, Any] | list[dict[str, Any]] | None = None,
@@ -397,6 +400,7 @@ class SkybrushStudioAPI:
                 Skybrush Viewer.
             time_markers: When specified, time markers will be exported as
                 temporal cues.
+            audio: when specified, a single audio file to include in the output
             cameras: When specified, list of cameras to include in the environment.
             renderer: The renderer(s) to use to export the show.
             renderer_params: Extra parameters for the renderer(s).
@@ -406,9 +410,14 @@ class SkybrushStudioAPI:
         Returns:
             The exported drone show data or `None` if an `output` filename
             was specified.
+
+        Raises:
+            SkybrushStudioExportWarning when a local check failed and the export
+            operation did not start. These are converted into warnings on the
+            Blender UI.
         """
 
-        meta = {}
+        meta: dict[str, Any] = {}
         if show_title is not None:
             meta["title"] = show_title
 
@@ -434,7 +443,15 @@ class SkybrushStudioAPI:
         if time_markers is None:
             time_markers = TimeMarkers()
 
-        # TODO: add music to the "media" key
+        media: dict[str, Any] = {}
+
+        if audio:
+            try:
+                media["audio"] = audio.as_dict(ndigits=ndigits)
+            except Exception as ex:
+                raise SkybrushStudioExportWarning(
+                    f"Could not parse audio file {audio.file_path!r}"
+                ) from ex
 
         def format_drone(name: str):
             settings = {
@@ -473,6 +490,7 @@ class SkybrushStudioAPI:
                         ]
                     },
                     "meta": meta,
+                    "media": media,
                 },
             },
         }
@@ -483,7 +501,11 @@ class SkybrushStudioAPI:
                 renderer_params = [None] * len(renderer)  # type: ignore
             assert isinstance(renderer_params, (list, tuple))
             data["outputs"] = [
-                {"format": format, "parameters": parameters or {}}
+                {
+                    "format": format,
+                    "mode": "production" if media and format == "skyc" else "draft",
+                    "parameters": parameters or {},
+                }
                 for format, parameters in zip(renderer, renderer_params, strict=True)
             ]
         else:
@@ -492,6 +514,8 @@ class SkybrushStudioAPI:
             data["output"]["format"] = renderer
             if renderer_params is not None:
                 data["output"]["parameters"] = renderer_params
+            if media and renderer == "skyc":
+                data["output"]["mode"] = "production"
 
         with self._send_request(f"operations/{operation}", data) as response:
             if output:
