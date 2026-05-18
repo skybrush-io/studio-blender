@@ -19,9 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The minimum backend version required for this version of the add-on is now
-  2.40.0.
-
 - The default velocity profile of the takeoff operation got changed to "linear", 
   while the transition to the first formation is "smooth from right" now. This keeps
   the speed and the minimum distance of the takeoff prodecure transparent on both
