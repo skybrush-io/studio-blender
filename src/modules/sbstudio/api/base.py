@@ -412,7 +412,7 @@ class SkybrushStudioAPI:
             was specified.
 
         Raises:
-            SkybrushStudioExportWarning when a local check failed and the export
+            SkybrushStudioExportWarning: when a local check failed and the export
             operation did not start. These are converted into warnings on the
             Blender UI.
         """

@@ -14,7 +14,7 @@ from natsort import natsorted
 
 from sbstudio.api.base import SkybrushStudioAPI
 from sbstudio.api.types import Version
-from sbstudio.api.version import is_backend_version_ge
+from sbstudio.api.version import is_backend_version_at_least
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation
@@ -173,7 +173,7 @@ def export_show_to_file_using_api(
     if export_audio:
         # Check if the backend version is sufficient for audio export
         minimum_version = Version(2, 40, 0)
-        if is_backend_version_ge(api, minimum_version):
+        if is_backend_version_at_least(api, minimum_version):
             audio = get_audio_from_context(context)
         else:
             raise SkybrushStudioExportWarning(
