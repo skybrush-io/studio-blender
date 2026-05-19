@@ -1,4 +1,4 @@
-from math import ceil, floor
+from math import ceil
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
@@ -182,7 +182,7 @@ class LandOperator(StoryboardOperator):
             durations = [diff / self.velocity for diff in diffs]
 
         delays = [int(ceil(delay * fps)) for delay in delays]
-        durations = [int(floor(duration * fps)) for duration in durations]
+        durations = [int(ceil(duration * fps)) for duration in durations]
         max_duration = max(
             delay + duration for delay, duration in zip(delays, durations)
         )
@@ -216,6 +216,7 @@ class LandOperator(StoryboardOperator):
         )
         assert entry is not None
         entry.transition_type = "MANUAL"
+        entry.transition_velocity_profile = "SMOOTH"
 
         # The addition of the new entry invalidated our reference to the last
         # entry so we need to query it again

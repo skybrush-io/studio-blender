@@ -18,7 +18,7 @@ from sbstudio.plugin.actions import (
 )
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.keyframes import set_keyframes
+from sbstudio.plugin.keyframes import set_keyframes, update_fcurves
 from sbstudio.plugin.model.formation import (
     get_markers_and_related_objects_from_formation,
     get_world_coordinates_of_markers_from_formation,
@@ -46,6 +46,13 @@ class InfluenceCurveTransitionType(Enum):
     SMOOTH_FROM_LEFT = "smoothFromLeft"
     SMOOTH_FROM_RIGHT = "smoothFromRight"
     SMOOTH = "smooth"
+
+    @classmethod
+    def from_enum_property(cls, value: str):
+        """Create an influence curve transition type from its
+        representation as a Blender EnumProperty."""
+        parts = value.lower().split("_")
+        return cls(parts[0] + "".join(p.capitalize() for p in parts[1:]))
 
 
 @dataclass
@@ -91,7 +98,7 @@ class InfluenceCurveDescriptor:
     """
 
     windup_type: InfluenceCurveTransitionType = InfluenceCurveTransitionType.SMOOTH
-    """The type of the windup transition."""
+    """The type of the windup transition that defines its velocity profile."""
 
     def __init__(
         self,
@@ -143,6 +150,7 @@ class InfluenceCurveDescriptor:
         frame = max(self.start_frame, keyframes[-1][0] + 1)
         start_of_transition = len(keyframes) - 1
         keyframes.append((frame, 1.0))
+        end_of_transition = len(keyframes) - 1
 
         # Add a keyframe at the end frame
         if self.end_frame is not None:
@@ -165,16 +173,15 @@ class InfluenceCurveDescriptor:
         )
 
         if self.windup_type != InfluenceCurveTransitionType.LINEAR:
-            kf = keyframe_objs[start_of_transition]
-            kf.interpolation = "BEZIER"
+            kf_start = keyframe_objs[start_of_transition]
+            kf_start.interpolation = "BEZIER"
             if self.windup_type == InfluenceCurveTransitionType.SMOOTH_FROM_RIGHT:
-                kf.handle_right_type = "VECTOR"
-            else:
-                kf.handle_right_type = "AUTO_CLAMPED"
+                kf_start.handle_right_type = "VECTOR"
+                update_fcurves(object, data_path)
             if self.windup_type == InfluenceCurveTransitionType.SMOOTH_FROM_LEFT:
-                kf.handle_left_type = "VECTOR"
-            else:
-                kf.handle_left_type = "AUTO_CLAMPED"
+                kf_end = keyframe_objs[end_of_transition]
+                kf_end.handle_left_type = "VECTOR"
+                update_fcurves(object, data_path)
 
 
 class _LazyFormationTargetList:
@@ -610,6 +617,9 @@ def update_transition_for_storyboard_entry(
             # windup_start_frame can be later than end_of_previous for
             # staggered departures.
 
+            windup_type = InfluenceCurveTransitionType.from_enum_property(
+                entry.transition_velocity_profile
+            )
             windup_start_frame = end_of_previous
             start_frame = entry.frame_start
             departure_delay = 0
@@ -678,6 +688,7 @@ def update_transition_for_storyboard_entry(
                 windup_start_frame=windup_start_frame,
                 start_frame=start_frame,
                 end_frame=start_of_next,
+                windup_type=windup_type,
             )
 
             # Do not update the influence curve now in case we have problems
@@ -848,6 +859,7 @@ class RecalculateTransitionsOperator(StoryboardOperator):
         try:
             with call_api_from_blender_operator(self, "transition planner"):
                 recalculate_transitions(tasks, start_of_scene=start_of_scene)
+            bpy.ops.skybrush.update_time_markers_from_storyboard()
             success = True
         except Exception:
             success = False

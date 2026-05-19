@@ -199,7 +199,7 @@ class TakeoffOperator(StoryboardOperator):
         # Calculate takeoff durations from distances to travel and the
         # average velocity
         fps = context.scene.render.fps
-        takeoff_durations = [ceil((diff / self.velocity) * fps) for diff in diffs]
+        takeoff_durations = [int(ceil((diff / self.velocity) * fps)) for diff in diffs]
 
         # We ensure that drones arrive at the same time, so calculate the
         # takeoff delays for those drones that take off to lower altitudes
@@ -256,6 +256,7 @@ class TakeoffOperator(StoryboardOperator):
         )
         assert entry is not None
         entry.transition_type = "MANUAL"
+        entry.transition_velocity_profile = "LINEAR"
 
         # Set up the custom departure delays for the drones
         if delays and max(delays) > 0:

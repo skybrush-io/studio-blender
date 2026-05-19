@@ -204,7 +204,7 @@ class StoryboardEntry(PropertyGroup):
             ("AUTO", "Auto", "", 2),
         ],
         name="Type",
-        description="Type of transition between the previous formation and this one. "
+        description="Type of the transition between the previous formation and this one. "
         "Manual transitions map the nth vertex of the initial formation to the nth "
         "vertex of the target formation; auto-matched transitions find an "
         "optimal mapping between vertices of the initial and the target formation",
@@ -223,6 +223,20 @@ class StoryboardEntry(PropertyGroup):
             "trajectories are guaranteed only for synchronized transitions"
         ),
         default="SYNCHRONIZED",
+        options=set(),
+    )
+    transition_velocity_profile = EnumProperty(
+        items=[
+            ("LINEAR", "Linear", "", 1),
+            ("SMOOTH_FROM_LEFT", "Smooth from left", "", 2),
+            ("SMOOTH_FROM_RIGHT", "Smooth from right", "", 3),
+            ("SMOOTH", "Smooth", "", 4),
+        ],
+        name="Profile",
+        description="Velocity profile of the transition between the previous formation and this one. "
+        "Linear transitions have constant speed, smooth transitions are Bezier-interpolated "
+        "from left, from right or from both sides (default).",
+        default="SMOOTH",
         options=set(),
     )
 
@@ -548,11 +562,21 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
         if duration is None or duration < 0:
             duration = fps * DEFAULT_STORYBOARD_ENTRY_DURATION
 
+        previous_entry = self.last_entry
         entry: StoryboardEntry = self.entries.add()
         entry.frame_start = frame_start
         entry.duration = duration
         entry.name = name
         entry.purpose = purpose.name
+        entry.transition_velocity_profile = (
+            "SMOOTH_FROM_RIGHT"
+            if previous_entry is not None
+            and previous_entry.purpose == "TAKEOFF"
+            and entry.purpose == "SHOW"
+            and previous_entry.transition_velocity_profile
+            in ["LINEAR", "SMOOTH_FROM_LEFT"]
+            else "SMOOTH"
+        )
 
         if (
             formation is None

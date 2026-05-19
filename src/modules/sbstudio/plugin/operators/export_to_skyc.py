@@ -53,7 +53,14 @@ class SkybrushExportOperator(ExportOperator):
         default=False,
     )
 
-    # yaw control enable/disable
+    # audio export enable/disable
+    export_audio = BoolProperty(
+        name="Export audio",
+        description="Specifies whether a single audio file in the VSE should be exported into the show file",
+        default=False,
+    )
+
+    # camera export enable/disable
     export_cameras = BoolProperty(
         name="Export cameras",
         description="Specifies whether cameras defined in Blender should be exported into the show file",
@@ -73,6 +80,7 @@ class SkybrushExportOperator(ExportOperator):
         layout.separator()
 
         column = layout.column(align=True)
+        column.prop(self, "export_audio")
         column.prop(self, "export_cameras")
         column.prop(self, "use_pyro_control")
         column.prop(self, "use_yaw_control")
@@ -89,5 +97,6 @@ class SkybrushExportOperator(ExportOperator):
             "light_output_fps": self.light_output_fps,
             "use_pyro_control": self.use_pyro_control,
             "use_yaw_control": self.use_yaw_control,
+            "export_audio": self.export_audio,
             "export_cameras": self.export_cameras,
         }

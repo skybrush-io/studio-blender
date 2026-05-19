@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Added
+
+- Added audio export option to the .skyc exporter, requiring a single .mp3 music
+  file to be added as an audio strip in the VSE.
+
+- The velocity profile of each transitions can now be setup individually through the
+  new "Profile" setting in the "Transition from previos" / "Transition to next" popups.
+  Available profiles: "smooth" (previous default), "linear", "smooth from left", and
+  "smmoth from right".
+
+### Changed
+
+- The default velocity profile of the takeoff operation got changed to "linear", 
+  while the transition to the first formation is "smooth from right" now. This keeps
+  the speed and the minimum distance of the takeoff prodecure transparent on both
+  single and multi-layered takeoffs, but might introduce short acceleration spikes 
+  at the start and end of the takeoff. If that is disturbing the velocity profile
+  can be set back to "smooth" for backward compatibility.
+
+## [4.4.0] - 2026-05-12
+
+### Added
+
+- Added an option to resample imported CSV and DSS trajectories to the frame
+  resolution of the project to avoid acceleration spike artifacts.
+
 ### Changed
 
 - The `.vviz` exporter received a new time offset parameter to be able to move the
@@ -18,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of 0. Finally, the size of the `.vviz` file is now reduced to some extent with
   proper rounding of inner values stored. The new features of the exporter are
   introduced in **Skybrush Studio Server** version 2.39.0.
+
+- From now on the time markers created by the Skybrush plugin update automatically
+  when recalculating transitions.
+
+### Fixed
+
+- Fixed the size of safety warning markers on Blender 5.1 and later by switching
+  the underlying `FLAT_COLOR` shader to `POINT_FLAT_COLOR`.
+
+- Fixed some of the rounding issues during CSV imports that sometimes created
+  artificial acceleration spikes.
 
 ## [4.3.0] - 2026-04-01
 

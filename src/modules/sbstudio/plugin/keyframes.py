@@ -190,6 +190,19 @@ def set_keyframes(
     return result
 
 
+def update_fcurves(object: Object, data_path: str) -> None:
+    """Updates the fcurves of an object on the given data path.
+
+    Parameters:
+        object: the object on which the keyframes are to be set
+        data_path: the data path to use
+    """
+    anim_data = ensure_animation_data_exists_for_object(object)
+    fcurves = find_all_f_curves_for_data_path(anim_data, data_path)
+    for fcurve in fcurves:
+        fcurve.update()
+
+
 def _update_keyframes_on_single_f_curve(
     fcurve: FCurve, values: Sequence[tuple[float, float | None]]
 ) -> list:

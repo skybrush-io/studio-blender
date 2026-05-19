@@ -9,7 +9,7 @@ from .types import Version
 if TYPE_CHECKING:
     from sbstudio.plugin.api import SkybrushStudioAPI
 
-__all__ = ("ensure_backend_version",)
+__all__ = ("ensure_backend_version", "is_backend_version_at_least")
 
 _backend_version_cache: tuple[SkybrushStudioAPI, Version] | None = None
 
@@ -53,3 +53,20 @@ def ensure_backend_version(api: SkybrushStudioAPI):
     version = _get_or_query_backend_version(api)
     if version < MINIMUM_BACKEND_VERSION:
         raise BackendVersionMismatchError(version)
+
+
+def is_backend_version_at_least(version: Version, *, api: SkybrushStudioAPI) -> bool:
+    """Returns whether the backend version is at least the given version.
+
+    This function re-uses the cached version number if we already know the
+    version number of the backend.
+
+    Args:
+        version: the minimum version to reach to return `True`
+        api: the API object to use for the query
+
+    Returns:
+        True if backend version is greater or equal than the given version
+    """
+    backend_version = _get_or_query_backend_version(api)
+    return backend_version >= version
