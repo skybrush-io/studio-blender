@@ -173,7 +173,7 @@ def export_show_to_file_using_api(
     if export_audio:
         # Check if the backend version is sufficient for audio export
         minimum_version = Version(2, 40, 0)
-        if is_backend_version_at_least(api, minimum_version):
+        if is_backend_version_at_least(minimum_version, api=api):
             audio = get_audio_from_context(context)
         else:
             raise SkybrushStudioExportWarning(

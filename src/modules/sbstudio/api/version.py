@@ -55,15 +55,15 @@ def ensure_backend_version(api: SkybrushStudioAPI):
         raise BackendVersionMismatchError(version)
 
 
-def is_backend_version_at_least(api: SkybrushStudioAPI, version: Version) -> bool:
+def is_backend_version_at_least(version: Version, *, api: SkybrushStudioAPI) -> bool:
     """Returns whether the backend version is at least the given version.
 
     This function re-uses the cached version number if we already know the
     version number of the backend.
 
     Args:
-        api: the API object to use for the query
         version: the minimum version to reach to return `True`
+        api: the API object to use for the query
 
     Returns:
         True if backend version is greater or equal than the given version
