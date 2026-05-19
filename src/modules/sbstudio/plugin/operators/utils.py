@@ -13,6 +13,8 @@ from bpy.types import Context
 from natsort import natsorted
 
 from sbstudio.api.base import SkybrushStudioAPI
+from sbstudio.api.types import Version
+from sbstudio.api.version import is_backend_version_at_least
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.location import ShowLocation
@@ -30,6 +32,7 @@ from sbstudio.plugin.props.frame_range import resolve_frame_range
 from sbstudio.plugin.tasks.light_effects import suspended_light_effects
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
+from sbstudio.plugin.utils.audio import get_audio_from_context
 from sbstudio.plugin.utils.cameras import get_cameras_from_context
 from sbstudio.plugin.utils.gps_coordinates import parse_latitude, parse_longitude
 from sbstudio.plugin.utils.progress import FrameProgressReport
@@ -164,6 +167,20 @@ def export_show_to_file_using_api(
 
     # get time markers (cues)
     time_markers = get_time_markers_from_context(context)
+
+    # get audio
+    export_audio = settings.get("export_audio", False)
+    if export_audio:
+        # Check if the backend version is sufficient for audio export
+        minimum_version = Version(2, 40, 0)
+        if is_backend_version_at_least(api, minimum_version):
+            audio = get_audio_from_context(context)
+        else:
+            raise SkybrushStudioExportWarning(
+                f"Please update Skybrush Studio Server to version {minimum_version} or above to export audio"
+            )
+    else:
+        audio = None
 
     # get cameras
     export_cameras = settings.get("export_cameras", False)
@@ -321,6 +338,7 @@ def export_show_to_file_using_api(
         yaw_setpoints=yaw_setpoints,
         output=filepath,
         time_markers=time_markers,
+        audio=audio,
         cameras=cameras,
         renderer=renderer,
         renderer_params=renderer_params,
