@@ -13,7 +13,7 @@ from bpy.path import basename
 from bpy.types import Context
 from natsort import natsorted
 
-from sbstudio.api.base import SkybrushStudioAPI
+from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.types import Version
 from sbstudio.api.version import is_backend_version_at_least
 from sbstudio.model.file_formats import FileFormat
