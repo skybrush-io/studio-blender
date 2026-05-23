@@ -46,6 +46,7 @@ from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
+from sbstudio.plugin.light_fx_presets import get_preset_enum_items, get_preset_function
 
 from .mixins import ListMixin
 
@@ -91,6 +92,7 @@ OUTPUT_ITEMS = [
     ("TEMPORAL", "Temporal", "", 10),
     ("DISTANCE", "Distance from mesh", "", 11),
     ("CUSTOM", "Custom expression", "", 12),
+    ("LIGHT_PRESET", "Light preset", "Built-in light effect preset (portable across machines)", 14),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
@@ -347,6 +349,14 @@ class LightEffect(PropertyGroup):
         type=ColorFunctionProperties,
         name="Output Y Function",
         description="Custom function for the output Y",
+    )
+
+    preset_id = EnumProperty(
+        name="Preset",
+        description="Built-in light effect preset (portable across machines)",
+        items=get_preset_enum_items,
+        default=0,
+        options=set(),
     )
 
     output_mapping_mode = EnumProperty(
@@ -619,6 +629,25 @@ class LightEffect(PropertyGroup):
                 else:
                     common_output = 1.0
 
+            elif output_type == "LIGHT_PRESET":
+                preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
+                if preset_fn is not None:
+                    outputs = [
+                        preset_fn(
+                            frame=frame,
+                            time_fraction=time_fraction,
+                            drone_index=index,
+                            formation_index=(
+                                mapping[index] if mapping is not None else None
+                            ),
+                            position=positions[index],
+                            drone_count=num_positions,
+                        )
+                        for index in range(num_positions)
+                    ]
+                else:
+                    common_output = 1.0
+
             else:
                 # Should not get here
                 common_output = 1.0
@@ -768,6 +797,7 @@ class LightEffect(PropertyGroup):
             "type": self.type,
             "invertTarget": self.invert_target,
             "colorFunction": self.color_function.as_dict(),
+            "presetId": self.preset_id,
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
             "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
@@ -934,6 +964,7 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
+        self.preset_id = other.preset_id
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
         self.output_function_y.update_from(other.output_function_y)
