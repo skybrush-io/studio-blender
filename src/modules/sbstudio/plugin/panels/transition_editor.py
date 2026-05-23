@@ -61,6 +61,10 @@ class TransitionEditorBase(Panel):
         for label in self._get_info_labels(storyboard, entry):
             layout.label(text=label)
 
+        box = layout.box()
+        box.label(text="Drone Group Filter", icon="GROUP")
+        box.prop(entry, "limit_to_group", text="Limit to")
+
         layout.prop(entry, "transition_type")
         layout.prop(entry, "transition_velocity_profile")
         layout.prop(entry, "transition_schedule")

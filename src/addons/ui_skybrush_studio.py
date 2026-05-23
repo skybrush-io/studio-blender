@@ -93,8 +93,12 @@ from sbstudio.plugin.operators import (
     DSSPath3ExportOperator,
     DSSPathExportOperator,
     DuplicateLightEffectOperator,
+    ApplyBoxParamsOperator,
+    ApplyGridLayoutOperator,
     EVSKYExportOperator,
+    ExportBoxPresetOperator,
     ExportLightEffectsOperator,
+    SetDroneCoordOperator,
     FinaleCSVExportOperator,
     FixConstraintOrderingOperator,
     GetFormationStatisticsOperator,
@@ -234,6 +238,10 @@ operators = (
     SetLightEffectEndFrameOperator,
     SetLightEffectStartFrameOperator,
     CreateTakeoffGridOperator,
+    ExportBoxPresetOperator,
+    ApplyBoxParamsOperator,
+    ApplyGridLayoutOperator,
+    SetDroneCoordOperator,
     DetachMaterialsFromDroneTemplateOperator,
     FixConstraintOrderingOperator,
     RecalculateTransitionsOperator,
@@ -322,6 +330,15 @@ overlay_getters = (
 
 def register():
     register_translations(translations_dict)
+
+    # Register Box Preset translations with a separate package name
+    from sbstudio.plugin.operators.create_takeoff_grid import translations_dict as box_preset_translations
+    try:
+        import bpy
+        bpy.app.translations.register("skybrush_box_preset", box_preset_translations)
+    except Exception as e:
+        print(f"Warning: Could not register box preset translations: {e}")
+
     register_state()
     for custom_type in types:
         register_type(custom_type)
@@ -362,4 +379,12 @@ def unregister():
     for custom_type in reversed(types):
         unregister_type(custom_type)
     unregister_state()
+
+    # Unregister Box Preset translations
+    try:
+        import bpy
+        bpy.app.translations.unregister("skybrush_box_preset")
+    except Exception:
+        pass
+
     unregister_translations()
