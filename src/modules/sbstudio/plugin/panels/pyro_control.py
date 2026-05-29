@@ -31,8 +31,10 @@ class PyroControlPanel(Panel):
             return
 
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
-        layout.prop(pyro_control, "visualization", text="Render")
+        layout.prop(pyro_control, "visualization", text="Visualization")
 
         layout.separator()
 
