@@ -10,8 +10,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
-from sbstudio.plugin.colors import get_colors_of_drones_fast, set_color_of_drone
+from sbstudio.plugin.colors import (
+    get_color_of_drone,
+    get_colors_of_drones_fast,
+    set_color_of_drone,
+)
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.overlays.light_effect import LightEffectOverlayMarker
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 from .base import Task
@@ -30,6 +35,13 @@ mapping is keyed by the _ids_ of the drones so we do not hang on to a
 reference of a drone if the user deletes it and Blender decides to free the
 associated memory area."""
 
+_final_color_cache: dict[int, RGBAColor] = {}
+"""Cache for the "final" color of every drone in the current frame after we
+apply the light effects on them. Cleared when there are no light effects. The
+mapping is keyed by the _ids_ of the drones so we do not hang on to a
+reference of a drone if the user deletes it and Blender decides to free the
+associated memory area."""
+
 _last_frame: int | None = None
 """Number of the last frame that was evaluated with `update_light_effects()`"""
 
@@ -44,7 +56,7 @@ drone.
 
 @suspension.wrap
 def update_light_effects(scene: Scene, depsgraph: Depsgraph):
-    global _last_frame, _base_color_cache, WHITE
+    global _last_frame, _base_color_cache, _final_color_cache, WHITE
 
     # This function is going to be evaluated in every frame, so we should walk
     # the extra mile to ensure that the number of object allocations is as low
@@ -53,6 +65,8 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 
     light_effects = scene.skybrush.light_effects
     if not light_effects or not light_effects.enabled:
+        _final_color_cache.clear()
+        light_effects.clear_overlay_markers()
         return
 
     random_seq = scene.skybrush.settings.random_sequence_root
@@ -102,19 +116,36 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # the _base_color_cache is filled), clear the cache and update the colors
     # nevertheless. This is needed to update the screen properly when the last
     # effect is disabled.
-    if not changed:
-        if _base_color_cache:
-            drones = Collections.find_drones().objects
-            colors = [
-                _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
-            ]
-            _base_color_cache.clear()
-            changed = True
+    has_active_effects = changed
+    if not changed and _base_color_cache:
+        drones = Collections.find_drones().objects
+        colors = [_base_color_cache.get(id(drone)) or list(WHITE) for drone in drones]
+        _base_color_cache.clear()
+        has_active_effects = False
+        changed = True
 
+    overlay_markers: list[LightEffectOverlayMarker] = []
     if changed:
         assert drones is not None
+
         for drone, color in zip(drones, colors):
-            set_color_of_drone(drone, color)
+            _final_color_cache[id(drone)] = color
+            match light_effects.visualization:
+                case "MARKERS":
+                    if has_active_effects:
+                        position = get_position_of_object(drone)
+                        overlay_markers.append((position, color))
+                case "MATERIALS":
+                    set_color_of_drone(drone, color)
+                case _:
+                    pass
+    light_effects.update_overlay_markers(overlay_markers)
+
+
+def get_final_color_of_drone(drone) -> RGBAColor:
+    """Returns the (cached) final color of the drone at the current frame
+    after all active light effects are applied on it."""
+    return _final_color_cache.get(id(drone)) or get_color_of_drone(drone)
 
 
 suspended_light_effects = suspension.use

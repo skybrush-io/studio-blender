@@ -69,6 +69,7 @@ from sbstudio.plugin.model import (
     StoryboardEntry,
     StoryboardEntryOrTransition,
     get_formation_order_overlay,
+    get_light_effects_overlay,
     get_pyro_effects_overlay,
     get_safety_check_overlay,
 )
@@ -313,8 +314,9 @@ tasks = (
 """Background tasks in this addon."""
 
 overlay_getters = (
-    partial(get_safety_check_overlay, create=False),
+    partial(get_light_effects_overlay, create=False),
     partial(get_pyro_effects_overlay, create=False),
+    partial(get_safety_check_overlay, create=False),
     get_formation_order_overlay,
 )
 """Getters for the overlays in this addon, used to disable them before unloading."""

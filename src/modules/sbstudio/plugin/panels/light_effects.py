@@ -53,6 +53,8 @@ class LightEffectsPanel(Panel):
             row = layout.row()
             row.use_property_split = False
             row.prop(light_effects, "enabled", text="Enable light effects")
+            row = layout.row()
+            row.prop(light_effects, "visualization", text="Visualization")
 
         row = layout.row()
         row.operator(ImportLightEffectsOperator.bl_idname, text="Import...")

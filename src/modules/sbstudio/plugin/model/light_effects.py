@@ -4,7 +4,7 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import Any, cast
+from typing import Any, cast, overload
 from uuid import uuid4
 
 import bpy
@@ -39,6 +39,10 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
+from sbstudio.plugin.overlays.light_effect import (
+    LightEffectOverlay,
+    LightEffectOverlayMarker,
+)
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -50,13 +54,6 @@ from sbstudio.utils import constant, distance_sq_of, load_module, negate
 from .mixins import ListMixin
 
 __all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
-
-
-def object_has_mesh_data(self, obj) -> bool:
-    """Filter function that accepts only those Blender objects that have a mesh
-    as their associated data.
-    """
-    return obj.data and isinstance(obj.data, Mesh)
 
 
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
@@ -96,11 +93,62 @@ OUTPUT_ITEMS = [
 of drones to a given axis of the light effect color space"""
 
 
+_always_true = constant(True)
+
+_overlay = None
+"""Global light effects marker overlay. This cannot be an attribute of LightEffectCollection
+for some reason; Blender PropertyGroup objects are weird."""
+
+
 def effect_type_supports_randomization(type: str) -> bool:
     """Returns whether the light effect type given in the argument supports
     randomization.
     """
     return type == "COLOR_RAMP" or type == "IMAGE"
+
+
+def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
+    names: list[str]
+
+    if self.path:
+        absolute_path = abspath(self.path)
+        module = load_module(absolute_path)
+        names = [
+            name
+            for name in dir(module)
+            if isinstance(getattr(module, name), types.FunctionType)
+        ]
+    else:
+        names = []
+
+    # Always add an empty entry so we have a reasonable default for the case
+    # when no module is selected
+    names.insert(0, "")
+    return [(name, name, "") for name in names]
+
+
+@overload
+def get_overlay() -> LightEffectOverlay: ...
+
+
+@overload
+def get_overlay(create: bool) -> LightEffectOverlay | None: ...
+
+
+def get_overlay(create: bool = True):
+    global _overlay
+
+    if _overlay is None and create:
+        _overlay = LightEffectOverlay()
+
+    return _overlay
+
+
+def object_has_mesh_data(self, obj) -> bool:
+    """Filter function that accepts only those Blender objects that have a mesh
+    as their associated data.
+    """
+    return obj.data and isinstance(obj.data, Mesh)
 
 
 def output_type_supports_mapping_mode(type: str) -> bool:
@@ -145,29 +193,6 @@ def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
         return plane.is_front(point)
     else:
         return True
-
-
-_always_true = constant(True)
-
-
-def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
-    names: list[str]
-
-    if self.path:
-        absolute_path = abspath(self.path)
-        module = load_module(absolute_path)
-        names = [
-            name
-            for name in dir(module)
-            if isinstance(getattr(module, name), types.FunctionType)
-        ]
-    else:
-        names = []
-
-    # Always add an empty entry so we have a reasonable default for the case
-    # when no module is selected
-    names.insert(0, "")
-    return [(name, name, "") for name in names]
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -1168,6 +1193,18 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     )
     """Global toggle for all light effects."""
 
+    visualization = EnumProperty(
+        items=[
+            ("NONE", "None", "No rendering is very quick but invisible", 1),
+            ("MARKERS", "Markers", "Markers are simple but quick", 2),
+            ("MATERIALS", "Materials", "Material coloring looks nice but is slower", 3),
+        ],
+        name="Visualization",
+        description=("The visualization method of the light effects."),
+        default="MATERIALS",
+    )
+    """Visualization method of the light effects."""
+
     entries = CollectionProperty(type=LightEffect)
     """The entries in the collection."""
 
@@ -1307,6 +1344,17 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
             else bpy.context.scene.frame_start
         )
 
+    def clear_overlay_markers(self) -> None:
+        """Clears the light effect overlay markers."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.markers = []
+
+    def ensure_overlays_enabled_if_needed(self) -> None:
+        get_overlay().enabled = self.visualization == "MARKERS"
+
     def get_index_of_entry_containing_frame(self, frame: int) -> int:
         """Returns the index of an arbitrary light effect containing the given
         frame.
@@ -1330,10 +1378,18 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
             if entry.enabled and entry.influence > 0 and entry.contains_frame(frame):
                 yield entry
 
-    def _on_removing_entry(self, entry) -> bool:
-        entry._remove_texture()
-        return True
-
     def update_from_storyboard(self, context: Context) -> None:
         for entry in self.entries:
             entry.update_from_storyboard(context, reset_offset=False)
+
+    def update_overlay_markers(self, markers: list[LightEffectOverlayMarker]) -> None:
+        """Updates the light effect overlay markers."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.markers = markers
+
+    def _on_removing_entry(self, entry) -> bool:
+        entry._remove_texture()
+        return True
