@@ -61,7 +61,7 @@ class LightEffectOverlay(ShaderOverlay):
         light_effects: LightEffectCollection | None = getattr(
             skybrush, "light_effects", None
         )
-        if not light_effects or light_effects.visualization != "MARKERS":
+        if not light_effects:
             return
 
         if self._markers is not None:
