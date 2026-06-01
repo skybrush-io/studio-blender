@@ -2,7 +2,7 @@ from sbstudio.plugin.model.light_effects import (
     invalidate_pixel_cache as invalidate_light_effect_pixel_cache,
 )
 from sbstudio.plugin.tasks.light_effects import update_light_effects
-from sbstudio.plugin.views import find_all_3d_views_and_their_areas
+from sbstudio.plugin.views import redraw_all_3d_views
 
 from .base import LightEffectOperator
 
@@ -28,8 +28,6 @@ class RemoveLightEffectOperator(LightEffectOperator):
         invalidate_light_effect_pixel_cache()
         update_light_effects(context.scene, context.evaluated_depsgraph_get())
 
-        # Mark all the 3D views to be redrawn
-        for _, area in find_all_3d_views_and_their_areas():
-            area.tag_redraw()
+        redraw_all_3d_views()
 
         return {"FINISHED"}

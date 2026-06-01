@@ -13,6 +13,7 @@ __all__ = (
     "find_all_3d_views_and_their_areas",
     "find_one_3d_view",
     "find_one_3d_view_and_its_area",
+    "redraw_all_3d_views",
 )
 
 
@@ -98,3 +99,18 @@ def find_one_3d_view_and_its_area(
                 if space.type == "VIEW_3D":
                     return space, area
     return None, None
+
+
+@with_screen
+def redraw_all_3d_views(
+    screen: str | None = None,
+) -> None:
+    """Redraws all 3D views in the Blender screen with the given name.
+
+    Parameters:
+        screen: the name of the Blender screen to redraw; `None` means to
+            redraw the current screen
+
+    """
+    for _, area in find_all_3d_views_and_their_areas(screen):
+        area.tag_redraw()
