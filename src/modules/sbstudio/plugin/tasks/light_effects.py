@@ -23,7 +23,7 @@ from .base import Task
 from .utils import Suspension
 
 if TYPE_CHECKING:
-    from bpy.types import Depsgraph, Scene
+    from bpy.types import Depsgraph, Object, Scene
 
 __all__ = ("UpdateLightEffectsTask", "suspended_light_effects")
 
@@ -142,7 +142,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     light_effects.update_overlay_markers(overlay_markers)
 
 
-def get_final_color_of_drone(drone) -> RGBAColor:
+def get_final_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the (cached) final color of the drone at the current frame
     after all active light effects are applied on it."""
     return _final_color_cache.get(id(drone)) or get_color_of_drone(drone)
