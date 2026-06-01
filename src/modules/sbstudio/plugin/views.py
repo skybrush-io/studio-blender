@@ -112,5 +112,6 @@ def redraw_all_3d_views(
             redraw the current screen
 
     """
-    for _, area in find_all_3d_views_and_their_areas(screen):
+    # Now that the decorator resolved the screen name, we can pass it on
+    for _, area in _find_all_3d_views_and_their_areas(screen):
         area.tag_redraw()
