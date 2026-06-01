@@ -10,13 +10,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
+from sbstudio.plugin.callbacks.light_effects import get_final_color_update_callbacks
 from sbstudio.plugin.colors import (
     get_color_of_drone,
     get_colors_of_drones_fast,
-    set_color_of_drone,
 )
 from sbstudio.plugin.constants import Collections
-from sbstudio.plugin.overlays.light_effect import LightEffectOverlayMarker
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 
 from .base import Task
@@ -66,18 +65,21 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     light_effects = scene.skybrush.light_effects
     if not light_effects or not light_effects.enabled:
         _final_color_cache.clear()
-        light_effects.clear_overlay_markers()
+        for cb in get_final_color_update_callbacks():
+            cb([], [], False)
         return
 
     random_seq = scene.skybrush.settings.random_sequence_root
 
     frame = scene.frame_current
     drones = None
+    colors = None
 
     if _last_frame != frame:
-        # Frame changed, clear the base color cache
+        # Frame changed, clear the base and final color cache
         _last_frame = frame
         _base_color_cache.clear()
+        _final_color_cache.clear()
 
     changed = False
 
@@ -124,22 +126,16 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         has_active_effects = False
         changed = True
 
-    overlay_markers: list[LightEffectOverlayMarker] = []
     if changed:
         assert drones is not None
-
-        for drone, color in zip(drones, colors):
+        for drone, color in zip(drones, colors, strict=True):
             _final_color_cache[id(drone)] = color
-            match light_effects.visualization:
-                case "MARKERS":
-                    if has_active_effects:
-                        position = get_position_of_object(drone)
-                        overlay_markers.append((position, color))
-                case "MATERIALS":
-                    set_color_of_drone(drone, color)
-                case _:
-                    pass
-    light_effects.update_overlay_markers(overlay_markers)
+
+    # Note that we need to call the callbacks even if we did not change anything,
+    # as there might be callbacks (e.g. marker overlay) that need to be cleared when
+    # there are no active light effects
+    for cb in get_final_color_update_callbacks():
+        cb(drones or [], colors or [], has_active_effects)
 
 
 def get_final_color_of_drone(drone: Object) -> RGBAColor:

@@ -34,7 +34,12 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, MutableRGBAColor
+from sbstudio.model.types import Coordinate3D, MutableRGBAColor, RGBAColor
+from sbstudio.plugin.callbacks.light_effects import (
+    register_final_color_update_callback,
+    unregister_final_color_update_callback,
+)
+from sbstudio.plugin.colors import set_color_of_drone
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
@@ -142,6 +147,45 @@ def get_overlay(create: bool = True):
         _overlay = LightEffectOverlay()
 
     return _overlay
+
+
+def _visualization_callback_for_markers(
+    drones: list[Object], colors: list[RGBAColor], has_active_effects: bool
+) -> None:
+    light_effects = bpy.context.scene.skybrush.light_effects
+    overlay_markers: list[LightEffectOverlayMarker] = []
+    if has_active_effects:
+        for drone, color in zip(drones, colors, strict=True):
+            position = get_position_of_object(drone)
+            overlay_markers.append((position, color))
+    light_effects.update_overlay_markers(overlay_markers)
+
+
+def _visualization_callback_for_materials(
+    drones: list[Object], colors: list[RGBAColor], has_active_effects: bool
+) -> None:
+    for drone, color in zip(drones, colors, strict=True):
+        set_color_of_drone(drone, color)
+
+
+def light_effect_visualization_updated(
+    self: "LightEffectCollection", context: Context | None = None
+):
+    """Called when user changes the visualization type of light effects."""
+    match self.visualization:
+        case "MARKERS":
+            unregister_final_color_update_callback(
+                _visualization_callback_for_materials
+            )
+            register_final_color_update_callback(_visualization_callback_for_markers)
+        case "MATERIALS":
+            unregister_final_color_update_callback(_visualization_callback_for_markers)
+            register_final_color_update_callback(_visualization_callback_for_materials)
+        case _:
+            unregister_final_color_update_callback(_visualization_callback_for_markers)
+            unregister_final_color_update_callback(
+                _visualization_callback_for_materials
+            )
 
 
 def object_has_mesh_data(self, obj) -> bool:
@@ -1202,6 +1246,7 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         name="Visualization",
         description=("The visualization method of the light effects."),
         default="MATERIALS",
+        update=light_effect_visualization_updated,
     )
     """Visualization method of the light effects."""
 
