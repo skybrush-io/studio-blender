@@ -77,10 +77,10 @@ class PyroOverlay(ShaderOverlay):
             self._markers = []
             for point, color in value:
                 marker = (
-                    tuple(float(c) for c in point),
-                    tuple(float(c) for c in color),
+                    (float(point[0]), float(point[1]), float(point[2])),
+                    (float(color[0]), float(color[1]), float(color[2])),
                 )
-                self._markers.append(marker)  # type: ignore
+                self._markers.append(marker)
 
         else:
             self._markers = None

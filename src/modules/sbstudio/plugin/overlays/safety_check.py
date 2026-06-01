@@ -79,10 +79,10 @@ class SafetyCheckOverlay(ShaderOverlay):
             self._markers = []
             for marker_points, group in value:
                 marker_points = tuple(
-                    tuple(float(coord) for coord in point) for point in marker_points
+                    (float(point[0]), float(point[1]), float(point[2]))
+                    for point in marker_points
                 )
-                self._markers.append((marker_points, group))  # type: ignore
-
+                self._markers.append((marker_points, group))
         else:
             self._markers = None
 
