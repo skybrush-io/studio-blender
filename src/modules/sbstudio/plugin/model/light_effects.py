@@ -154,29 +154,33 @@ def _visualization_callback_for_markers(
     drones: list[Object], colors: list[RGBAColor], has_active_effects: bool
 ) -> None:
     light_effects = bpy.context.scene.skybrush.light_effects
-    overlay_markers: list[LightEffectOverlayMarker] = []
     if has_active_effects:
-        for drone, color in zip(drones, colors, strict=True):
-            position = get_position_of_object(drone)
-            overlay_markers.append((position, color))
-    light_effects.update_overlay_markers(overlay_markers)
+        overlay_markers = [
+            (get_position_of_object(drone), color)
+            for drone, color in zip(drones, colors, strict=True)
+        ]
+        light_effects.update_overlay_markers(overlay_markers)
+    else:
+        light_effects.clear_overlay_markers()
 
 
 def _visualization_callback_for_materials(
     drones: list[Object], colors: list[RGBAColor], has_active_effects: bool
 ) -> None:
-    for drone, color in zip(drones, colors, strict=True):
-        set_color_of_drone(drone, color)
+    if has_active_effects:
+        for drone, color in zip(drones, colors, strict=True):
+            set_color_of_drone(drone, color)
 
-    # TODO: experiment with the "fast" solution below, which is actually slower for
-    # the time being, but maybe there is a way to make it faster...
+        # TODO: experiment with the "fast" solution below, which is actually slower for
+        # the time being, but maybe there is a way to make it faster by calling the
+        # proper update function...
 
-    # from numpy import array, float32
-    # from sbstudio.plugin.colors import set_colors_of_drones_fast
+        # from numpy import array, float32
+        # from sbstudio.plugin.colors import set_colors_of_drones_fast
 
-    # set_colors_of_drones_fast(drones, array(colors, dtype=float32).ravel())
-    # for drone in drones:
-    #     drone.update_tag()
+        # set_colors_of_drones_fast(drones, array(colors, dtype=float32).ravel())
+        # for drone in drones:
+        #     drone.update_tag()
 
 
 def light_effect_visualization_updated(
@@ -184,10 +188,12 @@ def light_effect_visualization_updated(
 ):
     # unregister
     if self.visualization != "MARKERS":
-        unregister_final_color_update_callback(_visualization_callback_for_materials)
-        self.clear_overlay_markers()
-    elif self.visualization != "MATERIALS":
         unregister_final_color_update_callback(_visualization_callback_for_markers)
+        self.clear_overlay_markers()
+    if self.visualization != "MATERIALS":
+        unregister_final_color_update_callback(_visualization_callback_for_materials)
+        # TODO: set drone colors back to base color without light effects if we are annoyed
+        # by seeing material colors until the first frame change...
 
     # register
     match self.visualization:

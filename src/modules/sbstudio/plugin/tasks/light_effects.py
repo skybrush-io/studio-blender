@@ -24,7 +24,12 @@ from .utils import Suspension
 if TYPE_CHECKING:
     from bpy.types import Depsgraph, Object, Scene
 
-__all__ = ("UpdateLightEffectsTask", "suspended_light_effects")
+__all__ = (
+    "UpdateLightEffectsTask",
+    "get_base_color_of_drone",
+    "get_final_color_of_drone",
+    "suspended_light_effects",
+)
 
 
 _base_color_cache: dict[int, RGBAColor] = {}
@@ -136,6 +141,12 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # there are no active light effects
     for cb in get_final_color_update_callbacks():
         cb(drones or [], colors or [], has_active_effects)
+
+
+def get_base_color_of_drone(drone: Object) -> RGBAColor:
+    """Returns the (cached) base color of the drone at the current frame
+    before any active light effects are applied on it."""
+    return _base_color_cache.get(id(drone)) or get_color_of_drone(drone)
 
 
 def get_final_color_of_drone(drone: Object) -> RGBAColor:
