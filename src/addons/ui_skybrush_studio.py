@@ -73,6 +73,8 @@ from sbstudio.plugin.model import (
     get_pyro_effects_overlay,
     get_safety_check_overlay,
 )
+from sbstudio.plugin.model.light_effects import register as register_light_effects
+from sbstudio.plugin.model.light_effects import unregister as unregister_light_effects
 from sbstudio.plugin.operators import (
     AddMarkersFromQRCodeOperator,
     AddMarkersFromStaticCSVOperator,
@@ -172,12 +174,8 @@ from sbstudio.plugin.plugin_helpers import (
     unregister_translations,
     unregister_type,
 )
-from sbstudio.plugin.state import (
-    register as register_state,
-)
-from sbstudio.plugin.state import (
-    unregister as unregister_state,
-)
+from sbstudio.plugin.state import register as register_state
+from sbstudio.plugin.state import unregister as unregister_state
 from sbstudio.plugin.tasks import (
     InitializationTask,
     InvalidatePixelCacheTask,
@@ -343,8 +341,11 @@ def register():
     Scene.skybrush = PointerProperty(type=DroneShowAddonProperties)
     Object.skybrush = PointerProperty(type=DroneShowAddonObjectProperties)
 
+    register_light_effects()
+
 
 def unregister():
+    unregister_light_effects()
     for getter in overlay_getters:
         overlay = getter()
         if overlay:

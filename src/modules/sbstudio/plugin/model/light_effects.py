@@ -8,6 +8,7 @@ from typing import Any, cast, overload
 from uuid import uuid4
 
 import bpy
+from bpy.app.handlers import persistent
 from bpy.path import abspath
 from bpy.props import (
     BoolProperty,
@@ -167,25 +168,33 @@ def _visualization_callback_for_materials(
     for drone, color in zip(drones, colors, strict=True):
         set_color_of_drone(drone, color)
 
+    # TODO: experiment with the "fast" solution below, which is actually slower for
+    # the time being, but maybe there is a way to make it faster...
+
+    # from numpy import array, float32
+    # from sbstudio.plugin.colors import set_colors_of_drones_fast
+
+    # set_colors_of_drones_fast(drones, array(colors, dtype=float32).ravel())
+    # for drone in drones:
+    #     drone.update_tag()
+
 
 def light_effect_visualization_updated(
     self: "LightEffectCollection", context: Context | None = None
 ):
-    """Called when user changes the visualization type of light effects."""
+    # unregister
+    if self.visualization != "MARKERS":
+        unregister_final_color_update_callback(_visualization_callback_for_materials)
+        self.clear_overlay_markers()
+    elif self.visualization != "MATERIALS":
+        unregister_final_color_update_callback(_visualization_callback_for_markers)
+
+    # register
     match self.visualization:
         case "MARKERS":
-            unregister_final_color_update_callback(
-                _visualization_callback_for_materials
-            )
             register_final_color_update_callback(_visualization_callback_for_markers)
         case "MATERIALS":
-            unregister_final_color_update_callback(_visualization_callback_for_markers)
             register_final_color_update_callback(_visualization_callback_for_materials)
-        case _:
-            unregister_final_color_update_callback(_visualization_callback_for_markers)
-            unregister_final_color_update_callback(
-                _visualization_callback_for_materials
-            )
 
 
 def object_has_mesh_data(self, obj) -> bool:
@@ -1438,3 +1447,24 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     def _on_removing_entry(self, entry) -> bool:
         entry._remove_texture()
         return True
+
+
+@persistent
+def _on_load_initialize_callbacks(*args):
+    scene = bpy.context.scene
+    if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "light_effects"):
+        light_effect_visualization_updated(scene.skybrush.light_effects)
+
+
+def register():
+    """Registers light effects subsystem."""
+    if _on_load_initialize_callbacks not in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.append(_on_load_initialize_callbacks)
+
+
+def unregister():
+    """Unregisters light effects subsystem."""
+    if _on_load_initialize_callbacks in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(_on_load_initialize_callbacks)
+    unregister_final_color_update_callback(_visualization_callback_for_markers)
+    unregister_final_color_update_callback(_visualization_callback_for_materials)
