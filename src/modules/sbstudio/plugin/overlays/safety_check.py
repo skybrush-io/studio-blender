@@ -5,15 +5,13 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import blf
 import bpy
-import gpu
-import gpu.state
 from bpy.types import SpaceView3D
 from gpu_extras.batch import batch_for_shader
 
 from sbstudio.model.types import Coordinate3D, RGBColor
 from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
-from .base import ShaderOverlay
+from .base import ShaderBatchBasedOverlay
 
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
@@ -59,7 +57,7 @@ def set_warning_color_iff(
         blf.color(font_id, 1, 1, 1, 1)
 
 
-class SafetyCheckOverlay(ShaderOverlay):
+class SafetyCheckOverlay(ShaderBatchBasedOverlay):
     """Overlay that marks the closest pair of drones and all drones above the
     altitude threshold in the 3D view.
     """
@@ -67,7 +65,6 @@ class SafetyCheckOverlay(ShaderOverlay):
     shader_type = "POINT_FLAT_COLOR"
 
     _markers: list[Marker] | None = None
-    _shader_batches: list[GPUBatch] | None = None
 
     @property
     def markers(self) -> list[Marker] | None:
@@ -203,24 +200,8 @@ class SafetyCheckOverlay(ShaderOverlay):
             y -= line_height
 
     def draw_3d(self) -> None:
-        gpu.state.blend_set("ALPHA")
-
         if self._markers is not None:
-            assert self._shader is not None
-
-            if self._shader_batches is None:
-                self._shader_batches = self._create_shader_batches()
-
-            if self._shader_batches:
-                self._shader.bind()
-                gpu.state.line_width_set(5)
-                gpu.state.point_size_set(20)
-                for batch in self._shader_batches:
-                    batch.draw(self._shader)
-
-    def dispose(self) -> None:
-        super().dispose()
-        self._shader_batches = None
+            self._draw_shader_batches(point_size=20, line_width=5)
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None

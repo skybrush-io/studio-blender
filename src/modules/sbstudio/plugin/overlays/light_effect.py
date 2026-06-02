@@ -3,13 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import bpy
-import gpu
-import gpu.state
 from gpu_extras.batch import batch_for_shader
 
 from sbstudio.model.types import Coordinate3D, RGBColor
 
-from .base import ShaderOverlay
+from .base import ShaderBatchBasedOverlay
 
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
@@ -27,13 +25,12 @@ a single coordinate and a Color.
 """
 
 
-class LightEffectOverlay(ShaderOverlay):
+class LightEffectOverlay(ShaderBatchBasedOverlay):
     """Overlay that marks light effect colors of drones in the 3D view."""
 
     shader_type = "POINT_FLAT_COLOR"
 
     _markers: list[LightEffectOverlayMarker] | None = None
-    _shader_batches: list[GPUBatch] | None = None
 
     @property
     def markers(self) -> list[LightEffectOverlayMarker] | None:
@@ -55,8 +52,6 @@ class LightEffectOverlay(ShaderOverlay):
         self._shader_batches = None
 
     def draw_3d(self) -> None:
-        gpu.state.blend_set("ALPHA")
-
         skybrush = getattr(bpy.context.scene, "skybrush", None)
         light_effects: LightEffectCollection | None = getattr(
             skybrush, "light_effects", None
@@ -65,20 +60,7 @@ class LightEffectOverlay(ShaderOverlay):
             return
 
         if self._markers is not None:
-            assert self._shader is not None
-
-            if self._shader_batches is None:
-                self._shader_batches = self._create_shader_batches()
-
-            if self._shader_batches:
-                self._shader.bind()
-                gpu.state.point_size_set(25)
-                for batch in self._shader_batches:
-                    batch.draw(self._shader)
-
-    def dispose(self) -> None:
-        super().dispose()
-        self._shader_batches = None
+            self._draw_shader_batches(point_size=25)
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None

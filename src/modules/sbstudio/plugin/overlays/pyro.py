@@ -4,15 +4,13 @@ from typing import TYPE_CHECKING, cast
 
 import blf
 import bpy
-import gpu
-import gpu.state
 from bpy.types import SpaceView3D
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 from gpu_extras.batch import batch_for_shader
 
 from sbstudio.model.types import Coordinate3D, RGBColor
 
-from .base import ShaderOverlay
+from .base import ShaderBatchBasedOverlay
 
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
@@ -38,14 +36,13 @@ DEFAULT_PYRO_OVERLAY_MARKER_COLOR: RGBColor = (0.5, 0.5, 0.5)
 """Default color for pyro marker overlays."""
 
 
-class PyroOverlay(ShaderOverlay):
+class PyroOverlay(ShaderBatchBasedOverlay):
     """Overlay that marks pyro drones in the 3D view."""
 
     shader_type = "POINT_FLAT_COLOR"
 
     _info_blocks: list[PyroOverlayInfo] | None = None
     _markers: list[PyroOverlayMarker] | None = None
-    _shader_batches: list[GPUBatch] | None = None
 
     @property
     def info_blocks(self) -> list[PyroOverlayInfo] | None:
@@ -135,8 +132,6 @@ class PyroOverlay(ShaderOverlay):
                 y -= line_height
 
     def draw_3d(self) -> None:
-        gpu.state.blend_set("ALPHA")
-
         skybrush = getattr(bpy.context.scene, "skybrush", None)
         pyro_control: PyroControlPanelProperties | None = getattr(
             skybrush, "pyro_control", None
@@ -145,20 +140,7 @@ class PyroOverlay(ShaderOverlay):
             return
 
         if self._markers is not None:
-            assert self._shader is not None
-
-            if self._shader_batches is None:
-                self._shader_batches = self._create_shader_batches()
-
-            if self._shader_batches:
-                self._shader.bind()
-                gpu.state.point_size_set(30)
-                for batch in self._shader_batches:
-                    batch.draw(self._shader)
-
-    def dispose(self) -> None:
-        super().dispose()
-        self._shader_batches = None
+            self._draw_shader_batches(point_size=30)
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
