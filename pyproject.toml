@@ -18,7 +18,20 @@ Pepository = "https://github.com/skybrush-io/studio-plugin-blender"
 Documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [dependency-groups]
-dev = ["numpy", "pyclean>=2.0.0"]
+dev = ["numpy", "poethepoet>=0.42.1", "pyclean>=2.0.0", "ruff>=0.15.5", "ty>=0.0.21"]
+
+[tool.poe.tasks]
+
+format = "ruff format . --check"
+format-fix = "ruff format ."
+
+lint = "ruff check ."
+lint-fix = "ruff check . --fix"
+
+ty = "ty check src/"
+
+check.sequence = ["format", "lint"]
+check.ignore_fail = "return_non_zero"
 
 [tool.uv.build-backend]
 module-root = "src/modules"
