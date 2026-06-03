@@ -1336,18 +1336,21 @@ def _build_translation_dict() -> dict:
     return {"zh_HANS": zh, "zh_CN": zh, "ja_JP": ja}
 
 
-def register():
-    """Register translations for the built-in presets.
+def register() -> None:
+    """Register translations for the built-in light effect presets.
 
-    Called by the addon's top-level ``register()`` function.  Idempotent."""
+    Called by the addon's top-level ``register()`` function.  Idempotent.
+    """
     try:
         import bpy
     except ImportError:
         return  # Headless / unit-test context
+
     try:
         bpy.app.translations.unregister(_I18N_DOMAIN)
     except Exception:
         pass  # not previously registered
+
     try:
         bpy.app.translations.register(_I18N_DOMAIN, _build_translation_dict())
     except Exception as exc:
@@ -1355,11 +1358,12 @@ def register():
         print(f"[sbstudio.light_fx_presets] failed to register i18n: {exc}")
 
 
-def unregister():
+def unregister() -> None:
     try:
         import bpy
     except ImportError:
         return
+
     try:
         bpy.app.translations.unregister(_I18N_DOMAIN)
     except Exception:

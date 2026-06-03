@@ -36,10 +36,10 @@ from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
-from sbstudio.plugin.light_fx_presets import get_preset_enum_items, get_preset_function
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
+from sbstudio.plugin.presets.light_fx import get_preset_enum_items, get_preset_function
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
