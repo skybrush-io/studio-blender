@@ -47,7 +47,6 @@ for candidate in candidates:
 # imports needed by the addon
 
 from sbstudio.i18n.translations import translations_dict
-from sbstudio.plugin import light_fx_presets as _light_fx_presets
 from sbstudio.plugin.lists import (
     SKYBRUSH_UL_lightfxlist,
     SKYBRUSH_UL_scheduleoverridelist,
@@ -172,12 +171,10 @@ from sbstudio.plugin.plugin_helpers import (
     unregister_translations,
     unregister_type,
 )
-from sbstudio.plugin.state import (
-    register as register_state,
-)
-from sbstudio.plugin.state import (
-    unregister as unregister_state,
-)
+from sbstudio.plugin.presets import register as register_presets
+from sbstudio.plugin.presets import unregister as unregister_presets
+from sbstudio.plugin.state import register as register_state
+from sbstudio.plugin.state import unregister as unregister_state
 from sbstudio.plugin.tasks import (
     InitializationTask,
     InvalidatePixelCacheTask,
@@ -323,9 +320,9 @@ overlay_getters = (
 
 def register():
     register_translations(translations_dict)
-
-    _light_fx_presets.register()
+    register_presets()
     register_state()
+
     for custom_type in types:
         register_type(custom_type)
     for operator in operators:
@@ -350,6 +347,7 @@ def unregister():
         overlay = getter()
         if overlay:
             overlay.enabled = False
+
     for task in tasks:
         task.unregister()
     for header in reversed(headers):
@@ -364,6 +362,7 @@ def unregister():
         unregister_operator(operator)
     for custom_type in reversed(types):
         unregister_type(custom_type)
+
     unregister_state()
-    _light_fx_presets.unregister()
+    unregister_presets()
     unregister_translations()
