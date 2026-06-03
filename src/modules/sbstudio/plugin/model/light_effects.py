@@ -91,13 +91,13 @@ OUTPUT_ITEMS = [
     ("GRADIENT_ZYX", "Gradient (ZYX)", "", 9),
     ("TEMPORAL", "Temporal", "", 10),
     ("DISTANCE", "Distance from mesh", "", 11),
-    ("CUSTOM", "Custom expression", "", 12),
     (
         "LIGHT_PRESET",
         "Light preset",
         "Built-in light effect preset (portable across machines)",
         14,
     ),
+    ("CUSTOM", "Custom expression", "", 12),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
