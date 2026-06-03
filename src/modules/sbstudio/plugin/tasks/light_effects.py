@@ -6,6 +6,7 @@ light effects.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+import time
 
 import numpy as np
 
@@ -67,6 +68,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 
     changed = False
 
+    start_time = time.time()
     for effect in light_effects.iter_active_effects_in_frame(frame):
         if drones is None:
             # The only allocations should be concentrated here
@@ -115,6 +117,9 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         assert drones is not None
         for drone, color in zip(drones, colors):
             set_color_of_drone(drone, color)
+
+    elapsed_time = time.time() - start_time
+    print(f"Time =  {elapsed_time:.4f} seconds.")
 
 
 suspended_light_effects = suspension.use
