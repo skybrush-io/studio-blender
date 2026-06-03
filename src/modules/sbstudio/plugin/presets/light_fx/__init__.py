@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import TYPE_CHECKING
 
 __all__ = (
     "PresetMeta",
@@ -37,6 +37,8 @@ __all__ = (
     "unregister",
 )
 
+if TYPE_CHECKING:
+    from sbstudio.plugin.model.light_effects import CustomLightEffectFunction
 
 # ---------------------------------------------------------------------------
 # Registry types
@@ -49,7 +51,7 @@ class PresetMeta:
     label: str  # English label (used as the i18n source string)
     label_zh: str  # Chinese label (registered as zh_HANS translation)
     label_ja: str  # Japanese label (registered as ja_JP translation)
-    function: Callable[..., float]
+    function: CustomLightEffectFunction
     description: str = ""
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
@@ -67,7 +69,7 @@ def register_preset(
     description: str = "",
     aliases: tuple[str, ...] = (),
 ):
-    def decorator(fn: Callable[..., float]) -> Callable[..., float]:
+    def decorator(fn: CustomLightEffectFunction) -> CustomLightEffectFunction:
         if id in PRESETS:
             raise ValueError(f"Duplicate light-fx preset id: {id!r}")
         PRESETS[id] = PresetMeta(
@@ -84,7 +86,7 @@ def register_preset(
     return decorator
 
 
-def get_preset_function(preset_id: str) -> Callable[..., float] | None:
+def get_preset_function(preset_id: str) -> CustomLightEffectFunction | None:
     meta = PRESETS.get(preset_id)
     return meta.function if meta is not None else None
 
