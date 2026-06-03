@@ -43,7 +43,7 @@ __all__ = (
 # ---------------------------------------------------------------------------
 
 
-@dataclass
+@dataclass(frozen=True)
 class PresetMeta:
     id: str
     label: str  # English label (used as the i18n source string)
