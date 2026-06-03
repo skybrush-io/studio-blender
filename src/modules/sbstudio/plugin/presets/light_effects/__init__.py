@@ -509,7 +509,7 @@ def lightfx_8(
 @register_preset(
     id="radial_diffusion_xy",
     label="Radial Diffusion XY",
-    translations=(("zh", "径向扩散_XY"), ("ja", "放射拡散_XY")),
+    translations=(("zh", "径向扩散 XY"), ("ja", "放射拡散 XY")),
 )
 def radial_diffusion_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -521,7 +521,7 @@ def radial_diffusion_xy(
 @register_preset(
     id="radial_diffusion_xz",
     label="Radial Diffusion XZ",
-    translations=(("zh", "径向扩散_XZ"), ("ja", "放射拡散_XZ")),
+    translations=(("zh", "径向扩散 XZ"), ("ja", "放射拡散 XZ")),
 )
 def radial_diffusion_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -533,7 +533,7 @@ def radial_diffusion_xz(
 @register_preset(
     id="radial_diffusion_yz",
     label="Radial Diffusion YZ",
-    translations=(("zh", "径向扩散_YZ"), ("ja", "放射拡散_YZ")),
+    translations=(("zh", "径向扩散 YZ"), ("ja", "放射拡散 YZ")),
 )
 def radial_diffusion_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -546,7 +546,7 @@ def radial_diffusion_yz(
 @register_preset(
     id="radial_convergence_xy",
     label="Radial Convergence XY",
-    translations=(("zh", "径向汇聚_XY"), ("ja", "放射収束_XY")),
+    translations=(("zh", "径向汇聚 XY"), ("ja", "放射収束 XY")),
 )
 def radial_convergence_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -558,7 +558,7 @@ def radial_convergence_xy(
 @register_preset(
     id="radial_convergence_xz",
     label="Radial Convergence XZ",
-    translations=(("zh", "径向汇聚_XZ"), ("ja", "放射収束_XZ")),
+    translations=(("zh", "径向汇聚 XZ"), ("ja", "放射収束 XZ")),
 )
 def radial_convergence_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -570,7 +570,7 @@ def radial_convergence_xz(
 @register_preset(
     id="radial_convergence_yz",
     label="Radial Convergence YZ",
-    translations=(("zh", "径向汇聚_YZ"), ("ja", "放射収束_YZ")),
+    translations=(("zh", "径向汇聚 YZ"), ("ja", "放射収束 YZ")),
 )
 def radial_convergence_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -583,7 +583,7 @@ def radial_convergence_yz(
 @register_preset(
     id="roundtrip_sweep_ltr_xy",
     label="Roundtrip Sweep L→R XY",
-    translations=(("zh", "往返扫光_左到右_XY"), ("ja", "往復スイープ_左→右_XY")),
+    translations=(("zh", "往返扫光 左到右 XY"), ("ja", "往復スイープ 左→右 XY")),
 )
 def roundtrip_sweep_ltr_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -595,7 +595,7 @@ def roundtrip_sweep_ltr_xy(
 @register_preset(
     id="roundtrip_sweep_rtl_xy",
     label="Roundtrip Sweep R→L XY",
-    translations=(("zh", "往返扫光_右到左_XY"), ("ja", "往復スイープ_右→左_XY")),
+    translations=(("zh", "往返扫光 右到左 XY"), ("ja", "往復スイープ 右→左 XY")),
 )
 def roundtrip_sweep_rtl_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -607,7 +607,7 @@ def roundtrip_sweep_rtl_xy(
 @register_preset(
     id="roundtrip_sweep_ltr_xz",
     label="Roundtrip Sweep L→R XZ",
-    translations=(("zh", "往返扫光_左到右_XZ"), ("ja", "往復スイープ_左→右_XZ")),
+    translations=(("zh", "往返扫光 左到右 XZ"), ("ja", "往復スイープ 左→右 XZ")),
 )
 def roundtrip_sweep_ltr_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -619,7 +619,7 @@ def roundtrip_sweep_ltr_xz(
 @register_preset(
     id="roundtrip_sweep_rtl_xz",
     label="Roundtrip Sweep R→L XZ",
-    translations=(("zh", "往返扫光_右到左_XZ"), ("ja", "往復スイープ_右→左_XZ")),
+    translations=(("zh", "往返扫光 右到左 XZ"), ("ja", "往復スイープ 右→左 XZ")),
 )
 def roundtrip_sweep_rtl_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -631,7 +631,7 @@ def roundtrip_sweep_rtl_xz(
 @register_preset(
     id="roundtrip_sweep_ltr_yz",
     label="Roundtrip Sweep L→R YZ",
-    translations=(("zh", "往返扫光_左到右_YZ"), ("ja", "往復スイープ_左→右_YZ")),
+    translations=(("zh", "往返扫光 左到右 YZ"), ("ja", "往復スイープ 左→右 YZ")),
 )
 def roundtrip_sweep_ltr_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -643,7 +643,7 @@ def roundtrip_sweep_ltr_yz(
 @register_preset(
     id="roundtrip_sweep_rtl_yz",
     label="Roundtrip Sweep R→L YZ",
-    translations=(("zh", "往返扫光_右到左_YZ"), ("ja", "往復スイープ_右→左_YZ")),
+    translations=(("zh", "往返扫光 右到左 YZ"), ("ja", "往復スイープ 右→左 YZ")),
 )
 def roundtrip_sweep_rtl_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -656,7 +656,7 @@ def roundtrip_sweep_rtl_yz(
 @register_preset(
     id="oneway_sweep_ltr_xy",
     label="Oneway Sweep L→R XY",
-    translations=(("zh", "单向扫光_左到右_XY"), ("ja", "片道スイープ_左→右_XY")),
+    translations=(("zh", "单向扫光 左到右 XY"), ("ja", "片道スイープ 左→右 XY")),
 )
 def oneway_sweep_ltr_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -668,7 +668,7 @@ def oneway_sweep_ltr_xy(
 @register_preset(
     id="oneway_sweep_rtl_xy",
     label="Oneway Sweep R→L XY",
-    translations=(("zh", "单向扫光_右到左_XY"), ("ja", "片道スイープ_右→左_XY")),
+    translations=(("zh", "单向扫光 右到左 XY"), ("ja", "片道スイープ 右→左 XY")),
 )
 def oneway_sweep_rtl_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -680,7 +680,7 @@ def oneway_sweep_rtl_xy(
 @register_preset(
     id="oneway_sweep_ltr_xz",
     label="Oneway Sweep L→R XZ",
-    translations=(("zh", "单向扫光_左到右_XZ"), ("ja", "片道スイープ_左→右_XZ")),
+    translations=(("zh", "单向扫光 左到右 XZ"), ("ja", "片道スイープ 左→右 XZ")),
 )
 def oneway_sweep_ltr_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -692,7 +692,7 @@ def oneway_sweep_ltr_xz(
 @register_preset(
     id="oneway_sweep_rtl_xz",
     label="Oneway Sweep R→L XZ",
-    translations=(("zh", "单向扫光_右到左_XZ"), ("ja", "片道スイープ_右→左_XZ")),
+    translations=(("zh", "单向扫光 右到左 XZ"), ("ja", "片道スイープ 右→左 XZ")),
 )
 def oneway_sweep_rtl_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -704,7 +704,7 @@ def oneway_sweep_rtl_xz(
 @register_preset(
     id="oneway_sweep_ltr_yz",
     label="Oneway Sweep L→R YZ",
-    translations=(("zh", "单向扫光_左到右_YZ"), ("ja", "片道スイープ_左→右_YZ")),
+    translations=(("zh", "单向扫光 左到右 YZ"), ("ja", "片道スイープ 左→右 YZ")),
 )
 def oneway_sweep_ltr_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -716,7 +716,7 @@ def oneway_sweep_ltr_yz(
 @register_preset(
     id="oneway_sweep_rtl_yz",
     label="Oneway Sweep R→L YZ",
-    translations=(("zh", "单向扫光_右到左_YZ"), ("ja", "片道スイープ_右→左_YZ")),
+    translations=(("zh", "单向扫光 右到左 YZ"), ("ja", "片道スイープ 右→左 YZ")),
 )
 def oneway_sweep_rtl_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -730,8 +730,8 @@ def oneway_sweep_rtl_yz(
     id="diagonal_sweep_lb_rt_xy",
     label="Diagonal Sweep LB→RT XY",
     translations=(
-        ("zh", "倾斜扫光_左下到右上_XY"),
-        ("ja", "斜めスイープ_左下→右上_XY"),
+        ("zh", "倾斜扫光 左下到右上 XY"),
+        ("ja", "斜めスイープ 左下→右上 XY"),
     ),
 )
 def diagonal_sweep_lb_rt_xy(
@@ -746,8 +746,8 @@ def diagonal_sweep_lb_rt_xy(
     id="diagonal_sweep_rt_lb_xy",
     label="Diagonal Sweep RT→LB XY",
     translations=(
-        ("zh", "倾斜扫光_右上到左下_XY"),
-        ("ja", "斜めスイープ_右上→左下_XY"),
+        ("zh", "倾斜扫光 右上到左下 XY"),
+        ("ja", "斜めスイープ 右上→左下 XY"),
     ),
 )
 def diagonal_sweep_rt_lb_xy(
@@ -762,8 +762,8 @@ def diagonal_sweep_rt_lb_xy(
     id="diagonal_sweep_lb_rt_xz",
     label="Diagonal Sweep LB→RT XZ",
     translations=(
-        ("zh", "倾斜扫光_左下到右上_XZ"),
-        ("ja", "斜めスイープ_左下→右上_XZ"),
+        ("zh", "倾斜扫光 左下到右上 XZ"),
+        ("ja", "斜めスイープ 左下→右上 XZ"),
     ),
 )
 def diagonal_sweep_lb_rt_xz(
@@ -778,8 +778,8 @@ def diagonal_sweep_lb_rt_xz(
     id="diagonal_sweep_rt_lb_xz",
     label="Diagonal Sweep RT→LB XZ",
     translations=(
-        ("zh", "倾斜扫光_右上到左下_XZ"),
-        ("ja", "斜めスイープ_右上→左下_XZ"),
+        ("zh", "倾斜扫光 右上到左下 XZ"),
+        ("ja", "斜めスイープ 右上→左下 XZ"),
     ),
 )
 def diagonal_sweep_rt_lb_xz(
@@ -794,8 +794,8 @@ def diagonal_sweep_rt_lb_xz(
     id="diagonal_sweep_lb_rt_yz",
     label="Diagonal Sweep LB→RT YZ",
     translations=(
-        ("zh", "倾斜扫光_左下到右上_YZ"),
-        ("ja", "斜めスイープ_左下→右上_YZ"),
+        ("zh", "倾斜扫光 左下到右上 YZ"),
+        ("ja", "斜めスイープ 左下→右上 YZ"),
     ),
 )
 def diagonal_sweep_lb_rt_yz(
@@ -810,8 +810,8 @@ def diagonal_sweep_lb_rt_yz(
     id="diagonal_sweep_rt_lb_yz",
     label="Diagonal Sweep RT→LB YZ",
     translations=(
-        ("zh", "倾斜扫光_右上到左下_YZ"),
-        ("ja", "斜めスイープ_右上→左下_YZ"),
+        ("zh", "倾斜扫光 右上到左下 YZ"),
+        ("ja", "斜めスイープ 右上→左下 YZ"),
     ),
 )
 def diagonal_sweep_rt_lb_yz(
@@ -826,7 +826,7 @@ def diagonal_sweep_rt_lb_yz(
 @register_preset(
     id="chasing_tails_xy",
     label="Chasing Tails XY",
-    translations=(("zh", "追逐尾巴_XY"), ("ja", "追跡_XY")),
+    translations=(("zh", "追逐尾巴 XY"), ("ja", "追跡 XY")),
 )
 def chasing_tails_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -837,7 +837,7 @@ def chasing_tails_xy(
 @register_preset(
     id="chasing_tails_xz",
     label="Chasing Tails XZ",
-    translations=(("zh", "追逐尾巴_XZ"), ("ja", "追跡_XZ")),
+    translations=(("zh", "追逐尾巴 XZ"), ("ja", "追跡 XZ")),
 )
 def chasing_tails_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -848,7 +848,7 @@ def chasing_tails_xz(
 @register_preset(
     id="chasing_tails_yz",
     label="Chasing Tails YZ",
-    translations=(("zh", "追逐尾巴_YZ"), ("ja", "追跡_YZ")),
+    translations=(("zh", "追逐尾巴 YZ"), ("ja", "追跡 YZ")),
 )
 def chasing_tails_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -860,7 +860,7 @@ def chasing_tails_yz(
 @register_preset(
     id="radar_scan_60_xy",
     label="Radar Scan 60° XY",
-    translations=(("zh", "雷达扫描_60度_XY"), ("ja", "レーダースキャン_60°_XY")),
+    translations=(("zh", "雷达扫描 60度 XY"), ("ja", "レーダースキャン 60° XY")),
 )
 def radar_scan_60_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -871,7 +871,7 @@ def radar_scan_60_xy(
 @register_preset(
     id="radar_scan_90_xy",
     label="Radar Scan 90° XY",
-    translations=(("zh", "雷达扫描_90度_XY"), ("ja", "レーダースキャン_90°_XY")),
+    translations=(("zh", "雷达扫描 90度 XY"), ("ja", "レーダースキャン 90° XY")),
 )
 def radar_scan_90_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -882,7 +882,7 @@ def radar_scan_90_xy(
 @register_preset(
     id="radar_scan_120_xy",
     label="Radar Scan 120° XY",
-    translations=(("zh", "雷达扫描_120度_XY"), ("ja", "レーダースキャン_120°_XY")),
+    translations=(("zh", "雷达扫描 120度 XY"), ("ja", "レーダースキャン 120° XY")),
 )
 def radar_scan_120_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -893,7 +893,7 @@ def radar_scan_120_xy(
 @register_preset(
     id="radar_scan_60_xz",
     label="Radar Scan 60° XZ",
-    translations=(("zh", "雷达扫描_60度_XZ"), ("ja", "レーダースキャン_60°_XZ")),
+    translations=(("zh", "雷达扫描 60度 XZ"), ("ja", "レーダースキャン 60° XZ")),
 )
 def radar_scan_60_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -904,7 +904,7 @@ def radar_scan_60_xz(
 @register_preset(
     id="radar_scan_90_xz",
     label="Radar Scan 90° XZ",
-    translations=(("zh", "雷达扫描_90度_XZ"), ("ja", "レーダースキャン_90°_XZ")),
+    translations=(("zh", "雷达扫描 90度 XZ"), ("ja", "レーダースキャン 90° XZ")),
 )
 def radar_scan_90_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -915,7 +915,7 @@ def radar_scan_90_xz(
 @register_preset(
     id="radar_scan_120_xz",
     label="Radar Scan 120° XZ",
-    translations=(("zh", "雷达扫描_120度_XZ"), ("ja", "レーダースキャン_120°_XZ")),
+    translations=(("zh", "雷达扫描 120度 XZ"), ("ja", "レーダースキャン 120° XZ")),
 )
 def radar_scan_120_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -926,7 +926,7 @@ def radar_scan_120_xz(
 @register_preset(
     id="radar_scan_60_yz",
     label="Radar Scan 60° YZ",
-    translations=(("zh", "雷达扫描_60度_YZ"), ("ja", "レーダースキャン_60°_YZ")),
+    translations=(("zh", "雷达扫描 60度 YZ"), ("ja", "レーダースキャン 60° YZ")),
 )
 def radar_scan_60_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -937,7 +937,7 @@ def radar_scan_60_yz(
 @register_preset(
     id="radar_scan_90_yz",
     label="Radar Scan 90° YZ",
-    translations=(("zh", "雷达扫描_90度_YZ"), ("ja", "レーダースキャン_90°_YZ")),
+    translations=(("zh", "雷达扫描 90度 YZ"), ("ja", "レーダースキャン 90° YZ")),
 )
 def radar_scan_90_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -948,7 +948,7 @@ def radar_scan_90_yz(
 @register_preset(
     id="radar_scan_120_yz",
     label="Radar Scan 120° YZ",
-    translations=(("zh", "雷达扫描_120度_YZ"), ("ja", "レーダースキャン_120°_YZ")),
+    translations=(("zh", "雷达扫描 120度 YZ"), ("ja", "レーダースキャン 120° YZ")),
 )
 def radar_scan_120_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -960,7 +960,7 @@ def radar_scan_120_yz(
 @register_preset(
     id="pattern_paint_on_xy",
     label="Pattern Paint-On XY",
-    translations=(("zh", "图案逐渐点亮_XY"), ("ja", "パターンペイント_XY")),
+    translations=(("zh", "图案逐渐点亮 XY"), ("ja", "パターンペイント XY")),
 )
 def pattern_paint_on_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
