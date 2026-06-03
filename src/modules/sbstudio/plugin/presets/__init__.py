@@ -1,5 +1,5 @@
-from .light_fx import register as register_light_fx_presets
-from .light_fx import unregister as unregister_light_fx_presets
+from .light_effects import register as register_light_effect_presets
+from .light_effects import unregister as unregister_light_effect_presets
 
 __all__ = (
     "register",
@@ -12,8 +12,8 @@ def register():
 
     Called by the addon's top-level ``register()`` function.  Idempotent.
     """
-    register_light_fx_presets()
+    register_light_effect_presets()
 
 
 def unregister():
-    unregister_light_fx_presets()
+    unregister_light_effect_presets()
