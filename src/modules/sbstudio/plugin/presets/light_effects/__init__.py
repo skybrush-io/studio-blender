@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 __all__ = (
     "PresetMeta",
@@ -38,6 +38,8 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from bpy.types import Context
+
     from sbstudio.plugin.model.light_effects import CustomLightEffectFunction
 
 # ---------------------------------------------------------------------------
@@ -49,11 +51,10 @@ if TYPE_CHECKING:
 class PresetMeta:
     id: str
     label: str  # English label (used as the i18n source string)
-    label_zh: str  # Chinese label (registered as zh_HANS translation)
-    label_ja: str  # Japanese label (registered as ja_JP translation)
     function: CustomLightEffectFunction
     description: str = ""
     aliases: tuple[str, ...] = field(default_factory=tuple)
+    translations: dict[str, str] = field(default_factory=dict)  # language code -> label
 
 
 # Insertion-ordered.  Order here = order in the UI dropdown = circled number.
@@ -64,10 +65,9 @@ def register_preset(
     *,
     id: str,
     label: str,
-    label_zh: str,
-    label_ja: str = "",
     description: str = "",
     aliases: tuple[str, ...] = (),
+    translations: Sequence[tuple[str, str]] = (),
 ):
     def decorator(fn: CustomLightEffectFunction) -> CustomLightEffectFunction:
         if id in PRESETS:
@@ -75,11 +75,10 @@ def register_preset(
         PRESETS[id] = PresetMeta(
             id=id,
             label=label,
-            label_zh=label_zh,
-            label_ja=label_ja or label,
             function=fn,
             description=description,
             aliases=aliases,
+            translations=dict(translations),
         )
         return fn
 
@@ -103,9 +102,8 @@ def get_preset_function(preset_id: str) -> CustomLightEffectFunction | None:
 @register_preset(
     id="odd_even_pulse",
     label="Odd-Even Pulse",
-    label_zh="奇偶脉冲",
-    label_ja="奇数偶数パルス",
     aliases=("奇偶脉冲", "odd_even_pulse"),
+    translations=(("zh", "奇偶脉冲"), ("ja", "奇数偶数パルス")),
 )
 def odd_even_pulse(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -117,9 +115,8 @@ def odd_even_pulse(
 @register_preset(
     id="odd_even_constant",
     label="Odd-Even Constant",
-    label_zh="奇偶恒亮",
-    label_ja="奇数偶数定常",
     aliases=("奇偶恒亮", "odd_even_brightness"),
+    translations=(("zh", "奇偶恒亮"), ("ja", "奇数偶数定常")),
 )
 def odd_even_constant(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -131,9 +128,8 @@ def odd_even_constant(
 @register_preset(
     id="simple_filling",
     label="Simple Gradient Fill",
-    label_zh="简单渐亮",
-    label_ja="シンプルグラデーション",
     aliases=("简单渐亮", "simple_filling"),
+    translations=(("zh", "简单渐亮"), ("ja", "シンプルグラデーション")),
 )
 def simple_filling(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -159,9 +155,8 @@ def _continuous_filling(frame, formation_index, drone_count, speed_factor, divis
 @register_preset(
     id="clover_fill",
     label="Clover Fill",
-    label_zh="三叶草填充",
-    label_ja="クローバーフィル",
     aliases=("三叶草填充", "continuous_fillingCLOVER"),
+    translations=(("zh", "三叶草填充"), ("ja", "クローバーフィル")),
 )
 def clover_fill(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -172,9 +167,8 @@ def clover_fill(
 @register_preset(
     id="continuous_filling_1",
     label="Continuous Filling 1",
-    label_zh="连续填充1",
-    label_ja="連続フィル1",
     aliases=("连续填充1", "continuous_filling1"),
+    translations=(("zh", "连续填充1"), ("ja", "連続フィル1")),
 )
 def continuous_filling_1(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -185,9 +179,8 @@ def continuous_filling_1(
 @register_preset(
     id="continuous_filling_1_5",
     label="Continuous Filling 1.5",
-    label_zh="连续填充1.5",
-    label_ja="連続フィル1.5",
     aliases=("连续填充1p5", "continuous_filling1p5"),
+    translations=(("zh", "连续填充1.5"), ("ja", "連続フィル1.5")),
 )
 def continuous_filling_1_5(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -198,9 +191,8 @@ def continuous_filling_1_5(
 @register_preset(
     id="continuous_filling_2",
     label="Continuous Filling 2",
-    label_zh="连续填充2",
-    label_ja="連続フィル2",
     aliases=("连续填充2", "continuous_filling2"),
+    translations=(("zh", "连续填充2"), ("ja", "連続フィル2")),
 )
 def continuous_filling_2(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -211,9 +203,8 @@ def continuous_filling_2(
 @register_preset(
     id="continuous_filling_3",
     label="Continuous Filling 3",
-    label_zh="连续填充3",
-    label_ja="連続フィル3",
     aliases=("连续填充3", "continuous_filling3"),
+    translations=(("zh", "连续填充3"), ("ja", "連続フィル3")),
 )
 def continuous_filling_3(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -224,9 +215,8 @@ def continuous_filling_3(
 @register_preset(
     id="continuous_filling_4",
     label="Continuous Filling 4",
-    label_zh="连续填充4",
-    label_ja="連続フィル4",
     aliases=("连续填充4", "continuous_filling4"),
+    translations=(("zh", "连续填充4"), ("ja", "連続フィル4")),
 )
 def continuous_filling_4(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -237,9 +227,8 @@ def continuous_filling_4(
 @register_preset(
     id="continuous_filling_5",
     label="Continuous Filling 5",
-    label_zh="连续填充5",
-    label_ja="連続フィル5",
     aliases=("连续填充5", "continuous_filling5"),
+    translations=(("zh", "连续填充5"), ("ja", "連続フィル5")),
 )
 def continuous_filling_5(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -250,9 +239,8 @@ def continuous_filling_5(
 @register_preset(
     id="continuous_filling_stripes",
     label="Continuous Stripes",
-    label_zh="连续条纹填充",
-    label_ja="連続ストライプ",
     aliases=("连续条纹填充", "continuous_fillingstripes"),
+    translations=(("zh", "连续条纹填充"), ("ja", "連続ストライプ")),
 )
 def continuous_filling_stripes(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -266,9 +254,8 @@ def continuous_filling_stripes(
 @register_preset(
     id="ramp_down_wave",
     label="Ramp-Down Wave",
-    label_zh="递减坡形波",
-    label_ja="ランプダウン波",
     aliases=("递减坡形波", "ramp_down_wave"),
+    translations=(("zh", "递减坡形波"), ("ja", "ランプダウン波")),
 )
 def ramp_down_wave(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -284,9 +271,8 @@ def _ramp_up(frame, formation_index, wave_length):
 @register_preset(
     id="ramp_up_wave_10",
     label="Ramp-Up Wave 10",
-    label_zh="递增坡形波10",
-    label_ja="ランプアップ波10",
     aliases=("递增坡形波10", "ramp_up_wave10"),
+    translations=(("zh", "递增坡形波10"), ("ja", "ランプアップ波10")),
 )
 def ramp_up_wave_10(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -297,9 +283,8 @@ def ramp_up_wave_10(
 @register_preset(
     id="ramp_up_wave_15",
     label="Ramp-Up Wave 15",
-    label_zh="递增坡形波15",
-    label_ja="ランプアップ波15",
     aliases=("递增坡形波15", "ramp_up_wave15"),
+    translations=(("zh", "递增坡形波15"), ("ja", "ランプアップ波15")),
 )
 def ramp_up_wave_15(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -310,9 +295,8 @@ def ramp_up_wave_15(
 @register_preset(
     id="ramp_up_wave_25",
     label="Ramp-Up Wave 25",
-    label_zh="递增坡形波25",
-    label_ja="ランプアップ波25",
     aliases=("递增坡形波25", "ramp_up_wave25"),
+    translations=(("zh", "递增坡形波25"), ("ja", "ランプアップ波25")),
 )
 def ramp_up_wave_25(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -323,9 +307,8 @@ def ramp_up_wave_25(
 @register_preset(
     id="ramp_up_wave_75",
     label="Ramp-Up Wave 75",
-    label_zh="递增坡形波75",
-    label_ja="ランプアップ波75",
     aliases=("递增坡形波75", "ramp_up_wave75"),
+    translations=(("zh", "递增坡形波75"), ("ja", "ランプアップ波75")),
 )
 def ramp_up_wave_75(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -336,9 +319,8 @@ def ramp_up_wave_75(
 @register_preset(
     id="ramp_up_wave_100",
     label="Ramp-Up Wave 100",
-    label_zh="递增坡形波100",
-    label_ja="ランプアップ波100",
     aliases=("递增坡形波100", "ramp_up_wave100"),
+    translations=(("zh", "递增坡形波100"), ("ja", "ランプアップ波100")),
 )
 def ramp_up_wave_100(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -349,9 +331,8 @@ def ramp_up_wave_100(
 @register_preset(
     id="ramp_up_wave_150",
     label="Ramp-Up Wave 150",
-    label_zh="递增坡形波150",
-    label_ja="ランプアップ波150",
     aliases=("递增坡形波150", "ramp_up_wave150"),
+    translations=(("zh", "递增坡形波150"), ("ja", "ランプアップ波150")),
 )
 def ramp_up_wave_150(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -362,9 +343,8 @@ def ramp_up_wave_150(
 @register_preset(
     id="triangle_wave",
     label="Triangle Wave",
-    label_zh="三角波",
-    label_ja="三角波",
     aliases=("三角波", "triangle_wave"),
+    translations=(("zh", "三角波"), ("ja", "三角波")),
 )
 def triangle_wave(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -380,9 +360,8 @@ def triangle_wave(
 @register_preset(
     id="expanding_pulse",
     label="Expanding Pulse",
-    label_zh="扩散脉冲",
-    label_ja="拡散パルス",
     aliases=("扩散脉冲", "expanding_pulse"),
+    translations=(("zh", "扩散脉冲"), ("ja", "拡散パルス")),
 )
 def expanding_pulse(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -398,10 +377,9 @@ def expanding_pulse(
 @register_preset(
     id="wave_effect",
     label="Spatial Wave",
-    label_zh="空间波纹",
-    label_ja="空間波",
     description="Sinusoidal wave traveling along the world X axis",
     aliases=("空间波纹", "wave_effect"),
+    translations=(("zh", "空间波纹"), ("ja", "空間波")),
 )
 def wave_effect(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -425,10 +403,9 @@ def _ranges_lookup(ranges, formation_index):
 @register_preset(
     id="group_ranges_3",
     label="3 Group Ranges",
-    label_zh="三段亮度分区",
-    label_ja="3グループ範囲",
     description="Hard-coded 3-band brightness mapping by formation index",
     aliases=("三段亮度分区", "LightFx3group_color_ranges"),
+    translations=(("zh", "三段亮度分区"), ("ja", "3グループ範囲")),
 )
 def group_ranges_3(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -446,10 +423,9 @@ def group_ranges_3(
 @register_preset(
     id="group_ranges_5",
     label="5 Group Ranges",
-    label_zh="五段亮度分区",
-    label_ja="5グループ範囲",
     description="Hard-coded 5-band brightness mapping by formation index",
     aliases=("五段亮度分区", "LightFx5group_color_ranges"),
+    translations=(("zh", "五段亮度分区"), ("ja", "5グループ範囲")),
 )
 def group_ranges_5(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -470,9 +446,8 @@ def group_ranges_5(
 @register_preset(
     id="lightfx_0",
     label="Light FX 0",
-    label_zh="灯效0",
-    label_ja="ライトFX 0",
     aliases=("灯效0", "LightFX0"),
+    translations=(("zh", "灯效0"), ("ja", "ライトFX 0")),
 )
 def lightfx_0(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -488,9 +463,8 @@ def lightfx_0(
 @register_preset(
     id="lightfx_1",
     label="Light FX 1",
-    label_zh="灯效1",
-    label_ja="ライトFX 1",
     aliases=("灯效1", "LightFX1"),
+    translations=(("zh", "灯效1"), ("ja", "ライトFX 1")),
 )
 def lightfx_1(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -506,9 +480,8 @@ def lightfx_1(
 @register_preset(
     id="lightfx_4",
     label="Light FX 4",
-    label_zh="灯效4",
-    label_ja="ライトFX 4",
     aliases=("灯效4", "LightFx4"),
+    translations=(("zh", "灯效4"), ("ja", "ライトFX 4")),
 )
 def lightfx_4(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -520,9 +493,8 @@ def lightfx_4(
 @register_preset(
     id="lightfx_6",
     label="Light FX 6",
-    label_zh="灯效6",
-    label_ja="ライトFX 6",
     aliases=("灯效6", "LightFx6"),
+    translations=(("zh", "灯效6"), ("ja", "ライトFX 6")),
 )
 def lightfx_6(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -534,9 +506,8 @@ def lightfx_6(
 @register_preset(
     id="lightfx_7",
     label="Light FX 7",
-    label_zh="灯效7",
-    label_ja="ライトFX 7",
     aliases=("灯效7", "LightFx7"),
+    translations=(("zh", "灯效7"), ("ja", "ライトFX 7")),
 )
 def lightfx_7(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -549,9 +520,8 @@ def lightfx_7(
 @register_preset(
     id="lightfx_8",
     label="Light FX 8",
-    label_zh="灯效8",
-    label_ja="ライトFX 8",
     aliases=("灯效8", "LightFx8"),
+    translations=(("zh", "灯效8"), ("ja", "ライトFX 8")),
 )
 def lightfx_8(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -571,9 +541,8 @@ def lightfx_8(
 @register_preset(
     id="radial_diffusion_xy",
     label="Radial Diffusion XY",
-    label_zh="径向扩散_XY",
-    label_ja="放射拡散_XY",
     aliases=("径向扩散_XY",),
+    translations=(("zh", "径向扩散_XY"), ("ja", "放射拡散_XY")),
 )
 def radial_diffusion_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -585,9 +554,8 @@ def radial_diffusion_xy(
 @register_preset(
     id="radial_diffusion_xz",
     label="Radial Diffusion XZ",
-    label_zh="径向扩散_XZ",
-    label_ja="放射拡散_XZ",
     aliases=("径向扩散_XZ",),
+    translations=(("zh", "径向扩散_XZ"), ("ja", "放射拡散_XZ")),
 )
 def radial_diffusion_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -599,9 +567,8 @@ def radial_diffusion_xz(
 @register_preset(
     id="radial_diffusion_yz",
     label="Radial Diffusion YZ",
-    label_zh="径向扩散_YZ",
-    label_ja="放射拡散_YZ",
     aliases=("径向扩散_YZ",),
+    translations=(("zh", "径向扩散_YZ"), ("ja", "放射拡散_YZ")),
 )
 def radial_diffusion_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -614,9 +581,8 @@ def radial_diffusion_yz(
 @register_preset(
     id="radial_convergence_xy",
     label="Radial Convergence XY",
-    label_zh="径向汇聚_XY",
-    label_ja="放射収束_XY",
     aliases=("径向汇聚_XY",),
+    translations=(("zh", "径向汇聚_XY"), ("ja", "放射収束_XY")),
 )
 def radial_convergence_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -628,9 +594,8 @@ def radial_convergence_xy(
 @register_preset(
     id="radial_convergence_xz",
     label="Radial Convergence XZ",
-    label_zh="径向汇聚_XZ",
-    label_ja="放射収束_XZ",
     aliases=("径向汇聚_XZ",),
+    translations=(("zh", "径向汇聚_XZ"), ("ja", "放射収束_XZ")),
 )
 def radial_convergence_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -642,9 +607,8 @@ def radial_convergence_xz(
 @register_preset(
     id="radial_convergence_yz",
     label="Radial Convergence YZ",
-    label_zh="径向汇聚_YZ",
-    label_ja="放射収束_YZ",
     aliases=("径向汇聚_YZ",),
+    translations=(("zh", "径向汇聚_YZ"), ("ja", "放射収束_YZ")),
 )
 def radial_convergence_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -657,9 +621,8 @@ def radial_convergence_yz(
 @register_preset(
     id="roundtrip_sweep_ltr_xy",
     label="Roundtrip Sweep L→R XY",
-    label_zh="往返扫光_左到右_XY",
-    label_ja="往復スイープ_左→右_XY",
     aliases=("往返扫光_左到右_XY",),
+    translations=(("zh", "往返扫光_左到右_XY"), ("ja", "往復スイープ_左→右_XY")),
 )
 def roundtrip_sweep_ltr_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -671,9 +634,8 @@ def roundtrip_sweep_ltr_xy(
 @register_preset(
     id="roundtrip_sweep_rtl_xy",
     label="Roundtrip Sweep R→L XY",
-    label_zh="往返扫光_右到左_XY",
-    label_ja="往復スイープ_右→左_XY",
     aliases=("往返扫光_右到左_XY",),
+    translations=(("zh", "往返扫光_右到左_XY"), ("ja", "往復スイープ_右→左_XY")),
 )
 def roundtrip_sweep_rtl_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -685,9 +647,8 @@ def roundtrip_sweep_rtl_xy(
 @register_preset(
     id="roundtrip_sweep_ltr_xz",
     label="Roundtrip Sweep L→R XZ",
-    label_zh="往返扫光_左到右_XZ",
-    label_ja="往復スイープ_左→右_XZ",
     aliases=("往返扫光_左到右_XZ",),
+    translations=(("zh", "往返扫光_左到右_XZ"), ("ja", "往復スイープ_左→右_XZ")),
 )
 def roundtrip_sweep_ltr_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -699,9 +660,8 @@ def roundtrip_sweep_ltr_xz(
 @register_preset(
     id="roundtrip_sweep_rtl_xz",
     label="Roundtrip Sweep R→L XZ",
-    label_zh="往返扫光_右到左_XZ",
-    label_ja="往復スイープ_右→左_XZ",
     aliases=("往返扫光_右到左_XZ",),
+    translations=(("zh", "往返扫光_右到左_XZ"), ("ja", "往復スイープ_右→左_XZ")),
 )
 def roundtrip_sweep_rtl_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -713,9 +673,8 @@ def roundtrip_sweep_rtl_xz(
 @register_preset(
     id="roundtrip_sweep_ltr_yz",
     label="Roundtrip Sweep L→R YZ",
-    label_zh="往返扫光_左到右_YZ",
-    label_ja="往復スイープ_左→右_YZ",
     aliases=("往返扫光_左到右_YZ",),
+    translations=(("zh", "往返扫光_左到右_YZ"), ("ja", "往復スイープ_左→右_YZ")),
 )
 def roundtrip_sweep_ltr_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -727,9 +686,8 @@ def roundtrip_sweep_ltr_yz(
 @register_preset(
     id="roundtrip_sweep_rtl_yz",
     label="Roundtrip Sweep R→L YZ",
-    label_zh="往返扫光_右到左_YZ",
-    label_ja="往復スイープ_右→左_YZ",
     aliases=("往返扫光_右到左_YZ",),
+    translations=(("zh", "往返扫光_右到左_YZ"), ("ja", "往復スイープ_右→左_YZ")),
 )
 def roundtrip_sweep_rtl_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -742,9 +700,8 @@ def roundtrip_sweep_rtl_yz(
 @register_preset(
     id="oneway_sweep_ltr_xy",
     label="Oneway Sweep L→R XY",
-    label_zh="单向扫光_左到右_XY",
-    label_ja="片道スイープ_左→右_XY",
     aliases=("单向扫光_左到右_XY",),
+    translations=(("zh", "单向扫光_左到右_XY"), ("ja", "片道スイープ_左→右_XY")),
 )
 def oneway_sweep_ltr_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -756,9 +713,8 @@ def oneway_sweep_ltr_xy(
 @register_preset(
     id="oneway_sweep_rtl_xy",
     label="Oneway Sweep R→L XY",
-    label_zh="单向扫光_右到左_XY",
-    label_ja="片道スイープ_右→左_XY",
     aliases=("单向扫光_右到左_XY",),
+    translations=(("zh", "单向扫光_右到左_XY"), ("ja", "片道スイープ_右→左_XY")),
 )
 def oneway_sweep_rtl_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -770,9 +726,8 @@ def oneway_sweep_rtl_xy(
 @register_preset(
     id="oneway_sweep_ltr_xz",
     label="Oneway Sweep L→R XZ",
-    label_zh="单向扫光_左到右_XZ",
-    label_ja="片道スイープ_左→右_XZ",
     aliases=("单向扫光_左到右_XZ",),
+    translations=(("zh", "单向扫光_左到右_XZ"), ("ja", "片道スイープ_左→右_XZ")),
 )
 def oneway_sweep_ltr_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -784,9 +739,8 @@ def oneway_sweep_ltr_xz(
 @register_preset(
     id="oneway_sweep_rtl_xz",
     label="Oneway Sweep R→L XZ",
-    label_zh="单向扫光_右到左_XZ",
-    label_ja="片道スイープ_右→左_XZ",
     aliases=("单向扫光_右到左_XZ",),
+    translations=(("zh", "单向扫光_右到左_XZ"), ("ja", "片道スイープ_右→左_XZ")),
 )
 def oneway_sweep_rtl_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -798,9 +752,8 @@ def oneway_sweep_rtl_xz(
 @register_preset(
     id="oneway_sweep_ltr_yz",
     label="Oneway Sweep L→R YZ",
-    label_zh="单向扫光_左到右_YZ",
-    label_ja="片道スイープ_左→右_YZ",
     aliases=("单向扫光_左到右_YZ",),
+    translations=(("zh", "单向扫光_左到右_YZ"), ("ja", "片道スイープ_左→右_YZ")),
 )
 def oneway_sweep_ltr_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -812,9 +765,8 @@ def oneway_sweep_ltr_yz(
 @register_preset(
     id="oneway_sweep_rtl_yz",
     label="Oneway Sweep R→L YZ",
-    label_zh="单向扫光_右到左_YZ",
-    label_ja="片道スイープ_右→左_YZ",
     aliases=("单向扫光_右到左_YZ",),
+    translations=(("zh", "单向扫光_右到左_YZ"), ("ja", "片道スイープ_右→左_YZ")),
 )
 def oneway_sweep_rtl_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -827,9 +779,11 @@ def oneway_sweep_rtl_yz(
 @register_preset(
     id="diagonal_sweep_lb_rt_xy",
     label="Diagonal Sweep LB→RT XY",
-    label_zh="倾斜扫光_左下到右上_XY",
-    label_ja="斜めスイープ_左下→右上_XY",
     aliases=("倾斜扫光_左下到右上_XY",),
+    translations=(
+        ("zh", "倾斜扫光_左下到右上_XY"),
+        ("ja", "斜めスイープ_左下→右上_XY"),
+    ),
 )
 def diagonal_sweep_lb_rt_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -842,9 +796,11 @@ def diagonal_sweep_lb_rt_xy(
 @register_preset(
     id="diagonal_sweep_rt_lb_xy",
     label="Diagonal Sweep RT→LB XY",
-    label_zh="倾斜扫光_右上到左下_XY",
-    label_ja="斜めスイープ_右上→左下_XY",
     aliases=("倾斜扫光_右上到左下_XY",),
+    translations=(
+        ("zh", "倾斜扫光_右上到左下_XY"),
+        ("ja", "斜めスイープ_右上→左下_XY"),
+    ),
 )
 def diagonal_sweep_rt_lb_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -857,9 +813,11 @@ def diagonal_sweep_rt_lb_xy(
 @register_preset(
     id="diagonal_sweep_lb_rt_xz",
     label="Diagonal Sweep LB→RT XZ",
-    label_zh="倾斜扫光_左下到右上_XZ",
-    label_ja="斜めスイープ_左下→右上_XZ",
     aliases=("倾斜扫光_左下到右上_XZ",),
+    translations=(
+        ("zh", "倾斜扫光_左下到右上_XZ"),
+        ("ja", "斜めスイープ_左下→右上_XZ"),
+    ),
 )
 def diagonal_sweep_lb_rt_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -872,9 +830,11 @@ def diagonal_sweep_lb_rt_xz(
 @register_preset(
     id="diagonal_sweep_rt_lb_xz",
     label="Diagonal Sweep RT→LB XZ",
-    label_zh="倾斜扫光_右上到左下_XZ",
-    label_ja="斜めスイープ_右上→左下_XZ",
     aliases=("倾斜扫光_右上到左下_XZ",),
+    translations=(
+        ("zh", "倾斜扫光_右上到左下_XZ"),
+        ("ja", "斜めスイープ_右上→左下_XZ"),
+    ),
 )
 def diagonal_sweep_rt_lb_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -887,9 +847,11 @@ def diagonal_sweep_rt_lb_xz(
 @register_preset(
     id="diagonal_sweep_lb_rt_yz",
     label="Diagonal Sweep LB→RT YZ",
-    label_zh="倾斜扫光_左下到右上_YZ",
-    label_ja="斜めスイープ_左下→右上_YZ",
     aliases=("倾斜扫光_左下到右上_YZ",),
+    translations=(
+        ("zh", "倾斜扫光_左下到右上_YZ"),
+        ("ja", "斜めスイープ_左下→右上_YZ"),
+    ),
 )
 def diagonal_sweep_lb_rt_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -902,9 +864,11 @@ def diagonal_sweep_lb_rt_yz(
 @register_preset(
     id="diagonal_sweep_rt_lb_yz",
     label="Diagonal Sweep RT→LB YZ",
-    label_zh="倾斜扫光_右上到左下_YZ",
-    label_ja="斜めスイープ_右上→左下_YZ",
     aliases=("倾斜扫光_右上到左下_YZ",),
+    translations=(
+        ("zh", "倾斜扫光_右上到左下_YZ"),
+        ("ja", "斜めスイープ_右上→左下_YZ"),
+    ),
 )
 def diagonal_sweep_rt_lb_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -918,9 +882,8 @@ def diagonal_sweep_rt_lb_yz(
 @register_preset(
     id="chasing_tails_xy",
     label="Chasing Tails XY",
-    label_zh="追逐尾巴_XY",
-    label_ja="追跡_XY",
     aliases=("追逐尾巴_XY",),
+    translations=(("zh", "追逐尾巴_XY"), ("ja", "追跡_XY")),
 )
 def chasing_tails_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -931,9 +894,8 @@ def chasing_tails_xy(
 @register_preset(
     id="chasing_tails_xz",
     label="Chasing Tails XZ",
-    label_zh="追逐尾巴_XZ",
-    label_ja="追跡_XZ",
     aliases=("追逐尾巴_XZ",),
+    translations=(("zh", "追逐尾巴_XZ"), ("ja", "追跡_XZ")),
 )
 def chasing_tails_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -944,9 +906,8 @@ def chasing_tails_xz(
 @register_preset(
     id="chasing_tails_yz",
     label="Chasing Tails YZ",
-    label_zh="追逐尾巴_YZ",
-    label_ja="追跡_YZ",
     aliases=("追逐尾巴_YZ",),
+    translations=(("zh", "追逐尾巴_YZ"), ("ja", "追跡_YZ")),
 )
 def chasing_tails_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -958,9 +919,8 @@ def chasing_tails_yz(
 @register_preset(
     id="radar_scan_60_xy",
     label="Radar Scan 60° XY",
-    label_zh="雷达扫描_60度_XY",
-    label_ja="レーダースキャン_60°_XY",
     aliases=("雷达扫描_60度_XY",),
+    translations=(("zh", "雷达扫描_60度_XY"), ("ja", "レーダースキャン_60°_XY")),
 )
 def radar_scan_60_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -971,9 +931,8 @@ def radar_scan_60_xy(
 @register_preset(
     id="radar_scan_90_xy",
     label="Radar Scan 90° XY",
-    label_zh="雷达扫描_90度_XY",
-    label_ja="レーダースキャン_90°_XY",
     aliases=("雷达扫描_90度_XY",),
+    translations=(("zh", "雷达扫描_90度_XY"), ("ja", "レーダースキャン_90°_XY")),
 )
 def radar_scan_90_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -984,9 +943,8 @@ def radar_scan_90_xy(
 @register_preset(
     id="radar_scan_120_xy",
     label="Radar Scan 120° XY",
-    label_zh="雷达扫描_120度_XY",
-    label_ja="レーダースキャン_120°_XY",
     aliases=("雷达扫描_120度_XY",),
+    translations=(("zh", "雷达扫描_120度_XY"), ("ja", "レーダースキャン_120°_XY")),
 )
 def radar_scan_120_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -997,9 +955,8 @@ def radar_scan_120_xy(
 @register_preset(
     id="radar_scan_60_xz",
     label="Radar Scan 60° XZ",
-    label_zh="雷达扫描_60度_XZ",
-    label_ja="レーダースキャン_60°_XZ",
     aliases=("雷达扫描_60度_XZ",),
+    translations=(("zh", "雷达扫描_60度_XZ"), ("ja", "レーダースキャン_60°_XZ")),
 )
 def radar_scan_60_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1010,9 +967,8 @@ def radar_scan_60_xz(
 @register_preset(
     id="radar_scan_90_xz",
     label="Radar Scan 90° XZ",
-    label_zh="雷达扫描_90度_XZ",
-    label_ja="レーダースキャン_90°_XZ",
     aliases=("雷达扫描_90度_XZ",),
+    translations=(("zh", "雷达扫描_90度_XZ"), ("ja", "レーダースキャン_90°_XZ")),
 )
 def radar_scan_90_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1023,9 +979,8 @@ def radar_scan_90_xz(
 @register_preset(
     id="radar_scan_120_xz",
     label="Radar Scan 120° XZ",
-    label_zh="雷达扫描_120度_XZ",
-    label_ja="レーダースキャン_120°_XZ",
     aliases=("雷达扫描_120度_XZ",),
+    translations=(("zh", "雷达扫描_120度_XZ"), ("ja", "レーダースキャン_120°_XZ")),
 )
 def radar_scan_120_xz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1036,9 +991,8 @@ def radar_scan_120_xz(
 @register_preset(
     id="radar_scan_60_yz",
     label="Radar Scan 60° YZ",
-    label_zh="雷达扫描_60度_YZ",
-    label_ja="レーダースキャン_60°_YZ",
     aliases=("雷达扫描_60度_YZ",),
+    translations=(("zh", "雷达扫描_60度_YZ"), ("ja", "レーダースキャン_60°_YZ")),
 )
 def radar_scan_60_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1049,9 +1003,8 @@ def radar_scan_60_yz(
 @register_preset(
     id="radar_scan_90_yz",
     label="Radar Scan 90° YZ",
-    label_zh="雷达扫描_90度_YZ",
-    label_ja="レーダースキャン_90°_YZ",
     aliases=("雷达扫描_90度_YZ",),
+    translations=(("zh", "雷达扫描_90度_YZ"), ("ja", "レーダースキャン_90°_YZ")),
 )
 def radar_scan_90_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1062,9 +1015,8 @@ def radar_scan_90_yz(
 @register_preset(
     id="radar_scan_120_yz",
     label="Radar Scan 120° YZ",
-    label_zh="雷达扫描_120度_YZ",
-    label_ja="レーダースキャン_120°_YZ",
     aliases=("雷达扫描_120度_YZ",),
+    translations=(("zh", "雷达扫描_120度_YZ"), ("ja", "レーダースキャン_120°_YZ")),
 )
 def radar_scan_120_yz(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1076,9 +1028,8 @@ def radar_scan_120_yz(
 @register_preset(
     id="pattern_paint_on_xy",
     label="Pattern Paint-On XY",
-    label_zh="图案逐渐点亮_XY",
-    label_ja="パターンペイント_XY",
     aliases=("图案逐渐点亮_XY",),
+    translations=(("zh", "图案逐渐点亮_XY"), ("ja", "パターンペイント_XY")),
 )
 def pattern_paint_on_xy(
     frame, time_fraction, drone_index, formation_index, position, drone_count
@@ -1284,7 +1235,7 @@ def _build_enum_items() -> list[tuple[str, str, str]]:
 _CACHED_ENUM_ITEMS: list[tuple[str, str, str]] = _build_enum_items()
 
 
-def get_preset_enum_items(self, context):
+def get_preset_enum_items(self, context: Context) -> Sequence[tuple[str, str, str]]:
     """``items`` callback for the ``preset_id`` EnumProperty.
 
     Returns the same cached list every call.  Strings inside the list stay
@@ -1302,11 +1253,14 @@ def get_preset_enum_items(self, context):
 _I18N_DOMAIN = "sbstudio_light_fx_presets"
 
 
-def _build_translation_dict() -> dict:
+BlenderTranslationDict = dict[tuple[str, str], str]
+
+
+def _build_translation_dict() -> dict[str, BlenderTranslationDict]:
     """Build a Blender-compatible translation dict.  Maps each English source
     string used in the UI to its Chinese and Japanese translations."""
-    zh: dict[tuple[str, str], str] = {}
-    ja: dict[tuple[str, str], str] = {}
+    zh: BlenderTranslationDict = {}
+    ja: BlenderTranslationDict = {}
 
     # Translate the OUTPUT_ITEMS entry "Light preset"
     zh[("*", "Light preset")] = "灯光模版"
@@ -1330,8 +1284,8 @@ def _build_translation_dict() -> dict:
     for i, (_preset_id, meta) in enumerate(reversed_presets):
         prefix = f"「{i + 1}」"
         en_display = f"{prefix}{meta.label}"
-        zh_display = f"{prefix}{meta.label_zh}"
-        ja_display = f"{prefix}{meta.label_ja}"
+        zh_display = f"{prefix}{meta.translations.get('zh', meta.label)}"
+        ja_display = f"{prefix}{meta.translations.get('ja', meta.label)}"
         zh[("*", en_display)] = zh_display
         ja[("*", en_display)] = ja_display
 
