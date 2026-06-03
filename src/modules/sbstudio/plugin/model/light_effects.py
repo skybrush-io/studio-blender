@@ -36,6 +36,7 @@ from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
+from sbstudio.plugin.light_fx_presets import get_preset_enum_items, get_preset_function
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
@@ -46,7 +47,6 @@ from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import constant, distance_sq_of, load_module, negate
-from sbstudio.plugin.light_fx_presets import get_preset_enum_items, get_preset_function
 
 from .mixins import ListMixin
 
@@ -92,7 +92,12 @@ OUTPUT_ITEMS = [
     ("TEMPORAL", "Temporal", "", 10),
     ("DISTANCE", "Distance from mesh", "", 11),
     ("CUSTOM", "Custom expression", "", 12),
-    ("LIGHT_PRESET", "Light preset", "Built-in light effect preset (portable across machines)", 14),
+    (
+        "LIGHT_PRESET",
+        "Light preset",
+        "Built-in light effect preset (portable across machines)",
+        14,
+    ),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
@@ -630,7 +635,9 @@ class LightEffect(PropertyGroup):
                     common_output = 1.0
 
             elif output_type == "LIGHT_PRESET":
-                preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
+                preset_fn = (
+                    get_preset_function(self.preset_id) if self.preset_id else None
+                )
                 if preset_fn is not None:
                     outputs = [
                         preset_fn(
