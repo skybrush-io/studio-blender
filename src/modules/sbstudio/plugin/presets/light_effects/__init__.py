@@ -40,6 +40,7 @@ __all__ = (
 if TYPE_CHECKING:
     from bpy.types import Context
 
+    from sbstudio.model.types import Coordinate3D
     from sbstudio.plugin.model.light_effects import CustomLightEffectFunction
 
 # ---------------------------------------------------------------------------
@@ -102,8 +103,13 @@ def get_preset_function(preset_id: str) -> CustomLightEffectFunction | None:
     translations=(("zh", "奇偶脉冲"), ("ja", "奇数偶数パルス")),
 )
 def odd_even_pulse(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     is_odd = (formation_index or 0) % 2
     return (math.sin(frame * 0.1 + is_odd * math.pi) + 1) / 2
 
@@ -114,8 +120,13 @@ def odd_even_pulse(
     translations=(("zh", "奇偶恒亮"), ("ja", "奇数偶数定常")),
 )
 def odd_even_constant(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     is_odd = (formation_index or 0) % 2
     return 1.0 if is_odd else 0.5
 
@@ -126,8 +137,13 @@ def odd_even_constant(
     translations=(("zh", "简单渐亮"), ("ja", "シンプルグラデーション")),
 )
 def simple_filling(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     if not drone_count:
         return 0.0
     factor = (formation_index or 0) / drone_count
@@ -137,7 +153,9 @@ def simple_filling(
 # ============================ filling ============================
 
 
-def _continuous_filling(frame, formation_index, drone_count, speed_factor, divisor):
+def _continuous_filling(
+    frame, formation_index, drone_count, speed_factor, divisor
+) -> float:
     if not drone_count:
         return 0.0
     wave_length = max(drone_count / divisor, 1e-6)
@@ -152,8 +170,13 @@ def _continuous_filling(frame, formation_index, drone_count, speed_factor, divis
     translations=(("zh", "三叶草填充"), ("ja", "クローバーフィル")),
 )
 def clover_fill(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 0.6, 3)
 
 
@@ -163,8 +186,13 @@ def clover_fill(
     translations=(("zh", "连续填充1"), ("ja", "連続フィル1")),
 )
 def continuous_filling_1(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 1.0, 3)
 
 
@@ -174,8 +202,13 @@ def continuous_filling_1(
     translations=(("zh", "连续填充1.5"), ("ja", "連続フィル1.5")),
 )
 def continuous_filling_1_5(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 1.5, 10)
 
 
@@ -185,8 +218,13 @@ def continuous_filling_1_5(
     translations=(("zh", "连续填充2"), ("ja", "連続フィル2")),
 )
 def continuous_filling_2(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 2.0, 5)
 
 
@@ -196,8 +234,13 @@ def continuous_filling_2(
     translations=(("zh", "连续填充3"), ("ja", "連続フィル3")),
 )
 def continuous_filling_3(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 3.0, 5)
 
 
@@ -207,8 +250,13 @@ def continuous_filling_3(
     translations=(("zh", "连续填充4"), ("ja", "連続フィル4")),
 )
 def continuous_filling_4(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 4.0, 5)
 
 
@@ -218,8 +266,13 @@ def continuous_filling_4(
     translations=(("zh", "连续填充5"), ("ja", "連続フィル5")),
 )
 def continuous_filling_5(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 5.0, 5)
 
 
@@ -229,8 +282,13 @@ def continuous_filling_5(
     translations=(("zh", "连续条纹填充"), ("ja", "連続ストライプ")),
 )
 def continuous_filling_stripes(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _continuous_filling(frame, formation_index, drone_count, 1.0, 5)
 
 
@@ -243,13 +301,18 @@ def continuous_filling_stripes(
     translations=(("zh", "递减坡形波"), ("ja", "ランプダウン波")),
 )
 def ramp_down_wave(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     wave_length = 50
     return 1 - ((frame + (formation_index or 0)) % wave_length / wave_length)
 
 
-def _ramp_up(frame, formation_index, wave_length):
+def _ramp_up(frame, formation_index, wave_length) -> float:
     return (frame + (formation_index or 0)) % wave_length / wave_length
 
 
@@ -259,8 +322,13 @@ def _ramp_up(frame, formation_index, wave_length):
     translations=(("zh", "递增坡形波10"), ("ja", "ランプアップ波10")),
 )
 def ramp_up_wave_10(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _ramp_up(frame, formation_index, 10)
 
 
@@ -270,8 +338,13 @@ def ramp_up_wave_10(
     translations=(("zh", "递增坡形波15"), ("ja", "ランプアップ波15")),
 )
 def ramp_up_wave_15(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _ramp_up(frame, formation_index, 15)
 
 
@@ -281,8 +354,13 @@ def ramp_up_wave_15(
     translations=(("zh", "递增坡形波25"), ("ja", "ランプアップ波25")),
 )
 def ramp_up_wave_25(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _ramp_up(frame, formation_index, 25)
 
 
@@ -292,8 +370,13 @@ def ramp_up_wave_25(
     translations=(("zh", "递增坡形波75"), ("ja", "ランプアップ波75")),
 )
 def ramp_up_wave_75(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _ramp_up(frame, formation_index, 75)
 
 
@@ -303,8 +386,13 @@ def ramp_up_wave_75(
     translations=(("zh", "递增坡形波100"), ("ja", "ランプアップ波100")),
 )
 def ramp_up_wave_100(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _ramp_up(frame, formation_index, 100)
 
 
@@ -314,8 +402,13 @@ def ramp_up_wave_100(
     translations=(("zh", "递增坡形波150"), ("ja", "ランプアップ波150")),
 )
 def ramp_up_wave_150(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _ramp_up(frame, formation_index, 150)
 
 
@@ -325,8 +418,13 @@ def ramp_up_wave_150(
     translations=(("zh", "三角波"), ("ja", "三角波")),
 )
 def triangle_wave(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     wave_length = 50
     offset = (frame + (formation_index or 0)) % wave_length / wave_length
     return 1 - abs(2 * offset - 1)
@@ -341,8 +439,13 @@ def triangle_wave(
     translations=(("zh", "扩散脉冲"), ("ja", "拡散パルス")),
 )
 def expanding_pulse(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     fi = formation_index or 0
     pulse_center = drone_count // 1 if drone_count else 0
     distance_from_center = abs(fi - pulse_center)
@@ -358,8 +461,13 @@ def expanding_pulse(
     translations=(("zh", "空间波纹"), ("ja", "空間波")),
 )
 def wave_effect(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     speed = 0.1
     distance = position[0] if position is not None else 0.0
     return (math.sin(frame * speed - distance) + 1) / 2
@@ -368,7 +476,7 @@ def wave_effect(
 # ============================ grouping ============================
 
 
-def _ranges_lookup(ranges, formation_index):
+def _ranges_lookup(ranges, formation_index) -> float:
     fi = formation_index or 0
     for start, end, brightness in ranges:
         if start <= fi <= end:
@@ -383,8 +491,13 @@ def _ranges_lookup(ranges, formation_index):
     translations=(("zh", "三段亮度分区"), ("ja", "3グループ範囲")),
 )
 def group_ranges_3(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     ranges = [
         (0, 17, 0.1),
         (18, 35, 0.2),
@@ -402,8 +515,13 @@ def group_ranges_3(
     translations=(("zh", "五段亮度分区"), ("ja", "5グループ範囲")),
 )
 def group_ranges_5(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     ranges = [
         (0, 19, 0.2),
         (20, 39, 0.1),
@@ -423,8 +541,13 @@ def group_ranges_5(
     translations=(("zh", "灯效0"), ("ja", "ライトFX 0")),
 )
 def lightfx_0(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     if not drone_count:
         return 0.0
     speed_factor = 1.0
@@ -439,8 +562,13 @@ def lightfx_0(
     translations=(("zh", "灯效1"), ("ja", "ライトFX 1")),
 )
 def lightfx_1(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     if not drone_count:
         return 0.0
     speed_factor = 1.0
@@ -455,8 +583,13 @@ def lightfx_1(
     translations=(("zh", "灯效4"), ("ja", "ライトFX 4")),
 )
 def lightfx_4(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     is_odd = (formation_index or 0) % 2
     return (math.sin(frame * 0.2 + is_odd * math.pi) + 1) / 4
 
@@ -467,8 +600,13 @@ def lightfx_4(
     translations=(("zh", "灯效6"), ("ja", "ライトFX 6")),
 )
 def lightfx_6(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     wave_length = 50
     return (frame + (formation_index or 0)) % wave_length / wave_length
 
@@ -479,8 +617,13 @@ def lightfx_6(
     translations=(("zh", "灯效7"), ("ja", "ライトFX 7")),
 )
 def lightfx_7(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     wave_length = 400
     offset = (frame + (formation_index or 0)) % wave_length / wave_length
     return 1 - abs(2 * offset - 1)
@@ -492,8 +635,13 @@ def lightfx_7(
     translations=(("zh", "灯效8"), ("ja", "ライトFX 8")),
 )
 def lightfx_8(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     if not drone_count:
         return 0.0
     speed_factor = -0.2
@@ -512,8 +660,13 @@ def lightfx_8(
     translations=(("zh", "径向扩散 XY"), ("ja", "放射拡散 XY")),
 )
 def radial_diffusion_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     distance = _v51_get_plane_distance(position, "XY")
     return (math.sin(frame * _V51_RADIAL_SPEED - distance * _V51_RADIAL_WAVE_K) + 1) / 2
 
@@ -524,8 +677,13 @@ def radial_diffusion_xy(
     translations=(("zh", "径向扩散 XZ"), ("ja", "放射拡散 XZ")),
 )
 def radial_diffusion_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     distance = _v51_get_plane_distance(position, "XZ")
     return (math.sin(frame * _V51_RADIAL_SPEED - distance * _V51_RADIAL_WAVE_K) + 1) / 2
 
@@ -536,8 +694,13 @@ def radial_diffusion_xz(
     translations=(("zh", "径向扩散 YZ"), ("ja", "放射拡散 YZ")),
 )
 def radial_diffusion_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     distance = _v51_get_plane_distance(position, "YZ")
     return (math.sin(frame * _V51_RADIAL_SPEED - distance * _V51_RADIAL_WAVE_K) + 1) / 2
 
@@ -549,8 +712,13 @@ def radial_diffusion_yz(
     translations=(("zh", "径向汇聚 XY"), ("ja", "放射収束 XY")),
 )
 def radial_convergence_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     distance = _v51_get_plane_distance(position, "XY")
     return (math.sin(frame * _V51_RADIAL_SPEED + distance * _V51_RADIAL_WAVE_K) + 1) / 2
 
@@ -561,8 +729,13 @@ def radial_convergence_xy(
     translations=(("zh", "径向汇聚 XZ"), ("ja", "放射収束 XZ")),
 )
 def radial_convergence_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     distance = _v51_get_plane_distance(position, "XZ")
     return (math.sin(frame * _V51_RADIAL_SPEED + distance * _V51_RADIAL_WAVE_K) + 1) / 2
 
@@ -573,8 +746,13 @@ def radial_convergence_xz(
     translations=(("zh", "径向汇聚 YZ"), ("ja", "放射収束 YZ")),
 )
 def radial_convergence_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     distance = _v51_get_plane_distance(position, "YZ")
     return (math.sin(frame * _V51_RADIAL_SPEED + distance * _V51_RADIAL_WAVE_K) + 1) / 2
 
@@ -586,8 +764,13 @@ def radial_convergence_yz(
     translations=(("zh", "往返扫光 左到右 XY"), ("ja", "往復スイープ 左→右 XY")),
 )
 def roundtrip_sweep_ltr_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_roundtrip(coord, +1, frame)
 
@@ -598,8 +781,13 @@ def roundtrip_sweep_ltr_xy(
     translations=(("zh", "往返扫光 右到左 XY"), ("ja", "往復スイープ 右→左 XY")),
 )
 def roundtrip_sweep_rtl_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_roundtrip(coord, -1, frame)
 
@@ -610,8 +798,13 @@ def roundtrip_sweep_rtl_xy(
     translations=(("zh", "往返扫光 左到右 XZ"), ("ja", "往復スイープ 左→右 XZ")),
 )
 def roundtrip_sweep_ltr_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_roundtrip(coord, +1, frame)
 
@@ -622,8 +815,13 @@ def roundtrip_sweep_ltr_xz(
     translations=(("zh", "往返扫光 右到左 XZ"), ("ja", "往復スイープ 右→左 XZ")),
 )
 def roundtrip_sweep_rtl_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_roundtrip(coord, -1, frame)
 
@@ -634,8 +832,13 @@ def roundtrip_sweep_rtl_xz(
     translations=(("zh", "往返扫光 左到右 YZ"), ("ja", "往復スイープ 左→右 YZ")),
 )
 def roundtrip_sweep_ltr_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "Y")
     return _v51_gradient_sweep_roundtrip(coord, +1, frame)
 
@@ -646,8 +849,13 @@ def roundtrip_sweep_ltr_yz(
     translations=(("zh", "往返扫光 右到左 YZ"), ("ja", "往復スイープ 右→左 YZ")),
 )
 def roundtrip_sweep_rtl_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "Y")
     return _v51_gradient_sweep_roundtrip(coord, -1, frame)
 
@@ -659,8 +867,13 @@ def roundtrip_sweep_rtl_yz(
     translations=(("zh", "单向扫光 左到右 XY"), ("ja", "片道スイープ 左→右 XY")),
 )
 def oneway_sweep_ltr_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_oneway_loop(coord, +1, frame)
 
@@ -671,8 +884,13 @@ def oneway_sweep_ltr_xy(
     translations=(("zh", "单向扫光 右到左 XY"), ("ja", "片道スイープ 右→左 XY")),
 )
 def oneway_sweep_rtl_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_oneway_loop(coord, -1, frame)
 
@@ -683,8 +901,13 @@ def oneway_sweep_rtl_xy(
     translations=(("zh", "单向扫光 左到右 XZ"), ("ja", "片道スイープ 左→右 XZ")),
 )
 def oneway_sweep_ltr_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_oneway_loop(coord, +1, frame)
 
@@ -695,8 +918,13 @@ def oneway_sweep_ltr_xz(
     translations=(("zh", "单向扫光 右到左 XZ"), ("ja", "片道スイープ 右→左 XZ")),
 )
 def oneway_sweep_rtl_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "X")
     return _v51_gradient_sweep_oneway_loop(coord, -1, frame)
 
@@ -707,8 +935,13 @@ def oneway_sweep_rtl_xz(
     translations=(("zh", "单向扫光 左到右 YZ"), ("ja", "片道スイープ 左→右 YZ")),
 )
 def oneway_sweep_ltr_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "Y")
     return _v51_gradient_sweep_oneway_loop(coord, +1, frame)
 
@@ -719,8 +952,13 @@ def oneway_sweep_ltr_yz(
     translations=(("zh", "单向扫光 右到左 YZ"), ("ja", "片道スイープ 右→左 YZ")),
 )
 def oneway_sweep_rtl_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     coord = _v51_get_axis_coord(position, "Y")
     return _v51_gradient_sweep_oneway_loop(coord, -1, frame)
 
@@ -735,8 +973,13 @@ def oneway_sweep_rtl_yz(
     ),
 )
 def diagonal_sweep_lb_rt_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     pos_a = _v51_get_axis_coord(position, "X")
     pos_b = _v51_get_axis_coord(position, "Y")
     return _v51_gradient_sweep_diagonal(pos_a, pos_b, +1, frame)
@@ -751,8 +994,13 @@ def diagonal_sweep_lb_rt_xy(
     ),
 )
 def diagonal_sweep_rt_lb_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     pos_a = _v51_get_axis_coord(position, "X")
     pos_b = _v51_get_axis_coord(position, "Y")
     return _v51_gradient_sweep_diagonal(pos_a, pos_b, -1, frame)
@@ -767,8 +1015,13 @@ def diagonal_sweep_rt_lb_xy(
     ),
 )
 def diagonal_sweep_lb_rt_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     pos_a = _v51_get_axis_coord(position, "X")
     pos_b = _v51_get_axis_coord(position, "Z")
     return _v51_gradient_sweep_diagonal(pos_a, pos_b, +1, frame)
@@ -783,8 +1036,13 @@ def diagonal_sweep_lb_rt_xz(
     ),
 )
 def diagonal_sweep_rt_lb_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     pos_a = _v51_get_axis_coord(position, "X")
     pos_b = _v51_get_axis_coord(position, "Z")
     return _v51_gradient_sweep_diagonal(pos_a, pos_b, -1, frame)
@@ -799,8 +1057,13 @@ def diagonal_sweep_rt_lb_xz(
     ),
 )
 def diagonal_sweep_lb_rt_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     pos_a = _v51_get_axis_coord(position, "Y")
     pos_b = _v51_get_axis_coord(position, "Z")
     return _v51_gradient_sweep_diagonal(pos_a, pos_b, +1, frame)
@@ -815,8 +1078,13 @@ def diagonal_sweep_lb_rt_yz(
     ),
 )
 def diagonal_sweep_rt_lb_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     pos_a = _v51_get_axis_coord(position, "Y")
     pos_b = _v51_get_axis_coord(position, "Z")
     return _v51_gradient_sweep_diagonal(pos_a, pos_b, -1, frame)
@@ -829,8 +1097,13 @@ def diagonal_sweep_rt_lb_yz(
     translations=(("zh", "追逐尾巴 XY"), ("ja", "追跡 XY")),
 )
 def chasing_tails_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_chasing_tails_core(position, "XY", frame, formation_index)
 
 
@@ -840,8 +1113,13 @@ def chasing_tails_xy(
     translations=(("zh", "追逐尾巴 XZ"), ("ja", "追跡 XZ")),
 )
 def chasing_tails_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_chasing_tails_core(position, "XZ", frame, formation_index)
 
 
@@ -851,8 +1129,13 @@ def chasing_tails_xz(
     translations=(("zh", "追逐尾巴 YZ"), ("ja", "追跡 YZ")),
 )
 def chasing_tails_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_chasing_tails_core(position, "YZ", frame, formation_index)
 
 
@@ -863,8 +1146,13 @@ def chasing_tails_yz(
     translations=(("zh", "雷达扫描 60度 XY"), ("ja", "レーダースキャン 60° XY")),
 )
 def radar_scan_60_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "XY", 60.0, frame)
 
 
@@ -874,8 +1162,13 @@ def radar_scan_60_xy(
     translations=(("zh", "雷达扫描 90度 XY"), ("ja", "レーダースキャン 90° XY")),
 )
 def radar_scan_90_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "XY", 90.0, frame)
 
 
@@ -885,8 +1178,13 @@ def radar_scan_90_xy(
     translations=(("zh", "雷达扫描 120度 XY"), ("ja", "レーダースキャン 120° XY")),
 )
 def radar_scan_120_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "XY", 120.0, frame)
 
 
@@ -896,8 +1194,13 @@ def radar_scan_120_xy(
     translations=(("zh", "雷达扫描 60度 XZ"), ("ja", "レーダースキャン 60° XZ")),
 )
 def radar_scan_60_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "XZ", 60.0, frame)
 
 
@@ -907,8 +1210,13 @@ def radar_scan_60_xz(
     translations=(("zh", "雷达扫描 90度 XZ"), ("ja", "レーダースキャン 90° XZ")),
 )
 def radar_scan_90_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "XZ", 90.0, frame)
 
 
@@ -918,8 +1226,13 @@ def radar_scan_90_xz(
     translations=(("zh", "雷达扫描 120度 XZ"), ("ja", "レーダースキャン 120° XZ")),
 )
 def radar_scan_120_xz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "XZ", 120.0, frame)
 
 
@@ -929,8 +1242,13 @@ def radar_scan_120_xz(
     translations=(("zh", "雷达扫描 60度 YZ"), ("ja", "レーダースキャン 60° YZ")),
 )
 def radar_scan_60_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "YZ", 60.0, frame)
 
 
@@ -940,8 +1258,13 @@ def radar_scan_60_yz(
     translations=(("zh", "雷达扫描 90度 YZ"), ("ja", "レーダースキャン 90° YZ")),
 )
 def radar_scan_90_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "YZ", 90.0, frame)
 
 
@@ -951,8 +1274,13 @@ def radar_scan_90_yz(
     translations=(("zh", "雷达扫描 120度 YZ"), ("ja", "レーダースキャン 120° YZ")),
 )
 def radar_scan_120_yz(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_radar_scan_core(position, "YZ", 120.0, frame)
 
 
@@ -963,8 +1291,13 @@ def radar_scan_120_yz(
     translations=(("zh", "图案逐渐点亮 XY"), ("ja", "パターンペイント XY")),
 )
 def pattern_paint_on_xy(
-    frame, time_fraction, drone_index, formation_index, position, drone_count
-):
+    frame: int,
+    time_fraction: float,
+    drone_index: int,
+    formation_index: int | None,
+    position: Coordinate3D,
+    drone_count: int,
+) -> float:
     return _v51_paint_on_core(position, "XY", frame)
 
 
@@ -986,7 +1319,7 @@ _V51_PAINT_FRAMERATE = 24.0
 
 
 # Helper functions for v5.1 effects
-def _v51_get_plane_distance(position, plane: str):
+def _v51_get_plane_distance(position, plane: str) -> float:
     if position is None:
         return 0.0
     x, y, z = position
@@ -995,14 +1328,14 @@ def _v51_get_plane_distance(position, plane: str):
     return math.sqrt(coords[a] ** 2 + coords[b] ** 2)
 
 
-def _v51_get_axis_coord(position, axis: str):
+def _v51_get_axis_coord(position, axis: str) -> float:
     if position is None:
         return 0.0
     coords = {"X": position[0], "Y": position[1], "Z": position[2]}
     return coords[axis.upper()]
 
 
-def _v51_get_plane_coords(position, plane: str):
+def _v51_get_plane_coords(position, plane: str) -> tuple[float, float]:
     if position is None:
         return (0.0, 0.0)
     x, y, z = position
@@ -1011,7 +1344,7 @@ def _v51_get_plane_coords(position, plane: str):
     return (coords[a], coords[b])
 
 
-def _v51_gradient_sweep_roundtrip(coord: float, direction: int, frame: int):
+def _v51_gradient_sweep_roundtrip(coord: float, direction: int, frame: int) -> float:
     oneway_frames = _V51_SWEEP_ONEWAY_DURATION
     pause_frames = _V51_SWEEP_ROUNDTRIP_PAUSE
     full_cycle = 2 * (oneway_frames + pause_frames)
@@ -1037,7 +1370,7 @@ def _v51_gradient_sweep_roundtrip(coord: float, direction: int, frame: int):
     return max(0.0, min(1.0, brightness))
 
 
-def _v51_gradient_sweep_oneway_loop(coord: float, direction: int, frame: int):
+def _v51_gradient_sweep_oneway_loop(coord: float, direction: int, frame: int) -> float:
     oneway_frames = _V51_SWEEP_ONEWAY_DURATION
     pause_frames = _V51_SWEEP_ONEWAY_PAUSE
     full_cycle = oneway_frames + pause_frames
@@ -1064,7 +1397,7 @@ def _v51_gradient_sweep_oneway_loop(coord: float, direction: int, frame: int):
 
 def _v51_gradient_sweep_diagonal(
     pos_a: float, pos_b: float, direction: int, frame: int
-):
+) -> float:
     proj = (pos_a + pos_b) / math.sqrt(2)
     oneway_frames = _V51_SWEEP_ONEWAY_DURATION
     pause_frames = _V51_SWEEP_ONEWAY_PAUSE
@@ -1090,7 +1423,7 @@ def _v51_gradient_sweep_diagonal(
     return max(0.0, min(1.0, brightness))
 
 
-def _v51_chasing_tails_core(position, plane: str, frame: int, formation_index):
+def _v51_chasing_tails_core(position, plane: str, frame: int, formation_index) -> float:
     if position is None:
         coord = 0.0
     else:
@@ -1107,7 +1440,9 @@ def _v51_chasing_tails_core(position, plane: str, frame: int, formation_index):
     return (v + 1) / 2
 
 
-def _v51_radar_scan_core(position, plane: str, fan_angle_deg: float, frame: int):
+def _v51_radar_scan_core(
+    position, plane: str, fan_angle_deg: float, frame: int
+) -> float:
     coord_a, coord_b = _v51_get_plane_coords(position, plane)
     time_sec = frame / _V51_RADAR_FRAMERATE
     rotation_angle_deg = (time_sec * _V51_RADAR_ANGULAR_SPEED) % 360.0
@@ -1123,7 +1458,7 @@ def _v51_radar_scan_core(position, plane: str, fan_angle_deg: float, frame: int)
     return 1.0 if in_fan else 0.0
 
 
-def _v51_paint_on_core(position, plane: str, frame: int):
+def _v51_paint_on_core(position, plane: str, frame: int) -> float:
     coord_a, coord_b = _v51_get_plane_coords(position, plane)
     drone_angle_deg = math.degrees(math.atan2(coord_b, coord_a))
     if drone_angle_deg < 0:
