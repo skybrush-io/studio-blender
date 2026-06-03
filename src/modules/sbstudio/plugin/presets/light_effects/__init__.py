@@ -53,7 +53,6 @@ class PresetMeta:
     label: str  # English label (used as the i18n source string)
     function: CustomLightEffectFunction
     description: str = ""
-    aliases: tuple[str, ...] = field(default_factory=tuple)
     translations: dict[str, str] = field(default_factory=dict)  # language code -> label
 
 
@@ -66,7 +65,6 @@ def register_preset(
     id: str,
     label: str,
     description: str = "",
-    aliases: tuple[str, ...] = (),
     translations: Sequence[tuple[str, str]] = (),
 ):
     def decorator(fn: CustomLightEffectFunction) -> CustomLightEffectFunction:
@@ -77,7 +75,6 @@ def register_preset(
             label=label,
             function=fn,
             description=description,
-            aliases=aliases,
             translations=dict(translations),
         )
         return fn
@@ -102,7 +99,6 @@ def get_preset_function(preset_id: str) -> CustomLightEffectFunction | None:
 @register_preset(
     id="odd_even_pulse",
     label="Odd-Even Pulse",
-    aliases=("奇偶脉冲", "odd_even_pulse"),
     translations=(("zh", "奇偶脉冲"), ("ja", "奇数偶数パルス")),
 )
 def odd_even_pulse(
@@ -115,7 +111,6 @@ def odd_even_pulse(
 @register_preset(
     id="odd_even_constant",
     label="Odd-Even Constant",
-    aliases=("奇偶恒亮", "odd_even_brightness"),
     translations=(("zh", "奇偶恒亮"), ("ja", "奇数偶数定常")),
 )
 def odd_even_constant(
@@ -128,7 +123,6 @@ def odd_even_constant(
 @register_preset(
     id="simple_filling",
     label="Simple Gradient Fill",
-    aliases=("简单渐亮", "simple_filling"),
     translations=(("zh", "简单渐亮"), ("ja", "シンプルグラデーション")),
 )
 def simple_filling(
@@ -155,7 +149,6 @@ def _continuous_filling(frame, formation_index, drone_count, speed_factor, divis
 @register_preset(
     id="clover_fill",
     label="Clover Fill",
-    aliases=("三叶草填充", "continuous_fillingCLOVER"),
     translations=(("zh", "三叶草填充"), ("ja", "クローバーフィル")),
 )
 def clover_fill(
@@ -167,7 +160,6 @@ def clover_fill(
 @register_preset(
     id="continuous_filling_1",
     label="Continuous Filling 1",
-    aliases=("连续填充1", "continuous_filling1"),
     translations=(("zh", "连续填充1"), ("ja", "連続フィル1")),
 )
 def continuous_filling_1(
@@ -179,7 +171,6 @@ def continuous_filling_1(
 @register_preset(
     id="continuous_filling_1_5",
     label="Continuous Filling 1.5",
-    aliases=("连续填充1p5", "continuous_filling1p5"),
     translations=(("zh", "连续填充1.5"), ("ja", "連続フィル1.5")),
 )
 def continuous_filling_1_5(
@@ -191,7 +182,6 @@ def continuous_filling_1_5(
 @register_preset(
     id="continuous_filling_2",
     label="Continuous Filling 2",
-    aliases=("连续填充2", "continuous_filling2"),
     translations=(("zh", "连续填充2"), ("ja", "連続フィル2")),
 )
 def continuous_filling_2(
@@ -203,7 +193,6 @@ def continuous_filling_2(
 @register_preset(
     id="continuous_filling_3",
     label="Continuous Filling 3",
-    aliases=("连续填充3", "continuous_filling3"),
     translations=(("zh", "连续填充3"), ("ja", "連続フィル3")),
 )
 def continuous_filling_3(
@@ -215,7 +204,6 @@ def continuous_filling_3(
 @register_preset(
     id="continuous_filling_4",
     label="Continuous Filling 4",
-    aliases=("连续填充4", "continuous_filling4"),
     translations=(("zh", "连续填充4"), ("ja", "連続フィル4")),
 )
 def continuous_filling_4(
@@ -227,7 +215,6 @@ def continuous_filling_4(
 @register_preset(
     id="continuous_filling_5",
     label="Continuous Filling 5",
-    aliases=("连续填充5", "continuous_filling5"),
     translations=(("zh", "连续填充5"), ("ja", "連続フィル5")),
 )
 def continuous_filling_5(
@@ -239,7 +226,6 @@ def continuous_filling_5(
 @register_preset(
     id="continuous_filling_stripes",
     label="Continuous Stripes",
-    aliases=("连续条纹填充", "continuous_fillingstripes"),
     translations=(("zh", "连续条纹填充"), ("ja", "連続ストライプ")),
 )
 def continuous_filling_stripes(
@@ -254,7 +240,6 @@ def continuous_filling_stripes(
 @register_preset(
     id="ramp_down_wave",
     label="Ramp-Down Wave",
-    aliases=("递减坡形波", "ramp_down_wave"),
     translations=(("zh", "递减坡形波"), ("ja", "ランプダウン波")),
 )
 def ramp_down_wave(
@@ -271,7 +256,6 @@ def _ramp_up(frame, formation_index, wave_length):
 @register_preset(
     id="ramp_up_wave_10",
     label="Ramp-Up Wave 10",
-    aliases=("递增坡形波10", "ramp_up_wave10"),
     translations=(("zh", "递增坡形波10"), ("ja", "ランプアップ波10")),
 )
 def ramp_up_wave_10(
@@ -283,7 +267,6 @@ def ramp_up_wave_10(
 @register_preset(
     id="ramp_up_wave_15",
     label="Ramp-Up Wave 15",
-    aliases=("递增坡形波15", "ramp_up_wave15"),
     translations=(("zh", "递增坡形波15"), ("ja", "ランプアップ波15")),
 )
 def ramp_up_wave_15(
@@ -295,7 +278,6 @@ def ramp_up_wave_15(
 @register_preset(
     id="ramp_up_wave_25",
     label="Ramp-Up Wave 25",
-    aliases=("递增坡形波25", "ramp_up_wave25"),
     translations=(("zh", "递增坡形波25"), ("ja", "ランプアップ波25")),
 )
 def ramp_up_wave_25(
@@ -307,7 +289,6 @@ def ramp_up_wave_25(
 @register_preset(
     id="ramp_up_wave_75",
     label="Ramp-Up Wave 75",
-    aliases=("递增坡形波75", "ramp_up_wave75"),
     translations=(("zh", "递增坡形波75"), ("ja", "ランプアップ波75")),
 )
 def ramp_up_wave_75(
@@ -319,7 +300,6 @@ def ramp_up_wave_75(
 @register_preset(
     id="ramp_up_wave_100",
     label="Ramp-Up Wave 100",
-    aliases=("递增坡形波100", "ramp_up_wave100"),
     translations=(("zh", "递增坡形波100"), ("ja", "ランプアップ波100")),
 )
 def ramp_up_wave_100(
@@ -331,7 +311,6 @@ def ramp_up_wave_100(
 @register_preset(
     id="ramp_up_wave_150",
     label="Ramp-Up Wave 150",
-    aliases=("递增坡形波150", "ramp_up_wave150"),
     translations=(("zh", "递增坡形波150"), ("ja", "ランプアップ波150")),
 )
 def ramp_up_wave_150(
@@ -343,7 +322,6 @@ def ramp_up_wave_150(
 @register_preset(
     id="triangle_wave",
     label="Triangle Wave",
-    aliases=("三角波", "triangle_wave"),
     translations=(("zh", "三角波"), ("ja", "三角波")),
 )
 def triangle_wave(
@@ -360,7 +338,6 @@ def triangle_wave(
 @register_preset(
     id="expanding_pulse",
     label="Expanding Pulse",
-    aliases=("扩散脉冲", "expanding_pulse"),
     translations=(("zh", "扩散脉冲"), ("ja", "拡散パルス")),
 )
 def expanding_pulse(
@@ -378,7 +355,6 @@ def expanding_pulse(
     id="wave_effect",
     label="Spatial Wave",
     description="Sinusoidal wave traveling along the world X axis",
-    aliases=("空间波纹", "wave_effect"),
     translations=(("zh", "空间波纹"), ("ja", "空間波")),
 )
 def wave_effect(
@@ -404,7 +380,6 @@ def _ranges_lookup(ranges, formation_index):
     id="group_ranges_3",
     label="3 Group Ranges",
     description="Hard-coded 3-band brightness mapping by formation index",
-    aliases=("三段亮度分区", "LightFx3group_color_ranges"),
     translations=(("zh", "三段亮度分区"), ("ja", "3グループ範囲")),
 )
 def group_ranges_3(
@@ -424,7 +399,6 @@ def group_ranges_3(
     id="group_ranges_5",
     label="5 Group Ranges",
     description="Hard-coded 5-band brightness mapping by formation index",
-    aliases=("五段亮度分区", "LightFx5group_color_ranges"),
     translations=(("zh", "五段亮度分区"), ("ja", "5グループ範囲")),
 )
 def group_ranges_5(
@@ -446,7 +420,6 @@ def group_ranges_5(
 @register_preset(
     id="lightfx_0",
     label="Light FX 0",
-    aliases=("灯效0", "LightFX0"),
     translations=(("zh", "灯效0"), ("ja", "ライトFX 0")),
 )
 def lightfx_0(
@@ -463,7 +436,6 @@ def lightfx_0(
 @register_preset(
     id="lightfx_1",
     label="Light FX 1",
-    aliases=("灯效1", "LightFX1"),
     translations=(("zh", "灯效1"), ("ja", "ライトFX 1")),
 )
 def lightfx_1(
@@ -480,7 +452,6 @@ def lightfx_1(
 @register_preset(
     id="lightfx_4",
     label="Light FX 4",
-    aliases=("灯效4", "LightFx4"),
     translations=(("zh", "灯效4"), ("ja", "ライトFX 4")),
 )
 def lightfx_4(
@@ -493,7 +464,6 @@ def lightfx_4(
 @register_preset(
     id="lightfx_6",
     label="Light FX 6",
-    aliases=("灯效6", "LightFx6"),
     translations=(("zh", "灯效6"), ("ja", "ライトFX 6")),
 )
 def lightfx_6(
@@ -506,7 +476,6 @@ def lightfx_6(
 @register_preset(
     id="lightfx_7",
     label="Light FX 7",
-    aliases=("灯效7", "LightFx7"),
     translations=(("zh", "灯效7"), ("ja", "ライトFX 7")),
 )
 def lightfx_7(
@@ -520,7 +489,6 @@ def lightfx_7(
 @register_preset(
     id="lightfx_8",
     label="Light FX 8",
-    aliases=("灯效8", "LightFx8"),
     translations=(("zh", "灯效8"), ("ja", "ライトFX 8")),
 )
 def lightfx_8(
@@ -541,7 +509,6 @@ def lightfx_8(
 @register_preset(
     id="radial_diffusion_xy",
     label="Radial Diffusion XY",
-    aliases=("径向扩散_XY",),
     translations=(("zh", "径向扩散_XY"), ("ja", "放射拡散_XY")),
 )
 def radial_diffusion_xy(
@@ -554,7 +521,6 @@ def radial_diffusion_xy(
 @register_preset(
     id="radial_diffusion_xz",
     label="Radial Diffusion XZ",
-    aliases=("径向扩散_XZ",),
     translations=(("zh", "径向扩散_XZ"), ("ja", "放射拡散_XZ")),
 )
 def radial_diffusion_xz(
@@ -567,7 +533,6 @@ def radial_diffusion_xz(
 @register_preset(
     id="radial_diffusion_yz",
     label="Radial Diffusion YZ",
-    aliases=("径向扩散_YZ",),
     translations=(("zh", "径向扩散_YZ"), ("ja", "放射拡散_YZ")),
 )
 def radial_diffusion_yz(
@@ -581,7 +546,6 @@ def radial_diffusion_yz(
 @register_preset(
     id="radial_convergence_xy",
     label="Radial Convergence XY",
-    aliases=("径向汇聚_XY",),
     translations=(("zh", "径向汇聚_XY"), ("ja", "放射収束_XY")),
 )
 def radial_convergence_xy(
@@ -594,7 +558,6 @@ def radial_convergence_xy(
 @register_preset(
     id="radial_convergence_xz",
     label="Radial Convergence XZ",
-    aliases=("径向汇聚_XZ",),
     translations=(("zh", "径向汇聚_XZ"), ("ja", "放射収束_XZ")),
 )
 def radial_convergence_xz(
@@ -607,7 +570,6 @@ def radial_convergence_xz(
 @register_preset(
     id="radial_convergence_yz",
     label="Radial Convergence YZ",
-    aliases=("径向汇聚_YZ",),
     translations=(("zh", "径向汇聚_YZ"), ("ja", "放射収束_YZ")),
 )
 def radial_convergence_yz(
@@ -621,7 +583,6 @@ def radial_convergence_yz(
 @register_preset(
     id="roundtrip_sweep_ltr_xy",
     label="Roundtrip Sweep L→R XY",
-    aliases=("往返扫光_左到右_XY",),
     translations=(("zh", "往返扫光_左到右_XY"), ("ja", "往復スイープ_左→右_XY")),
 )
 def roundtrip_sweep_ltr_xy(
@@ -634,7 +595,6 @@ def roundtrip_sweep_ltr_xy(
 @register_preset(
     id="roundtrip_sweep_rtl_xy",
     label="Roundtrip Sweep R→L XY",
-    aliases=("往返扫光_右到左_XY",),
     translations=(("zh", "往返扫光_右到左_XY"), ("ja", "往復スイープ_右→左_XY")),
 )
 def roundtrip_sweep_rtl_xy(
@@ -647,7 +607,6 @@ def roundtrip_sweep_rtl_xy(
 @register_preset(
     id="roundtrip_sweep_ltr_xz",
     label="Roundtrip Sweep L→R XZ",
-    aliases=("往返扫光_左到右_XZ",),
     translations=(("zh", "往返扫光_左到右_XZ"), ("ja", "往復スイープ_左→右_XZ")),
 )
 def roundtrip_sweep_ltr_xz(
@@ -660,7 +619,6 @@ def roundtrip_sweep_ltr_xz(
 @register_preset(
     id="roundtrip_sweep_rtl_xz",
     label="Roundtrip Sweep R→L XZ",
-    aliases=("往返扫光_右到左_XZ",),
     translations=(("zh", "往返扫光_右到左_XZ"), ("ja", "往復スイープ_右→左_XZ")),
 )
 def roundtrip_sweep_rtl_xz(
@@ -673,7 +631,6 @@ def roundtrip_sweep_rtl_xz(
 @register_preset(
     id="roundtrip_sweep_ltr_yz",
     label="Roundtrip Sweep L→R YZ",
-    aliases=("往返扫光_左到右_YZ",),
     translations=(("zh", "往返扫光_左到右_YZ"), ("ja", "往復スイープ_左→右_YZ")),
 )
 def roundtrip_sweep_ltr_yz(
@@ -686,7 +643,6 @@ def roundtrip_sweep_ltr_yz(
 @register_preset(
     id="roundtrip_sweep_rtl_yz",
     label="Roundtrip Sweep R→L YZ",
-    aliases=("往返扫光_右到左_YZ",),
     translations=(("zh", "往返扫光_右到左_YZ"), ("ja", "往復スイープ_右→左_YZ")),
 )
 def roundtrip_sweep_rtl_yz(
@@ -700,7 +656,6 @@ def roundtrip_sweep_rtl_yz(
 @register_preset(
     id="oneway_sweep_ltr_xy",
     label="Oneway Sweep L→R XY",
-    aliases=("单向扫光_左到右_XY",),
     translations=(("zh", "单向扫光_左到右_XY"), ("ja", "片道スイープ_左→右_XY")),
 )
 def oneway_sweep_ltr_xy(
@@ -713,7 +668,6 @@ def oneway_sweep_ltr_xy(
 @register_preset(
     id="oneway_sweep_rtl_xy",
     label="Oneway Sweep R→L XY",
-    aliases=("单向扫光_右到左_XY",),
     translations=(("zh", "单向扫光_右到左_XY"), ("ja", "片道スイープ_右→左_XY")),
 )
 def oneway_sweep_rtl_xy(
@@ -726,7 +680,6 @@ def oneway_sweep_rtl_xy(
 @register_preset(
     id="oneway_sweep_ltr_xz",
     label="Oneway Sweep L→R XZ",
-    aliases=("单向扫光_左到右_XZ",),
     translations=(("zh", "单向扫光_左到右_XZ"), ("ja", "片道スイープ_左→右_XZ")),
 )
 def oneway_sweep_ltr_xz(
@@ -739,7 +692,6 @@ def oneway_sweep_ltr_xz(
 @register_preset(
     id="oneway_sweep_rtl_xz",
     label="Oneway Sweep R→L XZ",
-    aliases=("单向扫光_右到左_XZ",),
     translations=(("zh", "单向扫光_右到左_XZ"), ("ja", "片道スイープ_右→左_XZ")),
 )
 def oneway_sweep_rtl_xz(
@@ -752,7 +704,6 @@ def oneway_sweep_rtl_xz(
 @register_preset(
     id="oneway_sweep_ltr_yz",
     label="Oneway Sweep L→R YZ",
-    aliases=("单向扫光_左到右_YZ",),
     translations=(("zh", "单向扫光_左到右_YZ"), ("ja", "片道スイープ_左→右_YZ")),
 )
 def oneway_sweep_ltr_yz(
@@ -765,7 +716,6 @@ def oneway_sweep_ltr_yz(
 @register_preset(
     id="oneway_sweep_rtl_yz",
     label="Oneway Sweep R→L YZ",
-    aliases=("单向扫光_右到左_YZ",),
     translations=(("zh", "单向扫光_右到左_YZ"), ("ja", "片道スイープ_右→左_YZ")),
 )
 def oneway_sweep_rtl_yz(
@@ -779,7 +729,6 @@ def oneway_sweep_rtl_yz(
 @register_preset(
     id="diagonal_sweep_lb_rt_xy",
     label="Diagonal Sweep LB→RT XY",
-    aliases=("倾斜扫光_左下到右上_XY",),
     translations=(
         ("zh", "倾斜扫光_左下到右上_XY"),
         ("ja", "斜めスイープ_左下→右上_XY"),
@@ -796,7 +745,6 @@ def diagonal_sweep_lb_rt_xy(
 @register_preset(
     id="diagonal_sweep_rt_lb_xy",
     label="Diagonal Sweep RT→LB XY",
-    aliases=("倾斜扫光_右上到左下_XY",),
     translations=(
         ("zh", "倾斜扫光_右上到左下_XY"),
         ("ja", "斜めスイープ_右上→左下_XY"),
@@ -813,7 +761,6 @@ def diagonal_sweep_rt_lb_xy(
 @register_preset(
     id="diagonal_sweep_lb_rt_xz",
     label="Diagonal Sweep LB→RT XZ",
-    aliases=("倾斜扫光_左下到右上_XZ",),
     translations=(
         ("zh", "倾斜扫光_左下到右上_XZ"),
         ("ja", "斜めスイープ_左下→右上_XZ"),
@@ -830,7 +777,6 @@ def diagonal_sweep_lb_rt_xz(
 @register_preset(
     id="diagonal_sweep_rt_lb_xz",
     label="Diagonal Sweep RT→LB XZ",
-    aliases=("倾斜扫光_右上到左下_XZ",),
     translations=(
         ("zh", "倾斜扫光_右上到左下_XZ"),
         ("ja", "斜めスイープ_右上→左下_XZ"),
@@ -847,7 +793,6 @@ def diagonal_sweep_rt_lb_xz(
 @register_preset(
     id="diagonal_sweep_lb_rt_yz",
     label="Diagonal Sweep LB→RT YZ",
-    aliases=("倾斜扫光_左下到右上_YZ",),
     translations=(
         ("zh", "倾斜扫光_左下到右上_YZ"),
         ("ja", "斜めスイープ_左下→右上_YZ"),
@@ -864,7 +809,6 @@ def diagonal_sweep_lb_rt_yz(
 @register_preset(
     id="diagonal_sweep_rt_lb_yz",
     label="Diagonal Sweep RT→LB YZ",
-    aliases=("倾斜扫光_右上到左下_YZ",),
     translations=(
         ("zh", "倾斜扫光_右上到左下_YZ"),
         ("ja", "斜めスイープ_右上→左下_YZ"),
@@ -882,7 +826,6 @@ def diagonal_sweep_rt_lb_yz(
 @register_preset(
     id="chasing_tails_xy",
     label="Chasing Tails XY",
-    aliases=("追逐尾巴_XY",),
     translations=(("zh", "追逐尾巴_XY"), ("ja", "追跡_XY")),
 )
 def chasing_tails_xy(
@@ -894,7 +837,6 @@ def chasing_tails_xy(
 @register_preset(
     id="chasing_tails_xz",
     label="Chasing Tails XZ",
-    aliases=("追逐尾巴_XZ",),
     translations=(("zh", "追逐尾巴_XZ"), ("ja", "追跡_XZ")),
 )
 def chasing_tails_xz(
@@ -906,7 +848,6 @@ def chasing_tails_xz(
 @register_preset(
     id="chasing_tails_yz",
     label="Chasing Tails YZ",
-    aliases=("追逐尾巴_YZ",),
     translations=(("zh", "追逐尾巴_YZ"), ("ja", "追跡_YZ")),
 )
 def chasing_tails_yz(
@@ -919,7 +860,6 @@ def chasing_tails_yz(
 @register_preset(
     id="radar_scan_60_xy",
     label="Radar Scan 60° XY",
-    aliases=("雷达扫描_60度_XY",),
     translations=(("zh", "雷达扫描_60度_XY"), ("ja", "レーダースキャン_60°_XY")),
 )
 def radar_scan_60_xy(
@@ -931,7 +871,6 @@ def radar_scan_60_xy(
 @register_preset(
     id="radar_scan_90_xy",
     label="Radar Scan 90° XY",
-    aliases=("雷达扫描_90度_XY",),
     translations=(("zh", "雷达扫描_90度_XY"), ("ja", "レーダースキャン_90°_XY")),
 )
 def radar_scan_90_xy(
@@ -943,7 +882,6 @@ def radar_scan_90_xy(
 @register_preset(
     id="radar_scan_120_xy",
     label="Radar Scan 120° XY",
-    aliases=("雷达扫描_120度_XY",),
     translations=(("zh", "雷达扫描_120度_XY"), ("ja", "レーダースキャン_120°_XY")),
 )
 def radar_scan_120_xy(
@@ -955,7 +893,6 @@ def radar_scan_120_xy(
 @register_preset(
     id="radar_scan_60_xz",
     label="Radar Scan 60° XZ",
-    aliases=("雷达扫描_60度_XZ",),
     translations=(("zh", "雷达扫描_60度_XZ"), ("ja", "レーダースキャン_60°_XZ")),
 )
 def radar_scan_60_xz(
@@ -967,7 +904,6 @@ def radar_scan_60_xz(
 @register_preset(
     id="radar_scan_90_xz",
     label="Radar Scan 90° XZ",
-    aliases=("雷达扫描_90度_XZ",),
     translations=(("zh", "雷达扫描_90度_XZ"), ("ja", "レーダースキャン_90°_XZ")),
 )
 def radar_scan_90_xz(
@@ -979,7 +915,6 @@ def radar_scan_90_xz(
 @register_preset(
     id="radar_scan_120_xz",
     label="Radar Scan 120° XZ",
-    aliases=("雷达扫描_120度_XZ",),
     translations=(("zh", "雷达扫描_120度_XZ"), ("ja", "レーダースキャン_120°_XZ")),
 )
 def radar_scan_120_xz(
@@ -991,7 +926,6 @@ def radar_scan_120_xz(
 @register_preset(
     id="radar_scan_60_yz",
     label="Radar Scan 60° YZ",
-    aliases=("雷达扫描_60度_YZ",),
     translations=(("zh", "雷达扫描_60度_YZ"), ("ja", "レーダースキャン_60°_YZ")),
 )
 def radar_scan_60_yz(
@@ -1003,7 +937,6 @@ def radar_scan_60_yz(
 @register_preset(
     id="radar_scan_90_yz",
     label="Radar Scan 90° YZ",
-    aliases=("雷达扫描_90度_YZ",),
     translations=(("zh", "雷达扫描_90度_YZ"), ("ja", "レーダースキャン_90°_YZ")),
 )
 def radar_scan_90_yz(
@@ -1015,7 +948,6 @@ def radar_scan_90_yz(
 @register_preset(
     id="radar_scan_120_yz",
     label="Radar Scan 120° YZ",
-    aliases=("雷达扫描_120度_YZ",),
     translations=(("zh", "雷达扫描_120度_YZ"), ("ja", "レーダースキャン_120°_YZ")),
 )
 def radar_scan_120_yz(
@@ -1028,7 +960,6 @@ def radar_scan_120_yz(
 @register_preset(
     id="pattern_paint_on_xy",
     label="Pattern Paint-On XY",
-    aliases=("图案逐渐点亮_XY",),
     translations=(("zh", "图案逐渐点亮_XY"), ("ja", "パターンペイント_XY")),
 )
 def pattern_paint_on_xy(
