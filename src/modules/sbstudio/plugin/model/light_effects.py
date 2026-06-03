@@ -4,7 +4,7 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import Any, cast
+from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import bpy
@@ -101,6 +101,32 @@ OUTPUT_ITEMS = [
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
+
+
+class CustomLightEffectFunction(Protocol):
+    def __call__(
+        self,
+        frame: int,
+        time_fraction: float,
+        drone_index: int,
+        formation_index: int | None,
+        position: Coordinate3D,
+        drone_count: int,
+    ) -> float: ...
+
+
+"""Type of the custom light effect function, used when the output type of a light effect is set to "CUSTOM". The function takes the following arguments:
+
+- frame: the current frame index
+- time_fraction: the fraction of time passed in the current light effect relative to its total duration, in the [0; 1] range
+- drone_index: the index of the drone for which the output is being calculated, in the range [0; num_drones - 1]
+- formation_index: the index of the formation to which the drone belongs, in the range [0; num_formations - 1], or None if there is no formation information available
+- position: the 3D position of the drone
+- drone_count: the total number of drones in the show
+
+The function returns a sequence of four floats in the [0; 1] range representing the
+RGBA color on the current color ramp to apply to the drone.
+"""
 
 
 def effect_type_supports_randomization(type: str) -> bool:
@@ -617,7 +643,9 @@ class LightEffect(PropertyGroup):
                 absolute_path = abspath(output_function.path)
                 module = load_module(absolute_path) if absolute_path else None
                 if output_function.name:
-                    fn = getattr(module, output_function.name)
+                    fn = cast(
+                        CustomLightEffectFunction, getattr(module, output_function.name)
+                    )
                     outputs = [
                         fn(
                             frame=frame,
@@ -833,11 +861,12 @@ class LightEffect(PropertyGroup):
     def color_image(self, image: Image | None):
         # If we have an old, legacy Texture instance, replace it with an
         # ImageTexture
-        if not isinstance(self.texture, ImageTexture):
+        if isinstance(self.texture, ImageTexture):
+            tex = self.texture
+        else:
             self._remove_texture()
-            self._create_texture()
+            tex = self._create_texture()
 
-        tex = self.texture
         if tex.image is not None:
             remove_if_unused(tex.image, from_=bpy.data.images)
         tex.image = image
@@ -1047,6 +1076,7 @@ class LightEffect(PropertyGroup):
             )
 
         if texture := data.get("texture"):
+            assert isinstance(self.texture, ImageTexture)
             warnings.extend(update_texture_from_dict(self.texture, texture))
 
         return warnings
@@ -1128,8 +1158,9 @@ class LightEffect(PropertyGroup):
             else:
                 # Object is not in the evaluated depsgraph -- maybe it is
                 # hidden? Use self.mesh directly
+                mesh_data = cast(Mesh, mesh.data)
                 with use_b_mesh() as b_mesh:
-                    b_mesh.from_mesh(mesh.data)
+                    b_mesh.from_mesh(mesh_data)
                     b_mesh.transform(mesh.matrix_world)
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
@@ -1140,13 +1171,13 @@ class LightEffect(PropertyGroup):
         no associated mesh or it has no faces.
         """
         if self.mesh:
-            mesh = self.mesh.data
+            mesh = cast(Mesh, self.mesh.data)
             local_to_world = self.mesh.matrix_world
             for polygon in mesh.polygons:
                 normal = local_to_world.to_3x3() @ polygon.normal
                 center = local_to_world @ polygon.center
                 try:
-                    return Plane.from_normal_and_point(normal, center)
+                    return Plane.from_normal_and_point(normal, center)  # ty:ignore[invalid-argument-type]
                 except Exception:
                     # probably all-zero normal vector
                     pass

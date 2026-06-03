@@ -16,7 +16,13 @@ class ListMixin(Generic[T]):
     named `entries`, `active_entry` and `active_entry_index`.
     """
 
-    entries: Sequence[T]  # bpy_prop_collection_idprop[T], but it confuses Blender
+    if (
+        TYPE_CHECKING
+    ):  # bpy_prop_collection_idprop[T], but it confuses Blender, hence the type guard
+        entries: bpy_prop_collection_idprop[T]
+    else:
+        entries: Sequence[T]
+
     active_entry: T
     active_entry_index: int
 
