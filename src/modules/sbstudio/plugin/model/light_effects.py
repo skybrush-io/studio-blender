@@ -107,6 +107,23 @@ of drones to a given axis of the light effect color space"""
 
 
 class CustomLightEffectFunction(Protocol):
+    """Type of the custom light effect function, used when the output type of a light
+    effect is set to "CUSTOM". The function takes the following arguments:
+
+    - frame: the current frame index
+    - time_fraction: the fraction of time passed in the current light effect relative to
+      its total duration, in the [0; 1] range
+    - drone_index: the index of the drone for which the output is being calculated, in
+      the range [0; num_drones - 1]
+    - formation_index: the index of the formation to which the drone belongs, in the
+      range [0; num_formations - 1], or None if there is no formation information available
+    - position: the 3D position of the drone
+    - drone_count: the total number of drones in the show
+
+    The function returns a sequence of four floats in the [0; 1] range representing the
+    RGBA color on the current color ramp to apply to the drone.
+    """
+
     def __call__(
         self,
         frame: int,
@@ -116,20 +133,6 @@ class CustomLightEffectFunction(Protocol):
         position: Coordinate3D,
         drone_count: int,
     ) -> float: ...
-
-
-"""Type of the custom light effect function, used when the output type of a light effect is set to "CUSTOM". The function takes the following arguments:
-
-- frame: the current frame index
-- time_fraction: the fraction of time passed in the current light effect relative to its total duration, in the [0; 1] range
-- drone_index: the index of the drone for which the output is being calculated, in the range [0; num_drones - 1]
-- formation_index: the index of the formation to which the drone belongs, in the range [0; num_formations - 1], or None if there is no formation information available
-- position: the 3D position of the drone
-- drone_count: the total number of drones in the show
-
-The function returns a sequence of four floats in the [0; 1] range representing the
-RGBA color on the current color ramp to apply to the drone.
-"""
 
 
 def effect_type_supports_randomization(type: str) -> bool:
