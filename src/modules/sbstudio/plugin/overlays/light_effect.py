@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import bpy
 import gpu.state
 from gpu_extras.batch import batch_for_shader
 
@@ -13,7 +12,6 @@ from .base import ShaderBatchBasedOverlay
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
 
-    from sbstudio.plugin.model.light_effects import LightEffectCollection
 
 __all__ = (
     "LightEffectOverlay",
@@ -52,17 +50,6 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
 
         self.invalidate_shader_batches()
 
-    def draw_3d(self) -> None:
-        skybrush = getattr(bpy.context.scene, "skybrush", None)
-        light_effects: LightEffectCollection | None = getattr(
-            skybrush, "light_effects", None
-        )
-        if not light_effects:
-            return
-
-        if self._markers is not None:
-            self._draw_shader_batches()
-
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
@@ -73,12 +60,13 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
             points.append(point)
             colors.append(color)
 
+        if not points:
+            return []
+
         # Construct the shader batch to draw the lines on the UI
-        batches: list[GPUBatch] = [
+        return [
             batch_for_shader(self._shader, "POINTS", {"pos": points, "color": colors}),
         ]
-
-        return batches
 
     def _prepare_gpu_state(self) -> None:
         gpu.state.point_size_set(25)

@@ -200,10 +200,6 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.draw(font_id, f"Max yaw rate: {safety_check.max_yaw_rate:.1f} deg/s")
             y -= line_height
 
-    def draw_3d(self) -> None:
-        if self._markers is not None:
-            self._draw_shader_batches()
-
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
@@ -231,17 +227,19 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
                     lines.extend(marker_points)
                     line_colors.extend([color, color])
 
-        # Construct the shader batch to draw the lines on the UI
-        batches.extend(
-            [
+        # Construct the shader batches to draw the lines on the UI
+        if lines:
+            batches.append(
                 batch_for_shader(
                     self._shader, "LINES", {"pos": lines, "color": line_colors}
-                ),
+                )
+            )
+        if points:
+            batches.append(
                 batch_for_shader(
                     self._shader, "POINTS", {"pos": points, "color": point_colors}
-                ),
-            ]
-        )
+                )
+            )
 
         return batches
 

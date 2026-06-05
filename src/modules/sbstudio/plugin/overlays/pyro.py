@@ -132,16 +132,15 @@ class PyroOverlay(ShaderBatchBasedOverlay):
                 blf.draw(font_id, line)
                 y -= line_height
 
-    def draw_3d(self) -> None:
+    def should_draw(self) -> bool:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
         pyro_control: PyroControlPanelProperties | None = getattr(
             skybrush, "pyro_control", None
         )
-        if not pyro_control or pyro_control.visualization not in ["MARKERS", "INFO"]:
-            return
-
-        if self._markers is not None:
-            self._draw_shader_batches()
+        return pyro_control is not None and pyro_control.visualization in (
+            "MARKERS",
+            "INFO",
+        )
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
