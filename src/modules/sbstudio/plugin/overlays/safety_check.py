@@ -68,11 +68,11 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
     _markers: list[Marker] | None = None
 
     @property
-    def markers(self) -> list[Marker] | None:
+    def markers(self) -> Sequence[Marker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: list[Marker] | None):
+    def markers(self, value: Sequence[Marker] | None):
         if value is not None:
             self._markers = []
             for marker_points, group in value:

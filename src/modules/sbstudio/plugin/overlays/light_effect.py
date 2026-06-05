@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 import gpu.state
 from gpu_extras.batch import batch_for_shader
@@ -32,11 +32,11 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
     _markers: list[LightEffectOverlayMarker] | None = None
 
     @property
-    def markers(self) -> list[LightEffectOverlayMarker] | None:
+    def markers(self) -> Sequence[LightEffectOverlayMarker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: list[LightEffectOverlayMarker] | None):
+    def markers(self, value: Sequence[LightEffectOverlayMarker] | None):
         if value is not None:
             self._markers = []
             for point, color in value:

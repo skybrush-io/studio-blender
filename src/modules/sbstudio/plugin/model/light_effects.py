@@ -36,10 +36,7 @@ from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor, RGBAColor
-from sbstudio.plugin.callbacks.light_effects import (
-    register_final_color_update_callback,
-    unregister_final_color_update_callback,
-)
+from sbstudio.plugin.callbacks import final_color_updated_callbacks
 from sbstudio.plugin.colors import set_color_of_drone
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
@@ -180,7 +177,7 @@ def get_overlay(create: bool = True):
 
 
 def _visualization_callback_for_markers(
-    drones: list[Object], colors: list[RGBAColor], has_active_effects: bool
+    drones: Sequence[Object], colors: Sequence[RGBAColor], has_active_effects: bool
 ) -> None:
     light_effects = bpy.context.scene.skybrush.light_effects
     if has_active_effects:
@@ -194,7 +191,7 @@ def _visualization_callback_for_markers(
 
 
 def _visualization_callback_for_materials(
-    drones: list[Object], colors: list[RGBAColor], has_active_effects: bool
+    drones: Sequence[Object], colors: Sequence[RGBAColor], has_active_effects: bool
 ) -> None:
     if has_active_effects:
         for drone, color in zip(drones, colors, strict=True):
@@ -217,19 +214,25 @@ def light_effect_visualization_updated(
 ):
     # unregister
     if self.visualization != "MARKERS":
-        unregister_final_color_update_callback(_visualization_callback_for_markers)
-        self.clear_overlay_markers()
+        if final_color_updated_callbacks.ensure_missing(
+            _visualization_callback_for_markers
+        ):
+            self.clear_overlay_markers()
+
     if self.visualization != "MATERIALS":
-        unregister_final_color_update_callback(_visualization_callback_for_materials)
-        # TODO: set drone colors back to base color without light effects if we are annoyed
-        # by seeing material colors until the first frame change...
+        if final_color_updated_callbacks.ensure_missing(
+            _visualization_callback_for_materials
+        ):
+            # TODO: set drone colors back to base color without light effects if we are annoyed
+            # by seeing material colors until the first frame change...
+            pass
 
     # register
     match self.visualization:
         case "MARKERS":
-            register_final_color_update_callback(_visualization_callback_for_markers)
+            final_color_updated_callbacks.ensure(_visualization_callback_for_markers)
         case "MATERIALS":
-            register_final_color_update_callback(_visualization_callback_for_materials)
+            final_color_updated_callbacks.ensure(_visualization_callback_for_materials)
 
 
 def object_has_mesh_data(self, obj) -> bool:
@@ -1476,7 +1479,9 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         for entry in self.entries:
             entry.update_from_storyboard(context, reset_offset=False)
 
-    def update_overlay_markers(self, markers: list[LightEffectOverlayMarker]) -> None:
+    def update_overlay_markers(
+        self, markers: Sequence[LightEffectOverlayMarker]
+    ) -> None:
         """Updates the light effect overlay markers."""
         self.ensure_overlays_enabled_if_needed()
 
@@ -1506,5 +1511,6 @@ def unregister():
     """Unregisters light effects subsystem."""
     if _on_load_initialize_callbacks in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.remove(_on_load_initialize_callbacks)
-    unregister_final_color_update_callback(_visualization_callback_for_markers)
-    unregister_final_color_update_callback(_visualization_callback_for_materials)
+
+    final_color_updated_callbacks.ensure_missing(_visualization_callback_for_markers)
+    final_color_updated_callbacks.ensure_missing(_visualization_callback_for_materials)

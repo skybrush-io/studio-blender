@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Sequence, cast
 
 import blf
 import bpy
@@ -66,11 +66,11 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         # self.invalidate_shader_batches()
 
     @property
-    def markers(self) -> list[PyroOverlayMarker] | None:
+    def markers(self) -> Sequence[PyroOverlayMarker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: list[PyroOverlayMarker] | None):
+    def markers(self, value: Sequence[PyroOverlayMarker] | None):
         if value is not None:
             self._markers = []
             for point, color in value:

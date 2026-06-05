@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
-from sbstudio.plugin.callbacks.light_effects import get_final_color_update_callbacks
+from sbstudio.plugin.callbacks import final_color_updated_callbacks
 from sbstudio.plugin.colors import (
     get_color_of_drone,
     get_colors_of_drones_fast,
@@ -70,8 +70,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     light_effects = scene.skybrush.light_effects
     if not light_effects or not light_effects.enabled:
         _final_color_cache.clear()
-        for cb in get_final_color_update_callbacks():
-            cb([], [], False)
+        final_color_updated_callbacks([], [], False)
         return
 
     random_seq = scene.skybrush.settings.random_sequence_root
@@ -139,8 +138,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # Note that we need to call the callbacks even if we did not change anything,
     # as there might be callbacks (e.g. marker overlay) that need to be cleared when
     # there are no active light effects
-    for cb in get_final_color_update_callbacks():
-        cb(drones or [], colors or [], has_active_effects)
+    final_color_updated_callbacks(drones or [], colors or [], has_active_effects)
 
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:
