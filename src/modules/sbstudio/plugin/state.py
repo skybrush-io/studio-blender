@@ -1,7 +1,7 @@
 """Global and file-specific state of Skybrush Studio for Blender."""
 
 import json
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any
 
 import bpy
@@ -14,7 +14,7 @@ from .utils import (
 )
 
 
-class StateBase(metaclass=ABCMeta):
+class StateBase(ABC):
     """Superclass for state objects that can be saved to and loaded from
     Blender text blocks.
     """
