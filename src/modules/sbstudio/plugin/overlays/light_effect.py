@@ -50,7 +50,7 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
         else:
             self._markers = None
 
-        self._shader_batches = None
+        self.invalidate_shader_batches()
 
     def draw_3d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)

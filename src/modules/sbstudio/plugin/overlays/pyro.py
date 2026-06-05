@@ -63,7 +63,7 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         else:
             self._info_blocks = None
 
-        # self._shader_batches = None
+        # self.invalidate_shader_batches()
 
     @property
     def markers(self) -> list[PyroOverlayMarker] | None:
@@ -83,7 +83,7 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         else:
             self._markers = None
 
-        self._shader_batches = None
+        self.invalidate_shader_batches()
 
     def draw_2d(self) -> None:
         context = bpy.context

@@ -132,7 +132,7 @@ class ShaderBatchBasedOverlay(ShaderOverlay):
 
     def dispose(self) -> None:
         super().dispose()
-        self._shader_batches = None
+        self.invalidate_shader_batches()
 
     @abstractmethod
     def _create_shader_batches(self) -> list[GPUBatch]:
@@ -170,3 +170,9 @@ class ShaderBatchBasedOverlay(ShaderOverlay):
             self._prepare_gpu_state()
             for batch in self._shader_batches:
                 batch.draw(self._shader)
+
+    def invalidate_shader_batches(self) -> None:
+        """Invalidates the shader batches, causing them to be recreated on the
+        next redraw.
+        """
+        self._shader_batches = None
