@@ -55,10 +55,10 @@ class PyroOverlay(ShaderBatchBasedOverlay):
             self._info_blocks = []
             for point, lines in value:
                 info_block = (
-                    tuple(float(c) for c in point),
+                    (float(point[0]), float(point[1]), float(point[2])),
                     lines,
                 )
-                self._info_blocks.append(info_block)  # type: ignore
+                self._info_blocks.append(info_block)
 
         else:
             self._info_blocks = None
