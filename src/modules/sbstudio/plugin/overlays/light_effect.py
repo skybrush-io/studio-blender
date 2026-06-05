@@ -53,15 +53,11 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
-        points: list[Coordinate3D] = []
-        colors: list[tuple[float, ...]] = []
-
-        for point, color in self._markers or ():
-            points.append(point)
-            colors.append(color)
-
+        points = [point for point, _ in self._markers or ()]
         if not points:
             return []
+
+        colors = [color for _, color in self._markers or ()]
 
         # Construct the shader batch to draw the lines on the UI
         return [
