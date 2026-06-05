@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import blf
 import bpy
+import gpu.state
 from bpy.types import SpaceView3D
 from gpu_extras.batch import batch_for_shader
 
@@ -201,7 +202,7 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
 
     def draw_3d(self) -> None:
         if self._markers is not None:
-            self._draw_shader_batches(point_size=20, line_width=5)
+            self._draw_shader_batches()
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
@@ -243,3 +244,7 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
         )
 
         return batches
+
+    def _prepare_gpu_state(self) -> None:
+        gpu.state.point_size_set(30)
+        gpu.state.line_width_set(5)

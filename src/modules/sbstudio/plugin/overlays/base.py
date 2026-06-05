@@ -4,7 +4,7 @@ Blender 3D view and that can be enabled or disabled on-demand.
 
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import TYPE_CHECKING, ClassVar
 
@@ -134,22 +134,30 @@ class ShaderBatchBasedOverlay(ShaderOverlay):
         super().dispose()
         self._shader_batches = None
 
+    @abstractmethod
     def _create_shader_batches(self) -> list[GPUBatch]:
         """Creates shader batches dynamically.
 
-        Function should be overriden by child classes with properly
-        initializing shader batches for drawing on 3D Views.
+        Function must be overriden by child classes to return properly
+        initialized shader batches for drawing on 3D views.
         """
-        return []
+        ...
 
-    def _draw_shader_batches(
-        self, point_size: int | None = None, line_width: int | None = None
-    ):
-        """Draws shader batches to 3D Views.
+    def _prepare_gpu_state(self) -> None:
+        """Prepares the GPU state for drawing shader batches.
+
+        Function is called by `_draw_shader_batchers()` after the shader is bound but
+        before the batches are drawn. You can use this method to set up a custom line
+        width or point size.
+        """
+        pass
+
+    def _draw_shader_batches(self):
+        """Draws shader batches to 3D views.
 
         Function should be typically called from the `draw_3d()`
-        method of child classes."""
-
+        method of child classes.
+        """
         assert self._shader is not None
 
         gpu.state.blend_set("ALPHA")
@@ -159,9 +167,6 @@ class ShaderBatchBasedOverlay(ShaderOverlay):
 
         if self._shader_batches:
             self._shader.bind()
-            if line_width is not None:
-                gpu.state.line_width_set(line_width)
-            if point_size is not None:
-                gpu.state.point_size_set(point_size)
+            self._prepare_gpu_state()
             for batch in self._shader_batches:
                 batch.draw(self._shader)

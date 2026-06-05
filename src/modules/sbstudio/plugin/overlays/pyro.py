@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 import blf
 import bpy
+import gpu.state
 from bpy.types import SpaceView3D
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 from gpu_extras.batch import batch_for_shader
@@ -140,7 +141,7 @@ class PyroOverlay(ShaderBatchBasedOverlay):
             return
 
         if self._markers is not None:
-            self._draw_shader_batches(point_size=30)
+            self._draw_shader_batches()
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
@@ -158,3 +159,6 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         ]
 
         return batches
+
+    def _prepare_gpu_state(self) -> None:
+        gpu.state.point_size_set(30)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import bpy
+import gpu.state
 from gpu_extras.batch import batch_for_shader
 
 from sbstudio.model.types import Coordinate3D, RGBColor
@@ -60,7 +61,7 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
             return
 
         if self._markers is not None:
-            self._draw_shader_batches(point_size=25)
+            self._draw_shader_batches()
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
@@ -78,3 +79,6 @@ class LightEffectOverlay(ShaderBatchBasedOverlay):
         ]
 
         return batches
+
+    def _prepare_gpu_state(self) -> None:
+        gpu.state.point_size_set(25)
