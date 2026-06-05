@@ -25,9 +25,9 @@ class RemoveLightEffectOperator(LightEffectOperator):
 
     def execute_on_light_effect_collection(self, light_effects, context):
         light_effects.remove_active_entry()
+
         invalidate_light_effect_pixel_cache()
         update_light_effects(context.scene, context.evaluated_depsgraph_get())
-
         redraw_all_3d_views()
 
         return {"FINISHED"}
