@@ -4,7 +4,7 @@ Blender 3D view and that can be enabled or disabled on-demand.
 
 from __future__ import annotations
 
-from abc import ABCMeta
+from abc import ABC
 from collections.abc import Callable
 from typing import TYPE_CHECKING, ClassVar
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 __all__ = ("Overlay",)
 
 
-class Overlay(metaclass=ABCMeta):
+class Overlay(ABC):
     """Base class for overlays that can register drawing callbacks on the
     Blender 3D view and that can be enabled or disabled on-demand.
 
