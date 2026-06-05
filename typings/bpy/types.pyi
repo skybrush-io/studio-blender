@@ -266,6 +266,23 @@ class MeshVertex(bpy_struct):
     index: int
     select: bool
 
+class MeshEdge(bpy_struct):
+    hide: bool
+    index: int
+    vertices: tuple[int, int]
+    select: bool
+
+class MeshPolygon(bpy_struct):
+    center: Vector
+    hide: bool
+    index: int
+    loop_start: int
+    loop_total: int
+    material_index: int
+    normal: Vector
+    select: bool
+    vertices: tuple[int, int, int]
+
 class Point(bpy_struct):
     co: Vector
     index: int
@@ -334,6 +351,8 @@ class MaterialSlot(bpy_struct):
 
 class Mesh(ID):
     vertices: bpy_prop_collection[MeshVertex]
+    edges: bpy_prop_collection[MeshEdge]
+    polygons: bpy_prop_collection[MeshPolygon]
 
     def transform(self, matrix: Matrix, shape_keys: bool = False) -> None: ...
 
