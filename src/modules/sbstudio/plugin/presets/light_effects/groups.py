@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from .base import register_preset
@@ -8,12 +9,31 @@ if TYPE_CHECKING:
     from sbstudio.model.types import Coordinate3D
 
 
-def _ranges_lookup(ranges, formation_index) -> float:
+def _ranges_lookup(
+    ranges: Sequence[tuple[int, int, float]], formation_index: int | None
+) -> float:
     fi = formation_index or 0
     for start, end, brightness in ranges:
         if start <= fi <= end:
             return brightness
     return 0.0
+
+
+_RANGES_3 = (
+    (0, 17, 0.1),
+    (18, 35, 0.2),
+    (36, 53, 0.4),
+    (54, 71, 0.3),
+    (72, 99, 0.5),
+)
+
+_RANGES_5 = (
+    (0, 19, 0.2),
+    (20, 39, 0.1),
+    (36, 53, 0.4),
+    (54, 71, 0.3),
+    (72, 99, 0.5),
+)
 
 
 @register_preset(
@@ -30,14 +50,7 @@ def group_ranges_3(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    ranges = [
-        (0, 17, 0.1),
-        (18, 35, 0.2),
-        (36, 53, 0.4),
-        (54, 71, 0.3),
-        (72, 99, 0.5),
-    ]
-    return _ranges_lookup(ranges, formation_index)
+    return _ranges_lookup(_RANGES_3, formation_index)
 
 
 @register_preset(
@@ -54,11 +67,4 @@ def group_ranges_5(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    ranges = [
-        (0, 19, 0.2),
-        (20, 39, 0.1),
-        (36, 53, 0.4),
-        (54, 71, 0.3),
-        (72, 99, 0.5),
-    ]
-    return _ranges_lookup(ranges, formation_index)
+    return _ranges_lookup(_RANGES_5, formation_index)
