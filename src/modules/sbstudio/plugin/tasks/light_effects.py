@@ -5,7 +5,8 @@ light effects.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -100,14 +101,16 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
                 get_colors_of_drones_fast(drones, dest=arr.ravel())
                 colors: list[MutableRGBAColor] = arr.tolist()
                 for drone, color in zip(drones, colors):
-                    _base_color_cache[id(drone)] = color
+                    _base_color_cache[id(drone)] = color  # ty:ignore[invalid-assignment]
             else:
                 # Initialize the colors list from the cached base colors
-                colors = [
+                colors: list[MutableRGBAColor] = [
                     _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
-                ]
+                ]  # ty:ignore[invalid-assignment]
 
             changed = True
+
+        assert colors is not None
 
         effect.apply_on_colors(
             colors,
@@ -120,22 +123,28 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # store final colors for later use if there are active light effects
     if changed:
         assert drones is not None
+        assert colors is not None
         for drone, color in zip(drones, colors, strict=True):
-            _final_color_cache[id(drone)] = color
+            _final_color_cache[id(drone)] = color  # ty:ignore[invalid-assignment]
+
     # If we haven't changed anything, _but_ this is because we have recently
     # disabled or removed the last effect (which we know from the fact that
     # the _base_color_cache is filled), clear the cache and update the colors
     # nevertheless. This is needed to update the screen properly when the last
     # effect is disabled.
-    elif _base_color_cache:
+    if not changed and _base_color_cache:
         drones = Collections.find_drones().objects
-        colors = [_base_color_cache.get(id(drone)) or list(WHITE) for drone in drones]
+        colors = [  # ty:ignore[invalid-assignment]
+            _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
+        ]
         _base_color_cache.clear()
         changed = True
 
     # Note that we need to call the callbacks even if we did not change anything,
     # and we imitate a single color change also on last light effect removal
-    final_color_updated_callbacks(drones or [], colors or [], changed)
+    final_color_updated_callbacks(
+        drones or [], cast(Sequence[RGBAColor], colors) or [], changed
+    )
 
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:

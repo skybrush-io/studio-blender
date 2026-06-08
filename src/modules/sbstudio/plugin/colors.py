@@ -1,5 +1,3 @@
-from typing import Sequence
-
 import bpy
 import numpy as np
 import numpy.typing as npt
@@ -53,7 +51,7 @@ def create_keyframe_for_color_of_drone(
     set_keyframes(drone, "color", keyframes, interpolation="LINEAR")
 
 
-def get_color_of_drone(drone: Object) -> Sequence[float]:
+def get_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the color of the LED light on the given drone.
 
     Parameters:
@@ -61,7 +59,7 @@ def get_color_of_drone(drone: Object) -> Sequence[float]:
         color: the color to apply to the LED light of the drone
     """
     if drone.color is not None:
-        return drone.color
+        return drone.color  # ty:ignore[invalid-return-type]
 
     return (0.0, 0.0, 0.0, 0.0)
 
