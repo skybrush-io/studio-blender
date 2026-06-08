@@ -14,29 +14,29 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "LightEffectOverlay",
-    "LightEffectOverlayMarker",
+    "LEDsOverlay",
+    "LEDsOverlayMarker",
 )
 
-LightEffectOverlayMarker = tuple[Coordinate3D, RGBColor]
+LEDsOverlayMarker = tuple[Coordinate3D, RGBColor]
 """Type specification for a single marker on the overlay. A marker requires
 a single coordinate and a Color.
 """
 
 
-class LightEffectOverlay(ShaderBatchBasedOverlay):
+class LEDsOverlay(ShaderBatchBasedOverlay):
     """Overlay that marks light effect colors of drones in the 3D view."""
 
     shader_type = "POINT_FLAT_COLOR"
 
-    _markers: list[LightEffectOverlayMarker] | None = None
+    _markers: list[LEDsOverlayMarker] | None = None
 
     @property
-    def markers(self) -> Sequence[LightEffectOverlayMarker] | None:
+    def markers(self) -> Sequence[LEDsOverlayMarker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: Sequence[LightEffectOverlayMarker] | None):
+    def markers(self, value: Sequence[LEDsOverlayMarker] | None):
         if value is not None:
             self._markers = []
             for point, color in value:

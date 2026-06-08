@@ -4,11 +4,10 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import Any, Protocol, cast, overload
+from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import bpy
-from bpy.app.handlers import persistent
 from bpy.path import abspath
 from bpy.props import (
     BoolProperty,
@@ -35,17 +34,11 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, MutableRGBAColor, RGBAColor
-from sbstudio.plugin.callbacks import final_color_updated_callbacks
-from sbstudio.plugin.colors import set_color_of_drone
+from sbstudio.model.types import Coordinate3D, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
-from sbstudio.plugin.overlays.light_effect import (
-    LightEffectOverlay,
-    LightEffectOverlayMarker,
-)
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -97,10 +90,6 @@ of drones to a given axis of the light effect color space"""
 
 
 _always_true = constant(True)
-
-_overlay = None
-"""Global light effects marker overlay. This cannot be an attribute of LightEffectCollection
-for some reason; Blender PropertyGroup objects are weird."""
 
 
 class CustomLightEffectFunction(Protocol):
@@ -157,82 +146,6 @@ def get_color_function_names(self, context: Context) -> list[tuple[str, str, str
     # when no module is selected
     names.insert(0, "")
     return [(name, name, "") for name in names]
-
-
-@overload
-def get_overlay() -> LightEffectOverlay: ...
-
-
-@overload
-def get_overlay(create: bool) -> LightEffectOverlay | None: ...
-
-
-def get_overlay(create: bool = True):
-    global _overlay
-
-    if _overlay is None and create:
-        _overlay = LightEffectOverlay()
-
-    return _overlay
-
-
-def _visualization_callback_for_markers(
-    drones: Sequence[Object], colors: Sequence[RGBAColor], has_active_effects: bool
-) -> None:
-    light_effects = bpy.context.scene.skybrush.light_effects
-    if has_active_effects:
-        overlay_markers = [
-            (get_position_of_object(drone), color)
-            for drone, color in zip(drones, colors, strict=True)
-        ]
-        light_effects.update_overlay_markers(overlay_markers)
-    else:
-        light_effects.clear_overlay_markers()
-
-
-def _visualization_callback_for_materials(
-    drones: Sequence[Object], colors: Sequence[RGBAColor], has_active_effects: bool
-) -> None:
-    if has_active_effects:
-        for drone, color in zip(drones, colors, strict=True):
-            set_color_of_drone(drone, color)
-
-        # TODO: experiment with the "fast" solution below, which is actually slower for
-        # the time being, but maybe there is a way to make it faster by calling the
-        # proper update function...
-
-        # from numpy import array, float32
-        # from sbstudio.plugin.colors import set_colors_of_drones_fast
-
-        # set_colors_of_drones_fast(drones, array(colors, dtype=float32).ravel())
-        # for drone in drones:
-        #     drone.update_tag()
-
-
-def light_effect_visualization_updated(
-    self: "LightEffectCollection", context: Context | None = None
-):
-    # unregister
-    if self.visualization != "MARKERS":
-        if final_color_updated_callbacks.ensure_missing(
-            _visualization_callback_for_markers
-        ):
-            self.clear_overlay_markers()
-
-    if self.visualization != "MATERIALS":
-        if final_color_updated_callbacks.ensure_missing(
-            _visualization_callback_for_materials
-        ):
-            # TODO: set drone colors back to base color without light effects if we are annoyed
-            # by seeing material colors until the first frame change...
-            pass
-
-    # register
-    match self.visualization:
-        case "MARKERS":
-            final_color_updated_callbacks.ensure(_visualization_callback_for_markers)
-        case "MATERIALS":
-            final_color_updated_callbacks.ensure(_visualization_callback_for_materials)
 
 
 def object_has_mesh_data(self, obj) -> bool:
@@ -1289,19 +1202,6 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
     )
     """Global toggle for all light effects."""
 
-    visualization = EnumProperty(
-        items=[
-            ("NONE", "None", "No rendering is very quick but invisible", 1),
-            ("MARKERS", "Markers", "Markers are simple but quick", 2),
-            ("MATERIALS", "Materials", "Material coloring looks nice but is slower", 3),
-        ],
-        name="Visualization",
-        description=("The visualization method of the light effects."),
-        default="MATERIALS",
-        update=light_effect_visualization_updated,
-    )
-    """Visualization method of the light effects."""
-
     entries = CollectionProperty(type=LightEffect)
     """The entries in the collection."""
 
@@ -1441,17 +1341,6 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
             else bpy.context.scene.frame_start
         )
 
-    def clear_overlay_markers(self) -> None:
-        """Clears the light effect overlay markers."""
-        self.ensure_overlays_enabled_if_needed()
-
-        overlay = get_overlay(create=False)
-        if overlay:
-            overlay.markers = []
-
-    def ensure_overlays_enabled_if_needed(self) -> None:
-        get_overlay().enabled = self.visualization == "MARKERS"
-
     def get_index_of_entry_containing_frame(self, frame: int) -> int:
         """Returns the index of an arbitrary light effect containing the given
         frame.
@@ -1479,38 +1368,6 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         for entry in self.entries:
             entry.update_from_storyboard(context, reset_offset=False)
 
-    def update_overlay_markers(
-        self, markers: Sequence[LightEffectOverlayMarker]
-    ) -> None:
-        """Updates the light effect overlay markers."""
-        self.ensure_overlays_enabled_if_needed()
-
-        overlay = get_overlay(create=False)
-        if overlay:
-            overlay.markers = markers
-
     def _on_removing_entry(self, entry) -> bool:
         entry._remove_texture()
         return True
-
-
-@persistent
-def _on_load_initialize_callbacks(*args):
-    scene = bpy.context.scene
-    if hasattr(scene, "skybrush") and hasattr(scene.skybrush, "light_effects"):
-        light_effect_visualization_updated(scene.skybrush.light_effects)
-
-
-def register():
-    """Registers light effects subsystem."""
-    if _on_load_initialize_callbacks not in bpy.app.handlers.load_post:
-        bpy.app.handlers.load_post.append(_on_load_initialize_callbacks)
-
-
-def unregister():
-    """Unregisters light effects subsystem."""
-    if _on_load_initialize_callbacks in bpy.app.handlers.load_post:
-        bpy.app.handlers.load_post.remove(_on_load_initialize_callbacks)
-
-    final_color_updated_callbacks.ensure_missing(_visualization_callback_for_markers)
-    final_color_updated_callbacks.ensure_missing(_visualization_callback_for_materials)

@@ -69,12 +69,12 @@ from sbstudio.plugin.model import (
     StoryboardEntry,
     StoryboardEntryOrTransition,
     get_formation_order_overlay,
-    get_light_effects_overlay,
+    get_led_control_overlay,
     get_pyro_effects_overlay,
     get_safety_check_overlay,
 )
-from sbstudio.plugin.model.light_effects import register as register_light_effects
-from sbstudio.plugin.model.light_effects import unregister as unregister_light_effects
+from sbstudio.plugin.model.led_control import register as register_led_control
+from sbstudio.plugin.model.led_control import unregister as unregister_led_control
 from sbstudio.plugin.operators import (
     AddMarkersFromQRCodeOperator,
     AddMarkersFromStaticCSVOperator,
@@ -312,7 +312,7 @@ tasks = (
 """Background tasks in this addon."""
 
 overlay_getters = (
-    partial(get_light_effects_overlay, create=False),
+    partial(get_led_control_overlay, create=False),
     partial(get_pyro_effects_overlay, create=False),
     partial(get_safety_check_overlay, create=False),
     get_formation_order_overlay,
@@ -341,11 +341,11 @@ def register():
     Scene.skybrush = PointerProperty(type=DroneShowAddonProperties)
     Object.skybrush = PointerProperty(type=DroneShowAddonObjectProperties)
 
-    register_light_effects()
+    register_led_control()
 
 
 def unregister():
-    unregister_light_effects()
+    unregister_led_control()
     for getter in overlay_getters:
         overlay = getter()
         if overlay:

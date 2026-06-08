@@ -40,6 +40,8 @@ class LEDControlPanel(Panel):
         draw_bad_shader_color_source_warning(context, layout)
 
         row = layout.row()
+        row.prop(led_control, "visualization", text="Visualization")
+        row = layout.row()
         col = row.column()
         col.prop(led_control, "primary_color", text="Primary", icon="COLOR")
         col = row.column()
