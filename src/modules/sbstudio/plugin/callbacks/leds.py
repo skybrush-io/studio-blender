@@ -1,4 +1,4 @@
-"""Callback functionality related to light effects."""
+"""Callback functionality related to LED colors."""
 
 from typing import Protocol, Sequence
 
@@ -8,10 +8,10 @@ from sbstudio.model.types import RGBAColor
 
 from .base import CallbackList
 
-__all__ = ("LightEffectColorUpdateCallback", "final_color_updated_callbacks")
+__all__ = ("LEDColorUpdateCallback", "final_color_updated_callbacks")
 
 
-class LightEffectColorUpdateCallback(Protocol):
+class LEDColorUpdateCallback(Protocol):
     def __call__(
         self,
         drones: Sequence[Object],

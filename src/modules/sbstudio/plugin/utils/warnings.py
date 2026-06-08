@@ -26,11 +26,25 @@ def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> 
         return
     shading = space.shading
 
+    led_control = context.scene.skybrush.led_control
+    if led_control is None:
+        return
+
+    if led_control.visualization == "MATERIALS":
+        expected_wireframe_color_type = "OBJECT"
+        expected_color_type = "OBJECT"
+    else:
+        expected_wireframe_color_type = "THEME"
+        expected_color_type = "MATERIAL"
+
     label = (
-        "Set shader Wireframe Color to 'OBJECT'"
-        if (shading.type == "WIREFRAME" and shading.wireframe_color_type != "OBJECT")
-        else "Set shader Object Color to 'OBJECT'"
-        if (shading.type == "SOLID" and shading.color_type != "OBJECT")
+        f"Set shader Wireframe Color to {expected_wireframe_color_type!r}"
+        if (
+            shading.type == "WIREFRAME"
+            and shading.wireframe_color_type != expected_wireframe_color_type
+        )
+        else f"Set shader Object Color to {expected_color_type!r}"
+        if (shading.type == "SOLID" and shading.color_type != expected_color_type)
         else None
     )
     if label:

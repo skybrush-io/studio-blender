@@ -117,28 +117,25 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             random_seq=random_seq,
         )
 
+    # store final colors for later use if there are active light effects
+    if changed:
+        assert drones is not None
+        for drone, color in zip(drones, colors, strict=True):
+            _final_color_cache[id(drone)] = color
     # If we haven't changed anything, _but_ this is because we have recently
     # disabled or removed the last effect (which we know from the fact that
     # the _base_color_cache is filled), clear the cache and update the colors
     # nevertheless. This is needed to update the screen properly when the last
     # effect is disabled.
-    has_active_effects = changed
-    if not changed and _base_color_cache:
+    elif _base_color_cache:
         drones = Collections.find_drones().objects
         colors = [_base_color_cache.get(id(drone)) or list(WHITE) for drone in drones]
         _base_color_cache.clear()
-        has_active_effects = False
         changed = True
 
-    if changed:
-        assert drones is not None
-        for drone, color in zip(drones, colors, strict=True):
-            _final_color_cache[id(drone)] = color
-
     # Note that we need to call the callbacks even if we did not change anything,
-    # as there might be callbacks (e.g. marker overlay) that need to be cleared when
-    # there are no active light effects
-    final_color_updated_callbacks(drones or [], colors or [], has_active_effects)
+    # and we imitate a single color change also on last light effect removal
+    final_color_updated_callbacks(drones or [], colors or [], changed)
 
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:
@@ -150,7 +147,7 @@ def get_base_color_of_drone(drone: Object) -> RGBAColor:
 def get_final_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the (cached) final color of the drone at the current frame
     after all active light effects are applied on it."""
-    return _final_color_cache.get(id(drone)) or get_color_of_drone(drone)
+    return _final_color_cache.get(id(drone)) or get_base_color_of_drone(drone)
 
 
 suspended_light_effects = suspension.use

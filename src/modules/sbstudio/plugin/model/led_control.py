@@ -2,13 +2,15 @@ from collections.abc import Sequence
 from typing import overload
 
 import bpy
+import numpy as np
 from bpy.app.handlers import persistent
 from bpy.props import EnumProperty
 from bpy.types import Context, Object, PropertyGroup
 
 from sbstudio.model.types import RGBAColor
 from sbstudio.plugin.callbacks import final_color_updated_callbacks
-from sbstudio.plugin.colors import set_color_of_drone
+from sbstudio.plugin.colors import get_colors_of_drones_fast, set_color_of_drone
+from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.overlays.leds import (
     LEDsOverlay,
     LEDsOverlayMarker,
@@ -28,15 +30,18 @@ for some reason; Blender PropertyGroup objects are weird."""
 def _visualization_callback_for_markers(
     drones: Sequence[Object], colors: Sequence[RGBAColor], has_active_effects: bool
 ) -> None:
+    if not has_active_effects:
+        drones = Collections.find_drones().objects
+        arr = np.zeros((len(drones), 4), dtype=np.float32)
+        get_colors_of_drones_fast(drones, dest=arr.ravel())
+        colors = arr.tolist()
+
     led_control = bpy.context.scene.skybrush.led_control
-    if has_active_effects:
-        overlay_markers = [
-            (get_position_of_object(drone), color)
-            for drone, color in zip(drones, colors, strict=True)
-        ]
-        led_control.update_overlay_markers(overlay_markers)
-    else:
-        led_control.clear_overlay_markers()
+    overlay_markers = [
+        (get_position_of_object(drone), color)
+        for drone, color in zip(drones, colors, strict=True)
+    ]
+    led_control.update_overlay_markers(overlay_markers)
 
 
 def _visualization_callback_for_materials(
@@ -83,16 +88,12 @@ def visualization_updated(
         if final_color_updated_callbacks.ensure_missing(
             _visualization_callback_for_markers
         ):
-            # TODO(vasarhelyi)
             self.clear_overlay_markers()
 
     if self.visualization != "MATERIALS":
         if final_color_updated_callbacks.ensure_missing(
             _visualization_callback_for_materials
         ):
-            # TODO(vasarhelyi)
-            # TODO: set drone colors back to base color without light effects if we are annoyed
-            # by seeing material colors until the first frame change...
             pass
 
     # register
@@ -106,12 +107,12 @@ def visualization_updated(
     space = find_current_3d_view(context)
     if space is not None:
         shading = space.shading
-        if self.visualization == "MARKERS":
-            shading.color_type = "MATERIAL"
-            shading.wireframe_color_type = "THEME"
-        else:
+        if self.visualization == "MATERIALS":
             shading.color_type = "OBJECT"
             shading.wireframe_color_type = "OBJECT"
+        else:
+            shading.color_type = "MATERIAL"
+            shading.wireframe_color_type = "THEME"
 
 
 class LEDControlPanelProperties(PropertyGroup):
