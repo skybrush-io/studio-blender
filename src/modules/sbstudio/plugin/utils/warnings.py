@@ -1,10 +1,9 @@
-from typing import cast
-
-from bpy.types import Context, SpaceView3D, UILayout
+from bpy.types import Context, UILayout
 
 from sbstudio.plugin.migrations import get_migration_details
 from sbstudio.plugin.model.formation import count_markers_in_formation
 from sbstudio.plugin.stats import get_drone_count
+from sbstudio.plugin.views import find_current_3d_view
 
 __all__ = (
     "draw_bad_shader_color_source_warning",
@@ -21,11 +20,10 @@ def _draw_warning(layout, text: str) -> None:
 
 def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
     """Draw a bad shader color source warning to a layout, if needed."""
-    space = context.space_data
-    if not space or space.type != "VIEW_3D":
-        return
 
-    space = cast(SpaceView3D, space)
+    space = find_current_3d_view(context)
+    if space is None:
+        return
     shading = space.shading
 
     label = (

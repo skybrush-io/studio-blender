@@ -1,17 +1,16 @@
-from typing import cast
+from bpy.types import Context, Operator
 
-from bpy.types import Context, Operator, SpaceView3D
+from sbstudio.plugin.views import find_current_3d_view
 
 __all__ = ("SetupSceneOperator",)
 
 
 def is_shading_setup_needed(context: Context) -> bool:
-    space = context.space_data
-    if not space or space.type != "VIEW_3D":
+    space = find_current_3d_view(context)
+    if space is None:
         return False
-
-    space = cast(SpaceView3D, space)
     shading = space.shading
+
     return shading.wireframe_color_type != "OBJECT" or shading.color_type != "OBJECT"
 
 
@@ -33,9 +32,8 @@ class SetupSceneOperator(Operator):
         return is_setup_needed(context)
 
     def execute(self, context: Context):
-        space = context.space_data
-        if space and space.type == "VIEW_3D":
-            space = cast(SpaceView3D, space)
+        space = find_current_3d_view(context)
+        if space is not None:
             shading = space.shading
             shading.color_type = "OBJECT"
             shading.wireframe_color_type = "OBJECT"

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+from bpy.types import Context
 
 if TYPE_CHECKING:
     from bpy.types import Area, SpaceView3D
@@ -11,8 +13,7 @@ from .utils import with_screen
 __all__ = (
     "find_all_3d_views",
     "find_all_3d_views_and_their_areas",
-    "find_one_3d_view",
-    "find_one_3d_view_and_its_area",
+    "find_current_3d_view",
     "redraw_all_3d_views",
 )
 
@@ -62,43 +63,33 @@ def _find_all_3d_views_and_their_areas(
                     yield space, area
 
 
-@with_screen
-def find_one_3d_view(screen: str | None = None) -> SpaceView3D | None:
-    """Finds a 3D view in the Blender screen with the given name, and returns
+def find_current_3d_view(
+    context: Context | None = None,
+) -> SpaceView3D | None:
+    """Finds the current 3D view in the given context, and returns
     the view itself.
 
     Parameters:
-        screen: the name of the Blender screen to scan; `None` means to use the
-            current screen
+        context: the name of the Blender context to scan; `None` means to use the
+            current context
 
     Returns:
-        the first 3D view that we find in the given Blender screen, or ``None``
+        the current 3D view that we find in the given Blender context, or ``None``
         if no 3D view was found
     """
-    return find_one_3d_view_and_its_area(screen)[0]
+    if context is None:
+        return None
 
+    assert context is not None
 
-@with_screen
-def find_one_3d_view_and_its_area(
-    screen: str | None = None,
-) -> tuple[SpaceView3D | None, Area | None]:
-    """Finds a 3D view in the Blender screen with the given name, and returns
-    the view and its containing area in a tuple.
+    space = context.space_data
+    if not space or space.type != "VIEW_3D":
+        return None
 
-    Parameters:
-        screen: the name of the Blender screen to scan; `None` means to use the
-            current screen
+    if TYPE_CHECKING:
+        space = cast(SpaceView3D, space)
 
-    Returns:
-        the first 3D view that we find in the given Blender screen and its area,
-        or ``(None, None)`` if no 3D view was found
-    """
-    for area in screen.areas:  # type: ignore
-        if area.type == "VIEW_3D":
-            for space in area.spaces:
-                if space.type == "VIEW_3D":
-                    return space, area
-    return None, None
+    return space
 
 
 @with_screen
