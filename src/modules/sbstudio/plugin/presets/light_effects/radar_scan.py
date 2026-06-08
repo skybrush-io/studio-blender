@@ -13,27 +13,30 @@ RADAR_ANGULAR_SPEED = 2400.0 / 34.0
 RADAR_FRAMERATE = 24.0
 
 
-def _get_plane_coords(position: Coordinate3D, plane: str) -> tuple[float, float]:
-    x, y, z = position
-    coords = {"X": x, "Y": y, "Z": z}
-    a, b = plane.upper()
-    return (coords[a], coords[b])
-
-
-def _radar_scan_core(position, plane: str, fan_angle_deg: float, frame: int) -> float:
-    coord_a, coord_b = _get_plane_coords(position, plane)
+def _radar_scan_core(
+    position, plane: tuple[int, int], fan_angle_deg: float, frame: int
+) -> float:
     time_sec = frame / RADAR_FRAMERATE
     rotation_angle_deg = (time_sec * RADAR_ANGULAR_SPEED) % 360.0
+
+    coord_a, coord_b = position[plane[0]], position[plane[1]]
     drone_angle_deg = degrees(atan2(coord_b, coord_a))
     if drone_angle_deg < 0:
         drone_angle_deg += 360.0
+
     fan_start = rotation_angle_deg
     fan_end = (rotation_angle_deg + fan_angle_deg) % 360.0
     if fan_start <= fan_end:
         in_fan = fan_start <= drone_angle_deg <= fan_end
     else:
         in_fan = (drone_angle_deg >= fan_start) or (drone_angle_deg <= fan_end)
+
     return 1.0 if in_fan else 0.0
+
+
+XY = (0, 1)
+YZ = (1, 2)
+XZ = (0, 2)
 
 
 @register_preset(
@@ -49,7 +52,7 @@ def radar_scan_60_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "XY", 60.0, frame)
+    return _radar_scan_core(position, XY, 60.0, frame)
 
 
 @register_preset(
@@ -65,7 +68,7 @@ def radar_scan_90_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "XY", 90.0, frame)
+    return _radar_scan_core(position, XY, 90.0, frame)
 
 
 @register_preset(
@@ -81,7 +84,7 @@ def radar_scan_120_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "XY", 120.0, frame)
+    return _radar_scan_core(position, XY, 120.0, frame)
 
 
 @register_preset(
@@ -97,7 +100,7 @@ def radar_scan_60_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "XZ", 60.0, frame)
+    return _radar_scan_core(position, XZ, 60.0, frame)
 
 
 @register_preset(
@@ -113,7 +116,7 @@ def radar_scan_90_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "XZ", 90.0, frame)
+    return _radar_scan_core(position, XZ, 90.0, frame)
 
 
 @register_preset(
@@ -129,7 +132,7 @@ def radar_scan_120_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "XZ", 120.0, frame)
+    return _radar_scan_core(position, XZ, 120.0, frame)
 
 
 @register_preset(
@@ -145,7 +148,7 @@ def radar_scan_60_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "YZ", 60.0, frame)
+    return _radar_scan_core(position, YZ, 60.0, frame)
 
 
 @register_preset(
@@ -161,7 +164,7 @@ def radar_scan_90_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "YZ", 90.0, frame)
+    return _radar_scan_core(position, YZ, 90.0, frame)
 
 
 @register_preset(
@@ -177,20 +180,19 @@ def radar_scan_120_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _radar_scan_core(position, "YZ", 120.0, frame)
+    return _radar_scan_core(position, YZ, 120.0, frame)
 
 
-# Global parameters for v5.1 effects
 PAINT_DURATION_FRAMES = 120
 PAINT_FRAMERATE = 24.0
 
 
-# Helper functions for v5.1 effects
-def _v51_paint_on_core(position: Coordinate3D, plane: str, frame: int) -> float:
-    coord_a, coord_b = _get_plane_coords(position, plane)
+def _paint_on_core(position: Coordinate3D, plane: tuple[int, int], frame: int) -> float:
+    coord_a, coord_b = position[plane[0]], position[plane[1]]
     drone_angle_deg = degrees(atan2(coord_b, coord_a))
     if drone_angle_deg < 0:
         drone_angle_deg += 360.0
+
     phase = min(frame / max(PAINT_DURATION_FRAMES, 1), 1.0)
     current_angle_deg = phase * 360.0
     if drone_angle_deg <= current_angle_deg:
@@ -212,4 +214,4 @@ def pattern_paint_on_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _v51_paint_on_core(position, "XY", frame)
+    return _paint_on_core(position, XY, frame)
