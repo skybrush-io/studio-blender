@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import overload
+from typing import Literal, TypeAlias, overload
 
 import bpy
 import numpy as np
@@ -19,7 +19,11 @@ from sbstudio.plugin.props import ColorProperty
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.views import find_current_3d_view
 
-__all__ = ("LEDControlPanelProperties",)
+__all__ = (
+    "LEDControlPanelProperties",
+    "get_expected_3d_viewport_shader_configuration",
+    "get_expected_3d_viewport_shader_configuration_from_context",
+)
 
 
 _overlay = None
@@ -37,10 +41,10 @@ def _visualization_callback_for_markers(
         colors = arr.tolist()
 
     led_control = bpy.context.scene.skybrush.led_control
-    overlay_markers = [
+    overlay_markers: Sequence[LEDsOverlayMarker] = [
         (get_position_of_object(drone), color)
         for drone, color in zip(drones, colors, strict=True)
-    ]
+    ]  # ty:ignore[invalid-assignment]
     led_control.update_overlay_markers(overlay_markers)
 
 
@@ -61,6 +65,55 @@ def _visualization_callback_for_materials(
         # set_colors_of_drones_fast(drones, array(colors, dtype=float32).ravel())
         # for drone in drones:
         #     drone.update_tag()
+
+
+ViewportShaderConfig: TypeAlias = tuple[
+    Literal["THEME", "OBJECT"] | None, Literal["MATERIAL", "OBJECT"] | None
+]
+
+
+def get_expected_3d_viewport_shader_configuration(
+    visualization: str,
+) -> ViewportShaderConfig:
+    """Returns the expected wireframe and object color type to use in the 3D viewport
+    shading settings for a given visualization mode.
+
+    Args:
+        visualization: the visualization mode
+
+    Returns:
+        A tuple of (expected_wireframe_color_type, expected_color_type) where each
+        element is either a string representing the expected color type or None if
+        there is no expectation for that color type.
+    """
+    match visualization:
+        case "MATERIALS":
+            return "OBJECT", "OBJECT"
+        case "MARKERS":
+            return "THEME", "MATERIAL"
+        case _:
+            return None, None
+
+
+def get_expected_3d_viewport_shader_configuration_from_context(
+    context: Context,
+) -> ViewportShaderConfig:
+    """Returns the expected wireframe and object color type to use in the 3D viewport
+    shading settings based on the current Blender context.
+
+    Args:
+        context: the current Blender context
+
+    Returns:
+        A tuple of (expected_wireframe_color_type, expected_color_type) where each
+        element is either a string representing the expected color type or None if
+        there is no expectation for that color type.
+    """
+    led_control = context.scene.skybrush.led_control
+    if led_control is None:
+        return None, None
+    else:
+        return get_expected_3d_viewport_shader_configuration(led_control.visualization)
 
 
 @overload

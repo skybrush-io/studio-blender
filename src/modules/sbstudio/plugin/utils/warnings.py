@@ -2,6 +2,9 @@ from bpy.types import Context, UILayout
 
 from sbstudio.plugin.migrations import get_migration_details
 from sbstudio.plugin.model.formation import count_markers_in_formation
+from sbstudio.plugin.model.led_control import (
+    get_expected_3d_viewport_shader_configuration_from_context,
+)
 from sbstudio.plugin.stats import get_drone_count
 from sbstudio.plugin.views import find_current_3d_view
 
@@ -20,31 +23,29 @@ def _draw_warning(layout, text: str) -> None:
 
 def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
     """Draw a bad shader color source warning to a layout, if needed."""
-
     space = find_current_3d_view(context)
     if space is None:
         return
+
     shading = space.shading
 
-    led_control = context.scene.skybrush.led_control
-    if led_control is None:
-        return
-
-    if led_control.visualization == "MATERIALS":
-        expected_wireframe_color_type = "OBJECT"
-        expected_color_type = "OBJECT"
-    else:
-        expected_wireframe_color_type = "THEME"
-        expected_color_type = "MATERIAL"
+    expected_wireframe_color_type, expected_color_type = (
+        get_expected_3d_viewport_shader_configuration_from_context(context)
+    )
 
     label = (
         f"Set shader Wireframe Color to {expected_wireframe_color_type!r}"
         if (
             shading.type == "WIREFRAME"
+            and expected_wireframe_color_type is not None
             and shading.wireframe_color_type != expected_wireframe_color_type
         )
         else f"Set shader Object Color to {expected_color_type!r}"
-        if (shading.type == "SOLID" and shading.color_type != expected_color_type)
+        if (
+            shading.type == "SOLID"
+            and expected_color_type is not None
+            and shading.color_type != expected_color_type
+        )
         else None
     )
     if label:

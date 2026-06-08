@@ -1,5 +1,8 @@
 from bpy.types import Context, Operator
 
+from sbstudio.plugin.model.led_control import (
+    get_expected_3d_viewport_shader_configuration_from_context,
+)
 from sbstudio.plugin.views import find_current_3d_view
 
 __all__ = ("SetupSceneOperator",)
@@ -35,7 +38,16 @@ class SetupSceneOperator(Operator):
         space = find_current_3d_view(context)
         if space is not None:
             shading = space.shading
-            shading.color_type = "OBJECT"
-            shading.wireframe_color_type = "OBJECT"
+            expected_wireframe_color_type, expected_color_type = (
+                get_expected_3d_viewport_shader_configuration_from_context(context)
+            )
+
+            match shading.type:
+                case "WIREFRAME":
+                    if expected_wireframe_color_type is not None:
+                        shading.wireframe_color_type = expected_wireframe_color_type
+                case "SOLID":
+                    if expected_color_type is not None:
+                        shading.color_type = expected_color_type
 
         return {"FINISHED"}
