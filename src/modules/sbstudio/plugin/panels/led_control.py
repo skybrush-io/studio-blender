@@ -35,13 +35,16 @@ class LEDControlPanel(Panel):
             return
 
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
         draw_version_warning(context, layout)
         draw_bad_shader_color_source_warning(context, layout)
 
+        layout.prop(led_control, "visualization", text="Visualization")
+
         row = layout.row()
-        row.prop(led_control, "visualization", text="Visualization")
-        row = layout.row()
+        row.use_property_split = False
         col = row.column()
         col.prop(led_control, "primary_color", text="Primary", icon="COLOR")
         col = row.column()
