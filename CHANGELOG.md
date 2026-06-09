@@ -19,12 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The default velocity profile of the takeoff operation got changed to "linear", 
+- The default velocity profile of the takeoff operation got changed to "linear",
   while the transition to the first formation is "smooth from right" now. This keeps
   the speed and the minimum distance of the takeoff prodecure transparent on both
-  single and multi-layered takeoffs, but might introduce short acceleration spikes 
+  single and multi-layered takeoffs, but might introduce short acceleration spikes
   at the start and end of the takeoff. If that is disturbing the velocity profile
   can be set back to "smooth" for backward compatibility.
+
+### Fixed
+
+- Fixed an exception that happened when switching between files containing video based
+  light effects.
 
 ## [4.4.0] - 2026-05-12
 
