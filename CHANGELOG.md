@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Available profiles: "smooth" (previous default), "linear", "smooth from left", and
   "smmoth from right".
 
+- Added an experimental set of pre-defined light effects that can be applied to the
+  drones without the need of creating custom Python functions. Note that these light
+  effects are still experimental and we reserve the right to change or remove them any
+  time in future releases. If you use them in your own projects, please be prepared
+  that they may break or their behaviour might change in the future at any time. A
+  separate entry will be added in the changelog when they are considered final.
+
 ### Changed
 
 - The default velocity profile of the takeoff operation got changed to "linear",
