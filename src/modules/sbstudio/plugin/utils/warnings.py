@@ -12,6 +12,7 @@ __all__ = (
     "draw_bad_shader_color_source_warning",
     "draw_formation_size_warning",
     "draw_version_warning",
+    "get_bad_shader_color_source_warning",
 )
 
 
@@ -21,11 +22,12 @@ def _draw_warning(layout, text: str) -> None:
     row.label(text=text, icon="ERROR")
 
 
-def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
-    """Draw a bad shader color source warning to a layout, if needed."""
+def get_bad_shader_color_source_warning(context: Context) -> str | None:
+    """Returns a warning label if the shader configuration is bad,
+    `None` otherwise."""
     space = find_current_3d_view(context)
     if space is None:
-        return
+        return None
 
     shading = space.shading
 
@@ -48,6 +50,13 @@ def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> 
         )
         else None
     )
+
+    return label
+
+
+def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
+    """Draw a bad shader color source warning to a layout, if needed."""
+    label = get_bad_shader_color_source_warning(context)
     if label:
         _draw_warning(layout, text=label)
 

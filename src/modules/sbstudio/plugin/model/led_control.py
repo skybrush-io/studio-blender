@@ -17,7 +17,7 @@ from sbstudio.plugin.overlays.leds import (
 )
 from sbstudio.plugin.props import ColorProperty
 from sbstudio.plugin.utils.evaluator import get_position_of_object
-from sbstudio.plugin.views import find_current_3d_view
+from sbstudio.plugin.views import find_all_3d_views
 
 __all__ = (
     "LEDControlPanelProperties",
@@ -135,12 +135,18 @@ def get_overlay(create: bool = True):
 
 
 def set_expected_3d_viewport_shader_configuration_of_context(context: Context) -> None:
-    space = find_current_3d_view(context)
-    if space is not None:
+    """Updates the 3D viewport shading settings based on the current Blender
+    context to use the expected wireframe and object color type.
+
+    Args:
+        context: the current Blender context
+    """
+    expected_wireframe_color_type, expected_color_type = (
+        get_expected_3d_viewport_shader_configuration_from_context(context)
+    )
+
+    for space in find_all_3d_views():
         shading = space.shading
-        expected_wireframe_color_type, expected_color_type = (
-            get_expected_3d_viewport_shader_configuration_from_context(context)
-        )
 
         match shading.type:
             case "WIREFRAME":

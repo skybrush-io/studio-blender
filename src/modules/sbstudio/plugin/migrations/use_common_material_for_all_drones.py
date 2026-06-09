@@ -11,7 +11,9 @@ from sbstudio.plugin.materials import (
     _get_shader_node_and_input_for_diffuse_color_of_material,
     get_material_for_led_light_color,
 )
-from sbstudio.plugin.views import find_all_3d_views
+from sbstudio.plugin.model.led_control import (
+    set_expected_3d_viewport_shader_configuration_of_context,
+)
 
 from .base import Migration
 
@@ -37,14 +39,6 @@ def add_object_info_to_shader_node_tree_of_drone_template() -> None:
                 raise SkybrushStudioAddonError(
                     "Template drone shader node tree mismatch"
                 )
-
-
-def set_all_shading_color_types_to_object() -> None:
-    """Sets the object color source of the solid and wireframe
-    shading types of the 3D Viewport to use object color."""
-    for space in find_all_3d_views():
-        space.shading.color_type = "OBJECT"
-        space.shading.wireframe_color_type = "OBJECT"
 
 
 def upgrade_drone_color_animations_and_drone_materials(log: Logger) -> None:
@@ -135,7 +129,7 @@ class UseSharedMaterialForAllDronesMigration(Migration):
         log.info("Simplifying drone color animation storage...")
         upgrade_drone_color_animations_and_drone_materials(log)
 
-        log.info("Changing 3D viewport shader color types to 'OBJECT'...")
-        set_all_shading_color_types_to_object()
+        log.info("Updating 3D Viewport shader color types...")
+        set_expected_3d_viewport_shader_configuration_of_context(context)
 
         return {"FINISHED"}

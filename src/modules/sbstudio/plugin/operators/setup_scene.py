@@ -3,18 +3,13 @@ from bpy.types import Context, Operator
 from sbstudio.plugin.model.led_control import (
     set_expected_3d_viewport_shader_configuration_of_context,
 )
-from sbstudio.plugin.views import find_current_3d_view
+from sbstudio.plugin.utils.warnings import get_bad_shader_color_source_warning
 
 __all__ = ("SetupSceneOperator",)
 
 
 def is_shading_setup_needed(context: Context) -> bool:
-    space = find_current_3d_view(context)
-    if space is None:
-        return False
-    shading = space.shading
-
-    return shading.wireframe_color_type != "OBJECT" or shading.color_type != "OBJECT"
+    return get_bad_shader_color_source_warning(context) is not None
 
 
 def is_setup_needed(context: Context) -> bool:
