@@ -12,29 +12,22 @@ CHASE_SPEED = 0.12
 CHASE_SPATIAL_K = 0.1
 
 
-def _chasing_tails_core(position, plane: str, frame: int, formation_index) -> float:
-    if position is None:
-        coord = 0.0
-    else:
-        axis = plane[0].upper()
-        coords_map = {"X": position[0], "Y": position[1], "Z": position[2]}
-        coord = coords_map[axis]
+def _chasing_tails_core(
+    position: Coordinate3D, axis: int, frame: int, formation_index: int | None
+) -> float:
+    coord = position[axis]
     fi = formation_index if formation_index is not None else 0
-    group = fi % 2
     travel_phase = frame * CHASE_SPEED - coord * CHASE_SPATIAL_K
-    if group == 0:
-        v = sin(travel_phase)
-    else:
-        v = cos(travel_phase)
+    v = cos(travel_phase) if fi % 2 else sin(travel_phase)
     return (v + 1) / 2
 
 
 @register_preset(
-    id="chasing_tails_xy",
-    label="Chasing Tails XY",
-    translations=(("zh", "追逐尾巴 XY"), ("ja", "追跡 XY")),
+    id="chasing_tails_x",
+    label="Chasing Tails X",
+    translations=(("zh", "追逐尾巴 X"), ("ja", "追跡 X")),
 )
-def chasing_tails_xy(
+def chasing_tails_x(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -42,15 +35,15 @@ def chasing_tails_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _chasing_tails_core(position, "XY", frame, formation_index)
+    return _chasing_tails_core(position, 0, frame, formation_index)
 
 
 @register_preset(
-    id="chasing_tails_xz",
-    label="Chasing Tails XZ",
-    translations=(("zh", "追逐尾巴 XZ"), ("ja", "追跡 XZ")),
+    id="chasing_tails_y",
+    label="Chasing Tails Y",
+    translations=(("zh", "追逐尾巴 Y"), ("ja", "追跡 Y")),
 )
-def chasing_tails_xz(
+def chasing_tails_y(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -58,15 +51,15 @@ def chasing_tails_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _chasing_tails_core(position, "XZ", frame, formation_index)
+    return _chasing_tails_core(position, 1, frame, formation_index)
 
 
 @register_preset(
-    id="chasing_tails_yz",
-    label="Chasing Tails YZ",
-    translations=(("zh", "追逐尾巴 YZ"), ("ja", "追跡 YZ")),
+    id="chasing_tails_z",
+    label="Chasing Tails Z",
+    translations=(("zh", "追逐尾巴 Z"), ("ja", "追跡 Z")),
 )
-def chasing_tails_yz(
+def chasing_tails_z(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -74,4 +67,4 @@ def chasing_tails_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    return _chasing_tails_core(position, "YZ", frame, formation_index)
+    return _chasing_tails_core(position, 2, frame, formation_index)
