@@ -3,6 +3,7 @@ from bpy.types import Panel
 
 from sbstudio.plugin.model.light_effects import (
     effect_type_supports_randomization,
+    output_type_is_experimental,
     output_type_supports_mapping_mode,
 )
 from sbstudio.plugin.operators import (
@@ -16,6 +17,7 @@ from sbstudio.plugin.operators import (
     SetLightEffectEndFrameOperator,
     SetLightEffectStartFrameOperator,
 )
+from sbstudio.plugin.utils.warnings import draw_experimental_feature_warning
 
 
 class LightEffectsPanel(Panel):
@@ -172,6 +174,8 @@ class LightEffectsPanel(Panel):
             col.separator()
             if entry.type == "COLOR_RAMP" or entry.type == "IMAGE":
                 col.prop(entry, "output")
+                if output_type_is_experimental(entry.output):
+                    draw_experimental_feature_warning(col)
                 if entry.output == "CUSTOM":
                     col.prop(entry.output_function, "path", text="Fn file")
                     col.prop(entry.output_function, "name", text="Fn name")
@@ -181,6 +185,8 @@ class LightEffectsPanel(Panel):
                 col.prop(entry, "output_mapping_mode")
             if entry.type == "IMAGE":
                 col.prop(entry, "output_y")
+                if output_type_is_experimental(entry.output_y):
+                    draw_experimental_feature_warning(col)
                 if entry.output_y == "CUSTOM":
                     col.prop(entry.output_function_y, "path", text="Fn file")
                     col.prop(entry.output_function_y, "name", text="Fn name")

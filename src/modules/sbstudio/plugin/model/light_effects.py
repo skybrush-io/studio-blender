@@ -53,7 +53,14 @@ from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
 
-__all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
+__all__ = (
+    "ColorFunctionProperties",
+    "LightEffect",
+    "LightEffectCollection",
+    "effect_type_supports_randomization",
+    "output_type_is_experimental",
+    "output_type_supports_mapping_mode",
+)
 
 
 def object_has_mesh_data(self, obj) -> bool:
@@ -140,6 +147,13 @@ def effect_type_supports_randomization(type: str) -> bool:
     randomization.
     """
     return type == "COLOR_RAMP" or type == "IMAGE"
+
+
+def output_type_is_experimental(type: str) -> bool:
+    """Returns whether the light effect output type given in the argument is
+    experimental and may be subject to change or removal in future versions of
+    the plugin."""
+    return type == "LIGHT_PRESET"
 
 
 def output_type_supports_mapping_mode(type: str) -> bool:
@@ -1296,7 +1310,7 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         if duration is None or duration <= 0:
             duration = fps * DEFAULT_LIGHT_EFFECT_DURATION
 
-        entry: LightEffect = cast(LightEffect, self.entries.add())
+        entry = self.entries.add()
         entry.type = "COLOR_RAMP"
         entry.frame_start = frame_start
         entry.duration = duration
