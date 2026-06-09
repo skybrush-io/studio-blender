@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
 
+import bpy
 import numpy as np
 
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
@@ -18,6 +19,7 @@ from sbstudio.plugin.colors import (
 )
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.views import redraw_all_3d_views
 
 from .base import Task
 from .utils import Suspension
@@ -165,6 +167,12 @@ context is entered and re-enables them when the context is exited.
 """
 
 
+def _update_light_effects_post_load(*args):
+    context = bpy.context
+    update_light_effects(context.scene, context.evaluated_depsgraph_get())
+    redraw_all_3d_views()
+
+
 class UpdateLightEffectsTask(Task):
     """Background task that is invoked after every frame change and that is
     responsible for updating the colors of the drones according to the active
@@ -174,4 +182,5 @@ class UpdateLightEffectsTask(Task):
     functions = {
         "depsgraph_update_post": update_light_effects,
         "frame_change_post": update_light_effects,
+        "load_post": _update_light_effects_post_load,
     }

@@ -335,23 +335,24 @@ def register():
         register_panel(panel)
     for header in headers:
         register_header(header)
-    for task in tasks:
-        task.register()
 
     Scene.skybrush = PointerProperty(type=DroneShowAddonProperties)
     Object.skybrush = PointerProperty(type=DroneShowAddonObjectProperties)
 
     register_led_control()
 
+    for task in tasks:
+        task.register()
+
 
 def unregister():
+    for task in tasks:
+        task.unregister()
     unregister_led_control()
     for getter in overlay_getters:
         overlay = getter()
         if overlay:
             overlay.enabled = False
-    for task in tasks:
-        task.unregister()
     for header in reversed(headers):
         unregister_header(header)
     for panel in reversed(panels):
