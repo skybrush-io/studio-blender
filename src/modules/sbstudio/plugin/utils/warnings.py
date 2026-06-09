@@ -1,15 +1,18 @@
-from typing import cast
-
-from bpy.types import Context, SpaceView3D, UILayout
+from bpy.types import Context, UILayout
 
 from sbstudio.plugin.migrations import get_migration_details
 from sbstudio.plugin.model.formation import count_markers_in_formation
+from sbstudio.plugin.model.led_control import (
+    get_expected_3d_viewport_shader_configuration_from_context,
+)
 from sbstudio.plugin.stats import get_drone_count
+from sbstudio.plugin.views import find_current_3d_view
 
 __all__ = (
     "draw_bad_shader_color_source_warning",
     "draw_formation_size_warning",
     "draw_version_warning",
+    "get_bad_shader_color_source_warning",
 )
 
 
@@ -19,22 +22,41 @@ def _draw_warning(layout, text: str) -> None:
     row.label(text=text, icon="ERROR")
 
 
-def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
-    """Draw a bad shader color source warning to a layout, if needed."""
-    space = context.space_data
-    if not space or space.type != "VIEW_3D":
-        return
+def get_bad_shader_color_source_warning(context: Context) -> str | None:
+    """Returns a warning label if the shader configuration is bad,
+    `None` otherwise."""
+    space = find_current_3d_view(context)
+    if space is None:
+        return None
 
-    space = cast(SpaceView3D, space)
     shading = space.shading
 
+    expected_wireframe_color_type, expected_color_type = (
+        get_expected_3d_viewport_shader_configuration_from_context(context)
+    )
+
     label = (
-        "Set shader Wireframe Color to 'OBJECT'"
-        if (shading.type == "WIREFRAME" and shading.wireframe_color_type != "OBJECT")
-        else "Set shader Object Color to 'OBJECT'"
-        if (shading.type == "SOLID" and shading.color_type != "OBJECT")
+        f"Set shader Wireframe Color to {expected_wireframe_color_type!r}"
+        if (
+            shading.type == "WIREFRAME"
+            and expected_wireframe_color_type is not None
+            and shading.wireframe_color_type != expected_wireframe_color_type
+        )
+        else f"Set shader Object Color to {expected_color_type!r}"
+        if (
+            shading.type == "SOLID"
+            and expected_color_type is not None
+            and shading.color_type != expected_color_type
+        )
         else None
     )
+
+    return label
+
+
+def draw_bad_shader_color_source_warning(context: Context, layout: UILayout) -> None:
+    """Draw a bad shader color source warning to a layout, if needed."""
+    label = get_bad_shader_color_source_warning(context)
     if label:
         _draw_warning(layout, text=label)
 

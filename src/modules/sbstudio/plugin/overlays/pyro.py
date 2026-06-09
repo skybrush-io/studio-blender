@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Sequence, cast
 
 import blf
 import bpy
-import gpu
 import gpu.state
 from bpy.types import SpaceView3D
 from bpy_extras.view3d_utils import location_3d_to_region_2d
@@ -12,7 +11,7 @@ from gpu_extras.batch import batch_for_shader
 
 from sbstudio.model.types import Coordinate3D, RGBColor
 
-from .base import ShaderOverlay
+from .base import ShaderBatchBasedOverlay
 
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
@@ -38,14 +37,13 @@ DEFAULT_PYRO_OVERLAY_MARKER_COLOR: RGBColor = (0.5, 0.5, 0.5)
 """Default color for pyro marker overlays."""
 
 
-class PyroOverlay(ShaderOverlay):
+class PyroOverlay(ShaderBatchBasedOverlay):
     """Overlay that marks pyro drones in the 3D view."""
 
     shader_type = "POINT_FLAT_COLOR"
 
     _info_blocks: list[PyroOverlayInfo] | None = None
     _markers: list[PyroOverlayMarker] | None = None
-    _shader_batches: list[GPUBatch] | None = None
 
     @property
     def info_blocks(self) -> list[PyroOverlayInfo] | None:
@@ -57,35 +55,35 @@ class PyroOverlay(ShaderOverlay):
             self._info_blocks = []
             for point, lines in value:
                 info_block = (
-                    tuple(float(c) for c in point),
+                    (float(point[0]), float(point[1]), float(point[2])),
                     lines,
                 )
-                self._info_blocks.append(info_block)  # type: ignore
+                self._info_blocks.append(info_block)
 
         else:
             self._info_blocks = None
 
-        # self._shader_batches = None
+        # self.invalidate_shader_batches()
 
     @property
-    def markers(self) -> list[PyroOverlayMarker] | None:
+    def markers(self) -> Sequence[PyroOverlayMarker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: list[PyroOverlayMarker] | None):
+    def markers(self, value: Sequence[PyroOverlayMarker] | None):
         if value is not None:
             self._markers = []
             for point, color in value:
                 marker = (
-                    tuple(float(c) for c in point),
-                    tuple(float(c) for c in color),
+                    (float(point[0]), float(point[1]), float(point[2])),
+                    (float(color[0]), float(color[1]), float(color[2])),
                 )
-                self._markers.append(marker)  # type: ignore
+                self._markers.append(marker)
 
         else:
             self._markers = None
 
-        self._shader_batches = None
+        self.invalidate_shader_batches()
 
     def draw_2d(self) -> None:
         context = bpy.context
@@ -134,31 +132,15 @@ class PyroOverlay(ShaderOverlay):
                 blf.draw(font_id, line)
                 y -= line_height
 
-    def draw_3d(self) -> None:
-        gpu.state.blend_set("ALPHA")
-
+    def should_draw(self) -> bool:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
         pyro_control: PyroControlPanelProperties | None = getattr(
             skybrush, "pyro_control", None
         )
-        if not pyro_control or pyro_control.visualization not in ["MARKERS", "INFO"]:
-            return
-
-        if self._markers is not None:
-            assert self._shader is not None
-
-            if self._shader_batches is None:
-                self._shader_batches = self._create_shader_batches()
-
-            if self._shader_batches:
-                self._shader.bind()
-                gpu.state.point_size_set(30)
-                for batch in self._shader_batches:
-                    batch.draw(self._shader)
-
-    def dispose(self) -> None:
-        super().dispose()
-        self._shader_batches = None
+        return pyro_control is not None and pyro_control.visualization in (
+            "MARKERS",
+            "INFO",
+        )
 
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
@@ -176,3 +158,6 @@ class PyroOverlay(ShaderOverlay):
         ]
 
         return batches
+
+    def _prepare_gpu_state(self) -> None:
+        gpu.state.point_size_set(20)

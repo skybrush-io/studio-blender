@@ -2,7 +2,7 @@ from bpy.types import Operator
 
 from sbstudio.plugin.selection import get_selected_drones
 from sbstudio.plugin.utils.pyro_markers import get_pyro_markers_of_object
-from sbstudio.plugin.views import find_all_3d_views_and_their_areas
+from sbstudio.plugin.views import redraw_all_3d_views
 
 __all__ = ("UpdatePyroParamsFromSelectedDroneOperator",)
 
@@ -46,8 +46,6 @@ class UpdatePyroParamsFromSelectedDroneOperator(Operator):
         # update pyro control params
         pyro_control.update_params_from_pyro_payload(marker.payload)
 
-        # Mark all the 3D views to be redrawn
-        for _, area in find_all_3d_views_and_their_areas():
-            area.tag_redraw()
+        redraw_all_3d_views()
 
         return True

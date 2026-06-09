@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added visualization type selector for LED lights. The new overlay marker based
+  visualization can speed up playback and render speed when using light effects.
+
 - Added audio export option to the .skyc exporter, requiring a single .mp3 music
   file to be added as an audio strip in the VSE.
 
