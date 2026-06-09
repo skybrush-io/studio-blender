@@ -39,6 +39,10 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
+from sbstudio.plugin.presets.light_effects import (
+    get_preset_enum_items,
+    get_preset_function,
+)
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -49,7 +53,14 @@ from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
 
-__all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
+__all__ = (
+    "ColorFunctionProperties",
+    "LightEffect",
+    "LightEffectCollection",
+    "effect_type_supports_randomization",
+    "output_type_is_experimental",
+    "output_type_supports_mapping_mode",
+)
 
 
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
@@ -83,6 +94,12 @@ OUTPUT_ITEMS = [
     ("GRADIENT_ZYX", "Gradient (ZYX)", "", 9),
     ("TEMPORAL", "Temporal", "", 10),
     ("DISTANCE", "Distance from mesh", "", 11),
+    (
+        "LIGHT_PRESET",
+        "Light preset",
+        "Built-in light effect preset (portable across machines)",
+        14,
+    ),
     ("CUSTOM", "Custom expression", "", 12),
 ]
 """Output types of light effects, determining the indexing
@@ -153,6 +170,13 @@ def object_has_mesh_data(self, obj) -> bool:
     as their associated data.
     """
     return obj.data and isinstance(obj.data, Mesh)
+
+
+def output_type_is_experimental(type: str) -> bool:
+    """Returns whether the light effect output type given in the argument is
+    experimental and may be subject to change or removal in future versions of
+    the plugin."""
+    return type == "LIGHT_PRESET"
 
 
 def output_type_supports_mapping_mode(type: str) -> bool:
@@ -376,6 +400,14 @@ class LightEffect(PropertyGroup):
         type=ColorFunctionProperties,
         name="Output Y Function",
         description="Custom function for the output Y",
+    )
+
+    preset_id = EnumProperty(
+        name="Preset",
+        description="Built-in light effect preset (portable across machines)",
+        items=get_preset_enum_items,
+        default=0,
+        options=set(),
     )
 
     output_mapping_mode = EnumProperty(
@@ -650,6 +682,27 @@ class LightEffect(PropertyGroup):
                 else:
                     common_output = 1.0
 
+            elif output_type == "LIGHT_PRESET":
+                preset_fn = (
+                    get_preset_function(self.preset_id) if self.preset_id else None
+                )
+                if preset_fn is not None:
+                    outputs = [
+                        preset_fn(
+                            frame=frame,
+                            time_fraction=time_fraction,
+                            drone_index=index,
+                            formation_index=(
+                                mapping[index] if mapping is not None else None
+                            ),
+                            position=positions[index],
+                            drone_count=num_positions,
+                        )
+                        for index in range(num_positions)
+                    ]
+                else:
+                    common_output = 1.0
+
             else:
                 # Should not get here
                 common_output = 1.0
@@ -799,6 +852,7 @@ class LightEffect(PropertyGroup):
             "type": self.type,
             "invertTarget": self.invert_target,
             "colorFunction": self.color_function.as_dict(),
+            "presetId": self.preset_id,
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
             "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
@@ -966,6 +1020,7 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
+        self.preset_id = other.preset_id
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
         self.output_function_y.update_from(other.output_function_y)
@@ -1255,7 +1310,7 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         if duration is None or duration <= 0:
             duration = fps * DEFAULT_LIGHT_EFFECT_DURATION
 
-        entry: LightEffect = cast(LightEffect, self.entries.add())
+        entry = self.entries.add()
         entry.type = "COLOR_RAMP"
         entry.frame_start = frame_start
         entry.duration = duration
