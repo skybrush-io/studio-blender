@@ -73,7 +73,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
-            positions = [get_position_of_object(drone) for drone in drones]
+            positions = tuple(map(get_position_of_object, drones))
             mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
