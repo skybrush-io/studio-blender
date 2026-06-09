@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections import OrderedDict
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, MutableMapping, Sequence
 
 if TYPE_CHECKING:
     from bpy.types import Context
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 __all__ = (
     "get_preset_enum_items",
     "get_preset_function",
-    "get_preset_mapping",
+    "iter_preset_mapping",
     "register_preset",
 )
 
@@ -27,7 +28,7 @@ class PresetMeta:
 
 
 # Insertion-ordered.  Order here = order in the UI dropdown = circled number.
-_PRESETS: dict[str, PresetMeta] = {}
+_PRESETS: MutableMapping[str, PresetMeta] = OrderedDict()
 
 
 def register_preset(
@@ -39,7 +40,7 @@ def register_preset(
 ):
     def decorator(fn: CustomLightEffectFunction) -> CustomLightEffectFunction:
         if id in _PRESETS:
-            raise ValueError(f"Duplicate light-fx preset id: {id!r}")
+            raise ValueError(f"Duplicate light effect preset ID: {id!r}")
         _PRESETS[id] = PresetMeta(
             id=id,
             label=label,
@@ -52,14 +53,15 @@ def register_preset(
     return decorator
 
 
-def get_preset_mapping() -> Mapping[str, PresetMeta]:
-    """Get the full mapping from preset identifiers to their metadata."""
-    return _PRESETS
-
-
 def get_preset_function(preset_id: str) -> CustomLightEffectFunction | None:
     meta = _PRESETS.get(preset_id)
     return meta.function if meta is not None else None
+
+
+def iter_preset_mapping() -> Iterator[PresetMeta]:
+    """Iterate over the preset metadata in registration order (which is the order
+    they appear in the UI dropdown)."""
+    return iter(_PRESETS.values())
 
 
 # ---------------------------------------------------------------------------
@@ -84,13 +86,9 @@ def _build_enum_items() -> list[tuple[str, str, str]]:
     Order: v5.1 custom effects first, then original effects (reversed order)
     """
     items: list[tuple[str, str, str]] = [("", "<None>", "")]
-
-    # Reverse the order so v5.1 effects (added last) appear first
-    reversed_presets = list(reversed(list(_PRESETS.items())))
-
-    for i, (_preset_id, meta) in enumerate(reversed_presets):
+    for index, meta in enumerate(iter_preset_mapping(), 1):
         # Use full-width brackets 「」 for numbering
-        prefix = f"「{i + 1}」"
+        prefix = f"「{index}」"
         display = f"{prefix}{meta.label}"
         items.append((meta.id, display, meta.description or meta.label))
     return items
