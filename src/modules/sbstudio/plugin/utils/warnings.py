@@ -10,6 +10,7 @@ from sbstudio.plugin.views import find_current_3d_view
 
 __all__ = (
     "draw_bad_shader_color_source_warning",
+    "draw_experimental_feature_warning",
     "draw_formation_size_warning",
     "draw_version_warning",
     "get_bad_shader_color_source_warning",
@@ -84,6 +85,13 @@ def draw_formation_size_warning(context: Context, layout: UILayout) -> None:
             f"{'<' if num_markers < num_drones else '>'} "
             f"{num_drones}",
         )
+
+
+def draw_experimental_feature_warning(
+    layout: UILayout, *, message: str = "This feature is experimental"
+) -> None:
+    """Draw an experimental feature warning to a layout."""
+    _draw_warning(layout, message)
 
 
 def draw_version_warning(context: Context, layout: UILayout) -> None:

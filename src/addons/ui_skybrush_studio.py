@@ -176,6 +176,8 @@ from sbstudio.plugin.plugin_helpers import (
     unregister_translations,
     unregister_type,
 )
+from sbstudio.plugin.presets import register as register_presets
+from sbstudio.plugin.presets import unregister as unregister_presets
 from sbstudio.plugin.state import register as register_state
 from sbstudio.plugin.state import unregister as unregister_state
 from sbstudio.plugin.tasks import (
@@ -326,7 +328,9 @@ overlay_getters = (
 
 def register():
     register_translations(translations_dict)
+    register_presets()
     register_state()
+
     for custom_type in types:
         register_type(custom_type)
     for operator in operators:
@@ -352,11 +356,14 @@ def register():
 def unregister():
     for task in tasks:
         task.unregister()
+
     unregister_led_control()
+
     for getter in overlay_getters:
         overlay = getter()
         if overlay:
             overlay.enabled = False
+
     for header in reversed(headers):
         unregister_header(header)
     for panel in reversed(panels):
@@ -369,5 +376,7 @@ def unregister():
         unregister_operator(operator)
     for custom_type in reversed(types):
         unregister_type(custom_type)
+
     unregister_state()
+    unregister_presets()
     unregister_translations()
