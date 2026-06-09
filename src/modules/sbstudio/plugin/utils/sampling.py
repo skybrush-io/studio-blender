@@ -237,8 +237,6 @@ def sample_positions_and_colors_of_objects(
     Parameters:
         objects: the Blender objects to process
         frames: an iterable yielding the indices of the frames to process
-        by_name: whether the result dictionary should be keyed by the _names_
-            of the objects
         simplify: whether to simplify the trajectories and light programs. If
             this option is enabled, the resulting trajectories and light programs
             might not contain samples for all the input frames; excess samples
@@ -298,8 +296,6 @@ def sample_positions_colors_and_yaw_of_objects(
     Parameters:
         objects: the Blender objects to process
         frames: an iterable yielding the indices of the frames to process
-        by_name: whether the result dictionary should be keyed by the _names_
-            of the objects
         simplify: whether to simplify the trajectories, light programs and yaw
             setpoints. If this option is enabled, the resulting trajectories,
             light programs and yaw setpoints might not contain samples for all
