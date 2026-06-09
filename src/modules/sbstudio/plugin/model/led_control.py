@@ -23,6 +23,7 @@ __all__ = (
     "LEDControlPanelProperties",
     "get_expected_3d_viewport_shader_configuration",
     "get_expected_3d_viewport_shader_configuration_from_context",
+    "set_expected_3d_viewport_shader_configuration_of_context",
 )
 
 
@@ -68,7 +69,7 @@ def _visualization_callback_for_materials(
 
 
 ViewportShaderConfig: TypeAlias = tuple[
-    Literal["THEME", "OBJECT"] | None, Literal["MATERIAL", "OBJECT"] | None
+    Literal["THEME", "OBJECT"] | None, Literal["SINGLE", "OBJECT"] | None
 ]
 
 
@@ -90,7 +91,7 @@ def get_expected_3d_viewport_shader_configuration(
         case "MATERIALS":
             return "OBJECT", "OBJECT"
         case "MARKERS":
-            return "THEME", "MATERIAL"
+            return "THEME", "SINGLE"
         case _:
             return None, None
 
@@ -133,6 +134,23 @@ def get_overlay(create: bool = True):
     return _overlay
 
 
+def set_expected_3d_viewport_shader_configuration_of_context(context: Context) -> None:
+    space = find_current_3d_view(context)
+    if space is not None:
+        shading = space.shading
+        expected_wireframe_color_type, expected_color_type = (
+            get_expected_3d_viewport_shader_configuration_from_context(context)
+        )
+
+        match shading.type:
+            case "WIREFRAME":
+                if expected_wireframe_color_type is not None:
+                    shading.wireframe_color_type = expected_wireframe_color_type
+            case "SOLID":
+                if expected_color_type is not None:
+                    shading.color_type = expected_color_type
+
+
 def visualization_updated(
     self: "LEDControlPanelProperties", context: Context | None = None
 ):
@@ -156,16 +174,9 @@ def visualization_updated(
         case "MATERIALS":
             final_color_updated_callbacks.ensure(_visualization_callback_for_materials)
 
-    # setup viewport shading according to selection
-    space = find_current_3d_view(context)
-    if space is not None:
-        shading = space.shading
-        if self.visualization == "MATERIALS":
-            shading.color_type = "OBJECT"
-            shading.wireframe_color_type = "OBJECT"
-        else:
-            shading.color_type = "MATERIAL"
-            shading.wireframe_color_type = "THEME"
+    # update viewport shading according to selection
+    if context is not None:
+        set_expected_3d_viewport_shader_configuration_of_context(context)
 
 
 class LEDControlPanelProperties(PropertyGroup):
