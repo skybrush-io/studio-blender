@@ -52,13 +52,6 @@ from .mixins import ListMixin
 __all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
 
 
-def object_has_mesh_data(self, obj) -> bool:
-    """Filter function that accepts only those Blender objects that have a mesh
-    as their associated data.
-    """
-    return obj.data and isinstance(obj.data, Mesh)
-
-
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
 """Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
@@ -96,6 +89,9 @@ OUTPUT_ITEMS = [
 of drones to a given axis of the light effect color space"""
 
 
+_always_true = constant(True)
+
+
 class CustomLightEffectFunction(Protocol):
     """Type of the custom light effect function, used when the output type of a light
     effect is set to "CUSTOM". The function takes the following arguments:
@@ -130,6 +126,33 @@ def effect_type_supports_randomization(type: str) -> bool:
     randomization.
     """
     return type == "COLOR_RAMP" or type == "IMAGE"
+
+
+def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
+    names: list[str]
+
+    if self.path:
+        absolute_path = abspath(self.path)
+        module = load_module(absolute_path)
+        names = [
+            name
+            for name in dir(module)
+            if isinstance(getattr(module, name), types.FunctionType)
+        ]
+    else:
+        names = []
+
+    # Always add an empty entry so we have a reasonable default for the case
+    # when no module is selected
+    names.insert(0, "")
+    return [(name, name, "") for name in names]
+
+
+def object_has_mesh_data(self, obj) -> bool:
+    """Filter function that accepts only those Blender objects that have a mesh
+    as their associated data.
+    """
+    return obj.data and isinstance(obj.data, Mesh)
 
 
 def output_type_supports_mapping_mode(type: str) -> bool:
@@ -174,29 +197,6 @@ def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
         return plane.is_front(point)
     else:
         return True
-
-
-_always_true = constant(True)
-
-
-def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
-    names: list[str]
-
-    if self.path:
-        absolute_path = abspath(self.path)
-        module = load_module(absolute_path)
-        names = [
-            name
-            for name in dir(module)
-            if isinstance(getattr(module, name), types.FunctionType)
-        ]
-    else:
-        names = []
-
-    # Always add an empty entry so we have a reasonable default for the case
-    # when no module is selected
-    names.insert(0, "")
-    return [(name, name, "") for name in names]
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -1364,10 +1364,10 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
             if entry.enabled and entry.influence > 0 and entry.contains_frame(frame):
                 yield entry
 
-    def _on_removing_entry(self, entry) -> bool:
-        entry._remove_texture()
-        return True
-
     def update_from_storyboard(self, context: Context) -> None:
         for entry in self.entries:
             entry.update_from_storyboard(context, reset_offset=False)
+
+    def _on_removing_entry(self, entry) -> bool:
+        entry._remove_texture()
+        return True
