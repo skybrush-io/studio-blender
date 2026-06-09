@@ -352,11 +352,14 @@ def register():
 def unregister():
     for task in tasks:
         task.unregister()
+
     unregister_led_control()
+
     for getter in overlay_getters:
         overlay = getter()
         if overlay:
             overlay.enabled = False
+
     for header in reversed(headers):
         unregister_header(header)
     for panel in reversed(panels):

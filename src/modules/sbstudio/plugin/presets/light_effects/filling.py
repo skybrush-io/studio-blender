@@ -10,7 +10,11 @@ if TYPE_CHECKING:
 
 
 def _continuous_filling(
-    frame, formation_index, drone_count, speed_factor, divisor
+    frame: int,
+    formation_index: int | None,
+    drone_count: int,
+    speed_factor: float,
+    divisor: int,
 ) -> float:
     if not drone_count:
         return 0.0

@@ -41,7 +41,7 @@ def _gradient_sweep_roundtrip(coord: float, direction: int, frame: int) -> float
     return max(0.0, min(1.0, brightness))
 
 
-def _v51_gradient_sweep_oneway_loop(coord: float, direction: int, frame: int) -> float:
+def _gradient_sweep_oneway_loop(coord: float, direction: int, frame: int) -> float:
     oneway_frames = SWEEP_ONEWAY_DURATION
     pause_frames = SWEEP_ONEWAY_PAUSE
     full_cycle = oneway_frames + pause_frames
@@ -62,7 +62,7 @@ def _v51_gradient_sweep_oneway_loop(coord: float, direction: int, frame: int) ->
     return max(0.0, min(1.0, brightness))
 
 
-def _v51_gradient_sweep_diagonal(
+def _gradient_sweep_diagonal(
     pos_a: float, pos_b: float, direction: int, frame: int
 ) -> float:
     proj = (pos_a + pos_b) / sqrt(2)
@@ -86,20 +86,12 @@ def _v51_gradient_sweep_diagonal(
     return max(0.0, min(1.0, brightness))
 
 
-def _get_axis_coord(position, axis: str) -> float:
-    if position is None:
-        return 0.0
-    coords = {"X": position[0], "Y": position[1], "Z": position[2]}
-    return coords[axis.upper()]
-
-
-# 3. Roundtrip Sweep (往返扫光) - 6 presets
 @register_preset(
-    id="roundtrip_sweep_ltr_xy",
-    label="Roundtrip Sweep L→R XY",
-    translations=(("zh", "往返扫光 左到右 XY"), ("ja", "往復スイープ 左→右 XY")),
+    id="roundtrip_sweep_ltr_x",
+    label="Roundtrip Sweep L→R X",
+    translations=(("zh", "往返扫光 左到右 X"), ("ja", "往復スイープ 左→右 X")),
 )
-def roundtrip_sweep_ltr_xy(
+def roundtrip_sweep_ltr_x(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -107,16 +99,15 @@ def roundtrip_sweep_ltr_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _gradient_sweep_roundtrip(coord, +1, frame)
+    return _gradient_sweep_roundtrip(position[0], +1, frame)
 
 
 @register_preset(
-    id="roundtrip_sweep_rtl_xy",
-    label="Roundtrip Sweep R→L XY",
-    translations=(("zh", "往返扫光 右到左 XY"), ("ja", "往復スイープ 右→左 XY")),
+    id="roundtrip_sweep_rtl_x",
+    label="Roundtrip Sweep R→L X",
+    translations=(("zh", "往返扫光 右到左 X"), ("ja", "往復スイープ 右→左 X")),
 )
-def roundtrip_sweep_rtl_xy(
+def roundtrip_sweep_rtl_x(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -124,16 +115,15 @@ def roundtrip_sweep_rtl_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _gradient_sweep_roundtrip(coord, -1, frame)
+    return _gradient_sweep_roundtrip(position[0], -1, frame)
 
 
 @register_preset(
-    id="roundtrip_sweep_ltr_xz",
-    label="Roundtrip Sweep L→R XZ",
-    translations=(("zh", "往返扫光 左到右 XZ"), ("ja", "往復スイープ 左→右 XZ")),
+    id="roundtrip_sweep_ltr_y",
+    label="Roundtrip Sweep L→R Y",
+    translations=(("zh", "往返扫光 左到右 Y"), ("ja", "往復スイープ 左→右 Y")),
 )
-def roundtrip_sweep_ltr_xz(
+def roundtrip_sweep_ltr_y(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -141,16 +131,15 @@ def roundtrip_sweep_ltr_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _gradient_sweep_roundtrip(coord, +1, frame)
+    return _gradient_sweep_roundtrip(position[1], +1, frame)
 
 
 @register_preset(
-    id="roundtrip_sweep_rtl_xz",
-    label="Roundtrip Sweep R→L XZ",
-    translations=(("zh", "往返扫光 右到左 XZ"), ("ja", "往復スイープ 右→左 XZ")),
+    id="roundtrip_sweep_rtl_y",
+    label="Roundtrip Sweep R→L Y",
+    translations=(("zh", "往返扫光 右到左 Y"), ("ja", "往復スイープ 右→左 Y")),
 )
-def roundtrip_sweep_rtl_xz(
+def roundtrip_sweep_rtl_y(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -158,16 +147,15 @@ def roundtrip_sweep_rtl_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _gradient_sweep_roundtrip(coord, -1, frame)
+    return _gradient_sweep_roundtrip(position[1], -1, frame)
 
 
 @register_preset(
-    id="roundtrip_sweep_ltr_yz",
-    label="Roundtrip Sweep L→R YZ",
-    translations=(("zh", "往返扫光 左到右 YZ"), ("ja", "往復スイープ 左→右 YZ")),
+    id="roundtrip_sweep_ltr_z",
+    label="Roundtrip Sweep L→R Z",
+    translations=(("zh", "往返扫光 左到右 Z"), ("ja", "往復スイープ 左→右 Z")),
 )
-def roundtrip_sweep_ltr_yz(
+def roundtrip_sweep_ltr_z(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -175,16 +163,15 @@ def roundtrip_sweep_ltr_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "Y")
-    return _gradient_sweep_roundtrip(coord, +1, frame)
+    return _gradient_sweep_roundtrip(position[2], +1, frame)
 
 
 @register_preset(
-    id="roundtrip_sweep_rtl_yz",
-    label="Roundtrip Sweep R→L YZ",
-    translations=(("zh", "往返扫光 右到左 YZ"), ("ja", "往復スイープ 右→左 YZ")),
+    id="roundtrip_sweep_rtl_z",
+    label="Roundtrip Sweep R→L Z",
+    translations=(("zh", "往返扫光 右到左 Z"), ("ja", "往復スイープ 右→左 Z")),
 )
-def roundtrip_sweep_rtl_yz(
+def roundtrip_sweep_rtl_z(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -192,17 +179,15 @@ def roundtrip_sweep_rtl_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "Y")
-    return _gradient_sweep_roundtrip(coord, -1, frame)
+    return _gradient_sweep_roundtrip(position[2], -1, frame)
 
 
-# 4. Oneway Sweep (单向扫光) - 6 presets
 @register_preset(
-    id="oneway_sweep_ltr_xy",
-    label="Oneway Sweep L→R XY",
-    translations=(("zh", "单向扫光 左到右 XY"), ("ja", "片道スイープ 左→右 XY")),
+    id="oneway_sweep_ltr_x",
+    label="Oneway Sweep L→R X",
+    translations=(("zh", "单向扫光 左到右 X"), ("ja", "片道スイープ 左→右 X")),
 )
-def oneway_sweep_ltr_xy(
+def oneway_sweep_ltr_x(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -210,16 +195,15 @@ def oneway_sweep_ltr_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _v51_gradient_sweep_oneway_loop(coord, +1, frame)
+    return _gradient_sweep_oneway_loop(position[0], +1, frame)
 
 
 @register_preset(
-    id="oneway_sweep_rtl_xy",
-    label="Oneway Sweep R→L XY",
-    translations=(("zh", "单向扫光 右到左 XY"), ("ja", "片道スイープ 右→左 XY")),
+    id="oneway_sweep_rtl_x",
+    label="Oneway Sweep R→L X",
+    translations=(("zh", "单向扫光 右到左 X"), ("ja", "片道スイープ 右→左 X")),
 )
-def oneway_sweep_rtl_xy(
+def oneway_sweep_rtl_x(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -227,16 +211,15 @@ def oneway_sweep_rtl_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _v51_gradient_sweep_oneway_loop(coord, -1, frame)
+    return _gradient_sweep_oneway_loop(position[0], -1, frame)
 
 
 @register_preset(
-    id="oneway_sweep_ltr_xz",
-    label="Oneway Sweep L→R XZ",
-    translations=(("zh", "单向扫光 左到右 XZ"), ("ja", "片道スイープ 左→右 XZ")),
+    id="oneway_sweep_ltr_y",
+    label="Oneway Sweep L→R Y",
+    translations=(("zh", "单向扫光 左到右 Y"), ("ja", "片道スイープ 左→右 Y")),
 )
-def oneway_sweep_ltr_xz(
+def oneway_sweep_ltr_y(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -244,16 +227,15 @@ def oneway_sweep_ltr_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _v51_gradient_sweep_oneway_loop(coord, +1, frame)
+    return _gradient_sweep_oneway_loop(position[1], +1, frame)
 
 
 @register_preset(
-    id="oneway_sweep_rtl_xz",
-    label="Oneway Sweep R→L XZ",
-    translations=(("zh", "单向扫光 右到左 XZ"), ("ja", "片道スイープ 右→左 XZ")),
+    id="oneway_sweep_rtl_y",
+    label="Oneway Sweep R→L Y",
+    translations=(("zh", "单向扫光 右到左 Y"), ("ja", "片道スイープ 右→左 Y")),
 )
-def oneway_sweep_rtl_xz(
+def oneway_sweep_rtl_y(
     frame: int,
     time_fraction: float,
     drone_index: int,
@@ -261,14 +243,13 @@ def oneway_sweep_rtl_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "X")
-    return _v51_gradient_sweep_oneway_loop(coord, -1, frame)
+    return _gradient_sweep_oneway_loop(position[1], -1, frame)
 
 
 @register_preset(
-    id="oneway_sweep_ltr_yz",
-    label="Oneway Sweep L→R YZ",
-    translations=(("zh", "单向扫光 左到右 YZ"), ("ja", "片道スイープ 左→右 YZ")),
+    id="oneway_sweep_ltr_z",
+    label="Oneway Sweep L→R Z",
+    translations=(("zh", "单向扫光 左到右 Z"), ("ja", "片道スイープ 左→右 Z")),
 )
 def oneway_sweep_ltr_yz(
     frame: int,
@@ -278,14 +259,13 @@ def oneway_sweep_ltr_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "Y")
-    return _v51_gradient_sweep_oneway_loop(coord, +1, frame)
+    return _gradient_sweep_oneway_loop(position[2], +1, frame)
 
 
 @register_preset(
-    id="oneway_sweep_rtl_yz",
-    label="Oneway Sweep R→L YZ",
-    translations=(("zh", "单向扫光 右到左 YZ"), ("ja", "片道スイープ 右→左 YZ")),
+    id="oneway_sweep_rtl_z",
+    label="Oneway Sweep R→L Z",
+    translations=(("zh", "单向扫光 右到左 Z"), ("ja", "片道スイープ 右→左 Z")),
 )
 def oneway_sweep_rtl_yz(
     frame: int,
@@ -295,11 +275,9 @@ def oneway_sweep_rtl_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    coord = _get_axis_coord(position, "Y")
-    return _v51_gradient_sweep_oneway_loop(coord, -1, frame)
+    return _gradient_sweep_oneway_loop(position[2], -1, frame)
 
 
-# 5. Diagonal Sweep (倾斜扫光) - 6 presets
 @register_preset(
     id="diagonal_sweep_lb_rt_xy",
     label="Diagonal Sweep LB→RT XY",
@@ -316,9 +294,7 @@ def diagonal_sweep_lb_rt_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    pos_a = _get_axis_coord(position, "X")
-    pos_b = _get_axis_coord(position, "Y")
-    return _v51_gradient_sweep_diagonal(pos_a, pos_b, +1, frame)
+    return _gradient_sweep_diagonal(position[0], position[1], +1, frame)
 
 
 @register_preset(
@@ -337,9 +313,7 @@ def diagonal_sweep_rt_lb_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    pos_a = _get_axis_coord(position, "X")
-    pos_b = _get_axis_coord(position, "Y")
-    return _v51_gradient_sweep_diagonal(pos_a, pos_b, -1, frame)
+    return _gradient_sweep_diagonal(position[0], position[1], -1, frame)
 
 
 @register_preset(
@@ -358,9 +332,7 @@ def diagonal_sweep_lb_rt_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    pos_a = _get_axis_coord(position, "X")
-    pos_b = _get_axis_coord(position, "Z")
-    return _v51_gradient_sweep_diagonal(pos_a, pos_b, +1, frame)
+    return _gradient_sweep_diagonal(position[0], position[2], +1, frame)
 
 
 @register_preset(
@@ -379,9 +351,7 @@ def diagonal_sweep_rt_lb_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    pos_a = _get_axis_coord(position, "X")
-    pos_b = _get_axis_coord(position, "Z")
-    return _v51_gradient_sweep_diagonal(pos_a, pos_b, -1, frame)
+    return _gradient_sweep_diagonal(position[0], position[2], -1, frame)
 
 
 @register_preset(
@@ -400,9 +370,7 @@ def diagonal_sweep_lb_rt_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    pos_a = _get_axis_coord(position, "Y")
-    pos_b = _get_axis_coord(position, "Z")
-    return _v51_gradient_sweep_diagonal(pos_a, pos_b, +1, frame)
+    return _gradient_sweep_diagonal(position[1], position[2], +1, frame)
 
 
 @register_preset(
@@ -421,6 +389,4 @@ def diagonal_sweep_rt_lb_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    pos_a = _get_axis_coord(position, "Y")
-    pos_b = _get_axis_coord(position, "Z")
-    return _v51_gradient_sweep_diagonal(pos_a, pos_b, -1, frame)
+    return _gradient_sweep_diagonal(position[1], position[2], -1, frame)

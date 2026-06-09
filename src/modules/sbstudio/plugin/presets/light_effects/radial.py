@@ -12,14 +12,19 @@ RADIAL_SPEED = 0.10
 RADIAL_WAVE_K = 0.30
 
 
-def _get_projected_plane_distance(position: Coordinate3D, plane: str) -> float:
-    x, y, z = position
-    coords = {"X": x, "Y": y, "Z": z}
-    a, b = plane.upper()
-    return hypot(coords[a], coords[b])
+def _get_projected_plane_distance(
+    position: Coordinate3D, axis_a: int, axis_b: int
+) -> float:
+    return hypot(position[axis_a], position[axis_b])
 
 
-# 1. Radial Diffusion (径向扩散) - 3 presets
+def _radial_core(
+    position: Coordinate3D, axis_a: int, axis_b: int, frame: int, sign: int
+) -> float:
+    distance = _get_projected_plane_distance(position, axis_a, axis_b)
+    return (sin(frame * RADIAL_SPEED + sign * distance * RADIAL_WAVE_K) + 1) / 2
+
+
 @register_preset(
     id="radial_diffusion_xy",
     label="Radial Diffusion XY",
@@ -33,8 +38,7 @@ def radial_diffusion_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    distance = _get_projected_plane_distance(position, "XY")
-    return (sin(frame * RADIAL_SPEED - distance * RADIAL_WAVE_K) + 1) / 2
+    return _radial_core(position, 0, 1, frame, -1)
 
 
 @register_preset(
@@ -50,8 +54,7 @@ def radial_diffusion_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    distance = _get_projected_plane_distance(position, "XZ")
-    return (sin(frame * RADIAL_SPEED - distance * RADIAL_WAVE_K) + 1) / 2
+    return _radial_core(position, 0, 2, frame, -1)
 
 
 @register_preset(
@@ -67,11 +70,9 @@ def radial_diffusion_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    distance = _get_projected_plane_distance(position, "YZ")
-    return (sin(frame * RADIAL_SPEED - distance * RADIAL_WAVE_K) + 1) / 2
+    return _radial_core(position, 1, 2, frame, -1)
 
 
-# 2. Radial Convergence (径向汇聚) - 3 presets
 @register_preset(
     id="radial_convergence_xy",
     label="Radial Convergence XY",
@@ -85,8 +86,7 @@ def radial_convergence_xy(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    distance = _get_projected_plane_distance(position, "XY")
-    return (sin(frame * RADIAL_SPEED + distance * RADIAL_WAVE_K) + 1) / 2
+    return _radial_core(position, 0, 1, frame, 1)
 
 
 @register_preset(
@@ -102,8 +102,7 @@ def radial_convergence_xz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    distance = _get_projected_plane_distance(position, "XZ")
-    return (sin(frame * RADIAL_SPEED + distance * RADIAL_WAVE_K) + 1) / 2
+    return _radial_core(position, 0, 2, frame, 1)
 
 
 @register_preset(
@@ -119,5 +118,4 @@ def radial_convergence_yz(
     position: Coordinate3D,
     drone_count: int,
 ) -> float:
-    distance = _get_projected_plane_distance(position, "YZ")
-    return (sin(frame * RADIAL_SPEED + distance * RADIAL_WAVE_K) + 1) / 2
+    return _radial_core(position, 1, 2, frame, 1)
