@@ -160,4 +160,4 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         return batches
 
     def _prepare_gpu_state(self) -> None:
-        gpu.state.point_size_set(30)
+        gpu.state.point_size_set(20)
