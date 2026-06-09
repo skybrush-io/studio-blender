@@ -6,6 +6,7 @@ from .formations_panel import (
 )
 from .global_settings import DroneShowAddonGlobalSettings
 from .led_control import LEDControlPanelProperties
+from .led_control import get_overlay as get_led_control_overlay
 from .light_effects import ColorFunctionProperties, LightEffect, LightEffectCollection
 from .object_props import DroneShowAddonObjectProperties
 from .pyro_control import PyroControlPanelProperties
@@ -38,6 +39,7 @@ __all__ = (
     "StoryboardEntryOrTransition",
     "Storyboard",
     "get_formation_order_overlay",
+    "get_led_control_overlay",
     "get_pyro_effects_overlay",
     "get_safety_check_overlay",
 )

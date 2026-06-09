@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import blf
 import bpy
-import gpu
 import gpu.state
 from bpy.types import SpaceView3D
 from gpu_extras.batch import batch_for_shader
@@ -13,7 +12,7 @@ from gpu_extras.batch import batch_for_shader
 from sbstudio.model.types import Coordinate3D, RGBColor
 from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
-from .base import ShaderOverlay
+from .base import ShaderBatchBasedOverlay
 
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
@@ -59,7 +58,7 @@ def set_warning_color_iff(
         blf.color(font_id, 1, 1, 1, 1)
 
 
-class SafetyCheckOverlay(ShaderOverlay):
+class SafetyCheckOverlay(ShaderBatchBasedOverlay):
     """Overlay that marks the closest pair of drones and all drones above the
     altitude threshold in the 3D view.
     """
@@ -67,26 +66,25 @@ class SafetyCheckOverlay(ShaderOverlay):
     shader_type = "POINT_FLAT_COLOR"
 
     _markers: list[Marker] | None = None
-    _shader_batches: list[GPUBatch] | None = None
 
     @property
-    def markers(self) -> list[Marker] | None:
+    def markers(self) -> Sequence[Marker] | None:
         return self._markers
 
     @markers.setter
-    def markers(self, value: list[Marker] | None):
+    def markers(self, value: Sequence[Marker] | None):
         if value is not None:
             self._markers = []
             for marker_points, group in value:
                 marker_points = tuple(
-                    tuple(float(coord) for coord in point) for point in marker_points
+                    (float(point[0]), float(point[1]), float(point[2]))
+                    for point in marker_points
                 )
-                self._markers.append((marker_points, group))  # type: ignore
-
+                self._markers.append((marker_points, group))
         else:
             self._markers = None
 
-        self._shader_batches = None
+        self.invalidate_shader_batches()
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
@@ -202,26 +200,6 @@ class SafetyCheckOverlay(ShaderOverlay):
             blf.draw(font_id, f"Max yaw rate: {safety_check.max_yaw_rate:.1f} deg/s")
             y -= line_height
 
-    def draw_3d(self) -> None:
-        gpu.state.blend_set("ALPHA")
-
-        if self._markers is not None:
-            assert self._shader is not None
-
-            if self._shader_batches is None:
-                self._shader_batches = self._create_shader_batches()
-
-            if self._shader_batches:
-                self._shader.bind()
-                gpu.state.line_width_set(5)
-                gpu.state.point_size_set(20)
-                for batch in self._shader_batches:
-                    batch.draw(self._shader)
-
-    def dispose(self) -> None:
-        super().dispose()
-        self._shader_batches = None
-
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
@@ -249,16 +227,22 @@ class SafetyCheckOverlay(ShaderOverlay):
                     lines.extend(marker_points)
                     line_colors.extend([color, color])
 
-        # Construct the shader batch to draw the lines on the UI
-        batches.extend(
-            [
+        # Construct the shader batches to draw the lines on the UI
+        if lines:
+            batches.append(
                 batch_for_shader(
                     self._shader, "LINES", {"pos": lines, "color": line_colors}
-                ),
+                )
+            )
+        if points:
+            batches.append(
                 batch_for_shader(
                     self._shader, "POINTS", {"pos": points, "color": point_colors}
-                ),
-            ]
-        )
+                )
+            )
 
         return batches
+
+    def _prepare_gpu_state(self) -> None:
+        gpu.state.point_size_set(30)
+        gpu.state.line_width_set(5)

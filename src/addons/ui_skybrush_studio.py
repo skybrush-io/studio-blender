@@ -69,9 +69,12 @@ from sbstudio.plugin.model import (
     StoryboardEntry,
     StoryboardEntryOrTransition,
     get_formation_order_overlay,
+    get_led_control_overlay,
     get_pyro_effects_overlay,
     get_safety_check_overlay,
 )
+from sbstudio.plugin.model.led_control import register as register_led_control
+from sbstudio.plugin.model.led_control import unregister as unregister_led_control
 from sbstudio.plugin.operators import (
     AddMarkersFromQRCodeOperator,
     AddMarkersFromStaticCSVOperator,
@@ -311,8 +314,9 @@ tasks = (
 """Background tasks in this addon."""
 
 overlay_getters = (
-    partial(get_safety_check_overlay, create=False),
+    partial(get_led_control_overlay, create=False),
     partial(get_pyro_effects_overlay, create=False),
+    partial(get_safety_check_overlay, create=False),
     get_formation_order_overlay,
 )
 """Getters for the overlays in this addon, used to disable them before unloading."""
@@ -335,21 +339,24 @@ def register():
         register_panel(panel)
     for header in headers:
         register_header(header)
-    for task in tasks:
-        task.register()
 
     Scene.skybrush = PointerProperty(type=DroneShowAddonProperties)
     Object.skybrush = PointerProperty(type=DroneShowAddonObjectProperties)
 
+    register_led_control()
+
+    for task in tasks:
+        task.register()
+
 
 def unregister():
+    for task in tasks:
+        task.unregister()
+    unregister_led_control()
     for getter in overlay_getters:
         overlay = getter()
         if overlay:
             overlay.enabled = False
-
-    for task in tasks:
-        task.unregister()
     for header in reversed(headers):
         unregister_header(header)
     for panel in reversed(panels):
