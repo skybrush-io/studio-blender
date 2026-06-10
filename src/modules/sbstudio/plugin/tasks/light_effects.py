@@ -101,16 +101,13 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
                 # the base color cache in parallel to the colors list
-                arr = np.zeros((len(drones), 4), dtype=np.float32)
+                arr = np.empty((len(drones), 4), dtype=np.float32)
                 get_colors_of_drones_fast(drones, dest=arr.ravel())
                 colors: list[MutableRGBAColor] = arr.tolist()
-                for drone, color in zip(drones, colors):
-                    _base_color_cache[id(drone)] = tuple(color)
+                _base_color_cache = dict(zip(drones, colors))
             else:
                 # Initialize the colors list from the cached base colors
-                colors = [
-                    list(_base_color_cache.get(id(drone)) or WHITE) for drone in drones
-                ]
+                colors = [_base_color_cache.get(drone, WHITE) for drone in drones]
 
             changed = True
 
@@ -128,8 +125,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     if changed:
         assert drones is not None
         assert colors is not None
-        for drone, color in zip(drones, colors, strict=True):
-            _final_color_cache[id(drone)] = color  # ty:ignore[invalid-assignment]
+        _final_color_cache = dict(zip(drones, colors))  # ty:ignore[invalid-assignment]
 
     # If we haven't changed anything, _but_ this is because we have recently
     # disabled or removed the last effect (which we know from the fact that
@@ -138,9 +134,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # effect is disabled.
     if not changed and _base_color_cache:
         drones = Collections.find_drones().objects
-        colors = [  # ty:ignore[invalid-assignment]
-            _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
-        ]
+        colors = [_base_color_cache.get(drone, WHITE) for drone in drones]
         _base_color_cache.clear()
         changed = True
 
@@ -150,20 +144,20 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         drones or [], cast(Sequence[RGBAColor], colors) or [], changed
     )
 
+    elapsed_time = time.time() - start_time
+    print(f"Time 02 =  {elapsed_time:.4f} seconds.")
+
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the (cached) base color of the drone at the current frame
     before any active light effects are applied on it."""
-    return _base_color_cache.get(id(drone)) or get_color_of_drone(drone)
+    return _base_color_cache.get(drone) or get_color_of_drone(drone)
 
 
 def get_final_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the (cached) final color of the drone at the current frame
     after all active light effects are applied on it."""
-    return _final_color_cache.get(id(drone)) or get_base_color_of_drone(drone)
-
-    elapsed_time = time.time() - start_time
-    print(f"Time =  {elapsed_time:.4f} seconds.")
+    return _final_color_cache.get(drone) or get_base_color_of_drone(drone)
 
 
 suspended_light_effects = suspension.use
