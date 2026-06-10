@@ -4,18 +4,22 @@ Blender 3D view and that can be enabled or disabled on-demand.
 
 from __future__ import annotations
 
-from abc import ABCMeta
+from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar, final
 
 import bpy
 import gpu
+import gpu.state
 from bpy.types import SpaceView3D
+
+if TYPE_CHECKING:
+    from gpu.types import GPUBatch
 
 __all__ = ("Overlay",)
 
 
-class Overlay(metaclass=ABCMeta):
+class Overlay(ABC):
     """Base class for overlays that can register drawing callbacks on the
     Blender 3D view and that can be enabled or disabled on-demand.
 
@@ -119,3 +123,71 @@ class ShaderOverlay(Overlay):
 
     def dispose(self) -> None:
         self._shader = None
+
+
+class ShaderBatchBasedOverlay(ShaderOverlay):
+    """SharedOverlay subclass that uses shader batches for redrawing."""
+
+    _shader_batches: list[GPUBatch] | None = None
+
+    def dispose(self) -> None:
+        super().dispose()
+        self.invalidate_shader_batches()
+
+    @final
+    def draw_3d(self) -> None:
+        if self.should_draw():
+            self._draw_shader_batches()
+
+    def invalidate_shader_batches(self) -> None:
+        """Invalidates the shader batches, causing them to be recreated on the
+        next redraw.
+        """
+        self._shader_batches = None
+
+    def should_draw(self) -> bool:
+        """Returns whether the overlay should be drawn in the current frame.
+
+        This is called by `draw_3d()` before drawing the shader batches. You can
+        use this method to skip drawing the overlay when certain conditions are
+        not met (even if the shader batches are constructed).
+        """
+        return True
+
+    @abstractmethod
+    def _create_shader_batches(self) -> list[GPUBatch]:
+        """Creates shader batches dynamically.
+
+        Function must be overriden by child classes to return properly
+        initialized shader batches for drawing on 3D views.
+        """
+        ...
+
+    def _draw_shader_batches(self) -> None:
+        """Draws the shader batches constructed by `_create_shader_batches()` to 3D
+        views. Ensures that the batches are retained for re-use later until they are
+        invalidated by a call to `invalidate_shader_batches()`.
+
+        `draw_3d()` calls this function automatically.
+        """
+        assert self._shader is not None
+
+        gpu.state.blend_set("ALPHA")
+
+        if self._shader_batches is None:
+            self._shader_batches = self._create_shader_batches()
+
+        if self._shader_batches:
+            self._shader.bind()
+            self._prepare_gpu_state()
+            for batch in self._shader_batches:
+                batch.draw(self._shader)
+
+    def _prepare_gpu_state(self) -> None:
+        """Prepares the GPU state for drawing shader batches.
+
+        Function is called by `_draw_shader_batchers()` after the shader is bound but
+        before the batches are drawn. You can use this method to set up a custom line
+        width or point size.
+        """
+        pass

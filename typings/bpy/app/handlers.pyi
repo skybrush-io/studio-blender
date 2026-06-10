@@ -1,4 +1,4 @@
-from typing import Callable, Generic, Iterable, ParamSpec, TypeVar
+from typing import Callable, Container, Generic, ParamSpec, TypeVar
 
 from bpy.types import Depsgraph, Scene
 
@@ -7,10 +7,9 @@ T = TypeVar("T")
 
 Func = TypeVar("Func", bound=Callable[..., None])
 
-class HandlerList(Generic[Func]):
+class HandlerList(Generic[Func], Container[Func]):
     def append(self, func: Func) -> None: ...
     def remove(self, func: Func) -> None: ...
-    def __iter__(self) -> Iterable[Func]: ...
 
 depsgraph_update_post: HandlerList[Callable[[Scene, Depsgraph], None]]
 frame_change_post: HandlerList[Callable[[Scene, Depsgraph], None]]
