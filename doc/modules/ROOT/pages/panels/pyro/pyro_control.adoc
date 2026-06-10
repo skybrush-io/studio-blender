@@ -8,7 +8,7 @@ frames.
 
 image::panels/pyro_control/pyro_control.jpg[Pyro Control panel]
 
-== Render
+== Visualization
 
 There are several visualization types for pyro effects from which you can choose dynamically:
 

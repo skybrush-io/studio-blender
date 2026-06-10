@@ -21,6 +21,19 @@ panel lies in the fact that it allows you to manipulate the keyframes of multipl
 drones at the same time, optionally taking into account the current positions of
 the drones as well when deciding what the final color should be.
 
+== Visualization
+
+There are several visualization types for LED lights from which you can choose dynamically:
+
+None::
+Select this option to skip color visualization completely
+(might be needed for speeding up playback or render).
+
+Markers::
+Select this option to use very simple but quick color overlay markers on drones. With this option you can still speed up playback and render speed, while having a simple but clear indication of drone colors (including light effects).
+
+Materials:: Select this option to preserve the default coloring scheme through the actual drone objects (this option slows down rendering time on large fleets).
+
 == Primary and secondary colors
 
 // Unicode arrow chars mostly not supported in PDF

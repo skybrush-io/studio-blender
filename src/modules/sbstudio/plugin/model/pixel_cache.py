@@ -35,7 +35,7 @@ class PixelCache(Mapping[str, Sequence[float]]):
         self._dynamic_keys = set()
         self._items = {}
 
-    def add(self, key: str, value: Sequence[float], *, is_static: bool = False):
+    def add(self, key: str, value: Sequence[float], *, is_static: bool = False) -> None:
         """Adds a cached pixel-level representation of an image to the cache
         with the given key.
 
@@ -52,16 +52,17 @@ class PixelCache(Mapping[str, Sequence[float]]):
         else:
             self._dynamic_keys.add(key)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clears all cached pixel-level representations of images."""
         self._items.clear()
+        self._dynamic_keys.clear()
 
-    def clear_dynamic(self):
+    def clear_dynamic(self) -> None:
         """Removes all cached pixel-level representations of images that are
         not static (i.e. they change when the current frame changes).
         """
         for key in self._dynamic_keys:
-            del self._items[key]
+            self._items.pop(key, None)
         self._dynamic_keys.clear()
 
     def remove(self, key: str) -> None:

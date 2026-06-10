@@ -39,6 +39,10 @@ from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
+from sbstudio.plugin.presets.light_effects import (
+    get_preset_enum_items,
+    get_preset_function,
+)
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
@@ -49,14 +53,14 @@ from sbstudio.utils import constant, distance_sq_of, load_module, negate
 
 from .mixins import ListMixin
 
-__all__ = ("ColorFunctionProperties", "LightEffect", "LightEffectCollection")
-
-
-def object_has_mesh_data(self, obj) -> bool:
-    """Filter function that accepts only those Blender objects that have a mesh
-    as their associated data.
-    """
-    return obj.data and isinstance(obj.data, Mesh)
+__all__ = (
+    "ColorFunctionProperties",
+    "LightEffect",
+    "LightEffectCollection",
+    "effect_type_supports_randomization",
+    "output_type_is_experimental",
+    "output_type_supports_mapping_mode",
+)
 
 
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
@@ -90,13 +94,39 @@ OUTPUT_ITEMS = [
     ("GRADIENT_ZYX", "Gradient (ZYX)", "", 9),
     ("TEMPORAL", "Temporal", "", 10),
     ("DISTANCE", "Distance from mesh", "", 11),
+    (
+        "LIGHT_PRESET",
+        "Light preset",
+        "Built-in light effect preset (portable across machines)",
+        14,
+    ),
     ("CUSTOM", "Custom expression", "", 12),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
 
 
+_always_true = constant(True)
+
+
 class CustomLightEffectFunction(Protocol):
+    """Type of the custom light effect function, used when the output type of a light
+    effect is set to "CUSTOM". The function takes the following arguments:
+
+    - frame: the current frame index
+    - time_fraction: the fraction of time passed in the current light effect relative to
+      its total duration, in the [0; 1] range
+    - drone_index: the index of the drone for which the output is being calculated, in
+      the range [0; num_drones - 1]
+    - formation_index: the index of the formation to which the drone belongs, in the
+      range [0; num_formations - 1], or None if there is no formation information available
+    - position: the 3D position of the drone
+    - drone_count: the total number of drones in the show
+
+    The function returns a sequence of four floats in the [0; 1] range representing the
+    RGBA color on the current color ramp to apply to the drone.
+    """
+
     def __call__(
         self,
         frame: int,
@@ -108,25 +138,45 @@ class CustomLightEffectFunction(Protocol):
     ) -> float: ...
 
 
-"""Type of the custom light effect function, used when the output type of a light effect is set to "CUSTOM". The function takes the following arguments:
-
-- frame: the current frame index
-- time_fraction: the fraction of time passed in the current light effect relative to its total duration, in the [0; 1] range
-- drone_index: the index of the drone for which the output is being calculated, in the range [0; num_drones - 1]
-- formation_index: the index of the formation to which the drone belongs, in the range [0; num_formations - 1], or None if there is no formation information available
-- position: the 3D position of the drone
-- drone_count: the total number of drones in the show
-
-The function returns a sequence of four floats in the [0; 1] range representing the
-RGBA color on the current color ramp to apply to the drone.
-"""
-
-
 def effect_type_supports_randomization(type: str) -> bool:
     """Returns whether the light effect type given in the argument supports
     randomization.
     """
     return type == "COLOR_RAMP" or type == "IMAGE"
+
+
+def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
+    names: list[str]
+
+    if self.path:
+        absolute_path = abspath(self.path)
+        module = load_module(absolute_path)
+        names = [
+            name
+            for name in dir(module)
+            if isinstance(getattr(module, name), types.FunctionType)
+        ]
+    else:
+        names = []
+
+    # Always add an empty entry so we have a reasonable default for the case
+    # when no module is selected
+    names.insert(0, "")
+    return [(name, name, "") for name in names]
+
+
+def object_has_mesh_data(self, obj) -> bool:
+    """Filter function that accepts only those Blender objects that have a mesh
+    as their associated data.
+    """
+    return obj.data and isinstance(obj.data, Mesh)
+
+
+def output_type_is_experimental(type: str) -> bool:
+    """Returns whether the light effect output type given in the argument is
+    experimental and may be subject to change or removal in future versions of
+    the plugin."""
+    return type == "LIGHT_PRESET"
 
 
 def output_type_supports_mapping_mode(type: str) -> bool:
@@ -171,29 +221,6 @@ def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
         return plane.is_front(point)
     else:
         return True
-
-
-_always_true = constant(True)
-
-
-def get_color_function_names(self, context: Context) -> list[tuple[str, str, str]]:
-    names: list[str]
-
-    if self.path:
-        absolute_path = abspath(self.path)
-        module = load_module(absolute_path)
-        names = [
-            name
-            for name in dir(module)
-            if isinstance(getattr(module, name), types.FunctionType)
-        ]
-    else:
-        names = []
-
-    # Always add an empty entry so we have a reasonable default for the case
-    # when no module is selected
-    names.insert(0, "")
-    return [(name, name, "") for name in names]
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -373,6 +400,14 @@ class LightEffect(PropertyGroup):
         type=ColorFunctionProperties,
         name="Output Y Function",
         description="Custom function for the output Y",
+    )
+
+    preset_id = EnumProperty(
+        name="Preset",
+        description="Built-in light effect preset (portable across machines)",
+        items=get_preset_enum_items,
+        default=0,
+        options=set(),
     )
 
     output_mapping_mode = EnumProperty(
@@ -825,6 +860,7 @@ class LightEffect(PropertyGroup):
             "type": self.type,
             "invertTarget": self.invert_target,
             "colorFunction": self.color_function.as_dict(),
+            "presetId": self.preset_id,
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
             "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
@@ -992,6 +1028,7 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
+        self.preset_id = other.preset_id
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
         self.output_function_y.update_from(other.output_function_y)
@@ -1283,7 +1320,7 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
         if duration is None or duration <= 0:
             duration = fps * DEFAULT_LIGHT_EFFECT_DURATION
 
-        entry: LightEffect = cast(LightEffect, self.entries.add())
+        entry = self.entries.add()
         entry.type = "COLOR_RAMP"
         entry.frame_start = frame_start
         entry.duration = duration
@@ -1392,10 +1429,10 @@ class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
             if entry.enabled and entry.influence > 0 and entry.contains_frame(frame):
                 yield entry
 
-    def _on_removing_entry(self, entry) -> bool:
-        entry._remove_texture()
-        return True
-
     def update_from_storyboard(self, context: Context) -> None:
         for entry in self.entries:
             entry.update_from_storyboard(context, reset_offset=False)
+
+    def _on_removing_entry(self, entry) -> bool:
+        entry._remove_texture()
+        return True

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added visualization type selector for LED lights. The new overlay marker based
+  visualization can speed up playback and render speed when using light effects.
+
 - Added audio export option to the .skyc exporter, requiring a single .mp3 music
   file to be added as an audio strip in the VSE.
 
@@ -17,14 +20,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Available profiles: "smooth" (previous default), "linear", "smooth from left", and
   "smmoth from right".
 
+- Added an experimental set of pre-defined light effects that can be applied to the
+  drones without the need of creating custom Python functions. Note that these light
+  effects are still experimental and we reserve the right to change or remove them any
+  time in future releases. If you use them in your own projects, please be prepared
+  that they may break or their behaviour might change in the future at any time. A
+  separate entry will be added in the changelog when they are considered final.
+
 ### Changed
 
-- The default velocity profile of the takeoff operation got changed to "linear", 
+- The default velocity profile of the takeoff operation got changed to "linear",
   while the transition to the first formation is "smooth from right" now. This keeps
   the speed and the minimum distance of the takeoff prodecure transparent on both
-  single and multi-layered takeoffs, but might introduce short acceleration spikes 
+  single and multi-layered takeoffs, but might introduce short acceleration spikes
   at the start and end of the takeoff. If that is disturbing the velocity profile
   can be set back to "smooth" for backward compatibility.
+
+### Fixed
+
+- Fixed an exception that happened when switching between files containing video based
+  light effects.
 
 ## [4.4.0] - 2026-05-12
 
