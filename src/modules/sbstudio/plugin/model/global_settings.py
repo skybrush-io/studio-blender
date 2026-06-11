@@ -97,28 +97,50 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
     def draw(self, context: Context) -> None:
         layout = self.layout
 
+        # First row: hardware ID and register button
+
         row = layout.row()
         col = row.column()
         col.enabled = False
         col.prop(self, "hardware_id")
 
         col = row.column()
-        col.scale_x = 0.75
+        col.scale_x = 0.4
         col.enabled = bool(self.hardware_id)
-        op = col.operator(RegisterHardwareIDOperator.bl_idname)
+        col.operator(RegisterHardwareIDOperator.bl_idname, text="Register")
 
-        layout.prop(self, "gateway_url")
+        # Second row: gateway URL
 
         row = layout.row()
-        op = row.operator(SetGatewayURLOperator.bl_idname, text="Use local gateway")
+        col = row.column()
+        col.prop(self, "gateway_url")
+
+        col = row.column()
+        col.scale_x = 0.4
+        col.label(text="")  # intentionally left empty for alignment
+
+        # Third row: buttons to set gateway URL to predefined values
+
+        row = layout.row()
+        op: SetGatewayURLOperator = row.operator(
+            SetGatewayURLOperator.bl_idname, text="Use local gateway"
+        )
         op.url = "http://localhost:7999"
 
-        op = row.operator(SetGatewayURLOperator.bl_idname, text="Do not use gateway")
+        op: SetGatewayURLOperator = row.operator(
+            SetGatewayURLOperator.bl_idname, text="Do not use gateway"
+        )
         op.url = ""
+
+        layout.separator()
+
+        # Fourth row: API key and server URL
 
         layout.prop(self, "api_key")
         # layout.prop(self, "license_file")
         layout.prop(self, "server_url")
+
+        # Fifth row: buttons to set server URL to predefined values
 
         row = layout.row()
         op: SetServerURLOperator = row.operator(
@@ -130,6 +152,8 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
             SetServerURLOperator.bl_idname, text="Use community server"
         )
         op.url = ""
+
+        layout.separator()
 
         layout.prop(self, "enable_experimental_features")
 

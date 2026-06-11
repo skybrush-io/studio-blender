@@ -12,14 +12,14 @@ __all__ = ("RegisterHardwareIDOperator",)
 log = logging.getLogger(__name__)
 
 
-SKYBRUSH_ACCOUNT_URL_TEMPLATE = """https://account.skybrush.io/go/register-hardware-id?hardwareId={hardware_id}&product=io.skybrush.studio.api"""
+SKYBRUSH_ACCOUNT_URL_TEMPLATE = "https://account.skybrush.io/go/register-hardware-id?hardwareId={hardware_id}&product=io.skybrush.studio.api"
 
 
 class RegisterHardwareIDOperator(Operator):
     """Opens Skybrush account in the default browser to register a given hardware ID."""
 
     bl_idname = "skybrush.register_hardware_id"
-    bl_label = "Register HWID"
+    bl_label = "Register hardware ID"
     bl_description = "Open Skybrush account to register your hardware ID"
 
     def execute(self, context):
