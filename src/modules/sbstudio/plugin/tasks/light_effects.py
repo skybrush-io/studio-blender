@@ -32,6 +32,7 @@ __all__ = (
     "get_base_color_of_drone",
     "get_final_color_of_drone",
     "suspended_light_effects",
+    "suspended_color_update_callbacks",
 )
 
 
@@ -52,8 +53,11 @@ associated memory area."""
 _last_frame: int | None = None
 """Number of the last frame that was evaluated with `update_light_effects()`"""
 
-suspension = Suspension()
+light_effect_suspension = Suspension()
 """Object to manage the suspension logic for the light effect task."""
+
+color_update_callbacks_suspension = Suspension()
+"""Object to manage the suspension logic for color update callbacks."""
 
 WHITE: RGBAColor = (1, 1, 1, 1)
 """White color, used as a base color when no info is available for a newly added
@@ -61,7 +65,7 @@ drone.
 """
 
 
-@suspension.wrap
+@light_effect_suspension.wrap
 def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     global _last_frame, _base_color_cache, _final_color_cache, WHITE
 
@@ -142,11 +146,13 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         _base_color_cache.clear()
         changed = True
 
-    # Note that we need to call the callbacks even if we did not change anything,
-    # and we imitate a single color change also on last light effect removal
-    final_color_updated_callbacks(
-        drones or [], cast(Sequence[RGBAColor], colors) or [], changed
-    )
+    # Wrap the callback calls to our suspension logic internally
+    if color_update_callbacks_suspension._counter <= 0:
+        # Note that we need to call the callbacks even if we did not change anything,
+        # and we imitate a single color change also on last light effect removal
+        final_color_updated_callbacks(
+            drones or [], cast(Sequence[RGBAColor], colors) or [], changed
+        )
 
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:
@@ -161,9 +167,15 @@ def get_final_color_of_drone(drone: Object) -> RGBAColor:
     return _final_color_cache.get(id(drone)) or get_base_color_of_drone(drone)
 
 
-suspended_light_effects = suspension.use
+suspended_light_effects = light_effect_suspension.use
 """Context manager that suspends the calculation of light effects when the
 context is entered and re-enables them when the context is exited.
+"""
+
+suspended_color_update_callbacks = color_update_callbacks_suspension.use
+"""Context manager that suspends the execution of color update callbacks when
+the context is entered and re-enables them when the context is exited. Light
+effects are still calculated and cached.
 """
 
 

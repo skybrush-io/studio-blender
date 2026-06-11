@@ -31,7 +31,10 @@ from sbstudio.plugin.model.storyboard import (
     get_storyboard,
 )
 from sbstudio.plugin.props.frame_range import resolve_frame_range
-from sbstudio.plugin.tasks.light_effects import suspended_light_effects
+from sbstudio.plugin.tasks.light_effects import (
+    suspended_color_update_callbacks,
+    suspended_light_effects,
+)
 from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
 from sbstudio.plugin.utils import with_context
 from sbstudio.plugin.utils.audio import get_audio_from_context
@@ -514,20 +517,23 @@ def _get_trajectories_and_lights(
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
-        with report_progress_during_api_operation() as on_progress:
-            with suspended_safety_checks():
-                frame_iter = frames.iter(
-                    trajectory_fps,
-                    operation=f"Sampling trajectories and lights at {trajectory_fps} FPS",
-                    on_progress=on_progress,
-                )
-                result = sample_positions_and_colors_of_objects(
-                    drones,
-                    frame_iter,
-                    context=context,
-                    redraw=redraw,
-                    simplify=True,
-                )
+        with (
+            suspended_safety_checks(),
+            suspended_color_update_callbacks(),
+            report_progress_during_api_operation() as on_progress,
+        ):
+            frame_iter = frames.iter(
+                trajectory_fps,
+                operation=f"Sampling trajectories and lights at {trajectory_fps} FPS",
+                on_progress=on_progress,
+            )
+            result = sample_positions_and_colors_of_objects(
+                drones,
+                frame_iter,
+                context=context,
+                redraw=redraw,
+                simplify=True,
+            )
 
         trajectories = {}
         lights = {}
@@ -560,13 +566,14 @@ def _get_trajectories_and_lights(
                     operation=f"Sampling lights at {light_fps} FPS",
                     on_progress=on_progress,
                 )
-                lights = sample_colors_of_objects(
-                    drones,
-                    frame_iter,
-                    context=context,
-                    redraw=redraw,
-                    simplify=True,
-                )
+                with suspended_color_update_callbacks():
+                    lights = sample_colors_of_objects(
+                        drones,
+                        frame_iter,
+                        context=context,
+                        redraw=redraw,
+                        simplify=True,
+                    )
 
     return trajectories, lights
 
@@ -615,20 +622,23 @@ def _get_trajectories_lights_and_yaw_setpoints(
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
-        with suspended_safety_checks():
-            with report_progress_during_api_operation() as on_progress:
-                frame_iter = frames.iter(
-                    trajectory_fps,
-                    operation=f"Sampling trajectories, lights and yaw setpoints at {trajectory_fps} FPS",
-                    on_progress=on_progress,
-                )
-                result = sample_positions_colors_and_yaw_of_objects(
-                    drones,
-                    frame_iter,
-                    context=context,
-                    redraw=redraw,
-                    simplify=True,
-                )
+        with (
+            suspended_safety_checks(),
+            suspended_color_update_callbacks(),
+            report_progress_during_api_operation() as on_progress,
+        ):
+            frame_iter = frames.iter(
+                trajectory_fps,
+                operation=f"Sampling trajectories, lights and yaw setpoints at {trajectory_fps} FPS",
+                on_progress=on_progress,
+            )
+            result = sample_positions_colors_and_yaw_of_objects(
+                drones,
+                frame_iter,
+                context=context,
+                redraw=redraw,
+                simplify=True,
+            )
 
         trajectories = {}
         lights = {}
@@ -670,13 +680,14 @@ def _get_trajectories_lights_and_yaw_setpoints(
                     operation=f"Sampling lights at {light_fps} FPS",
                     on_progress=on_progress,
                 )
-                lights = sample_colors_of_objects(
-                    drones,
-                    frame_iter,
-                    context=context,
-                    redraw=redraw,
-                    simplify=True,
-                )
+                with suspended_color_update_callbacks():
+                    lights = sample_colors_of_objects(
+                        drones,
+                        frame_iter,
+                        context=context,
+                        redraw=redraw,
+                        simplify=True,
+                    )
 
     return trajectories, lights, yaw_setpoints
 
