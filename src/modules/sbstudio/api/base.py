@@ -37,19 +37,18 @@ class Response:
     @property
     def content_type(self) -> str:
         """Returns the HTTP content type of the response."""
-        info = self._response.info()
-        return info.get_content_type()
+        return self._response.headers.get_content_type()
 
     @property
     def status_code(self) -> int:
         """Returns the HTTP status code of the response."""
-        return self._response.getcode()
+        return self._response.status
 
     def _run_sanity_checks(self) -> None:
         """Runs basic sanity checks on the wrapped HTTP response and raises
         appropriate exceptions when the HTTP response signals an error.
         """
-        if self.status_code not in [200, 201]:
+        if self.status_code not in (200, 201):
             raise SkybrushStudioAPIError(
                 f"Request returned HTTP error code {self.status_code}"
             )
