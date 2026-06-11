@@ -122,33 +122,30 @@ def export_show_to_file_using_api(
     use_yaw_control: bool = settings.get("use_yaw_control", False)
 
     # get trajectories, light programs and yaw setpoints
-    with report_progress_during_api_operation() as on_progress:
-        if use_yaw_control:
-            log.info("Getting object trajectories, light programs and yaw setpoints")
-            (
-                trajectories,
-                lights,
-                yaw_setpoints,
-            ) = _get_trajectories_lights_and_yaw_setpoints(
-                drones,
-                settings,
-                frame_range,
-                context=context,
-                progress=on_progress,
-            )
-        else:
-            log.info("Getting object trajectories and light programs")
-            (
-                trajectories,
-                lights,
-            ) = _get_trajectories_and_lights(
-                drones,
-                settings,
-                frame_range,
-                context=context,
-                progress=on_progress,
-            )
-            yaw_setpoints = None
+    if use_yaw_control:
+        log.info("Getting object trajectories, light programs and yaw setpoints")
+        (
+            trajectories,
+            lights,
+            yaw_setpoints,
+        ) = _get_trajectories_lights_and_yaw_setpoints(
+            drones,
+            settings,
+            frame_range,
+            context=context,
+        )
+    else:
+        log.info("Getting object trajectories and light programs")
+        (
+            trajectories,
+            lights,
+        ) = _get_trajectories_and_lights(
+            drones,
+            settings,
+            frame_range,
+            context=context,
+        )
+        yaw_setpoints = None
 
     # get pyro control enabled state
     use_pyro_control: bool = settings.get("use_pyro_control", False)
@@ -481,7 +478,6 @@ def _get_trajectories_and_lights(
     bounds: tuple[int, int],
     *,
     context: Context | None = None,
-    progress: ProgressHandler | None = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram]]:
     """Get trajectories and LED lights of all selected/picked objects.
 
@@ -518,19 +514,20 @@ def _get_trajectories_and_lights(
 
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
-        with suspended_safety_checks():
-            frame_iter = frames.iter(
-                trajectory_fps,
-                operation="Sampling trajectories and lights",
-                on_progress=progress,
-            )
-            result = sample_positions_and_colors_of_objects(
-                drones,
-                frame_iter,
-                context=context,
-                redraw=redraw,
-                simplify=True,
-            )
+        with report_progress_during_api_operation() as on_progress:
+            with suspended_safety_checks():
+                frame_iter = frames.iter(
+                    trajectory_fps,
+                    operation="Sampling trajectories and lights",
+                    on_progress=on_progress,
+                )
+                result = sample_positions_and_colors_of_objects(
+                    drones,
+                    frame_iter,
+                    context=context,
+                    redraw=redraw,
+                    simplify=True,
+                )
 
         trajectories = {}
         lights = {}
@@ -543,31 +540,33 @@ def _get_trajectories_and_lights(
         # We need to iterate over the show twice, once for the trajectories,
         # once for the lights
         with suspended_safety_checks():
-            frame_iter = frames.iter(
-                trajectory_fps,
-                operation="Sampling trajectories",
-                on_progress=progress,
-            )
-            with suspended_light_effects():
-                trajectories = sample_positions_of_objects(
+            with report_progress_during_api_operation() as on_progress:
+                frame_iter = frames.iter(
+                    trajectory_fps,
+                    operation="Sampling trajectories",
+                    on_progress=on_progress,
+                )
+                with suspended_light_effects():
+                    trajectories = sample_positions_of_objects(
+                        drones,
+                        frame_iter,
+                        context=context,
+                        simplify=True,
+                    )
+
+            with report_progress_during_api_operation() as on_progress:
+                frame_iter = frames.iter(
+                    light_fps,
+                    operation="Sampling lights",
+                    on_progress=on_progress,
+                )
+                lights = sample_colors_of_objects(
                     drones,
                     frame_iter,
                     context=context,
+                    redraw=redraw,
                     simplify=True,
                 )
-
-            frame_iter = frames.iter(
-                light_fps,
-                operation="Sampling lights",
-                on_progress=progress,
-            )
-            lights = sample_colors_of_objects(
-                drones,
-                frame_iter,
-                context=context,
-                redraw=redraw,
-                simplify=True,
-            )
 
     return trajectories, lights
 
@@ -579,7 +578,6 @@ def _get_trajectories_lights_and_yaw_setpoints(
     bounds: tuple[int, int],
     *,
     context: Context | None = None,
-    progress: ProgressHandler | None = None,
 ) -> tuple[dict[str, Trajectory], dict[str, LightProgram], dict[str, YawSetpointList]]:
     """Get trajectories, LED lights and yaw setpoints of all selected/picked objects.
 
@@ -618,18 +616,19 @@ def _get_trajectories_lights_and_yaw_setpoints(
     if trajectory_fps == light_fps:
         # This is easy, we can iterate over the show once
         with suspended_safety_checks():
-            frame_iter = frames.iter(
-                trajectory_fps,
-                operation="Sampling trajectories, lights and yaw setpoints",
-                on_progress=progress,
-            )
-            result = sample_positions_colors_and_yaw_of_objects(
-                drones,
-                frame_iter,
-                context=context,
-                redraw=redraw,
-                simplify=True,
-            )
+            with report_progress_during_api_operation() as on_progress:
+                frame_iter = frames.iter(
+                    trajectory_fps,
+                    operation="Sampling trajectories, lights and yaw setpoints",
+                    on_progress=on_progress,
+                )
+                result = sample_positions_colors_and_yaw_of_objects(
+                    drones,
+                    frame_iter,
+                    context=context,
+                    redraw=redraw,
+                    simplify=True,
+                )
 
         trajectories = {}
         lights = {}
@@ -644,38 +643,40 @@ def _get_trajectories_lights_and_yaw_setpoints(
         # We need to iterate over the show twice, once for the trajectories
         # and yaw setpoints, once for the lights
         with suspended_safety_checks():
-            frame_iter = frames.iter(
-                trajectory_fps,
-                operation="Sampling trajectories and yaw setpoints",
-                on_progress=progress,
-            )
-            with suspended_light_effects():
-                result = sample_positions_and_yaw_of_objects(
+            with report_progress_during_api_operation() as on_progress:
+                frame_iter = frames.iter(
+                    trajectory_fps,
+                    operation="Sampling trajectories and yaw setpoints",
+                    on_progress=on_progress,
+                )
+                with suspended_light_effects():
+                    result = sample_positions_and_yaw_of_objects(
+                        drones,
+                        frame_iter,
+                        context=context,
+                        simplify=True,
+                    )
+
+                    trajectories = {}
+                    yaw_setpoints = {}
+
+                    for key, (trajectory, yaw_curve) in result.items():
+                        trajectories[key] = trajectory
+                        yaw_setpoints[key] = yaw_curve
+
+            with report_progress_during_api_operation() as on_progress:
+                frame_iter = frames.iter(
+                    light_fps,
+                    operation="Sampling lights",
+                    on_progress=on_progress,
+                )
+                lights = sample_colors_of_objects(
                     drones,
                     frame_iter,
                     context=context,
+                    redraw=redraw,
                     simplify=True,
                 )
-
-                trajectories = {}
-                yaw_setpoints = {}
-
-                for key, (trajectory, yaw_curve) in result.items():
-                    trajectories[key] = trajectory
-                    yaw_setpoints[key] = yaw_curve
-
-            frame_iter = frames.iter(
-                light_fps,
-                operation="Sampling lights",
-                on_progress=progress,
-            )
-            lights = sample_colors_of_objects(
-                drones,
-                frame_iter,
-                context=context,
-                redraw=redraw,
-                simplify=True,
-            )
 
     return trajectories, lights, yaw_setpoints
 
