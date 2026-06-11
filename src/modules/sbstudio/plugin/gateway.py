@@ -3,7 +3,9 @@ from functools import lru_cache
 from typing import TypeVar
 
 from sbstudio.api import SkybrushGatewayAPI
-from sbstudio.api.errors import NoOnlineAccessAllowedError, SkybrushStudioAPIError
+from sbstudio.api.errors import SkybrushStudioAPIError
+
+from .plugin_helpers import only_with_online_access
 
 __all__ = ("get_gateway",)
 
@@ -43,6 +45,7 @@ def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI:
     return result
 
 
+@only_with_online_access
 def get_gateway() -> SkybrushGatewayAPI:
     """Returns the singleton instance of the Skybrush Gateway API object.
 
@@ -50,10 +53,6 @@ def get_gateway() -> SkybrushGatewayAPI:
         SkybrushStudioAPIError: if gateway is not configured
     """
     from sbstudio.plugin.model.global_settings import get_preferences
-    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
-
-    if not is_online_access_allowed():
-        raise NoOnlineAccessAllowedError()
 
     prefs = get_preferences()
     gateway_url = str(prefs.gateway_url).strip()
@@ -63,6 +62,4 @@ def get_gateway() -> SkybrushGatewayAPI:
             "Skybrush Gateway is not configured in the preferences"
         )
 
-    gateway = _get_gateway_from_url(gateway_url)
-
-    return gateway
+    return _get_gateway_from_url(gateway_url)

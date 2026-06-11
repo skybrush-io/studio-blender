@@ -2,7 +2,11 @@ from sbstudio.api.constants import MINIMUM_BACKEND_VERSION
 from sbstudio.api.types import Version
 from sbstudio.errors import SkybrushStudioError
 
-__all__ = ("SkybrushStudioAPIError",)
+__all__ = (
+    "SkybrushStudioAPIError",
+    "NoOnlineAccessAllowedError",
+    "BackendVersionMismatchError",
+)
 
 
 class SkybrushStudioAPIError(SkybrushStudioError):
