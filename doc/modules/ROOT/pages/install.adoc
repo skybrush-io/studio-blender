@@ -36,7 +36,7 @@ The professional license for *Skybrush Studio for Blender* always includes acces
 
 After purchasing a professional license for *Skybrush Studio for Blender*, follow the steps below for proper gateway installation:
 
-1. Download a precompiled copy of *Skybrush Gateway* from your https://account.skybrush.io/apps[Skybrush Account]. 
+1. Download a precompiled copy of *Skybrush Gateway* from your https://account.skybrush.io/apps[Skybrush Account].
 
 2. Start your gateway instance along with starting Blender. *Skybrush Gateway* will run in the background by default. If you wish to see task progress or other useful info hosted by *Skybrush Gateway*, open it up from its tray icon.
 +
@@ -48,7 +48,7 @@ WARNING: Keep *Skybrush Gateway* running throughout your entire design process t
 
 === Install Skybrush Studio Server
 
-*Skybrush Studio Server* is the required backend of *Skybrush Studio for Blender*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin. 
+*Skybrush Studio Server* is the required backend of *Skybrush Studio for Blender*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin.
 
 *Skybrush Studio Server* is available online for all, this is called our community server. It can also be purchased to run on your machine locally.
 

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 
+import bpy
 from bpy.types import Context, Object
 
 from sbstudio.model.color import Color4D

@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def gateway_url_updated(
-    self: DroneShowAddonGlobalSettings, context: Optional[Context] = None
+    self: DroneShowAddonGlobalSettings, context: Context | None = None
 ):
     hardware_id: str = ""
     if self.gateway_url:

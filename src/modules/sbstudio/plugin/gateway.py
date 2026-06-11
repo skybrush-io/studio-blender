@@ -1,5 +1,4 @@
 import logging
-
 from functools import lru_cache
 from typing import TypeVar
 
@@ -51,8 +50,8 @@ def get_gateway() -> SkybrushGatewayAPI:
     Raises:
         SkybrushStudioAPIError: if gateway is not configured
     """
-    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
     from sbstudio.plugin.model.global_settings import get_preferences
+    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
 
     if not is_online_access_allowed():
         raise NoOnlineAccessAllowedError()
