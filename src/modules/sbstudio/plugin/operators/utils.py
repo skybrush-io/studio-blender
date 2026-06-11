@@ -518,7 +518,7 @@ def _get_trajectories_and_lights(
             with suspended_safety_checks():
                 frame_iter = frames.iter(
                     trajectory_fps,
-                    operation="Sampling trajectories and lights",
+                    operation=f"Sampling trajectories and lights at {trajectory_fps} FPS",
                     on_progress=on_progress,
                 )
                 result = sample_positions_and_colors_of_objects(
@@ -543,7 +543,7 @@ def _get_trajectories_and_lights(
             with report_progress_during_api_operation() as on_progress:
                 frame_iter = frames.iter(
                     trajectory_fps,
-                    operation="Sampling trajectories",
+                    operation=f"Sampling trajectories at {trajectory_fps} FPS",
                     on_progress=on_progress,
                 )
                 with suspended_light_effects():
@@ -557,7 +557,7 @@ def _get_trajectories_and_lights(
             with report_progress_during_api_operation() as on_progress:
                 frame_iter = frames.iter(
                     light_fps,
-                    operation="Sampling lights",
+                    operation=f"Sampling lights at {light_fps} FPS",
                     on_progress=on_progress,
                 )
                 lights = sample_colors_of_objects(
@@ -619,7 +619,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
             with report_progress_during_api_operation() as on_progress:
                 frame_iter = frames.iter(
                     trajectory_fps,
-                    operation="Sampling trajectories, lights and yaw setpoints",
+                    operation=f"Sampling trajectories, lights and yaw setpoints at {trajectory_fps} FPS",
                     on_progress=on_progress,
                 )
                 result = sample_positions_colors_and_yaw_of_objects(
@@ -646,7 +646,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
             with report_progress_during_api_operation() as on_progress:
                 frame_iter = frames.iter(
                     trajectory_fps,
-                    operation="Sampling trajectories and yaw setpoints",
+                    operation=f"Sampling trajectories and yaw setpoints at {trajectory_fps} FPS",
                     on_progress=on_progress,
                 )
                 with suspended_light_effects():
@@ -667,7 +667,7 @@ def _get_trajectories_lights_and_yaw_setpoints(
             with report_progress_during_api_operation() as on_progress:
                 frame_iter = frames.iter(
                     light_fps,
-                    operation="Sampling lights",
+                    operation=f"Sampling lights at {light_fps} FPS",
                     on_progress=on_progress,
                 )
                 lights = sample_colors_of_objects(
