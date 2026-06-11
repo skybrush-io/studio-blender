@@ -18,12 +18,12 @@ from sbstudio.utils import create_path_and_open
 from .errors import SkybrushStudioAPIError
 
 __all__ = (
-    "SkybrushStudioResponse",
+    "Response",
     "SkybrushStudioBaseAPI",
 )
 
 
-class SkybrushStudioResponse:
+class Response:
     """Class representing a response from the Skybrush Studio/Gateway APIs."""
 
     def __init__(self, response: HTTPResponse):
@@ -171,7 +171,7 @@ class SkybrushStudioBaseAPI:
         signature: str | None = None,
         compressed: bool | None = None,
         method: str | None = None,
-    ) -> Iterator[SkybrushStudioResponse]:
+    ) -> Iterator[Response]:
         """Sends a request to the given URL, relative to the API root, and
         returns the corresponding HTTP response object.
 
@@ -238,7 +238,7 @@ class SkybrushStudioBaseAPI:
 
         try:
             with urlopen(req, context=self._request_context) as raw_response:
-                response = SkybrushStudioResponse(raw_response)
+                response = Response(raw_response)
                 response._run_sanity_checks()
                 yield response
         except HTTPError as ex:

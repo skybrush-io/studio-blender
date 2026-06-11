@@ -25,7 +25,7 @@ from sbstudio.model.yaw import YawSetpointList
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.gateway import get_gateway
 
-from .base import SkybrushStudioBaseAPI, SkybrushStudioResponse
+from .base import Response, SkybrushStudioBaseAPI
 from .constants import SKYBRUSH_STUDIO_SERVER_URL
 from .errors import SkybrushStudioAPIError
 from .types import Limits, Mapping, SmartRTHPlan, TransitionPlan, Version
@@ -56,9 +56,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
     """
 
     @contextmanager
-    def _sign_and_send_request(
-        self, url: str, data: Any = None
-    ) -> Iterator[SkybrushStudioResponse]:
+    def _sign_and_send_request(self, url: str, data: Any = None) -> Iterator[Response]:
         """Sign and send a request.
 
         Args:
