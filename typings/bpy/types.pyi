@@ -792,11 +792,6 @@ class Menu(bpy_struct):
 # operators used; could be separated to proper subclasses with
 # a lot of work and minimal advantages
 class OperatorProperties(bpy_struct):
-    # SetServerURLOperator
-    url: str
-    # ApplyColors
-    color: str
-    fade: bool
     # RecalculateTransitionsOperator
     scope: str
 
@@ -945,7 +940,7 @@ class UILayout(bpy_struct):
         depress: bool = False,
         icon_value: int = 0,
         search_weight: float = 0.0,
-    ) -> OperatorProperties: ...
+    ): ...  # return type is unknown; depends on the operator ID. Needs casting to the correct type by the caller.
     def operator_menu_enum(
         self,
         operator: str,
