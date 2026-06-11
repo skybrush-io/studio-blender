@@ -900,6 +900,8 @@ class UILayout(bpy_struct):
     alert: bool
     emboss: str
     enabled: bool
+    scale_x: float
+    scale_y: float
     use_property_decorate: bool
     use_property_split: bool
 
