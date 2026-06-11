@@ -24,7 +24,6 @@ def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI:
 
     Raises:
         ValueError: on initialization error
-        Exception: on all other unhandled exceptions
     """
     try:
         result = SkybrushGatewayAPI(url=url)
