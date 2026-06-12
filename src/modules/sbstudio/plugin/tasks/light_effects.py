@@ -31,8 +31,8 @@ __all__ = (
     "UpdateLightEffectsTask",
     "get_base_color_of_drone",
     "get_final_color_of_drone",
-    "suspended_light_effects",
     "suspended_color_update_callbacks",
+    "suspended_light_effects",
 )
 
 
@@ -147,7 +147,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         changed = True
 
     # Wrap the callback calls to our suspension logic internally
-    if color_update_callbacks_suspension._counter <= 0:
+    if not color_update_callbacks_suspension.active:
         # Note that we need to call the callbacks even if we did not change anything,
         # and we imitate a single color change also on last light effect removal
         final_color_updated_callbacks(

@@ -23,6 +23,13 @@ class Suspension:
     def __init__(self):
         self._counter = 0
 
+    @property
+    def active(self) -> bool:
+        """Returns whether the suspension is active (i.e. the task is currently
+        suspended).
+        """
+        return self._counter > 0
+
     @contextmanager
     def use(self):
         """Context manager that suspends the task while inside the context.
