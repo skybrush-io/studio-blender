@@ -55,18 +55,18 @@ class LEDControlPanel(Panel):
         col.prop(led_control, "secondary_color", text="Secondary", icon="COLOR")
 
         row = layout.row()
-        params = row.operator(ApplyColors.bl_idname, text="Apply")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Apply")
         params.color = "PRIMARY"
         params.fade = False
-        params = row.operator(ApplyColors.bl_idname, text="Apply")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Apply")
         params.color = "SECONDARY"
         params.fade = False
 
         row = layout.row()
-        params = row.operator(ApplyColors.bl_idname, text="Fade to")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Fade to")
         params.color = "PRIMARY"
         params.fade = True
-        params = row.operator(ApplyColors.bl_idname, text="Fade to")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Fade to")
         params.color = "SECONDARY"
         params.fade = True
 

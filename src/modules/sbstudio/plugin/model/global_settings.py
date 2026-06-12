@@ -59,10 +59,14 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         layout.prop(self, "server_url")
 
         row = layout.row()
-        op = row.operator(SetServerURLOperator.bl_idname, text="Use local server")
+        op: SetServerURLOperator = row.operator(
+            SetServerURLOperator.bl_idname, text="Use local server"
+        )
         op.url = "http://localhost:8000"
 
-        op = row.operator(SetServerURLOperator.bl_idname, text="Use community server")
+        op: SetServerURLOperator = row.operator(
+            SetServerURLOperator.bl_idname, text="Use community server"
+        )
         op.url = ""
 
         layout.prop(self, "enable_experimental_features")
