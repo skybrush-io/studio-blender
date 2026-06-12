@@ -22,7 +22,7 @@ There are many Blender versions available. We aim for compatibility with the htt
 
 === Install Skybrush Gateway
 
-*Skybrush Gateway* is a local component running on your machine, responsible for assuring trusted communication with our online server. It also shows you real-time progress information for your long lasting Blender tasks.
+*Skybrush Gateway* is a local component running on your machine, responsible for ensuring trusted communication with our online server. It also shows you real-time progress information for your long lasting Blender tasks.
 
 image::skybrush_gateway.jpg[Skybrush Gateway]
 
