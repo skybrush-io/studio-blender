@@ -99,7 +99,7 @@ class Response:
         """Returns the value of the response header matching name."""
         return self._response.getheader(name)
 
-    def save_to_file(self, filename: Path) -> None:
+    def save_to_file(self, filename: str | Path) -> None:
         """Writes response to a given file."""
         with create_path_and_open(filename, "wb") as f:
             copyfileobj(self._response, f)

@@ -199,7 +199,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         lights: dict[str, LightProgram] | None = None,
         pyro_programs: dict[str, PyroMarkers] | None = None,
         yaw_setpoints: dict[str, YawSetpointList] | None = None,
-        output: Path | None = None,
+        output: str | Path | None = None,
         show_title: str | None = None,
         show_type: str = "outdoor",
         show_location: ShowLocation | None = None,

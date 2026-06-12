@@ -66,7 +66,7 @@ def constant(value: Any) -> Callable[..., Any]:
     return result
 
 
-def create_path_and_open(filename, *args, **kwds):
+def create_path_and_open(filename: str | Path, *args, **kwds):
     """Like open() but also creates the directories leading to the given file
     if they don't exist yet.
     """
