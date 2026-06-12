@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
-import time
 
 import bpy
 import numpy as np
@@ -91,7 +90,6 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 
     changed = False
 
-    start_time = time.time()
     for effect in light_effects.iter_active_effects_in_frame(frame):
         if drones is None:
             # The only allocations should be concentrated here
@@ -143,9 +141,6 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     final_color_updated_callbacks(
         drones or [], cast(Sequence[RGBAColor], colors) or [], changed
     )
-
-    elapsed_time = time.time() - start_time
-    print(f"Time 02 =  {elapsed_time:.4f} seconds.")
 
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:
