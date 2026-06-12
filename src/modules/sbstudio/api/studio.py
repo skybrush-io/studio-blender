@@ -65,16 +65,20 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             data: the data to sign and send; for supported data types see
                 `self.send_request()`.
         """
+        compressed: bool | None
+
         if data is None or isinstance(data, bytes):
             compressed = None
         else:
             data = compress(json.dumps(data).encode("utf-8"))
             compressed = True
+
         try:
             gateway = get_gateway()
         except Exception as ex:
             log.warning(f"Could not find Studio Gateway: {ex}")
             gateway = None
+
         if gateway is not None:
             try:
                 signature = gateway.sign_request(data, compressed=compressed)
@@ -83,6 +87,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
                 signature = None
         else:
             signature = None
+
         with self._send_request(
             url, data, signature=signature, compressed=compressed
         ) as response:
@@ -532,7 +537,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             transition; ``None`` if not known or not calculated due to
             efficiency reasons
         """
-        data = {"version": 1, "source": source, "target": target}
+        data: dict[str, Any] = {"version": 1, "source": source, "target": target}
         if radius is not None:
             data["radius"] = radius
 
