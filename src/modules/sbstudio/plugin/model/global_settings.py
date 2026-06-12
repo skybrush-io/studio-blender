@@ -23,12 +23,17 @@ log = logging.getLogger(__name__)
 def gateway_url_updated(
     self: DroneShowAddonGlobalSettings, context: Context | None = None
 ):
+    """Callback that is called when the user updates the gateway URL in the add-on
+    preferences.
+
+    Tries to retrieve the hardware ID from the gateway and updates the hardware ID field
+    in the preferences accordingly.
+    """
     hardware_id: str = ""
     if self.gateway_url:
         try:
             gateway = get_gateway()
             hardware_id = gateway.get_hardware_id()
-            log.info(f"Hardware ID: {hardware_id}")
         except Exception as ex:
             log.warning(
                 f"Studio gateway could not be reached at {self.gateway_url}: {ex}"
