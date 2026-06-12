@@ -757,7 +757,7 @@ class LightEffect(PropertyGroup):
                     # and distribute them along the color axis proportionally
                     # to the differences between the numeric values of the sort
                     # keys
-                    evaluated_sort_keys = [sort_key(i) for i in order]
+                    evaluated_sort_keys = tuple(map(sort_key, order))
                     min_value, max_value = (
                         min(evaluated_sort_keys),
                         max(evaluated_sort_keys),
