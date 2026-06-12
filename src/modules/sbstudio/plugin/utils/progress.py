@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sized
 from itertools import chain
 from time import time
 from typing import Protocol, TypeVar
@@ -26,23 +26,16 @@ class ProgressReport(Protocol):
 
     This interface specification is intentionally kept as minimal as possible.
     If your operation consists of discrete steps, you can use
-    StepBasedProgrssReport_ as your base class.
+    StepBasedProgressReport_ as your base class.
     """
 
-    operation: str | None
-    """Optional string that describes the operation being executed."""
+    def format(self) -> str:
+        """Formats the progress report as a human-readable string."""
+        ...
 
     @property
-    def finished(self) -> bool:
-        """Whether the operation has finished.
-
-        Note that this is not necessarily equivalent to having reached 100%.
-        Being finished means that we have committed ourselves that no further
-        updates will be posted for this progress report.
-
-        Implementors _may_ choose to implement this method in a way that having
-        a progress of 100% implies being finished, but this is not required.
-        """
+    def operation(self) -> str | None:
+        """Optional string that describes the operation being executed."""
         ...
 
     @property
@@ -50,15 +43,6 @@ class ProgressReport(Protocol):
         """The percentage of the operation that has been completed, or ``None`` if
         the percentage is unknown.
         """
-        ...
-
-    @property
-    def remaining_time(self) -> float | None:
-        """Calculates remaining time in seconds or None if not known."""
-        ...
-
-    def format(self) -> str:
-        """Formats the progress report as a human-readable string."""
         ...
 
 
@@ -90,14 +74,23 @@ class ProgressReportBase(ABC, ProgressReport):
 
     @property
     def finished(self) -> bool:
+        """Whether the operation has finished.
+
+        Note that this is not necessarily equivalent to having reached 100%.
+        Being finished means that we have committed ourselves that no further
+        updates will be posted for this progress report.
+
+        Subclasses _may_ choose to implement this method in a way that having
+        a progress of 100% implies being finished, but this is not required.
+        """
         return self._finished_at is not None
 
     @property
     @abstractmethod
     def percentage(self) -> float | None: ...
 
-    @property
-    def remaining_time(self) -> float | None:
+    def estimate_remaining_time(self) -> float | None:
+        """Calculates estimated remaining time in seconds or `None` if not known."""
         if self.finished:
             return 0.0
         elif (
@@ -172,19 +165,6 @@ class StepBasedProgressReport(ProgressReportBase):
         else:
             return self._steps_done / self._num_steps * 100
 
-    @property
-    def remaining_time_str(self) -> str | None:
-        """Shows the remaining time as a mm:ss formatted string
-        or None if not known"""
-        if self.remaining_time is None:
-            return None
-        elif self.remaining_time < 0:
-            minutes, seconds = divmod(int(-self.remaining_time), 60)
-            return f"-{minutes:02d}:{seconds:02d}"
-        else:
-            minutes, seconds = divmod(int(self.remaining_time), 60)
-            return f"{minutes:02d}:{seconds:02d}"
-
     def add_step(self) -> None:
         """Registers that one step has been performed."""
         self.add_steps(1)
@@ -199,11 +179,7 @@ class StepBasedProgressReport(ProgressReportBase):
         self._touch()
 
     def format(self) -> str:
-        time_left = (
-            ""
-            if self.remaining_time_str is None
-            else f", {self.remaining_time_str} mins left"
-        )
+        time_left = self._format_remaining_time(prefix=", ")
         if self._num_steps is None:
             return (
                 f"{self.operation}: {self._steps_done} step(s) done, "
@@ -214,6 +190,27 @@ class StepBasedProgressReport(ProgressReportBase):
                 f"{self.operation}: {self._steps_done}/{self._num_steps}, "
                 f"{self.percentage:.1f}%{time_left}"
             )
+
+    @staticmethod
+    def _format_time(seconds: float) -> str:
+        """Formats the given number of seconds as a mm:ss formatted string."""
+        if seconds < 0:
+            minutes, seconds = divmod(int(-seconds), 60)
+            return f"-{minutes:02d}:{seconds:02d}"
+        else:
+            minutes, seconds = divmod(int(seconds), 60)
+            return f"{minutes:02d}:{seconds:02d}"
+
+    def _format_remaining_time(self, prefix: str = "") -> str:
+        """Formats the remaining time as a human-readable string.
+
+        Args:
+            prefix: optional prefix to prepend to the formatted string if the remaining
+                time is known
+        """
+        remaining_time = self.estimate_remaining_time()
+        time_left = "" if remaining_time is None else self._format_time(remaining_time)
+        return f"{prefix}{time_left} left" if time_left else ""
 
 
 ProgressHandler = Callable[[ProgressReport], bool]
@@ -244,11 +241,10 @@ def report_progress(
     """
     if size_hint is not None:
         total_items = size_hint
+    elif isinstance(iterable, Sized):
+        total_items = len(iterable)
     else:
-        try:
-            total_items = len(iterable)  # type: ignore[arg-type]
-        except TypeError:
-            total_items = None
+        total_items = None
 
     progress: StepBasedProgressReport = report_factory(total_items)
     progress.start(operation)
@@ -325,9 +321,6 @@ class FrameRange:
         if dist < 0:
             return iter([])
 
-        if dist == 0:
-            it = [self._start]
-
         if dist % frame_step == 0:
             it = range(self._start, self._end + 1, frame_step)
             size_hint = len(it)
@@ -387,11 +380,7 @@ class _FrameIteratorProgressReport(StepBasedProgressReport):
         super().__init__(num_steps=total_steps, operation=operation)
 
     def format(self) -> str:
-        time_left = (
-            ""
-            if self.remaining_time_str is None
-            else f", {self.remaining_time_str} mins left"
-        )
+        time_left = self._format_remaining_time(prefix=", ")
         return (
             f"{self.operation}: frame {self.current_frame} in range {self.frame_range!r}, "
             f"{self.percentage:.1f}%{time_left}"
