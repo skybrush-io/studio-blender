@@ -1,10 +1,7 @@
-import json
 import logging
 import re
 from base64 import b64encode
-from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
-from gzip import compress
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +22,7 @@ from sbstudio.model.yaw import YawSetpointList
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.gateway import get_gateway
 
-from .base import Response, SkybrushStudioBaseAPI
+from .base import SkybrushStudioBaseAPI
 from .constants import SKYBRUSH_STUDIO_SERVER_URL
 from .errors import SkybrushStudioAPIError
 from .types import Limits, Mapping, SmartRTHPlan, TransitionPlan, Version
@@ -55,43 +52,21 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
     For license-type API keys, the key must start with the string "License ".
     """
 
-    @contextmanager
-    def _sign_and_send_request(self, url: str, data: Any = None) -> Iterator[Response]:
-        """Sign and send a request.
-
-        Args:
-            url: the URL (relative to the API root) where the request should be
-                sent to.
-            data: the data to sign and send; for supported data types see
-                `self.send_request()`.
-        """
-        compressed: bool | None
-
-        if data is None or isinstance(data, bytes):
-            compressed = None
-        else:
-            data = compress(json.dumps(data).encode("utf-8"))
-            compressed = True
-
+    def _sign_request_body(self, data: bytes) -> str | None:
         try:
             gateway = get_gateway()
         except Exception as ex:
             log.warning(f"Could not find Studio Gateway: {ex}")
             gateway = None
 
-        if gateway is not None:
-            try:
-                signature = gateway.sign_request(data, compressed=compressed)
-            except Exception as ex:
-                log.warning(f"Could not sign request: {ex}")
-                signature = None
-        else:
-            signature = None
+        if gateway is None:
+            return None
 
-        with self._send_request(
-            url, data, signature=signature, compressed=compressed
-        ) as response:
-            yield response
+        try:
+            return gateway.sign_request(data)
+        except Exception as ex:
+            log.warning(f"Could not sign request: {ex}")
+            return None
 
     @staticmethod
     def validate_api_key(key: str) -> str:
@@ -183,7 +158,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             "min_distance": float(min_distance),
             "points": points,
         }
-        with self._sign_and_send_request("operations/decompose", data) as response:
+        with self._send_request("operations/decompose", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -352,7 +327,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             if media and renderer == "skyc":
                 data["output"]["mode"] = "production"
 
-        with self._sign_and_send_request(f"operations/{operation}", data) as response:
+        with self._send_request(f"operations/{operation}", data) as response:
             if output:
                 response.save_to_file(output)
             else:
@@ -394,7 +369,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             },
         }
 
-        with self._sign_and_send_request("operations/render", data) as response:
+        with self._send_request("operations/render", data) as response:
             result = response.as_bytes()
 
         return result
@@ -431,9 +406,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             },
         }
 
-        with self._sign_and_send_request(
-            "operations/create-static-formation", data
-        ) as response:
+        with self._send_request("operations/create-static-formation", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -507,17 +480,17 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             },
         }
 
-        with self._sign_and_send_request("operations/render", data) as response:
+        with self._send_request("operations/render", data) as response:
             response.save_to_file(output)
 
     def get_limits(self) -> Limits:
         """Returns the limits and supported file formats of the server."""
-        with self._sign_and_send_request("queries/limits") as response:
+        with self._send_request("queries/limits") as response:
             return Limits.from_json(response.as_json())
 
     def get_version(self) -> Version:
         """Returns the version of the server."""
-        with self._sign_and_send_request("queries/version") as response:
+        with self._send_request("queries/version") as response:
             return Version.from_json(response.as_json())
 
     def match_points(
@@ -541,7 +514,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         if radius is not None:
             data["radius"] = radius
 
-        with self._sign_and_send_request("operations/match-points", data) as response:
+        with self._send_request("operations/match-points", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -582,7 +555,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             "target_altitude": float(target_altitude),
             "spindown_time": float(spindown_time),
         }
-        with self._sign_and_send_request("operations/plan-landing", data) as response:
+        with self._send_request("operations/plan-landing", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -628,7 +601,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             "rth_model": rth_model,
         }
 
-        with self._sign_and_send_request("operations/plan-smart-rth", data) as response:
+        with self._send_request("operations/plan-smart-rth", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -703,9 +676,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         if max_velocity_z_up is not None:
             data["max_velocity_z_up"] = max_velocity_z_up
 
-        with self._sign_and_send_request(
-            "operations/plan-transition", data
-        ) as response:
+        with self._send_request("operations/plan-transition", data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:

@@ -167,7 +167,6 @@ class SkybrushStudioBaseAPI:
         url: str,
         data: Any = None,
         *,
-        signature: str | None = None,
         compressed: bool | None = None,
         method: str | None = None,
     ) -> Iterator[Response]:
@@ -188,8 +187,6 @@ class SkybrushStudioBaseAPI:
                 object, it will be encoded as JSON, compressed with `gzip` and
                 then sent as a request with `Content-Type` equal to
                 `application/json`.
-            signature: an optional digital signature of the request for
-                server side validation
             compressed: should be `True` if data is an already gzip-compressed
                 JSON-object, `False` if data is a JSON-object and compression
                 is not needed on it and `None` if data should be compressed
@@ -200,8 +197,8 @@ class SkybrushStudioBaseAPI:
             SkybrushStudioAPIError: when the request returned a non-successful
                 HTTP error code or an invalid content type
         """
-        content_type = None
-        content_encoding = None
+        content_type: str | None = None
+        content_encoding: str | None = None
 
         if data is None:
             method = method or "GET"
@@ -222,6 +219,9 @@ class SkybrushStudioBaseAPI:
                 content_encoding = "gzip"
             else:
                 content_type = "application/octet-stream"
+
+        # We should attempt to produce a signature even if the request body is empty
+        signature = self._sign_request_body(data or b"")
 
         headers = {}
         if content_type is not None:
@@ -274,6 +274,15 @@ class SkybrushStudioBaseAPI:
                 f"{self._http_status[ex.status]} ({ex.status}). "
                 f"This is most likely a server-side issue; please contact us and let us know."
             ) from ex
+
+    def _sign_request_body(self, data: bytes) -> str | None:
+        """Retrieves a signature for the given request body, which will be added to the
+        request in the `X-Skybrush-Request-Signature` header.
+
+        Returns:
+            the signature to append or `None` if no signature is needed
+        """
+        return None
 
     def _skip_ssl_checks(self) -> None:
         """Configures the API object to skip SSL checks when making requests.

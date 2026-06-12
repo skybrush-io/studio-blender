@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Iterator
 
 from sbstudio.plugin.errors import TaskCancelled
 from sbstudio.plugin.utils.progress import ProgressHandler, ProgressReport
@@ -20,21 +20,16 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         with self._send_request("hwid") as response:
             return response.as_str()
 
-    def sign_request(self, data: Any, *, compressed: bool | None = None) -> str:
+    def sign_request(self, data: bytes) -> str:
         """Signs a JSON request issued by Skybrush Studio.
 
         Args:
-            data: the raw or compressed data to sign
-            compressed: whether data is an already gzip-compressed JSON-object (True),
-                a JSON-object not to be compressed (False), or an object to be compressed
-                if applicable (None)
+            data: the raw data to sign
 
         Returns:
             the signed data to be sent to Skybrush Studio Server
         """
-        with self._send_request(
-            "sign", data=data, compressed=compressed, method="POST"
-        ) as response:
+        with self._send_request("sign", data=data, method="POST") as response:
             return response.as_str()
 
     @contextmanager
