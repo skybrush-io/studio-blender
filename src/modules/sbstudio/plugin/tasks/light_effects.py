@@ -170,12 +170,19 @@ def get_final_color_of_drone(drone: Object) -> RGBAColor:
 suspended_light_effects = light_effect_suspension.use
 """Context manager that suspends the calculation of light effects when the
 context is entered and re-enables them when the context is exited.
+
+Useful when sampling only the positions of the drones (or any other information that
+does not require the evaluation of light effects). Implies the suspension of color
+update callbacks as well since the colors are not going to be updated.
 """
 
 suspended_color_update_callbacks = color_update_callbacks_suspension.use
 """Context manager that suspends the execution of color update callbacks when
 the context is entered and re-enables them when the context is exited. Light
 effects are still calculated and cached.
+
+Useful when sampling the LED colors of the drones in a manner that does not require the
+3D viewport to be updated.
 """
 
 
