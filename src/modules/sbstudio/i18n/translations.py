@@ -1168,7 +1168,7 @@ translations_tuple = (
         ("hu_HU", "", (False, ())),
         ("id_ID", "", (False, ())),
         ("it_IT", "", (False, ())),
-        ("ja_JP", "", (False, ())),
+        ("ja_JP", "全ドローン", (False, ())),
         ("ka", "", (False, ())),
         ("km", "", (False, ())),
         ("ko_KR", "", (False, ())),
@@ -31333,6 +31333,31 @@ translations_tuple = (
         ("vi_VN", "", (False, ())),
         ("zh_HANS", "验证轨迹", (False, ())),
         ("zh_HANT", "", (False, ())),
+    ),
+    # ---- Drone Group Filter (Starlight Animator) ----
+    (
+        ("*", "Drone Group Filter"),
+        ((), ()),
+        ("zh_HANS", "无人机分组过滤", (False, ())),
+        ("ja_JP", "ドローングループフィルター", (False, ())),
+    ),
+    (
+        ("*", "Limit to"),
+        ((), ()),
+        ("zh_HANS", "限制为", (False, ())),
+        ("ja_JP", "対象を限定", (False, ())),
+    ),
+    (
+        ("*", "Box array only"),
+        ((), ()),
+        ("zh_HANS", "仅箱式阵列", (False, ())),
+        ("ja_JP", "箱形配列のみ", (False, ())),
+    ),
+    (
+        ("*", "Traditional array only"),
+        ((), ()),
+        ("zh_HANS", "仅单机阵列", (False, ())),
+        ("ja_JP", "従来配列のみ", (False, ())),
     ),
 )
 

@@ -11,7 +11,13 @@ from .create_formation import CreateFormationOperator
 from .create_light_effect import CreateLightEffectOperator
 from .create_new_schedule_override_entry import CreateNewScheduleOverrideEntryOperator
 from .create_new_storyboard_entry import CreateNewStoryboardEntryOperator
-from .create_takeoff_grid import CreateTakeoffGridOperator
+from .create_takeoff_grid import (
+    ApplyBoxParamsOperator,
+    ApplyGridLayoutOperator,
+    CreateTakeoffGridOperator,
+    ExportBoxPresetOperator,
+    SetDroneCoordOperator,
+)
 from .detach_materials_from_template import DetachMaterialsFromDroneTemplateOperator
 from .duplicate_light_effect import DuplicateLightEffectOperator
 from .export_light_effects import ExportLightEffectsOperator
@@ -82,7 +88,9 @@ __all__ = (
     "AddMarkersFromZippedCSVOperator",
     "AddMarkersFromZippedDSSOperator",
     "AppendFormationToStoryboardOperator",
+    "ApplyBoxParamsOperator",
     "ApplyColorsToSelectedDronesOperator",
+    "ApplyGridLayoutOperator",
     "CreateFormationOperator",
     "CreateLightEffectOperator",
     "CreateNewScheduleOverrideEntryOperator",
@@ -97,6 +105,7 @@ __all__ = (
     "DSSPathExportOperator",
     "DuplicateLightEffectOperator",
     "EVSKYExportOperator",
+    "ExportBoxPresetOperator",
     "ExportLightEffectsOperator",
     "FinaleCSVExportOperator",
     "FixConstraintOrderingOperator",
@@ -123,6 +132,7 @@ __all__ = (
     "RunFullProximityCheckOperator",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",
+    "SetDroneCoordOperator",
     "SetLightEffectEndFrameOperator",
     "SetLightEffectStartFrameOperator",
     "SetStoryboardEntryEndFrameOperator",
