@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
@@ -12,6 +12,10 @@ from sbstudio.errors import SkybrushStudioError
 
 from .errors import SkybrushStudioExportWarning, TaskCancelled
 from .plugin_helpers import only_with_online_access
+
+if TYPE_CHECKING:
+    from bpy.types import Operator
+
 
 __all__ = ("get_api",)
 
@@ -83,7 +87,7 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
 
 @contextmanager
 def call_api_from_blender_operator(
-    operator, what: str = "operation", *, check_version: bool = True
+    operator: Operator, what: str = "operation", *, check_version: bool = True
 ) -> Iterator[SkybrushStudioAPI]:
     """Context manager that yields immediately back to the caller from a
     try-except block, catches all exceptions, and calls the ``report()`` method
@@ -130,7 +134,8 @@ def call_api_from_blender_operator(
         # to look up the hostname in the server URL while not being connected
         # to the Internet (or without a DNS server)
         operator.report(
-            f"{default_message}: Could not resolve server URL. Are you connected to the Internet?"
+            {"ERROR"},
+            f"{default_message}: Could not resolve server URL. Are you connected to the Internet?",
         )
     except OSError as ex:
         operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
