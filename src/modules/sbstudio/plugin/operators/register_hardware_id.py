@@ -3,6 +3,8 @@ import webbrowser
 
 from bpy.types import Operator
 
+from sbstudio.plugin.gateway import call_gateway_from_blender_operator
+
 __all__ = ("RegisterHardwareIDOperator",)
 
 
@@ -23,14 +25,15 @@ class RegisterHardwareIDOperator(Operator):
     bl_description = "Open Skybrush account to register your hardware ID"
 
     def execute(self, context):
-        from sbstudio.plugin.model.global_settings import get_preferences
+        try:
+            with call_gateway_from_blender_operator(
+                self, "hardware ID retrieval"
+            ) as gateway:
+                hardware_id = gateway.get_hardware_id()
+        except Exception:
+            # Messages already handled by `call_gateway_from_blender_operator`
+            return {"CANCELLED"}
 
-        prefs = get_preferences()
-        hardware_id = prefs.hardware_id
-
-        if hardware_id:
-            webbrowser.open(
-                SKYBRUSH_ACCOUNT_URL_TEMPLATE.format(hardware_id=hardware_id)
-            )
+        webbrowser.open(SKYBRUSH_ACCOUNT_URL_TEMPLATE.format(hardware_id=hardware_id))
 
         return {"FINISHED"}

@@ -1,13 +1,24 @@
+from __future__ import annotations
+
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from functools import lru_cache
-from typing import TypeVar
+from socket import gaierror
+from typing import TYPE_CHECKING, TypeVar
+from urllib.error import URLError
 
 from sbstudio.api import SkybrushGatewayAPI
 from sbstudio.api.errors import SkybrushStudioAPIError
+from sbstudio.errors import SkybrushStudioError
 
+from .errors import TaskCancelled
 from .plugin_helpers import only_with_online_access
 
-__all__ = ("get_gateway",)
+if TYPE_CHECKING:
+    from bpy.types import Operator
+
+__all__ = ("get_gateway", "call_gateway_from_blender_operator")
 
 T = TypeVar("T")
 
@@ -63,3 +74,62 @@ def get_gateway() -> SkybrushGatewayAPI:
         )
 
     return _get_gateway_from_url(gateway_url)
+
+
+@contextmanager
+def call_gateway_from_blender_operator(
+    operator: Operator, what: str = "operation"
+) -> Iterator[SkybrushGatewayAPI]:
+    """Context manager that yields immediately back to the caller from a
+    try-except block, catches all exceptions, and calls the ``report()`` method
+    of the given Blender operator with an appropriate error message if there
+    was an error. All exceptions are then re-raised; the caller is expected to
+    return ``{"CANCELLED"}`` from the operator immediately in response to an
+    exception.
+    """
+    default_message = f"Error while invoking {what} on the Skybrush Studio gateway"
+    try:
+        # TODO(ntamas): This is not entirely correct here. When an exception happens
+        # during get_api(...), we will not yield anything back to the caller. If we
+        # handle _that_ exception without re-raising it, the caller itself will raise
+        # a "generator didn't yield" exception, which is quite confusing.
+        yield get_gateway()
+    except SkybrushStudioError as ex:
+        operator.report({"ERROR"}, ex.format_message() or default_message)
+        raise
+    except URLError as ex:
+        if isinstance(ex.reason, ConnectionRefusedError):
+            message = f"{default_message}: Connection refused. Is the gateway running?"
+        elif isinstance(ex.reason, gaierror):
+            message = f"{default_message}: Could not resolve gateway URL. Are you connected to the Internet?"
+        elif isinstance(ex.reason, OSError):
+            message = f"{default_message}: {ex.reason.strerror}"
+        elif isinstance(ex.reason, str):
+            message = f"{default_message}: {ex.reason}"
+        else:
+            message = default_message
+        operator.report({"ERROR"}, message)
+        raise
+    except ConnectionRefusedError:
+        operator.report(
+            {"ERROR"}, f"{default_message}: Connection refused. Is the gateway running?"
+        )
+        raise
+    except gaierror:
+        # gaierror is short for "getaddrinfo" error, which happens when trying
+        # to look up the hostname in the server URL while not being connected
+        # to the Internet (or without a DNS server)
+        operator.report(
+            {"ERROR"},
+            f"{default_message}: Could not resolve gateway URL. Are you connected to the Internet?",
+        )
+        raise
+    except OSError as ex:
+        operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
+        raise
+    except (TaskCancelled, KeyboardInterrupt):
+        operator.report({"ERROR"}, "Operation cancelled by user.")
+        raise
+    except Exception as ex:
+        operator.report({"ERROR"}, f"{default_message}: Unexpected error ({ex})")
+        raise
