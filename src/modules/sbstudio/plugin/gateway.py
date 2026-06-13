@@ -8,18 +8,17 @@ from socket import gaierror
 from typing import TYPE_CHECKING, TypeVar
 from urllib.error import URLError
 
-from sbstudio.api import SkybrushStudioAPI
-from sbstudio.api.version import ensure_backend_version
+from sbstudio.api import SkybrushGatewayAPI
+from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.errors import SkybrushStudioError
 
-from .errors import SkybrushStudioExportWarning, TaskCancelled
+from .errors import TaskCancelled
 from .plugin_helpers import only_with_online_access
 
 if TYPE_CHECKING:
     from bpy.types import Operator
 
-
-__all__ = ("get_api", "call_api_from_blender_operator")
+__all__ = ("get_gateway", "call_gateway_from_blender_operator")
 
 T = TypeVar("T")
 
@@ -30,27 +29,22 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _get_api_from_url_and_key_or_license(
-    url: str, key: str, license_file: str
-) -> SkybrushStudioAPI:
-    """Constructs a Skybrush Studio API object from a root URL and an API key
-    or a license file.
+def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI:
+    """Constructs a Skybrush Gateway API object from a root URL.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
+
+    Raises:
+        ValueError: on initialization error
     """
     try:
-        result = SkybrushStudioAPI(
-            api_key=key or None,
-            license_file=license_file or None,
-        )
-        if url:
-            result.url = url
+        result = SkybrushGatewayAPI(url=url)
     except ValueError as ex:
-        log.error(f"Could not initialize Skybrush Studio API: {str(ex)}")
+        log.error(f"Could not initialize Skybrush Gateway API: {str(ex)}")
         raise
     except Exception as ex:
-        log.error(f"Unhandled exception in Skybrush Studio API initialization: {ex!r}")
+        log.error(f"Unhandled exception in Skybrush Gateway API initialization: {ex!r}")
         raise
 
     # This is bad practice, but the default installation of Blender does not find
@@ -63,62 +57,51 @@ def _get_api_from_url_and_key_or_license(
 
 
 @only_with_online_access
-def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
-    """Returns the singleton instance of the Skybrush Studio API object.
+def get_gateway() -> SkybrushGatewayAPI:
+    """Returns the singleton instance of the Skybrush Gateway API object.
 
-    Optionally also checks the version number of the backend if it is not known
-    yet.
-
-    Args:
-        check_version: whether to check the version of the backend
+    Raises:
+        SkybrushStudioAPIError: if gateway is not configured
     """
     from sbstudio.plugin.model.global_settings import get_preferences
 
     prefs = get_preferences()
-    api_key = str(prefs.api_key).strip()
-    license_file = str(prefs.license_file).strip()
-    server_url = str(prefs.server_url).strip()
+    gateway_url = str(prefs.gateway_url).strip()
 
-    api = _get_api_from_url_and_key_or_license(server_url, api_key, license_file)
+    if not gateway_url:
+        raise SkybrushStudioAPIError(
+            "Skybrush Gateway is not configured in the preferences"
+        )
 
-    if check_version:
-        ensure_backend_version(api)
-
-    return api
+    return _get_gateway_from_url(gateway_url)
 
 
 @contextmanager
-def call_api_from_blender_operator(
-    operator: Operator, what: str = "operation", *, check_version: bool = True
-) -> Iterator[SkybrushStudioAPI]:
+def call_gateway_from_blender_operator(
+    operator: Operator, what: str = "operation"
+) -> Iterator[SkybrushGatewayAPI]:
     """Context manager that yields immediately back to the caller from a
     try-except block, catches all exceptions, and calls the ``report()`` method
     of the given Blender operator with an appropriate error message if there
     was an error. All exceptions are then re-raised; the caller is expected to
     return ``{"CANCELLED"}`` from the operator immediately in response to an
     exception.
-
-    Args:
-        check_version: whether to check the version number of the backend
     """
-    default_message = f"Error while invoking {what} on the Skybrush Studio server"
+    default_message = f"Error while invoking {what} on the Skybrush Studio gateway"
     try:
         # TODO(ntamas): This is not entirely correct here. When an exception happens
         # during get_api(...), we will not yield anything back to the caller. If we
         # handle _that_ exception without re-raising it, the caller itself will raise
         # a "generator didn't yield" exception, which is quite confusing.
-        yield get_api(check_version=check_version)
-    except SkybrushStudioExportWarning as ex:
-        operator.report({"WARNING"}, str(ex))
-        raise
+        yield get_gateway()
     except SkybrushStudioError as ex:
         operator.report({"ERROR"}, ex.format_message() or default_message)
         raise
     except URLError as ex:
         if isinstance(ex.reason, ConnectionRefusedError):
-            message = f"{default_message}: Connection refused. Is the server running?"
+            message = f"{default_message}: Connection refused. Is the gateway running?"
         elif isinstance(ex.reason, gaierror):
-            message = f"{default_message}: Could not resolve server URL. Are you connected to the Internet?"
+            message = f"{default_message}: Could not resolve gateway URL. Are you connected to the Internet?"
         elif isinstance(ex.reason, OSError):
             message = f"{default_message}: {ex.reason.strerror}"
         elif isinstance(ex.reason, str):
@@ -129,7 +112,7 @@ def call_api_from_blender_operator(
         raise
     except ConnectionRefusedError:
         operator.report(
-            {"ERROR"}, f"{default_message}: Connection refused. Is the server running?"
+            {"ERROR"}, f"{default_message}: Connection refused. Is the gateway running?"
         )
         raise
     except gaierror:
@@ -138,7 +121,7 @@ def call_api_from_blender_operator(
         # to the Internet (or without a DNS server)
         operator.report(
             {"ERROR"},
-            f"{default_message}: Could not resolve server URL. Are you connected to the Internet?",
+            f"{default_message}: Could not resolve gateway URL. Are you connected to the Internet?",
         )
         raise
     except OSError as ex:

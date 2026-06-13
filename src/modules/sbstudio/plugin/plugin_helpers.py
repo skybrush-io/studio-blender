@@ -3,7 +3,8 @@
 import re
 from collections.abc import Set
 from contextlib import contextmanager
-from typing import Iterator
+from functools import wraps
+from typing import Callable, Iterator, ParamSpec, TypeVar
 
 import bpy
 
@@ -161,6 +162,27 @@ def is_online_access_allowed() -> bool:
     # bpy.app.online_access was added in Blender 4.2; earlier versions default
     # to True
     return bool(getattr(bpy.app, "online_access", True))
+
+
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def only_with_online_access(func: Callable[P, T]) -> Callable[P, T]:
+    """Decorator that makes the decorated function raise a NoOnlineAccessAllowedError
+    if the user settings do not allow online access.
+    """
+
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+        if is_online_access_allowed():
+            return func(*args, **kwargs)
+        else:
+            from sbstudio.api.errors import NoOnlineAccessAllowedError
+
+            raise NoOnlineAccessAllowedError()
+
+    return wrapper
 
 
 @contextmanager
