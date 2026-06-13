@@ -7,15 +7,13 @@ from typing import TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
-from sbstudio.api.errors import NoOnlineAccessAllowedError
 from sbstudio.api.version import ensure_backend_version
 from sbstudio.errors import SkybrushStudioError
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
+
+from .errors import SkybrushStudioExportWarning, TaskCancelled
+from .plugin_helpers import only_with_online_access
 
 __all__ = ("get_api",)
-
-_fallback_api_key: str = "trial"
-"""Fallback API key to use when the user did not enter any API key"""
 
 T = TypeVar("T")
 
@@ -26,18 +24,18 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
+def _get_api_from_url_and_key_or_license(
+    url: str, key: str, license_file: str
+) -> SkybrushStudioAPI:
     """Constructs a Skybrush Studio API object from a root URL and an API key
     or a license file.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
     """
-    global _fallback_api_key
-
     try:
         result = SkybrushStudioAPI(
-            api_key=key or (None if license_file else _fallback_api_key),
+            api_key=key or None,
             license_file=license_file or None,
         )
         if url:
@@ -58,6 +56,7 @@ def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
     return result
 
 
+@only_with_online_access
 def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object.
 
@@ -68,14 +67,6 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
         check_version: whether to check the version of the backend
     """
     from sbstudio.plugin.model.global_settings import get_preferences
-    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
-
-    if not is_online_access_allowed():
-        raise NoOnlineAccessAllowedError()
-
-    api_key: str
-    server_url: str
-    license_file: str
 
     prefs = get_preferences()
     api_key = str(prefs.api_key).strip()
@@ -144,14 +135,9 @@ def call_api_from_blender_operator(
     except OSError as ex:
         operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
         raise
-    except Exception:
-        operator.report({"ERROR"}, default_message)
+    except (TaskCancelled, KeyboardInterrupt):
+        operator.report({"ERROR"}, "Operation cancelled by user.")
         raise
-
-
-def set_fallback_api_key(value: str | None) -> None:
-    """Sets the fallback API key to use when the user did not provide one in the
-    add-on preferences.
-    """
-    global _fallback_api_key
-    _fallback_api_key = str(value) if value is not None else ""
+    except Exception as ex:
+        operator.report({"ERROR"}, f"{default_message}: Unexpected error ({ex})")
+        raise
