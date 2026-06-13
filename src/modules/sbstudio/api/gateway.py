@@ -29,7 +29,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         Returns:
             the signed data to be sent to Skybrush Studio Server
         """
-        with self._send_request("sign", data=data, method="POST") as response:
+        with self._send_request("sign", data=data, allow_compression=False) as response:
             return response.as_str()
 
     @contextmanager
@@ -50,13 +50,12 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
             last_percentage = progress.percentage
             with self._send_request(
                 task_url,
-                {
+                json={
                     "progress": round(progress.percentage, 1)
                     if progress.percentage is not None
                     else -1,
                     "title": progress.operation,
                 },
-                compressed=False,
             ) as response:
                 cancelled = bool(response.as_json())
                 return cancelled
@@ -66,36 +65,33 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         except (TaskCancelled, KeyboardInterrupt):
             with self._send_request(
                 task_url,
-                {
+                json={
                     "cancelled": True,
                     "completed": False,
                     "error": "Cancelled by user",
                     "progress": last_percentage if last_percentage is not None else 0,
                 },
-                compressed=False,
             ):
                 pass  # Response can be ignored
             raise
         except Exception as ex:
             with self._send_request(
                 task_url,
-                {
+                json={
                     "completed": False,
                     "error": str(ex) or "An unexpected error occurred",
                     "progress": last_percentage if last_percentage is not None else 0,
                 },
-                compressed=False,
             ):
                 pass  # Response can be ignored
             raise
         else:
             with self._send_request(
                 task_url,
-                {
+                json={
                     "completed": True,
                     "progress": 100,
                 },
-                compressed=False,
             ):
                 pass  # Response can be ignored
         finally:
@@ -114,8 +110,7 @@ class SkybrushGatewayAPI(SkybrushStudioBaseAPI):
         Raises:
             SkybrushStudioAPIError: if the task could not be created
         """
-        data = {"title": title}
-        with self._send_request("task", data, compressed=False) as response:
+        with self._send_request("task", json={"title": title}) as response:
             if response.status_code != 201:
                 raise SkybrushStudioAPIError(
                     f"Progress reporter for {title!r} could not be created"

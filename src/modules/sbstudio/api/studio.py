@@ -158,7 +158,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             "min_distance": float(min_distance),
             "points": points,
         }
-        with self._send_request("operations/decompose", data) as response:
+        with self._send_request("operations/decompose", json=data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -327,7 +327,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             if media and renderer == "skyc":
                 data["output"]["mode"] = "production"
 
-        with self._send_request(f"operations/{operation}", data) as response:
+        with self._send_request(f"operations/{operation}", json=data) as response:
             if output:
                 response.save_to_file(output)
             else:
@@ -369,7 +369,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             },
         }
 
-        with self._send_request("operations/render", data) as response:
+        with self._send_request("operations/render", json=data) as response:
             result = response.as_bytes()
 
         return result
@@ -406,7 +406,9 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             },
         }
 
-        with self._send_request("operations/create-static-formation", data) as response:
+        with self._send_request(
+            "operations/create-static-formation", json=data
+        ) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -480,7 +482,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             },
         }
 
-        with self._send_request("operations/render", data) as response:
+        with self._send_request("operations/render", json=data) as response:
             response.save_to_file(output)
 
     def get_limits(self) -> Limits:
@@ -514,7 +516,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         if radius is not None:
             data["radius"] = radius
 
-        with self._send_request("operations/match-points", data) as response:
+        with self._send_request("operations/match-points", json=data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -555,7 +557,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             "target_altitude": float(target_altitude),
             "spindown_time": float(spindown_time),
         }
-        with self._send_request("operations/plan-landing", data) as response:
+        with self._send_request("operations/plan-landing", json=data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -601,7 +603,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             "rth_model": rth_model,
         }
 
-        with self._send_request("operations/plan-smart-rth", data) as response:
+        with self._send_request("operations/plan-smart-rth", json=data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:
@@ -676,7 +678,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         if max_velocity_z_up is not None:
             data["max_velocity_z_up"] = max_velocity_z_up
 
-        with self._send_request("operations/plan-transition", data) as response:
+        with self._send_request("operations/plan-transition", json=data) as response:
             result = response.as_json()
 
         if result.get("version") != 1:

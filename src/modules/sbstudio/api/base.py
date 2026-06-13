@@ -1,10 +1,11 @@
-import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from gzip import compress
 from http import HTTPStatus
 from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
+from json import dumps as json_dumps
+from json import load as json_load
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import CERT_NONE, create_default_context
@@ -77,7 +78,7 @@ class Response:
         """Parses the response body as JSON and returns the parsed object."""
         if self.content_type != "application/json":
             raise SkybrushStudioAPIError("Response type is not JSON")
-        return json.load(TextIOWrapper(self._response, encoding="utf-8"))
+        return json_load(TextIOWrapper(self._response, encoding="utf-8"))
 
     def as_str(self) -> str:
         """Reads the whole response body and return it as a string."""
@@ -103,6 +104,13 @@ class Response:
         """Writes response to a given file."""
         with create_path_and_open(filename, "wb") as f:
             copyfileobj(self._response, f)
+
+
+_MISSING = object()
+"""Special object to denote a missing `json` argument internally in
+`SkybrushStudioBaseAPI._send_request()`. Used to distinguish the case of
+"no `json` parameter provided" from the case of "user provided `None` as `json`".
+"""
 
 
 class SkybrushStudioBaseAPI:
@@ -165,60 +173,65 @@ class SkybrushStudioBaseAPI:
     def _send_request(
         self,
         url: str,
-        data: Any = None,
         *,
-        compressed: bool | None = None,
+        data: bytes | None = None,
+        json: Any = _MISSING,
+        allow_compression: bool = True,
         method: str | None = None,
     ) -> Iterator[Response]:
         """Sends a request to the given URL, relative to the API root, and
         returns the corresponding HTTP response object.
 
+        The content type of the request is determined automatically from the presence
+        of the `json` and `data` parameters. When `json` is present, the request body
+        is assumed to be a JSON object with content type `application/json`. When
+        `data` is present, the request body is assumed to be a raw bytes object with
+        content type `application/octet-stream`. `json` and `data` must not be present
+        at the same time.
+
         Parameters:
             url: the URL (relative to the API root) where the request should be
                 sent to. The request will be a GET request when the data is
                 omitted or `None`, otherwise it will be a POST request.
-            data: the body of the request; must be an arbitrary Python object
-                that can be encoded as JSON, or a `bytes` object. The content type
-                of the request will be determined based on the type of this
-                parameter; when `data` is a `bytes` object, it is sent as the
-                request body directly and the content type will be
-                `application/octet-stream` or `application/json` depending on
-                the `compressed` parameter. When `data` is any other Python
-                object, it will be encoded as JSON, compressed with `gzip` and
-                then sent as a request with `Content-Type` equal to
-                `application/json`.
-            compressed: should be `True` if data is an already gzip-compressed
-                JSON-object, `False` if data is a JSON-object and compression
-                is not needed on it and `None` if data should be compressed
-                automatically if it is not of type bytes
-            method: explicit method to use, or `None` to infer automatically
+            data: the raw body of the request, as a `bytes` object. Mutually exclusive
+                with `json`, i.e. if `json` is provided, `data` must not be provided.
+            json: the body of the request as a JSON object. Mutually exclusive with
+                `data`, i.e. if `data` is provided, `json` must not be provided.
+            allow_compression: specifies whether the function is allowed to compress the
+                request body when it makes sense. Set it to `False` to prevent the
+                compression of the request body, which is useful if you already know
+                that it is compressed. `True` means that the function is free to decide
+                whether it will use compression or not. The current implementation does
+                not compress small pieces of data (less than 4K).
+            method: explicit HTTP rqeuest method to use, or `None` to infer
+                automatically. `None` means to use GET if there is no request body
+                and POST if there is a request body (either `data` or `json`), even
+                if the body is empty (zero bytes).
 
         Raises:
             SkybrushStudioAPIError: when the request returned a non-successful
                 HTTP error code or an invalid content type
+            ValueError: for invalid parameters like providing `json` and `data` at the
+                same time
         """
         content_type: str | None = None
         content_encoding: str | None = None
 
-        if data is None:
-            method = method or "GET"
-        else:
-            method = method or "POST"
-            if not isinstance(data, bytes):
-                if compressed is True:
-                    raise SkybrushStudioAPIError(
-                        "Compressed is set to True but data type is not bytes"
-                    )
-                data = json.dumps(data).encode("utf-8")
-                if compressed is None:
-                    data = compress(data)
-                    content_encoding = "gzip"
-                content_type = "application/json"
-            elif compressed:
-                content_type = "application/json"
-                content_encoding = "gzip"
-            else:
-                content_type = "application/octet-stream"
+        if json is not _MISSING:
+            if data is not None:
+                raise ValueError("at most one of `json` or `data` must be provided")
+
+            data = json_dumps(json).encode("utf-8")
+            content_type = "application/json"
+        elif data is not None:
+            content_type = "application/octet-stream"
+
+        if method is None:
+            method = "POST" if data is not None else "GET"
+
+        if allow_compression and data is not None and len(data) >= 4096:
+            data = compress(data)
+            content_encoding = "gzip"
 
         # We should attempt to produce a signature even if the request body is empty
         signature = self._sign_request_body(data or b"")
