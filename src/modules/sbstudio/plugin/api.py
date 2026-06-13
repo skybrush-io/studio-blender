@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
@@ -62,6 +62,34 @@ def _get_api_from_url_and_key_or_license(
     return result
 
 
+class APISettings(TypedDict):
+    """Dictionary representing the settings required to construct a SkybrushStudioAPI_
+    object instance.
+    """
+
+    server_url: str
+    """URL of the server to connect to"""
+
+    api_key: str
+    """API key to include in headers when sending requests to the server"""
+
+    license_file: str
+    """License file to include in headers when sending requests to the server"""
+
+
+def get_api_settings() -> APISettings:
+    """Returns the API-related settings from the global add-on preferences."""
+    from sbstudio.plugin.model.global_settings import get_preferences
+
+    prefs = get_preferences()
+
+    return {
+        "api_key": str(prefs.api_key).strip(),
+        "license_file": str(prefs.license_file).strip(),
+        "server_url": str(prefs.server_url).strip(),
+    }
+
+
 @only_with_online_access
 def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object.
@@ -72,15 +100,8 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     Args:
         check_version: whether to check the version of the backend
     """
-    from sbstudio.plugin.model.global_settings import get_preferences
-
-    prefs = get_preferences()
-    api_key = str(prefs.api_key).strip()
-    license_file = str(prefs.license_file).strip()
-    server_url = str(prefs.server_url).strip()
-
-    api = _get_api_from_url_and_key_or_license(server_url, api_key, license_file)
-
+    settings = get_api_settings()
+    api = _get_api_from_url_and_key_or_license(**settings)
     if check_version:
         ensure_backend_version(api)
 
