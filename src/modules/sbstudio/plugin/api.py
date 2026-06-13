@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
     from bpy.types import Operator
 
 
-__all__ = ("get_api",)
+__all__ = ("get_api", "call_api_from_blender_operator")
 
 T = TypeVar("T")
 
@@ -124,6 +126,7 @@ def call_api_from_blender_operator(
         else:
             message = default_message
         operator.report({"ERROR"}, message)
+        raise
     except ConnectionRefusedError:
         operator.report(
             {"ERROR"}, f"{default_message}: Connection refused. Is the server running?"
@@ -137,6 +140,7 @@ def call_api_from_blender_operator(
             {"ERROR"},
             f"{default_message}: Could not resolve server URL. Are you connected to the Internet?",
         )
+        raise
     except OSError as ex:
         operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
         raise
