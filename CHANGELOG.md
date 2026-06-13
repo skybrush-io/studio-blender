@@ -41,6 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an exception that happened when switching between files containing video based
   light effects.
 
+### Removed
+
+- Removed the option to use license files as API keys, after its deprecation in version
+  3.9.1. The property in the add-on settings is kept for backward compatibility but it
+  is not used for anything any more.
+
 ## [4.4.0] - 2026-05-12
 
 ### Added

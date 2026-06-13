@@ -30,20 +30,14 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _get_api_from_url_and_key_or_license(
-    url: str, key: str, license_file: str
-) -> SkybrushStudioAPI:
-    """Constructs a Skybrush Studio API object from a root URL and an API key
-    or a license file.
+def _get_api_from_url_and_key(url: str, key: str) -> SkybrushStudioAPI:
+    """Constructs a Skybrush Studio API object from a root URL and an API key.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
     """
     try:
-        result = SkybrushStudioAPI(
-            api_key=key or None,
-            license_file=license_file or None,
-        )
+        result = SkybrushStudioAPI(api_key=key or None)
         if url:
             result.url = url
     except ValueError as ex:
@@ -73,9 +67,6 @@ class APISettings(TypedDict):
     api_key: str
     """API key to include in headers when sending requests to the server"""
 
-    license_file: str
-    """License file to include in headers when sending requests to the server"""
-
 
 def get_api_settings() -> APISettings:
     """Returns the API-related settings from the global add-on preferences."""
@@ -85,7 +76,6 @@ def get_api_settings() -> APISettings:
 
     return {
         "api_key": str(prefs.api_key).strip(),
-        "license_file": str(prefs.license_file).strip(),
         "server_url": str(prefs.server_url).strip(),
     }
 
@@ -101,7 +91,7 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
         check_version: whether to check the version of the backend
     """
     settings = get_api_settings()
-    api = _get_api_from_url_and_key_or_license(**settings)
+    api = _get_api_from_url_and_key(**settings)
     if check_version:
         ensure_backend_version(api)
 
