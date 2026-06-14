@@ -37,9 +37,6 @@ log = logging.getLogger(__name__)
 
 
 _API_KEY_REGEXP = re.compile(r"^[a-zA-Z0-9-_.]*$")
-_LICENSE_API_KEY_REGEXP = re.compile(
-    r"^License [A-Za-z0-9+/=]{4,}([A-Za-z0-9+/=]{2})*$"
-)
 
 
 class SkybrushStudioAPI(SkybrushStudioBaseAPI):
@@ -48,9 +45,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
     """
 
     _api_key: str | None = None
-    """The optional API key that will be submitted with each request.
-    For license-type API keys, the key must start with the string "License ".
-    """
+    """The optional API key that will be submitted with each request."""
 
     def _sign_request_body(self, data: bytes) -> str | None:
         try:
@@ -78,19 +73,14 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         Raises:
             ValueError: if the key cannot be a valid API key
         """
-        if key.startswith("License"):
-            if not _LICENSE_API_KEY_REGEXP.match(key):
-                raise ValueError("Invalid license-type API key")
-        else:
-            if not _API_KEY_REGEXP.match(key):
-                raise ValueError("Invalid API key")
+        if not _API_KEY_REGEXP.match(key):
+            raise ValueError("Invalid API key")
         return key
 
     def __init__(
         self,
         url: str = SKYBRUSH_STUDIO_SERVER_URL,
         api_key: str | None = None,
-        license_file: str | None = None,
     ):
         """Constructor.
 
@@ -98,19 +88,9 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             url: the root URL of the Skybrush Studio API; defaults to the public
                 online service
             api_key: the API key used to authenticate with the server
-            license_file: the path to a license file to be used as the API Key
         """
         super().__init__(url=url)
-
-        if api_key and license_file:
-            raise SkybrushStudioAPIError(
-                "Cannot use API key and license file at the same time"
-            )
-
-        if license_file:
-            self.api_key = self._convert_license_file_to_api_key(license_file)
-        else:
-            self.api_key = api_key
+        self.api_key = api_key
 
     @property
     def api_key(self) -> str | None:
@@ -120,26 +100,6 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
     @api_key.setter
     def api_key(self, value: str | None) -> None:
         self._api_key = self.validate_api_key(value) if value else None
-
-    def _convert_license_file_to_api_key(self, file: str) -> str:
-        """Parses a license file and transforms it to an API key.
-
-        Returns:
-            the license file parsed as an API key
-
-        Raises:
-            ValueError: if the file cannot be read as an API key
-        """
-        if not Path(file).exists():
-            raise ValueError("License file does not exist")
-
-        try:
-            with open(file, "rb") as fp:
-                api_key = f"License {b64encode(fp.read()).decode('ascii')}"
-        except Exception:
-            raise ValueError("Could not read license file") from None
-
-        return api_key
 
     def decompose_points(
         self,
