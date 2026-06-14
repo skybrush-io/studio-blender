@@ -42,7 +42,7 @@ def create_cone(
             bm,
             cap_ends=True,
             cap_tris=True,
-            segments=32,
+            segments=12,
             radius1=radius,
             depth=radius * 2,
             matrix=Matrix.Rotation(radians(90), 3, "Y"),
