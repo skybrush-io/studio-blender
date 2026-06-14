@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Breaking change
+
+- The add-on settings panel was re-designed in preparation for Skybrush Studio Cloud.
+  Since we needed to add a new property to the add-on settings, users upgrading to
+  this version of Skybrush Studio for Blender should check the add-on settings and
+  select the appropriate operation mode of the add-on (community server, local server
+  or Skybrush Studio Cloud). The default setting is "Community server", therefore users
+  who use a local Skybrush Studio server instance should change it to "Local server".
+
 ### Added
 
 - Added visualization type selector for LED lights. The new overlay marker based
@@ -28,14 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   separate entry will be added in the changelog when they are considered final.
 
 ### Changed
-
-- The add-on settings panel was re-designed in preparation for Skybrush Studio Cloud.
-  Since we needed to add a new property to the add-on settings, users upgrading to
-  this version of Skybrush Studio for Blender should check the add-on settings and
-  select the appropriate operation mode of the add-on (community server, local server
-  or Skybrush Studio Cloud). The default setting is "Advanced", which is backward
-  compatible with earlier versions but shows too many irrelevant widgets in the add-on
-  settings panel for most use-cases.
 
 - The default velocity profile of the takeoff operation got changed to "linear",
   while the transition to the first formation is "smooth from right" now. This keeps
