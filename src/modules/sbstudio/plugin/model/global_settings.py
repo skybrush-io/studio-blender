@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Literal, cast
 
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import AddonPreferences, Context
 
 from sbstudio.plugin.gateway import get_gateway
@@ -51,6 +51,38 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
     bl_idname = "ui_skybrush_studio"
 
+    operation_mode: Literal["COMMUNITY", "LOCAL", "CLOUD", "ADVANCED"] = EnumProperty(
+        name="Mode of operation",
+        description=(
+            "Specifies whether the user wishes to use the add-on with the community "
+            "server, a local server instance or the cloud version with hardware ID "
+            "based authentication"
+        ),
+        items=[
+            (
+                "COMMUNITY",
+                "Community server",
+                "Provided to the community for free. Limited drone count, no guaranteed uptime",
+            ),
+            (
+                "LOCAL",
+                "Local Skybrush Studio Server",
+                "Skybrush Studio Server running on the same machine as Blender itself. License required",
+            ),
+            (
+                "CLOUD",
+                "Skybrush Studio Cloud (experimental)",
+                "Skybrush Studio Server in the cloud, with hardware ID based authentication. License required",
+            ),
+            (
+                "ADVANCED",
+                "Advanced setup",
+                "Fully customizable settings settings, for experts only. No support provided",
+            ),
+        ],
+        default="COMMUNITY",
+    )
+
     # license_file is unused, kept for backward compatibility purposes only
     license_file: str = StringProperty(
         name="License file",
@@ -65,7 +97,10 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
     api_key: str = StringProperty(
         name="API Key",
-        description="API Key that is used when communicating with the Skybrush Studio server",
+        description=(
+            "API key that is used when communicating with the Skybrush Studio "
+            "server. Leave empty if you do not know what it is"
+        ),
     )
 
     server_url: str = StringProperty(
@@ -100,7 +135,42 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
     def draw(self, context: Context) -> None:
         layout = self.layout
 
-        # First row: hardware ID and register button
+        # Header: mode of operation. Most other widgets depend on this.
+        mode = self.operation_mode
+        if mode not in ("COMMUNITY", "LOCAL", "CLOUD", "ADVANCED"):
+            # Failsafe in case the user somehow managed to screw up this setting
+            mode = "ADVANCED"
+        layout.prop(self, "operation_mode")
+
+        # Top separator not needed for the simple cases
+        if mode not in ("COMMUNITY", "LOCAL"):
+            layout.separator()
+
+        # Hardware ID and register button. Needed for the cloud-based solution only.
+        if mode in ("CLOUD", "ADVANCED"):
+            self._draw_hardware_id_widgets()
+
+        # Gateway URL. Only for advanced use-cases. Gateway URL implied for "CLOUD"
+        # and empty for all other configurations.
+        if mode == "ADVANCED":
+            self._draw_gateway_widgets()
+
+        # API key. Not needed for local servers.
+        if mode != "LOCAL":
+            layout.prop(self, "api_key")
+
+        # Server URL and shortcuts to set to predefined values. Only for advanced use-cases.
+        if mode == "ADVANCED":
+            self._draw_server_url_widgets()
+
+        # Bottom separator not needed for the simple cases
+        if mode not in ("COMMUNITY", "LOCAL"):
+            layout.separator()
+
+        layout.prop(self, "enable_experimental_features")
+
+    def _draw_hardware_id_widgets(self) -> None:
+        layout = self.layout
 
         row = layout.row()
         col = row.column()
@@ -112,7 +182,8 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         col.enabled = bool(self.hardware_id)
         col.operator(RegisterHardwareIDOperator.bl_idname, text="Register")
 
-        # Second row: gateway URL
+    def _draw_gateway_widgets(self) -> None:
+        layout = self.layout
 
         row = layout.row()
         col = row.column()
@@ -121,8 +192,6 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         col = row.column()
         col.scale_x = 0.4
         col.label(text="")  # intentionally left empty for alignment
-
-        # Third row: buttons to set gateway URL to predefined values
 
         row = layout.row()
         op: SetGatewayURLOperator = row.operator(
@@ -137,12 +206,10 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
         layout.separator()
 
-        # Fourth row: API key and server URL
+    def _draw_server_url_widgets(self) -> None:
+        layout = self.layout
 
-        layout.prop(self, "api_key")
         layout.prop(self, "server_url")
-
-        # Fifth row: buttons to set server URL to predefined values
 
         row = layout.row()
         op: SetServerURLOperator = row.operator(
@@ -154,10 +221,6 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
             SetServerURLOperator.bl_idname, text="Use community server"
         )
         op.url = ""
-
-        layout.separator()
-
-        layout.prop(self, "enable_experimental_features")
 
 
 @with_context
