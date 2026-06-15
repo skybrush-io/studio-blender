@@ -75,7 +75,19 @@ def _get_api_settings() -> APISettings:
     prefs = get_preferences()
     mode = prefs.operation_mode
 
-    url = str(prefs.server_url).strip() if mode not in ["CLOUD", "COMMUNITY"] else ""
+    match mode:
+        case "LOCAL":
+            # Local setting uses a fixed URL from localhost
+            url = "http://localhost:8000"
+
+        case "ADVANCED":
+            # Advanced mode uses whatever the user entered
+            url = str(prefs.server_url).strip()
+
+        case _:
+            # All other modes do not need a server
+            url = ""
+
     key = str(prefs.api_key).strip() if mode != "LOCAL" else ""
 
     return {"url": url, "key": key}
