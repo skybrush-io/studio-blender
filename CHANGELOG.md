@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at the start and end of the takeoff. If that is disturbing the velocity profile
   can be set back to "smooth" for backward compatibility.
 
+- The cone template was simplified to use 12 segments only instead of 32.
+
 ### Fixed
 
 - Fixed an exception that happened when switching between files containing video based
