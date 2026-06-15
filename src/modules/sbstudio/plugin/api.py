@@ -75,7 +75,7 @@ def _get_api_settings() -> APISettings:
     prefs = get_preferences()
     mode = prefs.operation_mode
 
-    url = str(prefs.server_url).strip() if mode != "COMMUNITY" else ""
+    url = str(prefs.server_url).strip() if mode not in ["CLOUD", "COMMUNITY"] else ""
     key = str(prefs.api_key).strip() if mode != "LOCAL" else ""
 
     return {"url": url, "key": key}
