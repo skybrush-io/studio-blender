@@ -3,80 +3,39 @@
 :experimental:
 
 *Skybrush Studio for Blender* is a platform independent tool, just like
-Blender. The installation procedure is the same for Linux, macOS and Windows.
+Blender. The installation procedure is very similar for Linux, macOS and Windows.
 Please follow the steps below.
 
-== Installation
-
-=== Check hardware requirements
+== Hardware requirements
 
 We suggest following the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio for Blender*.
 
-An additional requirement is that you need an active Internet connection on your computer as *Skybrush Studio* needs to communicate with the *Skybrush Studio Server* for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. You may use the software without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
+The community and the cloud version of **Skybrush Studio** requires an active Internet connection on your computer as *Skybrush Studio* needs to communicate with our cloud-based server for certain tasks such as planning transitions or creating exports in Skybrush compiled show format. 
 
-=== Install Blender
+You may use the software without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
+
+== Install Blender
 
 Blender is the main open-source 3D animation software hosting the *Skybrush Studio for Blender* addon.
 
 There are many Blender versions available. We aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is version 4.5 at the time of writing. If you are unsure, check the version number of the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release] on the Blender site.
 
-=== Install Skybrush Gateway
+After installing Blender, there are a few general preferences that need to be set up properly.
 
-*Skybrush Gateway* is a local component running on your machine, responsible for ensuring trusted communication with our online server. It also shows you real-time progress information for your long lasting Blender tasks.
+=== Enable Online Access
 
-image::skybrush_gateway.jpg[Skybrush Gateway]
+Starting from Blender 4.2, the preferences dialog provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Skybrush Studio for Blender* relies on an external server/backend component in all of its operation modes to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. According to Blender terms it counts as an "online resource" even if it is running locally. So if you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
 
-==== Community users
+To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
 
-If you are a community user, you do _not_ need to install *Skybrush Gateway* as you can rely purely on our cloud-based community server.
+=== Setup network timeout in Blender
 
-==== Pro users
+If you use large fleets and/or long and fine-grained shows, make sure that the "Network timeout" setting right below the "Allow Online Access" checkbox is large enough to handle your requests to your local *Skybrush Studio Server* or to the online community/cloud server.
 
-The professional license for *Skybrush Studio for Blender* always includes access to a local copy of *Skybrush Gateway*.
+The longest action is usually the show export. During export, most time is taken by the sampling of your show within Blender to form the input of the requests towards *Skybrush Studio Server*. Even though this procedure is _not_ part of the request time, with large shows you may run into cases where you do need more processing time than the default 10 seconds. If such timeout occurs, raise the value as convenient.
 
-After purchasing a professional license for *Skybrush Studio for Blender*, follow the steps below for proper gateway installation:
-
-1. Download a precompiled copy of *Skybrush Gateway* from your https://account.skybrush.io/apps[Skybrush Account].
-
-2. Start your gateway instance along with starting Blender. *Skybrush Gateway* will run in the background by default. If you wish to see task progress or other useful info hosted by *Skybrush Gateway*, open it up from its tray icon.
-+
-WARNING: Keep *Skybrush Gateway* running throughout your entire design process to facilitate trusted communication with our online server.
-
-3. Press the btn:[Use local gateway] and btn:[Register HWID] buttons in the "Skybrush Studio" add-on preferences in Blender to register your machine to be used with your license automatically.
-
-4. After registering your hardware ID in your *Skybrush Account*, also make sure it is assigned to the proper *Skybrush Studio Server* component you obtained a license for (online or local, depending on which one you will use).
-
-=== Install Skybrush Studio Server
-
-*Skybrush Studio Server* is the required backend of *Skybrush Studio for Blender*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin.
-
-*Skybrush Studio Server* is available online for all, this is called our community server. It can also be purchased to run on your machine locally.
-
-image::skybrush_studio_server.jpg[Skybrush Studio Server]
-
-==== Community users
-
-If you are a community user, you do _not_ need to install a local copy of *Skybrush Studio Server* as you can rely on our cloud-based community server.
-
-==== Pro users
-
-The professional license for *Skybrush Studio for Blender* may come with or without access to a local copy of *Skybrush Studio Server*. You typically do not need a local server for smaller shows (<500 drones) and might need it for larger shows (>1000 drones) that might take up too much network bandwidth if using our online version of the server.
-
-If you have purchased a professional license for *Skybrush Studio for Blender* that includes access to a local copy of *Skybrush Studio Server*, follow the steps below for proper installation:
-
-1. Download a precompiled copy of *Skybrush Studio Server* from your https://account.skybrush.io/apps[Skybrush Account].
-
-2. Register the hardware ID of your machine at your https://account.skybrush.io/licenses[Skybrush Account]. This can be done using the btn:[Register HWID] button in the "Skybrush Studio" add-on preferences in Blender (if *Skybrush Gateway* is used), or can be done manually in your account. To find the hardware ID of your machine for manual registration, check the main window of *Skybrush Gateway* or the terminal log of *Skybrush Studio Server*.
-
-3. In your https://account.skybrush.io/licenses[Skybrush Account] make sure your registered hardware ID is also assigned to the license for your local *Skybrush Studio Server*.
-
-4. Download your license file named `skybrush-studio-server.cml` and copy it to the folder where you installed the server itself (If you cannot determine this path, run the server and it will display the expected location of the license file). You might need system administrator privileges to write into this folder.
-+
-The terminal log of *Skybrush Studio Server* will give you instant feedback about the presence and content of your currently used license file upon execution of the server.
-
-5. Finally, press the btn:[Use local server] button in the "Skybrush Studio" add-on preferences in Blender to use your newly installed local server instead of the online community server.
-
-=== Install Skybrush Studio for Blender
+[[skybrush-studio-for-blender]]
+== Install Skybrush Studio for Blender
 
 *Skybrush Studio for Blender* can be downloaded from https://skybrush.io as a single `.zip` file. Please download it to your computer first and then follow the instructions below.
 
@@ -92,46 +51,95 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 4. Once installed, activate the "Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list (you may need to scroll down to find the "Skybrush Studio" item, or start typing it into the search box at the top).
 
-5. After installation, open add-on preferences by pressing the btn:[>] button on the left side of the "Skybrush Studio" add-on item.
-
-=== Setup Skybrush Studio for Blender
-
-Note that generally you need to change add-on preferences _only_ if you are using a version of *Skybrush Studio for Blender* _other_ than the free community edition.
+After installation, open add-on preferences by pressing the btn:[>] button on the left side of the "Skybrush Studio" add-on item.
 
 image::skybrush_studio_addon_settings.jpg[Skybrush Studio Add-on settings]
 
-Register HWID:: If you are a pro license holder using *Skybrush Gateway*, you already pressed btn:[Use local gateway] and see your hardware ID in the btn:[Hardware ID] text box, press this button to open your Skybrush account and register your current machine for your active license automatically.
+=== Modes of operation
 
-Gateway URL:: Shows the URL of *Skybrush Gateway* available for pro license holders only. By default you do not have to touch this setting manually, change only if you know what you are doing.
+There are four basic modes of operation of **Skybrush Studio**, all of which requiring a slightly different setup. Use the btn:[Mode of operation] dropdown to select your preference from the followings:
 
-Use local gateway:: Press this button if you are a pro license holder and purchased a local copy of *Skybrush Gateway* that is already running on your machine locally. This action will fill the btn:[Gateway URL] field automatically.
+Community server::
+This is the free community mode of operation that does not require any additional settings or setup. 
++
+image::preferences/mode_of_operation_community.jpg[Community server]
++
+You can try **Skybrush Studio for Blender** in community mode without any license, but be prepared that it might be limited in drone number, execution time or available features.
 
-Do not use gateway:: Press this button if you do not want to use *Skybrush Gateway* for your operations. This action will clear the btn:[Gateway URL] field automatically. When not using *Skybrush Gateway*, you will still be eligible to use our community server as a free service, but it might be limited in drone number, execution time or available features. Purchase a professional server from https://shop.skybrush.io[Skybrush Store] if you need to use *Skybrush Studio for Blender* together with *Skybrush Gateway* without limits.
+Local Skybrush Studio Server:: Use this mode of operation if you have purchased https://shop.skybrush.io/products/studio[Skybrush Studio] or https://shop.skybrush.io/products/studio-x[Skybrush Studio X] from our webshop.
++
+image::preferences/mode_of_operation_local.jpg[Local Skybrush Studio Server]
++
+This mode of operation requires a local copy of **Skybrush Studio Server** to be installed and running on your machine (see installation procedure at the <<skybrush-studio-server>> section.).
 
-API key:: If you have received an API key for communicating with the online community server, paste it here (by default you do not have to touch this setting).
+Skybrush Studio Cloud:: Use this mode of operation if you have purchased https://shop.skybrush.io/products/studio-cloud[Skybrush Studio Cloud] or https://shop.skybrush.io/products/studio-x-cloud[Skybrush Studio X Cloud] from our webshop.
++
+image::preferences/mode_of_operation_cloud.jpg[Skybrush Studio Cloud]
++
+This mode of operation requires **Skybrush Gateway** to be installed and running on your machine (see installation procedure at the <<skybrush-gateway>> section). 
++
+Once you installed and started **Skybrush Gateway**, the unique hardware ID of your machine should appear in the btn:[Hardware ID] field automatically. If you see your hardware ID, press the btn:[Register] button to register it in your https://account.skybrush.io[Skybrush Account] to be able to assign your dynamic cloud-based license to your current machine.
 
-Server URL:: Shows the URL of your local *Skybrush Studio Server* if you are using one as a pro user. By default you do not have to touch this setting, change only if you know what you are doing.
+Advanced setup:: Use this mode of operation if you wish to change the default settings for the three standard modes of operation listed above.
++
+image::preferences/mode_of_operation_advanced.jpg[Advanced setup]
++
+The btn:[Gateway URL] field shows the URL of **Skybrush Gateway** available for cloud license holders only. By default you do not have to touch this setting manually, change only if you know what you are doing. Press the btn:[Use local gateway] button if you have installed *Skybrush Gateway* and it is already running on your machine locally. This action will fill the btn:[Gateway URL] field automatically. Press the btn:[Do not use gateway] button if you do not want to use *Skybrush Gateway* for your operations. This action will clear the btn:[Gateway URL] field automatically.
++
+The btn:[API key] field should be left blank unless you have been issued an API key by us for communication with the online community or cloud server. If you have received a key, enter it in this field.
++
+The btn:[Server URL] field shows the URL of your local **Skybrush Studio Server** available for offline license holders only. By default you do not have to touch this setting, change only if you know what you are doing. Press the btn:[Use local server] button if you have purchased a professional local copy of *Skybrush Studio Server* that is running on your own machine. This action will fill the btn:[Server URL] field automatically. Press the btn:[Use community server] button to use the online community or cloud server. This action will clear the btn:[Server URL] field automatically. 
 
-Use local server:: Press this button if you have purchased
-a professional local copy of *Skybrush Studio Server* that is running on your own machine. This action will fill the btn:[Server URL] field automatically.
+=== Enable experimental features
 
-Use community server:: Press this button to use the online community server. This action will clear the btn:[Server URL] field automatically. Our community server is a free service but it might be limited in drone number, execution time or available features. Purchase a professional server from https://shop.skybrush.io[Skybrush Store] if you need to use *Skybrush Studio for Blender* without limits.
+Enable this checkbox if you are open to experiment with the latest features of *Skybrush Studio for Blender*.
 
-Enable experimental features:: Enable this checkbox if you are open to experiment with the latest features of *Skybrush Studio for Blender*.
+[[skybrush-gateway]]
+== Install Skybrush Gateway
 
-=== Setup Blender
+IMPORTANT: You need to install **Skybrush Gateway** only if you have purchased https://shop.skybrush.io/products/studio-cloud[Skybrush Studio Cloud] or https://shop.skybrush.io/products/studio-x-cloud[Skybrush Studio X Cloud] from our webshop.
 
-==== Enable Online Access in Blender
+*Skybrush Gateway* is a local component running on your machine, responsible for signing your requests towards our cloud server to provide a cryptographic proof about the identity of users. It also shows you real-time progress information for your long lasting Blender tasks.
 
-Starting from Blender 4.2, the preferences dialog provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Skybrush Studio for Blender* uses an online resource (either a https://studio.skybrush.io[community server] or a locally hosted instance of that server) to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. If you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
+image::skybrush_gateway.jpg[Skybrush Gateway]
 
-To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
+1. Download the installer of *Skybrush Gateway* from your https://account.skybrush.io/products[Skybrush Account].
 
-==== Setup network timeout in Blender
+2. Execute the installer to install **Skybrush Gateway** on your computer.
 
-If you use large fleets and/or long and fine-grained shows, make sure that the "Network timeout" setting right below the "Allow Online Access" checkbox is large enough to handle your requests to your local *Skybrush Studio Server* or to the online community server.
+3. Always start **Skybrush Gateway** before starting Blender, and keep it running throughout your entire design process to facilitate trusted signing of your requests towards our online server.
 
-The longest action is usually the show export. During export, most time is taken by the sampling of your show within Blender to form the input of the requests towards *Skybrush Studio Server*. Even though this procedure is _not_ part of the request time, with large shows you may run into cases where you do need more processing time than the default 10 seconds. If such timeout occurs, raise the value as convenient.
+4. Set the btn:[Operation mode] dropdown to "Skybrush Studio Cloud" in the **Skybrush Studio** add-on preferences in Blender and press the btn:[Register] button to register your machine's hardware ID to be used with your cloud-based license automatically.
+
+5. After registering your hardware ID in your https://account.skybrush.donko.hu/licenses[Skybrush Account], also make sure it is assigned to the proper **Skybrush Studio Cloud** product you obtained a license for. Activation of your cloud based license will be automatic once you assign a hardware ID to it and start to use it.
+
+[[skybrush-studio-server]]
+== Install Skybrush Studio Server
+
+IMPORTANT: You need to install **Skybrush Studio Server** only if you have purchased https://shop.skybrush.io/products/studio[Skybrush Studio] or https://shop.skybrush.io/products/studio-x[Skybrush 
+Studio X] from our webshop.
+
+*Skybrush Studio Server* is the local server backend of *Skybrush Studio for Blender*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin in a completely offline context.
+
+image::skybrush_studio_server.jpg[Skybrush Studio Server]
+
+1. Download the installer of *Skybrush Studio Server* from your https://account.skybrush.io/products[Skybrush Account] and execute the installer to install the server on your computer.
+
+2. After installation, execute **Skybrush Studio Server** once. It will open a terminal window and will display the hardware ID of your machine. Copy this hardware ID for further reference.
+
+3. Register the hardware ID of your machine at your https://account.skybrush.io/licenses[Skybrush Account].
+
+4. In your https://account.skybrush.io/licenses[Skybrush Account] make sure your registered hardware ID is also assigned to the proper **Skybrush Studio** product you obtained a license for. 
+
+5. Activate your offline license with downloading it from your https://account.skybrush.io/licenses[Skybrush Account]. Note that offline licenses are _not_ revokable or reassignable. They contain a permenent link to the machine they are assigned to throughout the entire validity of the license period
++
+TIP: For dynamic seat management use the cloud-based licensing options.
+
+6. Download your license file named `skybrush-studio-server.cml` and copy it to the folder where you installed the server itself (If you cannot determine this path, run the server and it will display the expected location of the license file). You might need system administrator privileges to write into this folder.
++
+The terminal log of *Skybrush Studio Server* will give you instant feedback about the presence and content of your currently used license file upon execution of the server.
+
+7. Finally, do not forget to set the btn:[Operation mode] dropdown to "Local Skybrush Studio Server" in the **Skybrush Studio** add-on preferences in Blender.
 
 == Installing updates
 
@@ -149,6 +157,8 @@ The longest action is usually the show export. During export, most time is taken
 
 NOTE: If the update still fails after following the steps outlined above, try to completely uninstall the old add-on first manually (as described below) and then re-install the new one from scratch.
 
+Updates to additional pro components (**Skybrush Studio Server** or **Skybrush Gateway**) are straightforward. Just download the new installers and execute them, the update will be automatic.
+
 == Uninstallation
 
 If you decide to uninstall *Skybrush Studio for Blender* for any reason, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
@@ -157,3 +167,5 @@ If you decide to uninstall *Skybrush Studio for Blender* for any reason, you hav
 2. Open the file manager of your operating system and navigate to the folder containing the Blender add-ons. Refer to https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html[Blender's documentation] to find the add-ons folder.
 3. Remove the file named `ui_skybrush_studio.py`.
 4. Also remove the `skybrush` folder within the `vendor` folder.
+
+Uninstallation of additional pro components (**Skybrush Studio Server** or **Skybrush Gateway**) are straightforward. Just uninstall them the same way as you uninstall any other standard application from your system.
