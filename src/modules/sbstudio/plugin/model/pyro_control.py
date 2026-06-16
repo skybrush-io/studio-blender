@@ -125,6 +125,14 @@ class PyroControlPanelProperties(PropertyGroup):
         unit="ROTATION",
     )
 
+    def clear_pyro_overlay_info_blocks(self) -> None:
+        """Clears the pyro overlay info blocks."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.info_blocks = []
+
     def clear_pyro_overlay_markers(self) -> None:
         """Clears the pyro overlay markers."""
         self.ensure_overlays_enabled_if_needed()

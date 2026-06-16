@@ -100,11 +100,7 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         pyro_control: PyroControlPanelProperties | None = getattr(
             skybrush, "pyro_control", None
         )
-        if (
-            not pyro_control
-            or self._info_blocks is None
-            or pyro_control.visualization != "INFO"
-        ):
+        if not pyro_control or not self._info_blocks:
             return
 
         space_data = context.space_data
