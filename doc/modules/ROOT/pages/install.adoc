@@ -111,7 +111,7 @@ image::skybrush_gateway.jpg[Skybrush Gateway]
 
 4. Set the btn:[Operation mode] dropdown to "Skybrush Studio Cloud" in the **Skybrush Studio** add-on preferences in Blender and press the btn:[Register] button to register your machine's hardware ID to be used with your cloud-based license automatically.
 
-5. After registering your hardware ID in your https://account.skybrush.donko.hu/licenses[Skybrush Account], also make sure it is assigned to the proper **Skybrush Studio Cloud** product you obtained a license for. Activation of your cloud based license will be automatic once you assign a hardware ID to it and start to use it.
+5. After registering your hardware ID in your https://account.skybrush.donko.hu/licenses[Skybrush Account], also make sure it is assigned to the proper **Skybrush Studio Cloud** product you obtained a license for, using the btn:[Link hardware ID] button in your account. Activation of your cloud based license will be automatic once you assign a hardware ID to it and start to use it.
 
 [[skybrush-studio-server]]
 == Install Skybrush Studio Server
@@ -129,9 +129,9 @@ image::skybrush_studio_server.jpg[Skybrush Studio Server]
 
 3. Register the hardware ID of your machine at your https://account.skybrush.io/licenses[Skybrush Account].
 
-4. In your https://account.skybrush.io/licenses[Skybrush Account] make sure your registered hardware ID is also assigned to the proper **Skybrush Studio** product you obtained a license for. 
+4. In your https://account.skybrush.io/licenses[Skybrush Account] make sure your registered hardware ID is also assigned to the proper **Skybrush Studio** product you obtained a license for, using the btn:[Link hardware ID] button in your account.
 
-5. Activate your offline license with downloading it from your https://account.skybrush.io/licenses[Skybrush Account]. Note that offline licenses are _not_ revokable or reassignable. They contain a permenent link to the machine they are assigned to throughout the entire validity of the license period
+5. Activate your offline license with downloading it from your https://account.skybrush.io/licenses[Skybrush Account] using the btn:[Download license] button on the right side of the purchased product listed in your account. Note that offline licenses are _not_ revokable or reassignable. They contain a permenent link to the machine they are assigned to throughout the entire validity of the license period
 +
 TIP: For dynamic seat management use the cloud-based licensing options.
 
