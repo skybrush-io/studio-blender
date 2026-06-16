@@ -64,6 +64,14 @@ class PyroControlPanelProperties(PropertyGroup):
         update=visualization_updated,
     )
 
+    marker_size = IntProperty(
+        name="Marker size",
+        description="Size of overlay markers for the MARKERS visualization type",
+        min=1,
+        soft_max=50,
+        default=25,
+    )
+
     channel = IntProperty(
         name="Channel",
         description="The (1-based) channel index the pyro is attached to",
@@ -116,6 +124,14 @@ class PyroControlPanelProperties(PropertyGroup):
         step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
         unit="ROTATION",
     )
+
+    def clear_pyro_overlay_info_blocks(self) -> None:
+        """Clears the pyro overlay info blocks."""
+        self.ensure_overlays_enabled_if_needed()
+
+        overlay = get_overlay(create=False)
+        if overlay:
+            overlay.info_blocks = []
 
     def clear_pyro_overlay_markers(self) -> None:
         """Clears the pyro overlay markers."""

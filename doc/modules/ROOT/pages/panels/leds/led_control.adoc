@@ -34,6 +34,11 @@ Select this option to use very simple but quick color overlay markers on drones.
 
 Materials:: Select this option to preserve the default coloring scheme through the actual drone objects (this option slows down rendering time on large fleets).
 
+== Marker size
+
+This options defines the size of the LED overlay markers if the visualization type 
+is set to Markers. It is hidden otherwise.
+
 == Primary and secondary colors
 
 // Unicode arrow chars mostly not supported in PDF

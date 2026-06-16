@@ -34,7 +34,9 @@ class PyroControlPanel(Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(pyro_control, "visualization", text="Visualization")
+        layout.prop(pyro_control, "visualization")
+        if pyro_control.visualization == "MARKERS":
+            layout.prop(pyro_control, "marker_size")
 
         layout.separator()
 
