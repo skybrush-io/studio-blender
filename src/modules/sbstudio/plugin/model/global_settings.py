@@ -169,43 +169,41 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
     def draw(self, context: Context) -> None:
         layout = self.layout
 
+        box = layout.box()
+
         # Header: mode of operation. Most other widgets depend on this.
         mode = self.operation_mode
         if mode not in ("COMMUNITY", "LOCAL", "CLOUD", "ADVANCED"):
             # Failsafe in case the user somehow managed to screw up this setting
             mode = "ADVANCED"
-        layout.prop(self, "operation_mode")
+        box.prop(self, "operation_mode")
 
         # Top separator not needed for the simple cases
         if mode not in ("COMMUNITY", "LOCAL"):
-            layout.separator()
+            box.separator()
 
         # Hardware ID and register button. Needed for the cloud-based solution only.
         if mode in ("CLOUD", "ADVANCED"):
-            self._draw_hardware_id_widgets()
+            self._draw_hardware_id_widgets(box)
 
         # Gateway URL. Only for advanced use-cases. Gateway URL implied for "CLOUD"
         # and empty for all other configurations.
         if mode == "ADVANCED":
-            self._draw_gateway_widgets()
+            self._draw_gateway_widgets(box)
 
         # API key. Not needed for local servers.
         if mode != "LOCAL":
-            layout.prop(self, "api_key")
+            box.prop(self, "api_key")
 
         # Server URL and shortcuts to set to predefined values. Only for advanced use-cases.
         if mode == "ADVANCED":
-            self._draw_server_url_widgets()
+            self._draw_server_url_widgets(box)
 
-        # Bottom separator not needed for the simple cases
-        if mode not in ("COMMUNITY", "LOCAL"):
-            layout.separator()
+        layout.separator()
 
         layout.prop(self, "enable_experimental_features")
 
-    def _draw_hardware_id_widgets(self) -> None:
-        layout = self.layout
-
+    def _draw_hardware_id_widgets(self, layout) -> None:
         row = layout.row()
         col = row.column()
         col.enabled = False
@@ -216,9 +214,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         col.enabled = bool(self.hardware_id)
         col.operator(RegisterHardwareIDOperator.bl_idname, text="Register")
 
-    def _draw_gateway_widgets(self) -> None:
-        layout = self.layout
-
+    def _draw_gateway_widgets(self, layout) -> None:
         row = layout.row()
         col = row.column()
         col.prop(self, "gateway_url")
@@ -240,9 +236,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
         layout.separator()
 
-    def _draw_server_url_widgets(self) -> None:
-        layout = self.layout
-
+    def _draw_server_url_widgets(self, layout) -> None:
         layout.prop(self, "server_url")
 
         row = layout.row()
