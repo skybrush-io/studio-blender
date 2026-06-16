@@ -3,9 +3,11 @@ from __future__ import annotations
 import logging
 from typing import Literal, cast
 
+import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import AddonPreferences, Context
 
+from sbstudio.plugin.constants import DEFAULT_GATEWAY_URL, DEFAULT_SERVER_URL
 from sbstudio.plugin.gateway import get_gateway
 from sbstudio.plugin.operators.register_hardware_id import RegisterHardwareIDOperator
 from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
@@ -40,6 +42,37 @@ def gateway_url_updated(
             )
 
     self.hardware_id = hardware_id
+
+
+def mode_of_operation_updated(
+    self: DroneShowAddonGlobalSettings, context: Context | None = None
+):
+    """Callback that is called when the user updates the mode of operation in the add-on
+    preferences.
+    """
+
+    # Note that setting the gateway URL here explicitly is needed as it triggers an
+    # update of the hardware ID setting.
+
+    match self.operation_mode:
+        case "COMMUNITY":
+            self.gateway_url = ""
+            self.server_url = ""
+        case "LOCAL":
+            self.gateway_url = ""
+            self.server_url = DEFAULT_SERVER_URL
+        case "CLOUD":
+            self.gateway_url = DEFAULT_GATEWAY_URL
+            self.server_url = ""
+        case "ADVANCED":
+            pass
+
+    # We also need to refresh file formats based on the new settings
+    try:
+        bpy.ops.skybrush.refresh_file_formats()
+    except RuntimeError:
+        # Maybe the server is not running?
+        pass
 
 
 class DroneShowAddonGlobalSettings(AddonPreferences):
@@ -81,6 +114,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
             ),
         ],
         default="COMMUNITY",
+        update=mode_of_operation_updated,
     )
 
     # license_file is unused, kept for backward compatibility purposes only
@@ -197,7 +231,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         op: SetGatewayURLOperator = row.operator(
             SetGatewayURLOperator.bl_idname, text="Use local gateway"
         )
-        op.url = "http://localhost:7999"
+        op.url = DEFAULT_GATEWAY_URL
 
         op: SetGatewayURLOperator = row.operator(
             SetGatewayURLOperator.bl_idname, text="Do not use gateway"
@@ -215,7 +249,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         op: SetServerURLOperator = row.operator(
             SetServerURLOperator.bl_idname, text="Use local server"
         )
-        op.url = "http://localhost:8000"
+        op.url = DEFAULT_SERVER_URL
 
         op: SetServerURLOperator = row.operator(
             SetServerURLOperator.bl_idname, text="Use community server"

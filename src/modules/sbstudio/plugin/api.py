@@ -12,6 +12,7 @@ from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.version import ensure_backend_version
 from sbstudio.errors import SkybrushStudioError
 
+from .constants import DEFAULT_SERVER_URL
 from .errors import SkybrushStudioExportWarning, TaskCancelled
 from .plugin_helpers import only_with_online_access
 
@@ -78,7 +79,7 @@ def _get_api_settings() -> APISettings:
     match mode:
         case "LOCAL":
             # Local setting uses a fixed URL from localhost
-            url = "http://localhost:8000"
+            url = DEFAULT_SERVER_URL
 
         case "ADVANCED":
             # Advanced mode uses whatever the user entered

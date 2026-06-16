@@ -12,6 +12,7 @@ from sbstudio.api import SkybrushGatewayAPI
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.errors import SkybrushStudioError
 
+from .constants import DEFAULT_GATEWAY_URL
 from .errors import TaskCancelled
 from .plugin_helpers import only_with_online_access
 
@@ -51,7 +52,7 @@ def _get_gateway_settings() -> GatewaySettings:
     match mode:
         case "CLOUD":
             # Cloud setting uses a fixed URL from localhost
-            url = "http://localhost:7999"
+            url = DEFAULT_GATEWAY_URL
 
         case "ADVANCED":
             # Advanced mode uses whatever the user entered
