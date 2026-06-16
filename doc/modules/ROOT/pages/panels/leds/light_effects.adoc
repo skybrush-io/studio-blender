@@ -147,8 +147,12 @@ Temporal:: All drones will cycle through the color ramp simultaneously throughou
 
 Distance from mesh:: The single static color picked for each drone will be calculated by mapping the normalized distances between the drones and the selected mesh (see the *Mesh* widget) to the color ramp (i.e. the closest drone to the mesh will pick the leftmost color in the ramp, the farthest will pick the rightmost color, all the rest will get a value in between, distributed evenly along the color ramp).
 
-Custom expression:: A Python function which returns a number between 0 and 1. The function is called for each drone and each frame of the light effect.
-EXAMPLE:
+Light preset:: A predefined, hard-coded Python function which returns a number between 0 and 1. All light presets are called for each drone and each frame of the light effect. If you choose this output option, use the btn:[Preset] dropdown appearing below the Light preset setting to choose which light effect preset you wish to use.
++
+WARNING: Light effect presets are experimental. The list of available presets or the overall functionality around light presets might change.
+
+Custom expression:: A Python function which returns a number between 0 and 1. The function is called for each drone and each frame of the light effect. An example:
++
 ```python
 def odd_even(frame, time_fraction, drone_index, formation_index, position, drone_count):
     return drone_index % 2
