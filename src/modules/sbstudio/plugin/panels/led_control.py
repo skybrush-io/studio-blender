@@ -41,7 +41,9 @@ class LEDControlPanel(Panel):
         draw_version_warning(context, layout)
         draw_bad_shader_color_source_warning(context, layout)
 
-        layout.prop(led_control, "visualization", text="Visualization")
+        layout.prop(led_control, "visualization")
+        if led_control.visualization == "MARKERS":
+            layout.prop(led_control, "marker_size")
 
         row = layout.row()
         row.use_property_split = False

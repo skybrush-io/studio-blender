@@ -4,7 +4,7 @@ from typing import Literal, TypeAlias, overload
 import bpy
 import numpy as np
 from bpy.app.handlers import persistent
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, IntProperty
 from bpy.types import Context, Object, PropertyGroup
 
 from sbstudio.model.types import RGBAColor
@@ -198,6 +198,14 @@ class LEDControlPanelProperties(PropertyGroup):
         update=visualization_updated,
     )
     """Visualization method of the drone colors."""
+
+    marker_size = IntProperty(
+        name="Marker size",
+        description="Size of overlay markers for the MARKERS visualization type",
+        min=1,
+        soft_max=50,
+        default=25,
+    )
 
     primary_color = ColorProperty(
         name="Primary color", description="Primary color to set on the selected drones"

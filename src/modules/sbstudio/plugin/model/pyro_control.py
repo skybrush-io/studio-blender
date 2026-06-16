@@ -64,6 +64,14 @@ class PyroControlPanelProperties(PropertyGroup):
         update=visualization_updated,
     )
 
+    marker_size = IntProperty(
+        name="Marker size",
+        description="Size of overlay markers for the MARKERS visualization type",
+        min=1,
+        soft_max=50,
+        default=25,
+    )
+
     channel = IntProperty(
         name="Channel",
         description="The (1-based) channel index the pyro is attached to",
