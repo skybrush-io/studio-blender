@@ -282,10 +282,20 @@ class SkybrushStudioBaseAPI:
                     "Skybrush Studio Server."
                 ) from None
 
-            # No detailed information about the error so use a generic message
+            # No detailed information about the error so use a generic message.
+            # State that this is probably a server-side issue if the status code
+            # does not start with 4 -- status codes between 400 and 499 are client-side
+            # issues.
             raise SkybrushStudioAPIError(
-                f"{self._http_status[ex.status]} ({ex.status}). "
-                f"This is most likely a server-side issue; please contact us and let us know."
+                f"{self._http_status[ex.status]} ({ex.status})"
+                + (
+                    (
+                        ". This is most likely a server-side issue; please contact us "
+                        "and let us know."
+                    )
+                    if ex.status is None or ex.status < 400 or ex.status > 499
+                    else ""
+                )
             ) from ex
 
     def _sign_request_body(self, data: bytes) -> str | None:
