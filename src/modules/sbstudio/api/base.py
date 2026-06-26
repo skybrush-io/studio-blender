@@ -6,6 +6,7 @@ from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
 from json import dumps as json_dumps
 from json import load as json_load
+from json import loads as json_loads
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import CERT_NONE, create_default_context
@@ -264,7 +265,7 @@ class SkybrushStudioBaseAPI:
                     # response body
                     body = "{}"
                 try:
-                    decoded_body = json.loads(body)
+                    decoded_body = json_loads(body)
                 except Exception:
                     # response body is not valid JSON, let's pretend that we
                     # got an empty object
