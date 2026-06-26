@@ -13,6 +13,7 @@ from bpy_extras.io_utils import ExportHelper
 from numpy import array, floating
 from numpy.typing import NDArray
 
+from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.light_program import LightProgram
 from sbstudio.model.point import Point3D
@@ -277,6 +278,9 @@ class DynamicMarkerCreationOperator(FormationOperator):
         # Construct the trajectory and light program to set
         try:
             trajectories_and_lights = self._create_trajectories(context)
+        except SkybrushStudioAPIError:
+            # No need to report, already handled internally
+            return {"CANCELLED"}
         except RuntimeError as error:
             self.report({"ERROR"}, str(error))
             return {"CANCELLED"}
@@ -437,6 +441,9 @@ class StaticMarkerCreationOperator(FormationOperator):
         # Construct the point set
         try:
             points_and_colors = self._create_points(context)
+        except SkybrushStudioAPIError:
+            # No need to report, already handled internally
+            return {"CANCELLED"}
         except RuntimeError as error:
             self.report({"ERROR"}, str(error))
             return {"CANCELLED"}
