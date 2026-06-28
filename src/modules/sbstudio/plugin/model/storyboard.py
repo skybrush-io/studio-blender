@@ -295,6 +295,22 @@ class StoryboardEntry(PropertyGroup):
         ),
     )
 
+    # === Starlight Animator: per-entry drone group filter ===
+    limit_to_group = EnumProperty(
+        items=[
+            ("ALL", "All drones", "All drones participate in this transition", 1),
+            ("BOX", "Box array only", "Only box-array drones participate (others keep position)", 2),
+            ("TRAD", "Traditional array only", "Only traditional single-drone array participates", 3),
+        ],
+        name="Drone Group",
+        description=(
+            "Restrict this transition to a specific drone group. Non-participating "
+            "drones keep their position from the previous entry."
+        ),
+        default="ALL",
+        options=set(),
+    )
+
     # mapping is stored as a string so we don't need to maintain a separate
     # Blender collection as it would not be efficient
 
