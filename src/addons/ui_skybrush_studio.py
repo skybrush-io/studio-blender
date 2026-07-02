@@ -76,6 +76,7 @@ from sbstudio.plugin.model import (
 from sbstudio.plugin.model.led_control import register as register_led_control
 from sbstudio.plugin.model.led_control import unregister as unregister_led_control
 from sbstudio.plugin.operators import (
+    AddDronesSelectedToDroneGroupOperator,
     AddMarkersFromQRCodeOperator,
     AddMarkersFromStaticCSVOperator,
     AddMarkersFromSVGOperator,
@@ -83,6 +84,7 @@ from sbstudio.plugin.operators import (
     AddMarkersFromZippedDSSOperator,
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
+    CreateDroneGroupOperator,
     CreateFormationOperator,
     CreateLightEffectOperator,
     CreateNewScheduleOverrideEntryOperator,
@@ -112,6 +114,8 @@ from sbstudio.plugin.operators import (
     PrepareSceneOperator,
     RecalculateTransitionsOperator,
     RefreshFileFormatsOperator,
+    RemoveDroneGroupOperator,
+    RemoveDronesFromDroneGroupOperator,
     RegisterHardwareIDOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
@@ -121,6 +125,7 @@ from sbstudio.plugin.operators import (
     ReturnToHomeOperator,
     RunAllMigrationOperators,
     RunFullProximityCheckOperator,
+    SelectDronesFromDroneGroup,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     SetGatewayURLOperator,
@@ -146,6 +151,7 @@ from sbstudio.plugin.operators import (
     VVIZExportOperator,
 )
 from sbstudio.plugin.panels import (
+    DroneGroupPanel,
     DroneShowAddonObjectPropertiesPanel,
     ExportPanel,
     FormationsPanel,
@@ -276,6 +282,11 @@ operators = (
     RegisterHardwareIDOperator,
     RunAllMigrationOperators,
     SetupSceneOperator,
+    AddDronesSelectedToDroneGroupOperator,
+    CreateDroneGroupOperator,
+    RemoveDroneGroupOperator,
+    RemoveDronesFromDroneGroupOperator,
+    SelectDronesFromDroneGroup,
 )
 """Operators in this addon; operators that require other operators must come
 later in the list than their dependencies."""
@@ -293,6 +304,7 @@ panels = (
     SwarmPanel,
     FormationsPanel,
     StoryboardEditor,
+    DroneGroupPanel,
     TransitionEditorFromCurrentFormation,
     TransitionEditorIntoCurrentFormation,
     LEDControlPanel,

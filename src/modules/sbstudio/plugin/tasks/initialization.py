@@ -24,6 +24,19 @@ def setup_drone_collection(*args):
         scene.skybrush.settings.drone_collection = drones
 
 
+def setup_drone_group_collection(*args):
+    """Updates the `drone_group_collection` property of the file-specific settings
+    to be equal to whatever `Collections.find_drone_groups()` returns. Used to
+    migrate old files where the `drone_group_collection` property did not exist yet
+    but the user has already created a "Drone Groups" collection.
+    """
+    drones = Collections.find_drone_groups(create=False)
+    scene = bpy.context.scene
+
+    if drones and scene and scene.skybrush.settings.drone_group_collection is None:
+        scene.skybrush.settings.drone_group_collection = drones
+
+
 def remove_legacy_formation_constraints(*args):
     """Removes legacy formation constraints from the file that were created
     before we have migrated to formation constraints that refer a unique ID of
@@ -105,6 +118,7 @@ class InitializationTask(Task):
         "load_post": [
             update_bloom_effect,
             setup_drone_collection,
+            setup_drone_group_collection,
             remove_legacy_formation_constraints,
             setup_random_seed,
             update_pyro_particles_of_drones,

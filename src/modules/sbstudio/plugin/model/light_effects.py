@@ -4,7 +4,7 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import Any, Protocol, cast
+from typing import Any, Protocol, Set, cast
 from uuid import uuid4
 
 import bpy
@@ -19,6 +19,7 @@ from bpy.props import (
     StringProperty,
 )
 from bpy.types import (
+    Collection,
     ColorRamp,
     Context,
     Image,
@@ -35,7 +36,7 @@ from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor
-from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
+from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
@@ -138,6 +139,11 @@ class CustomLightEffectFunction(Protocol):
     ) -> float: ...
 
 
+def dronegroup_active(self, col: Collection) -> bool:
+    main_coll = Collections.find_drone_groups(create=False)
+    return main_coll is not None and col.name in main_coll.children
+
+
 def effect_type_supports_randomization(type: str) -> bool:
     """Returns whether the light effect type given in the argument supports
     randomization.
@@ -187,7 +193,9 @@ def output_type_supports_mapping_mode(type: str) -> bool:
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
 
-def test_containment(bvh_tree: BVHTree | None, point: Coordinate3D) -> bool:
+def test_containment(
+    bvh_tree: BVHTree | None, point: Coordinate3D, drone_obj: Object
+) -> bool:
     """Given a point and a BVH-tree, tests whether the point is _probably_
     within the mesh represented by the BVH-tree.
 
@@ -209,7 +217,16 @@ def test_containment(bvh_tree: BVHTree | None, point: Coordinate3D) -> bool:
     return True
 
 
-def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
+def test_is_in_dronegroup(drones, point: Coordinate3D, drone_obj: Object) -> bool:
+    if drone_obj in drones:
+        return True
+    else:
+        return False
+
+
+def test_is_in_front_of(
+    plane: Plane | None, point: Coordinate3D, drone_obj: Object
+) -> bool:
     """Given a point and a plane, tests whether the point is on the front side
     of the plane.
 
@@ -459,18 +476,28 @@ class LightEffect(PropertyGroup):
         poll=object_has_mesh_data,
     )
 
+    dronegroup = PointerProperty(
+        type=Collection,
+        name="Drone Group",
+        description=(
+            "The drones within the drone group will be subject to the influence of the light effect"
+        ),
+        poll=dronegroup_active,
+    )
+
     target = EnumProperty(
         name="Target",
         description=(
             "Specifies whether to apply this light effect to all drones or only"
             " to those drones that are inside the given mesh or are in front of"
-            " the plane of the first face of the mesh. See also the 'Invert'"
+            " the plane of the first face of the mesh or are in drone group. See also the 'Invert'"
             " property"
         ),
         items=[
             ("ALL", "All drones", "", 1),
             ("INSIDE_MESH", "Inside the mesh", "", 2),
             ("FRONT_SIDE", "Front side of plane", "", 3),
+            ("DRONE_GROUP", "Drone group", "", 4),
         ],
         default="ALL",
     )
@@ -513,6 +540,7 @@ class LightEffect(PropertyGroup):
     def apply_on_colors(
         self,
         colors: Sequence[MutableRGBAColor],
+        drones: Sequence[Object],
         positions: Sequence[Coordinate3D],
         mapping: list[int] | None,
         *,
@@ -524,6 +552,7 @@ class LightEffect(PropertyGroup):
 
         Parameters:
             colors: the colors to modify in-place
+            drones: the drone objects
             positions: the spatial positions of the drones having the given
                 colors in 3D space
             mapping: optional mapping of positions to match colors;
@@ -734,6 +763,9 @@ class LightEffect(PropertyGroup):
         condition = self._get_spatial_effect_predicate()
 
         for index, position in enumerate(positions):
+            # Drone object
+            drone = drones[index]
+
             # Take the base color to modify
             color = colors[index]
 
@@ -773,7 +805,10 @@ class LightEffect(PropertyGroup):
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
             alpha = max(
-                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
+                min(
+                    self._evaluate_influence_at(drone, position, frame, condition), 1.0
+                ),
+                0.0,
             )
 
             if color_function_ref is not None:
@@ -844,6 +879,7 @@ class LightEffect(PropertyGroup):
             "outputY": self.output_y,
             "influence": self.influence,
             "meshName": self.mesh.name if self.mesh else None,
+            "dronegroup": self.dronegroup,
             "target": self.target,
             "randomness": self.randomness,
             "outputMappingMode": self.output_mapping_mode,
@@ -1011,6 +1047,7 @@ class LightEffect(PropertyGroup):
         self.output_y = other.output_y
         self.influence = other.influence
         self.mesh = other.mesh
+        self.dronegroup = other.dronegroup
         self.target = other.target
         self.randomness = other.randomness
         self.output_mapping_mode = other.output_mapping_mode
@@ -1066,6 +1103,8 @@ class LightEffect(PropertyGroup):
                 warnings.append(
                     f"Could not import mesh: object {mesh_name!r} is not part of the current file"
                 )
+        if dronegroup := data.get("dronegroup"):
+            self.dronegroup = dronegroup
         if target := data.get("target"):
             self.target = target
         if randomness := data.get("randomness"):
@@ -1127,7 +1166,11 @@ class LightEffect(PropertyGroup):
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
     def _evaluate_influence_at(
-        self, position, frame: int, condition: Callable[[Coordinate3D], bool] | None
+        self,
+        drone,
+        position,
+        frame: int,
+        condition: Callable[[Coordinate3D], bool] | None,
     ) -> float:
         """Eveluates the effective influence of the effect on the given position
         in space and at the given frame.
@@ -1139,7 +1182,7 @@ class LightEffect(PropertyGroup):
                 with the position; otherwise the effect will not be applied at all
         """
         # Apply mesh containment constraint
-        if condition and not condition(position):
+        if condition and not condition(position, drone):
             return 0.0
 
         influence = self.influence
@@ -1185,6 +1228,10 @@ class LightEffect(PropertyGroup):
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
 
+    def _get_drones_in_group(self) -> Set | None:
+        if self.dronegroup:
+            return set(self.dronegroup.objects) or None
+
     def _get_plane_from_mesh(self) -> Plane | None:
         """Returns a plane that is an infinite expansion of the first face of the
         mesh associated to this light effect, or `None` if the light effect has
@@ -1209,6 +1256,12 @@ class LightEffect(PropertyGroup):
         elif self.target == "FRONT_SIDE":
             plane = self._get_plane_from_mesh()
             func = partial(test_is_in_front_of, plane)
+        elif self.target == "DRONE_GROUP":
+            drones_in_group = self._get_drones_in_group()
+            if drones_in_group:
+                func = partial(test_is_in_dronegroup, drones_in_group)
+            else:
+                func = None
         else:
             func = None
 

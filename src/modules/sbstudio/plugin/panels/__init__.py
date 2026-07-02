@@ -1,3 +1,4 @@
+from .drone_groups import DroneGroupPanel
 from .export import ExportPanel
 from .formations import FormationsPanel
 from .led_control import LEDControlPanel
@@ -15,6 +16,7 @@ from .transition_editor import (
 )
 
 __all__ = (
+    "DroneGroupPanel",
     "DroneShowAddonObjectPropertiesPanel",
     "ExportPanel",
     "FormationsPanel",

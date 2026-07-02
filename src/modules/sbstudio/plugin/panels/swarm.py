@@ -29,6 +29,7 @@ class SwarmPanel(Panel):
         layout = self.layout
 
         layout.prop(settings, "drone_collection", text="Drones")
+        layout.prop(settings, "drone_group_collection", text="Drone groups")
         layout.prop(settings, "max_acceleration", slider=True)
 
         if Collections.find_templates(create=False) is None:
