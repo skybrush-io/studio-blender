@@ -1,9 +1,6 @@
-from .formations_panel import (
-    FormationsPanelProperties,
-)
-from .formations_panel import (
-    get_overlay as get_formation_order_overlay,
-)
+from .drone_groups import DroneGroupsProperties
+from .formations_panel import FormationsPanelProperties
+from .formations_panel import get_overlay as get_formation_order_overlay
 from .global_settings import DroneShowAddonGlobalSettings
 from .led_control import LEDControlPanelProperties
 from .led_control import get_overlay as get_led_control_overlay
@@ -23,6 +20,7 @@ from .storyboard import (
 )
 
 __all__ = (
+    "DroneGroupsProperties",
     "DroneShowAddonFileSpecificSettings",
     "DroneShowAddonGlobalSettings",
     "DroneShowAddonObjectProperties",

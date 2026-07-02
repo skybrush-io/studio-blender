@@ -54,6 +54,7 @@ from sbstudio.plugin.lists import (
 from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.model import (
     ColorFunctionProperties,
+    DroneGroupsProperties,
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
     DroneShowAddonObjectProperties,
@@ -76,14 +77,15 @@ from sbstudio.plugin.model import (
 from sbstudio.plugin.model.led_control import register as register_led_control
 from sbstudio.plugin.model.led_control import unregister as unregister_led_control
 from sbstudio.plugin.operators import (
-    AddDronesSelectedToDroneGroupOperator,
     AddMarkersFromQRCodeOperator,
     AddMarkersFromStaticCSVOperator,
     AddMarkersFromSVGOperator,
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromZippedDSSOperator,
+    AddSelectedDronesToDroneGroupOperator,
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
+    ClearDroneGroupOperator,
     CreateDroneGroupOperator,
     CreateFormationOperator,
     CreateLightEffectOperator,
@@ -114,9 +116,8 @@ from sbstudio.plugin.operators import (
     PrepareSceneOperator,
     RecalculateTransitionsOperator,
     RefreshFileFormatsOperator,
-    RemoveDroneGroupOperator,
-    RemoveDronesFromDroneGroupOperator,
     RegisterHardwareIDOperator,
+    RemoveDroneGroupOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
     RemoveScheduleOverrideEntryOperator,
@@ -151,7 +152,7 @@ from sbstudio.plugin.operators import (
     VVIZExportOperator,
 )
 from sbstudio.plugin.panels import (
-    DroneGroupPanel,
+    DroneGroupsPanel,
     DroneShowAddonObjectPropertiesPanel,
     ExportPanel,
     FormationsPanel,
@@ -196,6 +197,7 @@ from sbstudio.plugin.tasks import (
 
 types = (
     FormationsPanelProperties,
+    DroneGroupsProperties,
     ColorFunctionProperties,
     ScheduleOverride,
     StoryboardEntry,
@@ -282,10 +284,10 @@ operators = (
     RegisterHardwareIDOperator,
     RunAllMigrationOperators,
     SetupSceneOperator,
-    AddDronesSelectedToDroneGroupOperator,
+    AddSelectedDronesToDroneGroupOperator,
     CreateDroneGroupOperator,
     RemoveDroneGroupOperator,
-    RemoveDronesFromDroneGroupOperator,
+    ClearDroneGroupOperator,
     SelectDronesFromDroneGroup,
 )
 """Operators in this addon; operators that require other operators must come
@@ -304,7 +306,7 @@ panels = (
     SwarmPanel,
     FormationsPanel,
     StoryboardEditor,
-    DroneGroupPanel,
+    DroneGroupsPanel,
     TransitionEditorFromCurrentFormation,
     TransitionEditorIntoCurrentFormation,
     LEDControlPanel,

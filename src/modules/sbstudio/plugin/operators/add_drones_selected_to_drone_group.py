@@ -1,35 +1,30 @@
-import bpy
+from bpy.types import Collection, Context
 
-from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.model.drone_groups import DroneGroupsProperties
+from sbstudio.plugin.operators.base import DroneGroupOperator
 
-__all__ = ("AddDronesSelectedToDroneGroupOperator",)
+__all__ = ("AddSelectedDronesToDroneGroupOperator",)
 
 
-class AddDronesSelectedToDroneGroupOperator(bpy.types.Operator):
+class AddSelectedDronesToDroneGroupOperator(DroneGroupOperator):
+    """Adds the currently selected drones to the given drone group."""
+
     bl_idname = "skybrush.add_drones_selected_to_drone_group"
-    bl_label = "Add Drones Selected"
+    bl_label = "Add Selected Drones"
+    bl_description = "Adds the currently selected drones to the given drone group"
     bl_options = {"REGISTER", "UNDO"}
 
-    drone_group: bpy.props.StringProperty(default="")  # type: ignore
-
     @classmethod
-    def poll(cls, context):
-        return context.scene.skybrush and context.selected_objects
+    def poll(cls, context: Context):
+        return DroneGroupOperator.poll(context) and context.selected_objects
 
-    def execute(self, context):
-        main_coll = Collections.find_drone_groups(create=False)
-        if main_coll is None:
-            # TODO(ntamas): we need a DroneGroupOperator base class and we need to
-            # make this check part of poll()
-            return {"FINISHED"}
-
-        drone_group_coll = bpy.data.collections[self.drone_group]
-
-        for obj in context.selected_objects:
-            if (
-                obj.name in main_coll.objects
-                and obj.name not in drone_group_coll.objects
-            ):
-                drone_group_coll.objects.link(obj)
+    def execute_on_drone_group(
+        self, group: Collection, drone_groups: DroneGroupsProperties, context: Context
+    ):
+        count = drone_groups.extend_group(group, context.selected_objects)
+        if count > 1:
+            self.report({"INFO"}, f"Added {count} drones to group '{group.name}'")
+        elif count == 1:
+            self.report({"INFO"}, f"Added drone to group '{group.name}'")
 
         return {"FINISHED"}

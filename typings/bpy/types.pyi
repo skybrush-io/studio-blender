@@ -326,10 +326,6 @@ class Collection(ID):
     children: CollectionChildren
     objects: CollectionObjects
 
-    def link(self, obj: Object) -> None: ...
-    def unlink(self, obj: Object) -> None: ...
-    def remove(self, obj: Object) -> None: ...
-
 class ColorManagedInputColorspaceSettings(ID):
     is_data: bool
     name: str
@@ -992,7 +988,22 @@ class UILayout(bpy_struct):
         self, *, factor: float = 1.0, type: Literal["AUTO", "SPACE", "LINE"] = "AUTO"
     ) -> None: ...
     def template_color_ramp(self, *args, **kwargs) -> None: ...
-    def template_list(self, *args, **kwargs) -> None: ...
+    def template_list(
+        self,
+        listtype_name: str,
+        list_id: str,
+        dataptr: Any,
+        propname: str,
+        active_dataptr: Any,
+        active_propname: str,
+        *,
+        item_dyntip_propname: str = "",
+        rows: int = 5,
+        maxrows: int = 5,
+        columns: int = 9,
+        sort_reverse: bool = False,
+        sort_lock: bool = False,
+    ) -> None: ...
 
 class View3DOverlay(bpy_struct):
     show_overlays: bool

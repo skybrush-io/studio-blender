@@ -1,29 +1,22 @@
-import bpy
+from bpy.types import Collection, Context
+
+from sbstudio.plugin.model.drone_groups import DroneGroupsProperties
+from sbstudio.plugin.operators.base import DroneGroupOperator
+from sbstudio.plugin.selection import select_only
 
 __all__ = ("SelectDronesFromDroneGroup",)
 
 
-class SelectDronesFromDroneGroup(bpy.types.Operator):
+class SelectDronesFromDroneGroup(DroneGroupOperator):
+    """Selects the drones from the currently selected drone group."""
+
     bl_idname = "skybrush.select_drones_from_drone_group"
-    bl_label = "Select the objects from the indicated drone group."
+    bl_label = "Select Drones from Drone Group"
+    bl_description = "Select the drones from the currently selected drone group"
     bl_options = {"REGISTER", "UNDO"}
 
-    target_collection: bpy.props.StringProperty(default="")  # type: ignore
-
-    @classmethod
-    def poll(cls, context):
-        return context.scene.skybrush
-
-    def execute(self, context):
-        objs = bpy.data.collections[self.target_collection].objects
-
-        if objs:
-            if bpy.context.selected_objects:
-                bpy.context.selected_objects[0].select_set(True)
-                bpy.context.view_layer.objects.active = bpy.context.selected_objects[0]
-                bpy.ops.object.select_all()
-
-            for ob in objs:
-                ob.select_set(True)
-
+    def execute_on_drone_group(
+        self, group: Collection, drone_groups: DroneGroupsProperties, context: Context
+    ):
+        select_only(group.objects, context=context)
         return {"FINISHED"}

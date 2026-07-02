@@ -1,6 +1,6 @@
 """Blender operators registered by Skybrush Studio for Blender."""
 
-from .add_drones_selected_to_drone_group import AddDronesSelectedToDroneGroupOperator
+from .add_drones_selected_to_drone_group import AddSelectedDronesToDroneGroupOperator
 from .add_markers_from_qr_code import AddMarkersFromQRCodeOperator
 from .add_markers_from_static_csv import AddMarkersFromStaticCSVOperator
 from .add_markers_from_svg import AddMarkersFromSVGOperator
@@ -8,6 +8,7 @@ from .add_markers_from_zipped_csv import AddMarkersFromZippedCSVOperator
 from .add_markers_from_zipped_dss import AddMarkersFromZippedDSSOperator
 from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator
+from .clear_drone_group import ClearDroneGroupOperator
 from .create_drone_group import CreateDroneGroupOperator
 from .create_formation import CreateFormationOperator
 from .create_light_effect import CreateLightEffectOperator
@@ -47,7 +48,6 @@ from .recalculate_transitions import RecalculateTransitionsOperator
 from .refresh_file_formats import RefreshFileFormatsOperator
 from .register_hardware_id import RegisterHardwareIDOperator
 from .remove_drone_group import RemoveDroneGroupOperator
-from .remove_drones_from_drone_group import RemoveDronesFromDroneGroupOperator
 from .remove_formation import RemoveFormationOperator
 from .remove_light_effect import RemoveLightEffectOperator
 from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
@@ -81,14 +81,15 @@ from .use_vgroup_for_formation import UseSelectedVertexGroupForFormationOperator
 from .validate_trajectories import ValidateTrajectoriesOperator
 
 __all__ = (
-    "AddDronesSelectedToDroneGroupOperator",
     "AddMarkersFromQRCodeOperator",
     "AddMarkersFromStaticCSVOperator",
     "AddMarkersFromSVGOperator",
     "AddMarkersFromZippedCSVOperator",
     "AddMarkersFromZippedDSSOperator",
+    "AddSelectedDronesToDroneGroupOperator",
     "AppendFormationToStoryboardOperator",
     "ApplyColorsToSelectedDronesOperator",
+    "ClearDroneGroupOperator",
     "CreateDroneGroupOperator",
     "CreateFormationOperator",
     "CreateLightEffectOperator",
