@@ -1,5 +1,6 @@
 import bpy
 
+from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.operators import (
     AddDronesSelectedToDroneGroupOperator,
     CreateDroneGroupOperator,
@@ -24,7 +25,6 @@ class DroneGroupPanel(bpy.types.Panel):
         return bpy.context.mode == "OBJECT" and context.scene.skybrush
 
     def draw(self, context):
-        settings = context.scene.skybrush.settings
         layout = self.layout
 
         layout.use_property_split = False
@@ -32,10 +32,11 @@ class DroneGroupPanel(bpy.types.Panel):
 
         layout.operator(CreateDroneGroupOperator.bl_idname)
 
-        if settings.drone_collection and len(settings.drone_collection.children) > 0:
+        drone_group_collection = Collections.find_drone_groups(create=False)
+        if drone_group_collection and len(drone_group_collection.children) > 0:
             col = layout.column()
             col.label(text="Drone groups:")
-            for drone_group_col in settings.drone_collection.children:
+            for drone_group_col in drone_group_collection.children:
                 row = layout.row()
 
                 row.prop(drone_group_col, "name", text="", icon="MESH_DATA")

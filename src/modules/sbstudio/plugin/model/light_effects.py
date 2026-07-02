@@ -36,7 +36,7 @@ from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
 from sbstudio.model.types import Coordinate3D, MutableRGBAColor
-from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
+from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
@@ -139,10 +139,9 @@ class CustomLightEffectFunction(Protocol):
     ) -> float: ...
 
 
-def dronegroup_active(self, col) -> bool:
-    main_col = bpy.context.scene.skybrush.settings.drone_collection
-    if main_col and col.name in main_col.children:
-        return True
+def dronegroup_active(self, col: Collection) -> bool:
+    main_coll = Collections.find_drone_groups(create=False)
+    return main_coll is not None and col.name in main_coll.children
 
 
 def effect_type_supports_randomization(type: str) -> bool:
@@ -1245,9 +1244,7 @@ class LightEffect(PropertyGroup):
                 normal = local_to_world.to_3x3() @ polygon.normal
                 center = local_to_world @ polygon.center
                 try:
-                    return Plane.from_normal_and_point(
-                        normal, center
-                    )  # ty:ignore[invalid-argument-type]
+                    return Plane.from_normal_and_point(normal, center)  # ty:ignore[invalid-argument-type]
                 except Exception:
                     # probably all-zero normal vector
                     pass

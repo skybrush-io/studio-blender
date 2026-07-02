@@ -17,7 +17,7 @@ __all__ = (
     "get_vertices_of_object",
     "get_vertices_of_object_in_vertex_group",
     "get_vertices_of_object_in_vertex_group_by_name",
-    "link_object_to_scene",
+    "link_to_scene",
     "object_contains_vertex",
     "remove_objects",
 )
@@ -38,7 +38,8 @@ def create_object(name: str, data: Any = None, scene: Scene | None = None) -> Ob
         the created object
     """
     object = bpy.data.objects.new(name, data)
-    return link_object_to_scene(object, scene=scene)
+    link_to_scene(object, scene=scene)
+    return object
 
 
 @with_scene
@@ -59,8 +60,10 @@ def duplicate_object(
     """
     duplicate = object.copy()
     duplicate.data = object.data.copy()
-    duplicate.name = name
-    return link_object_to_scene(duplicate, scene=scene)
+    if name is not None:
+        duplicate.name = name
+    link_to_scene(duplicate, scene=scene)
+    return duplicate
 
 
 def get_vertices_of_object(object: Object):
@@ -107,26 +110,27 @@ def get_vertices_of_object_in_vertex_group_by_name(
 
 
 @with_scene
-def link_object_to_scene(
-    object: Object, *, scene: Scene | None = None, allow_nested: bool = False
-) -> Object:
-    """Links a Blender object to the master collection of the given scene.
+def link_to_scene(
+    object: Object | Collection,
+    *,
+    scene: Scene | None = None,
+    allow_nested: bool = False,
+) -> None:
+    """Links a Blender object or collection to the master collection of the given scene.
 
     Parameters:
-        object: the Blender object to link to the scene
+        object: the Blender object or collection to link to the scene
         scene: the Blender scene to link the object to; `None` means to
             use the current scene
         allow_nested: whether the Blender object is allowed to be linked to
             some sub-collection of the scene. When this property is ``True``
             and the object is already part of the scene indirectly via some
             collection, it will not be linked to the scene directly.
-
-    Returns:
-        the Blender object
     """
     assert scene is not None
+
     parent = scene.collection
-    is_collection = isinstance(object, bpy.types.Collection)
+    is_collection = isinstance(object, Collection)
     parent = parent.children if is_collection else parent.objects
 
     if allow_nested:
@@ -142,9 +146,7 @@ def link_object_to_scene(
         should_link = object not in parent.values()
 
     if should_link:
-        parent.link(object)
-
-    return object
+        parent.link(cast(Any, object))
 
 
 def object_contains_vertex(obj: Object, vertex: MeshVertex) -> bool:
