@@ -28,7 +28,7 @@ class SKYBRUSH_UL_dronegrouplist(UIList):
             layout.alignment = "CENTER"
 
         split = layout.split(factor=0.9)
-        split.prop(item, "name", text="", emboss=False)
+        split.prop(item, "name", text="", emboss=False, icon="OUTLINER_OB_POINTCLOUD")
 
         right = split.row()
         right.alignment = "RIGHT"
