@@ -33,7 +33,6 @@ class SKYBRUSH_UL_lightfxlist(UIList):
 
             checkbox = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
             row.prop(item, "enabled", emboss=False, text="", icon=checkbox)
-
             row.prop(item, "name", text="", emboss=False)
 
             if item.contains_frame(frame):

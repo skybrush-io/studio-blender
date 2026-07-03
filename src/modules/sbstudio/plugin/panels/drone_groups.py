@@ -43,7 +43,7 @@ class DroneGroupsPanel(Panel):
 
         col = row.column()
         col.template_list(
-            "UI_UL_list",
+            "SKYBRUSH_UL_dronegrouplist",
             "OBJECT_PT_skybrush_storyboard_editor",
             group_collection,
             "children",

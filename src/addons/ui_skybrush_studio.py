@@ -48,6 +48,7 @@ for candidate in candidates:
 
 from sbstudio.i18n.translations import translations_dict
 from sbstudio.plugin.lists import (
+    SKYBRUSH_UL_dronegrouplist,
     SKYBRUSH_UL_lightfxlist,
     SKYBRUSH_UL_scheduleoverridelist,
 )
@@ -294,7 +295,11 @@ operators = (
 later in the list than their dependencies."""
 
 
-lists = (SKYBRUSH_UL_lightfxlist, SKYBRUSH_UL_scheduleoverridelist)
+lists = (
+    SKYBRUSH_UL_dronegrouplist,
+    SKYBRUSH_UL_lightfxlist,
+    SKYBRUSH_UL_scheduleoverridelist,
+)
 """List widgets in this addon."""
 
 menus = (GenerateMarkersMenu,)

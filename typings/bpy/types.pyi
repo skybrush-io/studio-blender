@@ -988,6 +988,12 @@ class UILayout(bpy_struct):
     def separator(
         self, *, factor: float = 1.0, type: Literal["AUTO", "SPACE", "LINE"] = "AUTO"
     ) -> None: ...
+    def split(
+        self,
+        *,
+        factor: float = 0.0,
+        align: bool = False,
+    ) -> UILayout: ...
     def template_color_ramp(self, *args, **kwargs) -> None: ...
     def template_list(
         self,
