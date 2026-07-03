@@ -41,7 +41,9 @@ class LEDControlPanel(Panel):
         draw_version_warning(context, layout)
         draw_bad_shader_color_source_warning(context, layout)
 
-        layout.prop(led_control, "visualization", text="Visualization")
+        layout.prop(led_control, "visualization")
+        if led_control.visualization == "MARKERS":
+            layout.prop(led_control, "marker_size")
 
         row = layout.row()
         row.use_property_split = False
@@ -55,18 +57,18 @@ class LEDControlPanel(Panel):
         col.prop(led_control, "secondary_color", text="Secondary", icon="COLOR")
 
         row = layout.row()
-        params = row.operator(ApplyColors.bl_idname, text="Apply")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Apply")
         params.color = "PRIMARY"
         params.fade = False
-        params = row.operator(ApplyColors.bl_idname, text="Apply")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Apply")
         params.color = "SECONDARY"
         params.fade = False
 
         row = layout.row()
-        params = row.operator(ApplyColors.bl_idname, text="Fade to")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Fade to")
         params.color = "PRIMARY"
         params.fade = True
-        params = row.operator(ApplyColors.bl_idname, text="Fade to")
+        params: ApplyColors = row.operator(ApplyColors.bl_idname, text="Fade to")
         params.color = "SECONDARY"
         params.fade = True
 

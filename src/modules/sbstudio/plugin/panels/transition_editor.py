@@ -109,7 +109,7 @@ class TransitionEditorBase(Panel):
 
         layout.prop(entry, "is_locked")
 
-        props = layout.operator(
+        props: RecalculateTransitionsOperator = layout.operator(
             RecalculateTransitionsOperator.bl_idname, text="Recalculate"
         )
         props.scope = self._get_recalculation_scope()

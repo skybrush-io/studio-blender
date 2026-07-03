@@ -1,21 +1,26 @@
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
-from sbstudio.api.errors import NoOnlineAccessAllowedError
 from sbstudio.api.version import ensure_backend_version
 from sbstudio.errors import SkybrushStudioError
-from sbstudio.plugin.errors import SkybrushStudioExportWarning
 
-__all__ = ("get_api",)
+from .constants import DEFAULT_SERVER_URL
+from .errors import SkybrushStudioExportWarning, TaskCancelled
+from .plugin_helpers import only_with_online_access
 
-_fallback_api_key: str = "trial"
-"""Fallback API key to use when the user did not enter any API key"""
+if TYPE_CHECKING:
+    from bpy.types import Operator
+
+
+__all__ = ("get_api", "call_api_from_blender_operator")
 
 T = TypeVar("T")
 
@@ -26,20 +31,14 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
-    """Constructs a Skybrush Studio API object from a root URL and an API key
-    or a license file.
+def _get_api_from_url_and_key(url: str, key: str) -> SkybrushStudioAPI:
+    """Constructs a Skybrush Studio API object from a root URL and an API key.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
     """
-    global _fallback_api_key
-
     try:
-        result = SkybrushStudioAPI(
-            api_key=key or (None if license_file else _fallback_api_key),
-            license_file=license_file or None,
-        )
+        result = SkybrushStudioAPI(api_key=key or None)
         if url:
             result.url = url
     except ValueError as ex:
@@ -58,6 +57,44 @@ def _get_api_from_url_and_key_or_license(url: str, key: str, license_file: str):
     return result
 
 
+class APISettings(TypedDict):
+    """Dictionary representing the settings required to construct a SkybrushStudioAPI_
+    object instance.
+    """
+
+    url: str
+    """URL of the server to connect to"""
+
+    key: str
+    """API key to include in headers when sending requests to the server"""
+
+
+def _get_api_settings() -> APISettings:
+    """Returns the API-related settings from the global add-on preferences."""
+    from sbstudio.plugin.model.global_settings import get_preferences
+
+    prefs = get_preferences()
+    mode = prefs.operation_mode
+
+    match mode:
+        case "LOCAL":
+            # Local setting uses a fixed URL from localhost
+            url = DEFAULT_SERVER_URL
+
+        case "ADVANCED":
+            # Advanced mode uses whatever the user entered
+            url = str(prefs.server_url).strip()
+
+        case _:
+            # All other modes do not need a server
+            url = ""
+
+    key = str(prefs.api_key).strip() if mode != "LOCAL" else ""
+
+    return {"url": url, "key": key}
+
+
+@only_with_online_access
 def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object.
 
@@ -67,23 +104,8 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     Args:
         check_version: whether to check the version of the backend
     """
-    from sbstudio.plugin.model.global_settings import get_preferences
-    from sbstudio.plugin.plugin_helpers import is_online_access_allowed
-
-    if not is_online_access_allowed():
-        raise NoOnlineAccessAllowedError()
-
-    api_key: str
-    server_url: str
-    license_file: str
-
-    prefs = get_preferences()
-    api_key = str(prefs.api_key).strip()
-    license_file = str(prefs.license_file).strip()
-    server_url = str(prefs.server_url).strip()
-
-    api = _get_api_from_url_and_key_or_license(server_url, api_key, license_file)
-
+    settings = _get_api_settings()
+    api = _get_api_from_url_and_key(**settings)
     if check_version:
         ensure_backend_version(api)
 
@@ -92,7 +114,7 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
 
 @contextmanager
 def call_api_from_blender_operator(
-    operator, what: str = "operation", *, check_version: bool = True
+    operator: Operator, what: str = "operation", *, check_version: bool = True
 ) -> Iterator[SkybrushStudioAPI]:
     """Context manager that yields immediately back to the caller from a
     try-except block, catches all exceptions, and calls the ``report()`` method
@@ -129,6 +151,7 @@ def call_api_from_blender_operator(
         else:
             message = default_message
         operator.report({"ERROR"}, message)
+        raise
     except ConnectionRefusedError:
         operator.report(
             {"ERROR"}, f"{default_message}: Connection refused. Is the server running?"
@@ -139,19 +162,16 @@ def call_api_from_blender_operator(
         # to look up the hostname in the server URL while not being connected
         # to the Internet (or without a DNS server)
         operator.report(
-            f"{default_message}: Could not resolve server URL. Are you connected to the Internet?"
+            {"ERROR"},
+            f"{default_message}: Could not resolve server URL. Are you connected to the Internet?",
         )
+        raise
     except OSError as ex:
         operator.report({"ERROR"}, f"{default_message}: {ex.strerror}")
         raise
-    except Exception:
-        operator.report({"ERROR"}, default_message)
+    except (TaskCancelled, KeyboardInterrupt):
+        operator.report({"ERROR"}, "Operation cancelled by user.")
         raise
-
-
-def set_fallback_api_key(value: str | None) -> None:
-    """Sets the fallback API key to use when the user did not provide one in the
-    add-on preferences.
-    """
-    global _fallback_api_key
-    _fallback_api_key = str(value) if value is not None else ""
+    except Exception as ex:
+        operator.report({"ERROR"}, f"{default_message}: Unexpected error ({ex})")
+        raise

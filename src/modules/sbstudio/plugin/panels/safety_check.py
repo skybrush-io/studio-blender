@@ -47,9 +47,16 @@ class SafetyCheckPanel(Panel):
         row = layout.row()
         row.enabled = safety_check.enabled
 
+        col = row.column()
+
+        # General settings
+
+        if safety_check.enabled:
+            col.prop(safety_check, "marker_size")
+            col.separator()
+
         # Proximity warning widgets
 
-        col = row.column()
         col.prop(safety_check, "proximity_warning_enabled")
         row = col.row()
         row.prop(safety_check, "proximity_warning_threshold", text="", slider=True)

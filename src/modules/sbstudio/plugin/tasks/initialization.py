@@ -74,7 +74,8 @@ def update_pyro_particles_of_drones(*args):
 def regenerate_storyboard_entries_or_transitions(*args):
     """Regenerates storyboard entries or transitions so that
     old files not containing this property have it initialized
-    properly to be used in the light effect's 'attach to' dropdown."""
+    properly to be used in the light effect's 'attach to' dropdown.
+    """
     scene = bpy.context.scene
     if scene and scene.skybrush.storyboard:
         scene.skybrush.storyboard._regenerate_entries_or_transitions()

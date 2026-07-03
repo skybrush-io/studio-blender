@@ -81,3 +81,29 @@ more details.
 
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
+
+## Utility script: light effect preset GIF previews
+
+The repository also contains `etc/scripts/render_light_effect_preset_gifs.py`,
+a helper script that renders animated GIF previews for all built-in light
+effect presets.
+
+The script evaluates each preset on a sunflower-seed drone layout and saves one
+GIF per preset. It also supports options for the output folder, drone count,
+and whether a connector line should be drawn between consecutive drones.
+
+Example usage:
+
+```sh
+uv run --with pillow python etc/scripts/render_light_effect_preset_gifs.py
+```
+
+For instance, to render previews for 100 drones into `tmp/light-effect-gifs/`
+and draw the connector line:
+
+```sh
+uv run --with pillow python etc/scripts/render_light_effect_preset_gifs.py \
+  --output-dir tmp/light-effect-gifs \
+  --drone-count 100 \
+  --draw-connector-line
+```

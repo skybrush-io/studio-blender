@@ -39,6 +39,7 @@ def run_update_pyro_overlay_markers(scene: Scene, depsgraph: Depsgraph) -> None:
         drones = None
 
     if not drones:
+        pyro_control.clear_pyro_overlay_info_blocks()
         pyro_control.clear_pyro_overlay_markers()
         return
 
@@ -53,7 +54,9 @@ def run_update_pyro_overlay_markers(scene: Scene, depsgraph: Depsgraph) -> None:
         info_lines = []
         position = None
         for channel, marker in markers.markers.items():
-            if pyro_control.visualization == "INFO" or marker.is_active_at_frame(
+            if pyro_control.visualization == "INFO":
+                info_lines.append(f"C{channel} F{marker.frame}: {marker.payload.name}")
+            elif pyro_control.visualization == "MARKERS" and marker.is_active_at_frame(
                 frame, fps
             ):
                 if position is None:
@@ -61,9 +64,9 @@ def run_update_pyro_overlay_markers(scene: Scene, depsgraph: Depsgraph) -> None:
                 # TODO: change color with pyro channel
                 color = DEFAULT_PYRO_OVERLAY_MARKER_COLOR
                 overlay_markers.append((position, color))
-                info_lines.append(f"C{channel} F{marker.frame}: {marker.payload.name}")
         if info_lines:
-            assert position is not None
+            if position is None:
+                position = get_position_of_object(drone)
             overlay_info_blocks.append((position, info_lines))
 
     pyro_control.update_pyro_overlay_markers(overlay_markers)

@@ -3,7 +3,13 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, overload
 
-from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    FloatProperty,
+    IntProperty,
+    StringProperty,
+)
 from bpy.types import Context, PropertyGroup
 
 from sbstudio.model.safety_check import SafetyCheckResult
@@ -137,6 +143,14 @@ class SafetyCheckProperties(PropertyGroup):
         description="Minimum altitude of all drones in the current frame",
         unit="LENGTH",
         default=0.0,
+    )
+
+    marker_size = IntProperty(
+        name="Marker size",
+        description="Size of overlay markers for the MARKERS visualization type",
+        min=1,
+        soft_max=50,
+        default=25,
     )
 
     max_altitude = FloatProperty(

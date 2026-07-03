@@ -2,7 +2,7 @@ from collections.abc import Callable, Sequence
 from contextlib import contextmanager
 from functools import partial
 from math import degrees
-from typing import Iterator, overload
+from typing import Iterator, Protocol, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -20,11 +20,22 @@ __all__ = (
 )
 
 
+class PositionEvaluator(Protocol):
+    """A callable that evaluates the positions of Blender objects at a given frame."""
+
+    def __call__(
+        self,
+        objects: Sequence[Object],
+        *,
+        frame: int | None = None,
+    ) -> Sequence[Coordinate3D]: ...
+
+
 @contextmanager
 @with_context
 def create_position_evaluator(
     context: Context | None = None,
-) -> Iterator[Callable[[Sequence[Object]], Sequence[Coordinate3D]]]:
+) -> Iterator[PositionEvaluator]:
     """Context manager that yields a function that allows the user to evaluate
     the position of any Blender object or objects at any given frame.
 
@@ -37,7 +48,7 @@ def create_position_evaluator(
     seek_to = scene.frame_set
 
     try:
-        yield partial(_evaluate_positions_of_objects, seek_to=seek_to)
+        yield partial(_evaluate_positions_of_objects, seek_to=seek_to)  # ty:ignore[invalid-yield]
     finally:
         seek_to(original_frame)
 
@@ -78,7 +89,7 @@ def get_position_of_object(object: Object) -> Coordinate3D:
     Returns:
         location of object in the world frame
     """
-    return tuple(object.matrix_world.translation)  # type: ignore[reportReturnType]
+    return tuple(object.matrix_world.translation)  # ty:ignore[invalid-return-type]
 
 
 def get_xyz_euler_rotation_of_object(object: Object) -> Rotation3D:
@@ -91,7 +102,7 @@ def get_xyz_euler_rotation_of_object(object: Object) -> Rotation3D:
     Returns:
         rotation of object in the world frame, in degrees
     """
-    return tuple(degrees(angle) for angle in object.matrix_world.to_euler("XYZ"))  # type: ignore[invalid-return-type]
+    return tuple(degrees(angle) for angle in object.matrix_world.to_euler("XYZ"))  # ty:ignore[invalid-return-type]
 
 
 def get_quaternion_rotation_of_object(object: Object) -> Quaternion:
@@ -104,7 +115,7 @@ def get_quaternion_rotation_of_object(object: Object) -> Quaternion:
     Returns:
         rotation of object in the world frame, in quaternions.
     """
-    return tuple(object.matrix_world.to_quaternion())  # type: ignore[invalid-return-type]
+    return tuple(object.matrix_world.to_quaternion())  # ty:ignore[invalid-return-type]
 
 
 def get_positions_of_objects_fast(

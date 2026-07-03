@@ -99,7 +99,7 @@ TIP: Make sure that the time intervals of the formations do not overlap and pay 
 
 == 5. Create automatic transitions
 
-Use the btn:[Recalculate transitions] button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will assure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
+Use the btn:[Recalculate transitions] button at the bottom of the Storyboard panel of the Formations tab to create optimal transitions between your formations automatically. This will ensure that all drones from a starting formation are mapped to their optimal matching point in the target formation.
 
 While transitions are created, your drones in the Drones collection will also be attached to all your formations. The animation part of your show is now almost ready...
 
