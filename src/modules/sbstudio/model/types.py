@@ -1,7 +1,20 @@
 from collections.abc import MutableSequence
-from typing import Protocol, Sequence, TypeAlias, overload
+from typing import Mapping, Protocol, Sequence, TypeAlias, overload
 
-__all__ = ("Coordinate3D", "RGBAColor", "Rotation3D")
+__all__ = (
+    "Color",
+    "ColorLike",
+    "Coordinate3D",
+    "Jsonable",
+    "MutableRGBColor",
+    "RGBAColor",
+    "RGBColor",
+    "RGBAColorLike",
+    "RGBColorLike",
+    "Rotation3D",
+    "SupportsForEach",
+    "Quaternion",
+)
 
 
 Coordinate3D: TypeAlias = tuple[float, float, float]
@@ -54,3 +67,9 @@ class SupportsForEach(Protocol):
     @overload
     def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
     def __len__(self) -> int: ...
+
+
+Jsonable: TypeAlias = (
+    int | float | bool | None | str | Sequence["Jsonable"] | Mapping[str, "Jsonable"]
+)
+"""Type alias for types that can be stored in a plain JSON file."""

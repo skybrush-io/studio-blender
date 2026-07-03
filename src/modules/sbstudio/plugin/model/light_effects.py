@@ -35,7 +35,7 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, MutableRGBAColor
+from sbstudio.model.types import Coordinate3D, Jsonable, MutableRGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
@@ -139,9 +139,9 @@ class CustomLightEffectFunction(Protocol):
     ) -> float: ...
 
 
-def dronegroup_active(self, col: Collection) -> bool:
-    main_coll = Collections.find_drone_groups(create=False)
-    return main_coll is not None and col.name in main_coll.children
+def collection_is_drone_group(self, col: Collection) -> bool:
+    drone_groups = Collections.find_drone_groups(create=False)
+    return drone_groups is not None and col.name in drone_groups.children
 
 
 def effect_type_supports_randomization(type: str) -> bool:
@@ -171,11 +171,11 @@ def get_color_function_names(self, context: Context) -> list[tuple[str, str, str
     return [(name, name, "") for name in names]
 
 
-def object_has_mesh_data(self, obj) -> bool:
+def object_has_mesh_data(self, obj: Object) -> bool:
     """Filter function that accepts only those Blender objects that have a mesh
     as their associated data.
     """
-    return obj.data and isinstance(obj.data, Mesh)
+    return isinstance(obj.data, Mesh)
 
 
 def output_type_is_experimental(type: str) -> bool:
@@ -265,7 +265,7 @@ class ColorFunctionProperties(PropertyGroup):
         if name := data.get("name"):
             self.name = name
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> Jsonable:
         # TODO: reading self.name invokes error, but why?:
         # WARN (bpy.rna:1360): pyrna_enum_to_py: current value '0' matches no enum in
         # 'ColorFunctionProperties', '', 'name'
@@ -476,13 +476,13 @@ class LightEffect(PropertyGroup):
         poll=object_has_mesh_data,
     )
 
-    dronegroup = PointerProperty(
+    drone_group = PointerProperty(
         type=Collection,
         name="Drone Group",
         description=(
             "The drones within the drone group will be subject to the influence of the light effect"
         ),
-        poll=dronegroup_active,
+        poll=collection_is_drone_group,
     )
 
     target = EnumProperty(
@@ -866,7 +866,7 @@ class LightEffect(PropertyGroup):
             # Apply the new color with alpha blending
             blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
 
-    def as_dict(self):
+    def as_dict(self) -> Jsonable:
         """Creates a dictionary representation of the light effect."""
         # Hint: synchronize content of this function with self.update_from()
         return {
@@ -879,7 +879,7 @@ class LightEffect(PropertyGroup):
             "outputY": self.output_y,
             "influence": self.influence,
             "meshName": self.mesh.name if self.mesh else None,
-            "dronegroup": self.dronegroup,
+            "droneGroupName": self.drone_group.name if self.drone_group else None,
             "target": self.target,
             "randomness": self.randomness,
             "outputMappingMode": self.output_mapping_mode,
@@ -1047,7 +1047,7 @@ class LightEffect(PropertyGroup):
         self.output_y = other.output_y
         self.influence = other.influence
         self.mesh = other.mesh
-        self.dronegroup = other.dronegroup
+        self.drone_group = other.drone_group
         self.target = other.target
         self.randomness = other.randomness
         self.output_mapping_mode = other.output_mapping_mode
@@ -1103,8 +1103,13 @@ class LightEffect(PropertyGroup):
                 warnings.append(
                     f"Could not import mesh: object {mesh_name!r} is not part of the current file"
                 )
-        if dronegroup := data.get("dronegroup"):
-            self.dronegroup = dronegroup
+        if drone_group_name := data.get("droneGroupName"):
+            if drone_group_name in bpy.data.collections:
+                self.drone_group = bpy.data.collections[drone_group_name]
+            else:
+                warnings.append(
+                    f"Could not import drone group: collection {drone_group_name!r} is not part of the current file"
+                )
         if target := data.get("target"):
             self.target = target
         if randomness := data.get("randomness"):
@@ -1229,8 +1234,8 @@ class LightEffect(PropertyGroup):
             return tree
 
     def _get_drones_in_group(self) -> Set | None:
-        if self.dronegroup:
-            return set(self.dronegroup.objects) or None
+        if self.drone_group:
+            return set(self.drone_group.objects) or None
 
     def _get_plane_from_mesh(self) -> Plane | None:
         """Returns a plane that is an infinite expansion of the first face of the
