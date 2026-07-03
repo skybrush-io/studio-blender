@@ -739,101 +739,102 @@ class LightEffect(PropertyGroup):
                 min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
 
-            if alpha > 0.0:
-                # Calculate the output value of the effect that goes through the color
-                # ramp or image mapper
-                if common_output_x is not None:
-                    output_x = common_output_x
+            if alpha <= 0.0:
+                # Alpha channel is zero so this color will not affect the base color
+                # so we can skip the rest of the calculations
+                new_color[:] = color
+                new_color[3] = 0.0
+                continue
+
+            # Calculate the output value of the effect that goes through the color
+            # ramp or image mapper
+            if common_output_x is not None:
+                output_x = common_output_x
+            else:
+                assert outputs_x is not None
+                # if this specific output is disabled, we
+                # skip the effect
+                if outputs_x[index] is None:
+                    continue
+                output_x = outputs_x[index]
+            assert isinstance(output_x, float)
+
+            # Randomize the output value if needed
+            if self.randomness != 0:
+                offset_x = (random_seq.get_float(index) - 0.5) * self.randomness
+                output_x = (offset_x + output_x) % 1.0
+
+            if color_ramp:
+                new_color[:] = color_ramp.evaluate(output_x)
+
+            elif color_function_ref is not None:
+                try:
+                    new_color[:] = color_function_ref(
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=(
+                            mapping[index] if mapping is not None else None
+                        ),
+                        position=position,
+                        drone_count=num_positions,
+                    )
+                except Exception as exc:
+                    raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
+
+            elif color_image is not None:
+                outputs_y, common_output_y = get_output_based_on_output_type(
+                    self.output, self.output_mapping_mode, self.output_function
+                )
+
+                if common_output_y is not None:
+                    output_y = common_output_y
                 else:
-                    assert outputs_x is not None
+                    assert outputs_y is not None
                     # if this specific output is disabled, we
                     # skip the effect
-                    if outputs_x[index] is None:
+                    if outputs_y[index] is None:
                         continue
-                    output_x = outputs_x[index]
-                assert isinstance(output_x, float)
+                    output_y = outputs_y[index]
+                assert isinstance(output_y, float)
 
-                # Randomize the output value if needed
                 if self.randomness != 0:
-                    offset_x = (random_seq.get_float(index) - 0.5) * self.randomness
-                    output_x = (offset_x + output_x) % 1.0
+                    offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
+                    output_y = (offset_y + output_y) % 1.0
 
-                if color_ramp:
-                    new_color[:] = color_ramp.evaluate(output_x)
+                width, height = color_image.size
+                pixels = self.get_image_pixels()
 
-                elif color_function_ref is not None:
-                    try:
-                        new_color[:] = color_function_ref(
-                            frame=frame,
-                            time_fraction=time_fraction,
-                            drone_index=index,
-                            formation_index=(
-                                mapping[index] if mapping is not None else None
-                            ),
-                            position=position,
-                            drone_count=num_positions,
-                        )
-                    except Exception as exc:
-                        raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
+                x = int(width * output_x) if output_x < 1 else width - 1
+                y = int(height * output_y) if output_y < 1 else height - 1
+                offset = (x + y * width) * 4
+                pixel_color = pixels[offset : offset + 4]
 
-                elif color_image is not None:
-                    outputs_y, common_output_y = get_output_based_on_output_type(
-                        self.output, self.output_mapping_mode, self.output_function
-                    )
-
-                    if common_output_y is not None:
-                        output_y = common_output_y
+                # This check is needed to cater for the cases when the calculated
+                # pixel coordinate is out of the bounds of the image, in which
+                # case get_pixel() returns an empty list or a short list
+                if len(pixel_color) == len(new_color):
+                    # If the conversion to linear space ever becomes a bottleneck,
+                    # we can convert the image in advance when it is stored into
+                    # the pixel cache if we can vectorize the operation somehow
+                    # or offload it to C.
+                    if color_image.colorspace_settings.is_data:
+                        new_color[:] = pixel_color
                     else:
-                        assert outputs_y is not None
-                        # if this specific output is disabled, we
-                        # skip the effect
-                        if outputs_y[index] is None:
-                            continue
-                        output_y = outputs_y[index]
-                    assert isinstance(output_y, float)
-
-                    if self.randomness != 0:
-                        offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
-                        output_y = (offset_y + output_y) % 1.0
-
-                    width, height = color_image.size
-                    pixels = self.get_image_pixels()
-
-                    x = int(width * output_x) if output_x < 1 else width - 1
-                    y = int(height * output_y) if output_y < 1 else height - 1
-                    offset = (x + y * width) * 4
-                    pixel_color = pixels[offset : offset + 4]
-
-                    # This check is needed to cater for the cases when the calculated
-                    # pixel coordinate is out of the bounds of the image, in which
-                    # case get_pixel() returns an empty list or a short list
-                    if len(pixel_color) == len(new_color):
-                        # If the conversion to linear space ever becomes a bottleneck,
-                        # we can convert the image in advance when it is stored into
-                        # the pixel cache if we can vectorize the operation somehow
-                        # or offload it to C.
-                        if color_image.colorspace_settings.is_data:
-                            new_color[:] = pixel_color
-                        else:
-                            match color_image.colorspace_settings.name:
-                                case "sRGB":
-                                    new_color[:] = convert_from_srgb_to_linear(
-                                        pixel_color
-                                    )  # type: ignore
-                                case "Linear Rec.709":
-                                    new_color[:] = pixel_color
-                                case _:
-                                    # Note that we do NOT handle conversion from other color spaces here,
-                                    # just use the colors as they are. If other color spaces are used frequently,
-                                    # explicit conversion needs to be implemented for them as well.
-                                    new_color[:] = pixel_color
-
-                else:
-                    # should not happen
-                    new_color[:] = (1.0, 1.0, 1.0, 1.0)
+                        match color_image.colorspace_settings.name:
+                            case "sRGB":
+                                new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
+                            case "Linear Rec.709":
+                                new_color[:] = pixel_color
+                            case _:
+                                # Note that we do NOT handle conversion from other color spaces here,
+                                # just use the colors as they are. If other color spaces are used frequently,
+                                # explicit conversion needs to be implemented for them as well.
+                                new_color[:] = pixel_color
 
             else:
-                new_color[:] = color
+                # should not happen
+                new_color[:] = (1.0, 1.0, 1.0, 1.0)
 
             new_color[3] *= alpha
 
