@@ -107,10 +107,12 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
                 get_colors_of_drones_fast(drones, dest=arr.ravel())
                 colors: list[MutableRGBAColor] = arr.tolist()
                 for drone, color in zip(drones, colors):
-                    _base_color_cache[id(drone)] = color
+                    _base_color_cache[id(drone)] = tuple(color)  # ty:ignore[invalid-assignment]
             else:
                 # Initialize the colors list from the cached base colors
-                colors = [_base_color_cache.get(id(drone), WHITE) for drone in drones]
+                colors = [
+                    list(_base_color_cache.get(id(drone), WHITE)) for drone in drones
+                ]
 
             changed = True
 
@@ -138,7 +140,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # effect is disabled.
     if not changed and _base_color_cache:
         drones = Collections.find_drones().objects
-        colors = [_base_color_cache.get(id(drone), WHITE) for drone in drones]
+        colors = [_base_color_cache.get(id(drone)) or list(WHITE) for drone in drones]  # ty:ignore[invalid-assignment]
         _base_color_cache.clear()
         changed = True
 
