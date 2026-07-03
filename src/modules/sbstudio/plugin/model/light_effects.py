@@ -724,10 +724,6 @@ class LightEffect(PropertyGroup):
         outputs_x, common_output_x = get_output_based_on_output_type(
             self.output, self.output_mapping_mode, self.output_function
         )
-        if color_image is not None:
-            outputs_y, common_output_y = get_output_based_on_output_type(
-                self.output_y, self.output_mapping_mode_y, self.output_function_y
-            )
 
         # Get the additional predicate required to evaluate whether the effect
         # will be applied at a given position
@@ -736,6 +732,19 @@ class LightEffect(PropertyGroup):
         for index, position in enumerate(positions):
             # Take the base color to modify
             color = colors[index]
+
+            # Calculate the influence of the effect, depending on the fade-in
+            # and fade-out durations and the optional mesh
+            alpha = max(
+                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
+            )
+
+            if alpha <= 0.0:
+                # Alpha channel is zero so this color will not affect the base color
+                # so we can skip the rest of the calculations
+                new_color[:] = color
+                new_color[3] = 0.0
+                continue
 
             # Calculate the output value of the effect that goes through the color
             # ramp or image mapper
@@ -750,33 +759,22 @@ class LightEffect(PropertyGroup):
                 output_x = outputs_x[index]
             assert isinstance(output_x, float)
 
-            if color_image is not None:
-                if common_output_y is not None:
-                    output_y = common_output_y
-                else:
-                    assert outputs_y is not None
-                    # if this specific output is disabled, we
-                    # skip the effect
-                    if outputs_y[index] is None:
-                        continue
-                    output_y = outputs_y[index]
-                assert isinstance(output_y, float)
-
             # Randomize the output value if needed
             if self.randomness != 0:
                 offset_x = (random_seq.get_float(index) - 0.5) * self.randomness
                 output_x = (offset_x + output_x) % 1.0
-                if color_image is not None:
-                    offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
-                    output_y = (offset_y + output_y) % 1.0
 
-            # Calculate the influence of the effect, depending on the fade-in
-            # and fade-out durations and the optional mesh
-            alpha = max(
-                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
-            )
+            # Apply the color ramp, image or function to get the new color. The order
+            # of conditions below is according to their expected frequency of use, with
+            # the most common case first.
+            #
+            # Note that the getters that these values come from are constructed in a
+            # way that they are set to `None` if they are not applicable, so only one of
+            # the branches will apply below.
+            if color_ramp is not None:
+                new_color[:] = color_ramp.evaluate(output_x)
 
-            if color_function_ref is not None:
+            elif color_function_ref is not None:
                 try:
                     new_color[:] = color_function_ref(
                         frame=frame,
@@ -790,7 +788,27 @@ class LightEffect(PropertyGroup):
                     )
                 except Exception as exc:
                     raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
+
             elif color_image is not None:
+                outputs_y, common_output_y = get_output_based_on_output_type(
+                    self.output, self.output_mapping_mode, self.output_function
+                )
+
+                if common_output_y is not None:
+                    output_y = common_output_y
+                else:
+                    assert outputs_y is not None
+                    # if this specific output is disabled, we
+                    # skip the effect
+                    if outputs_y[index] is None:
+                        continue
+                    output_y = outputs_y[index]
+                assert isinstance(output_y, float)
+
+                if self.randomness != 0:
+                    offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
+                    output_y = (offset_y + output_y) % 1.0
+
                 width, height = color_image.size
                 pixels = self.get_image_pixels()
 
@@ -820,8 +838,7 @@ class LightEffect(PropertyGroup):
                                 # just use the colors as they are. If other color spaces are used frequently,
                                 # explicit conversion needs to be implemented for them as well.
                                 new_color[:] = pixel_color
-            elif color_ramp:
-                new_color[:] = color_ramp.evaluate(output_x)
+
             else:
                 # should not happen
                 new_color[:] = (1.0, 1.0, 1.0, 1.0)
@@ -895,8 +912,12 @@ class LightEffect(PropertyGroup):
 
     @property
     def color_function_ref(self) -> Callable | None:
+        """The color function used to calculate the effect, if it exists and is being
+        used according to the type of the effect.
+        """
         if self.type != "FUNCTION" or not self.color_function:
             return None
+
         absolute_path = abspath(self.color_function.path)
         module = load_module(absolute_path)
         return getattr(module, self.color_function.name, None)
