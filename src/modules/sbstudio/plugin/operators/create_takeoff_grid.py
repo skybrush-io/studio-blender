@@ -1,8 +1,9 @@
-from math import ceil
+from math import ceil, radians
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator
+from mathutils import Matrix
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
 
 from sbstudio.model.types import Coordinate3D
@@ -63,6 +64,7 @@ def create_points_of_takeoff_grid(
     intra_slot_spacing_row: float = 0.5,
     intra_slot_spacing_col: float = 0.5,
     takeoff_pod: str = "",
+    takeoff_pod_rotation: float = 0,
 ) -> list[Coordinate3D]:
     """Creates the points of a takeoff grid centered at the given coordinate.
 
@@ -77,6 +79,7 @@ def create_points_of_takeoff_grid(
         intra_slot_spacing_row: the row spacing within a single slot of the grid
         intra_slot_spacing_col: the column spacing within a single slot of the grid
         takeoff_pod: optional takeoff pod mesh name to use at each position as a subgrid
+        takeoff_pod_rotation: optional rotation of the takeoff pod around axis Z, in [rad]
 
     Returns:
         the list of points in the grid
@@ -127,7 +130,10 @@ def create_points_of_takeoff_grid(
     if takeoff_pod and (pod_obj := TakeoffPods.find_pod(takeoff_pod)) is not None:
         vertices = get_vertices_of_object(pod_obj)
         num_drones_per_pod = len(vertices)
-        slot_template = array([v.co[:] for v in vertices])
+        rotation_matrix = Matrix.Rotation(takeoff_pod_rotation, 3, "Z")
+        slot_template = array(
+            [(rotation_matrix @ v.co)[:] for v in vertices], dtype=float
+        )
 
         grid = column_stack((xs, ys, zs))
         coords = repeat(grid, num_drones_per_pod, axis=0)
@@ -281,6 +287,16 @@ class CreateTakeoffGridOperator(Operator):
         update=_handle_takeoff_pod_change,
     )
 
+    takeoff_pod_rotation = FloatProperty(
+        name="Pod rotation",
+        description="Rotation of the takeoff pod around the vertical axis",
+        default=radians(0),
+        soft_min=radians(-180),
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
+
     use_separate_column_spacing = BoolProperty(
         name="Use seperate column spacing",
         default=False,
@@ -365,6 +381,8 @@ class CreateTakeoffGridOperator(Operator):
             pods = Collections.find_takeoff_pods(create=False)
             if pods:
                 layout.prop_search(self, "takeoff_pod", pods, "objects")
+                if self.takeoff_pod:
+                    layout.prop(self, "takeoff_pod_rotation")
 
     def execute(self, context):
         # This code path is invoked after an undo-redo
@@ -404,6 +422,7 @@ class CreateTakeoffGridOperator(Operator):
             intra_slot_spacing_row=self.intra_slot_spacing_row,
             intra_slot_spacing_col=self.intra_slot_spacing_col,
             takeoff_pod=self.takeoff_pod,
+            takeoff_pod_rotation=self.takeoff_pod_rotation,
         )[: self.drones]
 
         settings = context.scene.skybrush.settings
