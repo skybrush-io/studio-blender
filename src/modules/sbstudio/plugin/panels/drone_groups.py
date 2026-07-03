@@ -33,9 +33,14 @@ class DroneGroupsPanel(Panel):
         return bpy.context.mode == "OBJECT" and context.scene.skybrush
 
     def draw(self, context: Context):
+        scene = context.scene
+        settings = scene.skybrush.settings
+
         layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
+        # layout.use_property_split = True
+        # layout.use_property_decorate = False
+
+        layout.prop(settings, "drone_group_collection", text="Stored in")
 
         row = layout.row()
 
