@@ -111,7 +111,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             else:
                 # Initialize the colors list from the cached base colors
                 colors = [
-                    list(_base_color_cache.get(id(drone), WHITE)) for drone in drones
+                    list(_base_color_cache.get(id(drone)) or WHITE) for drone in drones
                 ]
 
             changed = True
@@ -140,7 +140,9 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     # effect is disabled.
     if not changed and _base_color_cache:
         drones = Collections.find_drones().objects
-        colors = [_base_color_cache.get(id(drone)) or list(WHITE) for drone in drones]  # ty:ignore[invalid-assignment]
+        colors = [  # ty:ignore[invalid-assignment]
+            _base_color_cache.get(id(drone)) or list(WHITE) for drone in drones
+        ]
         _base_color_cache.clear()
         changed = True
 
