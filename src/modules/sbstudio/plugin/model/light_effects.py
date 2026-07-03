@@ -764,7 +764,14 @@ class LightEffect(PropertyGroup):
                 offset_x = (random_seq.get_float(index) - 0.5) * self.randomness
                 output_x = (offset_x + output_x) % 1.0
 
-            if color_ramp:
+            # Apply the color ramp, image or function to get the new color. The order
+            # of conditions below is according to their expected frequency of use, with
+            # the most common case first.
+            #
+            # Note that the getters that these values come from are constructed in a
+            # way that they are set to `None` if they are not applicable, so only one of
+            # the branches will apply below.
+            if color_ramp is not None:
                 new_color[:] = color_ramp.evaluate(output_x)
 
             elif color_function_ref is not None:
@@ -905,8 +912,12 @@ class LightEffect(PropertyGroup):
 
     @property
     def color_function_ref(self) -> Callable | None:
+        """The color function used to calculate the effect, if it exists and is being
+        used according to the type of the effect.
+        """
         if self.type != "FUNCTION" or not self.color_function:
             return None
+
         absolute_path = abspath(self.color_function.path)
         module = load_module(absolute_path)
         return getattr(module, self.color_function.name, None)
