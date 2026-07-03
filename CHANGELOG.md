@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The default velocity profile of the takeoff operation got changed to "linear",
+- The default velocity profile of the takeoff operation was changed to "linear",
   while the transition to the first formation is "smooth from right" now. This keeps
   the speed and the minimum distance of the takeoff prodecure transparent on both
   single and multi-layered takeoffs, but might introduce short acceleration spikes
@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   can be set back to "smooth" for backward compatibility.
 
 - The cone template was simplified to use 12 segments only instead of 32.
+
+- Performance improvements to light effects, thanks to [@jefrau](https://github.com/jefrau).
 
 ### Fixed
 
@@ -397,7 +399,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Renderer parameter `min_nav_altitude` got removed as the new release of
+- Renderer parameter `min_nav_altitude` was removed as the new release of
   Skybrush Studio Server does not use it any more. Static starting and ending
   parts are still removed from show trajectories automatically, but now without
   the need of this parameter.
@@ -438,7 +440,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   parameter before creating the first takeoff grid.
 
 - Takeoff grid column spacing can be setup separately from row spacing, if needed.
-  Takeoff grid parameters also got reorganized into basic and advanced groups.
+  Takeoff grid parameters were also reorganized into basic and advanced groups.
 
 ### Fixed
 
@@ -622,7 +624,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The SVG formation generation got a new angle keyword that determines
+- The SVG formation generation received a new angle keyword that determines
   the maximum allowed change of angle at each path node to still treat the path
   around the node to be continuous.
 
