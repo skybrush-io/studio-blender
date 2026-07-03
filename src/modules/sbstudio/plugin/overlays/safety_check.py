@@ -10,12 +10,13 @@ from bpy.types import SpaceView3D
 from gpu_extras.batch import batch_for_shader
 
 from sbstudio.model.types import Coordinate3D, RGBColor
-from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
 from .base import ShaderBatchBasedOverlay
 
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
+
+    from sbstudio.plugin.model.safety_check import SafetyCheckProperties
 
 
 __all__ = ("SafetyCheckOverlay",)
@@ -85,6 +86,15 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             self._markers = None
 
         self.invalidate_shader_batches()
+
+    @property
+    def marker_size(self):
+        context = bpy.context
+        skybrush = getattr(context.scene, "skybrush", None)
+        safety_check: SafetyCheckProperties | None = getattr(
+            skybrush, "safety_check", None
+        )
+        return safety_check.marker_size if safety_check is not None else 30
 
     def draw_2d(self) -> None:
         skybrush = getattr(bpy.context.scene, "skybrush", None)
@@ -244,5 +254,5 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
         return batches
 
     def _prepare_gpu_state(self) -> None:
-        gpu.state.point_size_set(30)
+        gpu.state.point_size_set(self.marker_size)
         gpu.state.line_width_set(5)

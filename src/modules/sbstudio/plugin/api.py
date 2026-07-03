@@ -12,6 +12,7 @@ from sbstudio.api import SkybrushStudioAPI
 from sbstudio.api.version import ensure_backend_version
 from sbstudio.errors import SkybrushStudioError
 
+from .constants import DEFAULT_SERVER_URL
 from .errors import SkybrushStudioExportWarning, TaskCancelled
 from .plugin_helpers import only_with_online_access
 
@@ -61,23 +62,36 @@ class APISettings(TypedDict):
     object instance.
     """
 
-    server_url: str
+    url: str
     """URL of the server to connect to"""
 
-    api_key: str
+    key: str
     """API key to include in headers when sending requests to the server"""
 
 
-def get_api_settings() -> APISettings:
+def _get_api_settings() -> APISettings:
     """Returns the API-related settings from the global add-on preferences."""
     from sbstudio.plugin.model.global_settings import get_preferences
 
     prefs = get_preferences()
+    mode = prefs.operation_mode
 
-    return {
-        "api_key": str(prefs.api_key).strip(),
-        "server_url": str(prefs.server_url).strip(),
-    }
+    match mode:
+        case "LOCAL":
+            # Local setting uses a fixed URL from localhost
+            url = DEFAULT_SERVER_URL
+
+        case "ADVANCED":
+            # Advanced mode uses whatever the user entered
+            url = str(prefs.server_url).strip()
+
+        case _:
+            # All other modes do not need a server
+            url = ""
+
+    key = str(prefs.api_key).strip() if mode != "LOCAL" else ""
+
+    return {"url": url, "key": key}
 
 
 @only_with_online_access
@@ -90,7 +104,7 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     Args:
         check_version: whether to check the version of the backend
     """
-    settings = get_api_settings()
+    settings = _get_api_settings()
     api = _get_api_from_url_and_key(**settings)
     if check_version:
         ensure_backend_version(api)

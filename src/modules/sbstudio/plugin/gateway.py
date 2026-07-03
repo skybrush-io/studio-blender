@@ -5,20 +5,25 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from socket import gaierror
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushGatewayAPI
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.errors import SkybrushStudioError
 
+from .constants import DEFAULT_GATEWAY_URL
 from .errors import TaskCancelled
 from .plugin_helpers import only_with_online_access
 
 if TYPE_CHECKING:
     from bpy.types import Operator
 
-__all__ = ("get_gateway", "call_gateway_from_blender_operator")
+__all__ = (
+    "get_gateway",
+    "get_gateway_if_configured",
+    "call_gateway_from_blender_operator",
+)
 
 T = TypeVar("T")
 
@@ -28,16 +33,55 @@ T = TypeVar("T")
 log = logging.getLogger(__name__)
 
 
+class GatewaySettings(TypedDict):
+    """Dictionary representing the settings required to construct a SkybrushGatewayAPI_
+    object instance.
+    """
+
+    url: str
+    """URL of the gateway to connect to"""
+
+
+def _get_gateway_settings() -> GatewaySettings:
+    """Returns the gateway-related settings from the global add-on preferences."""
+    from sbstudio.plugin.model.global_settings import get_preferences
+
+    prefs = get_preferences()
+    mode = prefs.operation_mode
+
+    match mode:
+        case "CLOUD":
+            # Cloud setting uses a fixed URL from localhost
+            url = DEFAULT_GATEWAY_URL
+
+        case "ADVANCED":
+            # Advanced mode uses whatever the user entered
+            url = str(prefs.gateway_url).strip()
+
+        case _:
+            # All other modes do not need a gateway
+            url = ""
+
+    return {"url": url}
+
+
 @lru_cache(maxsize=1)
-def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI:
+def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI | None:
     """Constructs a Skybrush Gateway API object from a root URL.
 
     Memoized so we do not need to re-construct the same instance as long as
     the user does not change the add-on settings.
 
+    Args:
+        url: the root URL of the gateway API or an empty string if no gateway needs to
+            be used
+
     Raises:
         ValueError: on initialization error
     """
+    if not url:
+        return None
+
     try:
         result = SkybrushGatewayAPI(url=url)
     except ValueError as ex:
@@ -56,24 +100,28 @@ def _get_gateway_from_url(url: str) -> SkybrushGatewayAPI:
     return result
 
 
-@only_with_online_access
 def get_gateway() -> SkybrushGatewayAPI:
     """Returns the singleton instance of the Skybrush Gateway API object.
 
     Raises:
         SkybrushStudioAPIError: if gateway is not configured
     """
-    from sbstudio.plugin.model.global_settings import get_preferences
-
-    prefs = get_preferences()
-    gateway_url = str(prefs.gateway_url).strip()
-
-    if not gateway_url:
+    gateway = get_gateway_if_configured()
+    if gateway is None:
         raise SkybrushStudioAPIError(
             "Skybrush Gateway is not configured in the preferences"
         )
 
-    return _get_gateway_from_url(gateway_url)
+    return gateway
+
+
+@only_with_online_access
+def get_gateway_if_configured() -> SkybrushGatewayAPI | None:
+    """Returns the singleton instance of the Skybrush Gateway API object if it is
+    configured, ``None`` otherwise.
+    """
+    settings = _get_gateway_settings()
+    return _get_gateway_from_url(**settings)
 
 
 @contextmanager

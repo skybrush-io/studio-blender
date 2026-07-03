@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Sequence
 
+import bpy
 import gpu.state
 from gpu_extras.batch import batch_for_shader
 
@@ -12,6 +13,7 @@ from .base import ShaderBatchBasedOverlay
 if TYPE_CHECKING:
     from gpu.types import GPUBatch
 
+    from sbstudio.plugin.model.led_control import LEDControlPanelProperties
 
 __all__ = (
     "LEDsOverlay",
@@ -50,6 +52,15 @@ class LEDsOverlay(ShaderBatchBasedOverlay):
 
         self.invalidate_shader_batches()
 
+    @property
+    def marker_size(self):
+        context = bpy.context
+        skybrush = getattr(context.scene, "skybrush", None)
+        led_control: LEDControlPanelProperties | None = getattr(
+            skybrush, "led_control", None
+        )
+        return led_control.marker_size if led_control is not None else 25
+
     def _create_shader_batches(self) -> list[GPUBatch]:
         assert self._shader is not None
 
@@ -65,4 +76,4 @@ class LEDsOverlay(ShaderBatchBasedOverlay):
         ]
 
     def _prepare_gpu_state(self) -> None:
-        gpu.state.point_size_set(25)
+        gpu.state.point_size_set(self.marker_size)

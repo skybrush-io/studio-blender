@@ -36,6 +36,11 @@ in the material list of the drone mesh. The name of the material starts with
 but you need to keep in mind that *Skybrush Studio for Blender* will always adjust
 the second material.
 
+== Marker size
+
+This options defines the size of the pyro overlay markers if the visualization type 
+is set to Markers. It is hidden otherwise.
+
 == Channel
 
 Multiple pyro channels are supported by our add-on. Channel indexing starts with 1.

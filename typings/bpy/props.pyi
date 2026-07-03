@@ -5,9 +5,9 @@ from bpy.types import bpy_prop_collection_idprop
 _T = TypeVar("_T")
 
 _EnumItem: TypeAlias = (
-    tuple[_T, str, str]
-    | tuple[_T, str, str, int]
-    | tuple[_T, str, str, str, int]
+    tuple[str, str, str]
+    | tuple[str, str, str, int]
+    | tuple[str, str, str, str, int]
     | None
 )
 _PropertyDeferred: TypeAlias = tuple
@@ -29,8 +29,7 @@ def EnumProperty(
     *,
     name: str = ...,
     description: str = ...,
-    items: Sequence[_EnumItem[_T]]
-    | Callable[[Any, Any], Sequence[_EnumItem[_T]]] = ...,
+    items: Sequence[_EnumItem] | Callable[[Any, Any], Sequence[_EnumItem]] = ...,
     default: _T | int = ...,
     options: set[str] = ...,
     update: Callable[[Any, Any], None] | None = ...,

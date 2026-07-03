@@ -20,7 +20,7 @@ from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
 from sbstudio.model.yaw import YawSetpointList
 from sbstudio.plugin.errors import SkybrushStudioExportWarning
-from sbstudio.plugin.gateway import get_gateway
+from sbstudio.plugin.gateway import get_gateway_if_configured
 
 from .base import SkybrushStudioBaseAPI
 from .constants import SKYBRUSH_STUDIO_SERVER_URL
@@ -49,12 +49,13 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
 
     def _sign_request_body(self, data: bytes) -> str | None:
         try:
-            gateway = get_gateway()
+            gateway = get_gateway_if_configured()
         except Exception as ex:
             log.warning(f"Could not find Studio Gateway: {ex}")
             gateway = None
 
         if gateway is None:
+            # Gateway not configured or there was an error
             return None
 
         try:

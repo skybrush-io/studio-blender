@@ -85,17 +85,22 @@ class PyroOverlay(ShaderBatchBasedOverlay):
 
         self.invalidate_shader_batches()
 
+    @property
+    def marker_size(self):
+        context = bpy.context
+        skybrush = getattr(context.scene, "skybrush", None)
+        pyro_control: PyroControlPanelProperties | None = getattr(
+            skybrush, "pyro_control", None
+        )
+        return pyro_control.marker_size if pyro_control is not None else 20
+
     def draw_2d(self) -> None:
         context = bpy.context
         skybrush = getattr(context.scene, "skybrush", None)
         pyro_control: PyroControlPanelProperties | None = getattr(
             skybrush, "pyro_control", None
         )
-        if (
-            not pyro_control
-            or self._info_blocks is None
-            or pyro_control.visualization != "INFO"
-        ):
+        if not pyro_control or not self._info_blocks:
             return
 
         space_data = context.space_data
@@ -160,4 +165,4 @@ class PyroOverlay(ShaderBatchBasedOverlay):
         return batches
 
     def _prepare_gpu_state(self) -> None:
-        gpu.state.point_size_set(20)
+        gpu.state.point_size_set(self.marker_size)

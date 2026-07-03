@@ -14,6 +14,10 @@ image::panels/safety_check/real_time_safety_checks.jpg[Real time safety checks]
 
 The checkbox at the top left corner of the panel allows you to disable the safety checks entirely, although it is advised not to do so. One valid reason for disabling them temporarily is if you feel that the Blender UI has become sluggish and that the safety checks are responsible for that. The safety checks should have negligible impact on the overall performance of Blender so let us know if you found a situation where disabling the safety checks improved Blender's responsiveness significantly.
 
+== Marker size
+
+If safety checks are enabled, you can change the size of the safety overlay markers with the btn:[Marker size] settings.
+
 == Proximity warnings
 
 This option lets you define a minimum safety distance between your drones. If there are drones at the given frame that are closer to each other than this safety distance, you get real-time proximity warnings.

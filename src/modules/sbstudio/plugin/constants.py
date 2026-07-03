@@ -31,6 +31,12 @@ __all__ = ("Collections", "Templates")
 DEFAULT_EMISSION_STRENGTH = 1
 """Default strength of the emission node of the LED material"""
 
+DEFAULT_GATEWAY_URL = "http://localhost:7999"
+"""Default URL for communicating with Skybrush Gateway."""
+
+DEFAULT_SERVER_URL = "http://localhost:8000"
+"""Default URL for communicating with Skybrush Studio Server."""
+
 DEFAULT_STORYBOARD_ENTRY_DURATION = 20
 """Default duration of newly created storyboard entries, in seconds"""
 

@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Breaking change
+
+- The add-on settings panel was re-designed in preparation for Skybrush Studio Cloud.
+  Since we needed to add a new property to the add-on settings, users upgrading to
+  this version of Skybrush Studio for Blender should check the add-on settings and
+  select the appropriate operation mode of the add-on (community server, local server
+  or Skybrush Studio Cloud). The default setting is "Community server", therefore users
+  who use a local Skybrush Studio server instance should change it to "Local server".
+
 ### Added
 
 - Added visualization type selector for LED lights. The new overlay marker based
   visualization can speed up playback and render speed when using light effects.
+
+- Added marker size setting for the MARKERS type pyro and LED visualization and
+  to safety checks.
 
 - Added audio export option to the .skyc exporter, requiring a single .mp3 music
   file to be added as an audio strip in the VSE.
@@ -36,10 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at the start and end of the takeoff. If that is disturbing the velocity profile
   can be set back to "smooth" for backward compatibility.
 
+- The cone template was simplified to use 12 segments only instead of 32.
+
 ### Fixed
 
 - Fixed an exception that happened when switching between files containing video based
   light effects.
+
+- Pyro overlay markers are not drawn any more when visualization type is INFO.
 
 ### Removed
 
