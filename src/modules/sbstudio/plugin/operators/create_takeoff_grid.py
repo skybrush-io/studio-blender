@@ -1,3 +1,5 @@
+from math import ceil
+
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator
@@ -143,6 +145,13 @@ def _get_num_drones_per_pod(operator):
 
     # backwards compatibility
     return 1
+
+
+def _get_number_of_pods(operator):
+    if hasattr(operator, "takeoff_pod") and operator.takeoff_pod:
+        return ceil(operator.drones / _get_num_drones_per_pod(operator))
+
+    return 0
 
 
 def _get_num_drones_per_slot(operator):
@@ -330,7 +339,13 @@ class CreateTakeoffGridOperator(Operator):
         # general settings
         layout.prop(self, "rows")
         layout.prop(self, "columns")
-        layout.prop(self, "drones")
+        num_pods = _get_number_of_pods(self)
+        if num_pods > 0:
+            row = layout.row()
+            row.prop(self, "drones")
+            row.label(text=f"  ({num_pods} pods)")
+        else:
+            layout.prop(self, "drones")
         layout.prop(self, "spacing")
         layout.prop(self, "use_advanced_settings")
         # advanced settings
