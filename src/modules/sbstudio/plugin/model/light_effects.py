@@ -603,7 +603,7 @@ class LightEffect(PropertyGroup):
                         # and distribute them along the color axis proportionally
                         # to the differences between the numeric values of the sort
                         # keys
-                        evaluated_sort_keys = tuple(map(sort_key, order))
+                        evaluated_sort_keys = [sort_key(i) for i in order]
                         min_value, max_value = (
                             min(evaluated_sort_keys),
                             max(evaluated_sort_keys),
@@ -817,7 +817,9 @@ class LightEffect(PropertyGroup):
                         else:
                             match color_image.colorspace_settings.name:
                                 case "sRGB":
-                                    new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
+                                    new_color[:] = convert_from_srgb_to_linear(
+                                        pixel_color
+                                    )  # type: ignore
                                 case "Linear Rec.709":
                                     new_color[:] = pixel_color
                                 case _:
@@ -1204,9 +1206,7 @@ class LightEffect(PropertyGroup):
                 normal = local_to_world.to_3x3() @ polygon.normal
                 center = local_to_world @ polygon.center
                 try:
-                    return Plane.from_normal_and_point(
-                        normal, center
-                    )  # ty:ignore[invalid-argument-type]
+                    return Plane.from_normal_and_point(normal, center)  # ty:ignore[invalid-argument-type]
                 except Exception:
                     # probably all-zero normal vector
                     pass

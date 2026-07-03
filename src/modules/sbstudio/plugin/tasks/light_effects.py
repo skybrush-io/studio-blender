@@ -98,7 +98,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
-            positions = tuple(map(get_position_of_object, drones))
+            positions = [get_position_of_object(drone) for drone in drones]
             mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
@@ -154,13 +154,13 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 def get_base_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the (cached) base color of the drone at the current frame
     before any active light effects are applied on it."""
-    return _base_color_cache.get(id(drone), get_color_of_drone(drone))
+    return _base_color_cache.get(id(drone)) or get_color_of_drone(drone)
 
 
 def get_final_color_of_drone(drone: Object) -> RGBAColor:
     """Returns the (cached) final color of the drone at the current frame
     after all active light effects are applied on it."""
-    return _final_color_cache.get(id(drone), get_base_color_of_drone(drone))
+    return _final_color_cache.get(id(drone)) or get_base_color_of_drone(drone)
 
 
 suspended_light_effects = light_effect_suspension.use
