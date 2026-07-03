@@ -875,7 +875,7 @@ class UIList(bpy_struct):
         context: Context,
         layout: UILayout,
         data: bpy_struct,
-        item: bpy_struct,
+        item,  # leave untyped to allow subclasses to add their own type
         icon: int,
         active_data: bpy_struct,
         active_propname: str,
@@ -890,6 +890,7 @@ class UIList(bpy_struct):
 class UILayout(bpy_struct):
     active: bool
     alert: bool
+    alignment: Literal["EXPAND", "LEFT", "CENTER", "RIGHT"]
     emboss: str
     enabled: bool
     scale_x: float
