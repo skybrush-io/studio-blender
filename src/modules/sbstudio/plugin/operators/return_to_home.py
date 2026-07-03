@@ -3,7 +3,7 @@ from functools import partial
 from math import ceil, sqrt
 
 import bpy
-from bpy.props import BoolProperty, FloatProperty, IntProperty
+from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty
 from bpy.types import Context, Object
 
 from sbstudio.errors import SkybrushStudioError
@@ -134,6 +134,25 @@ class ReturnToHomeOperator(StoryboardOperator):
         default=False,
     )
 
+    # === Starlight: Group selection for Return ===
+    rth_group = EnumProperty(
+        name="Return Group",
+        description=(
+            "Select which drone group should return to home at this time. "
+            "Drones NOT in the selected group will keep their current position. "
+            "Only available with smart RTH. Run this operator multiple times "
+            "(at different start frames, with different groups) to control "
+            "each group's return independently."
+        ),
+        items=[
+            ("ALL", "All drones", "All drones return together (default)", 1),
+            ("BOX", "Box array only", "Only BOX drones return; TRAD drones keep position", 2),
+            ("TRAD", "Traditional array only", "Only TRAD drones return; BOX drones keep position", 3),
+        ],
+        default="ALL",
+        options=set(),
+    )
+
     @classmethod
     def poll(cls, context: Context):
         if not super().poll(context):
@@ -182,6 +201,9 @@ class ReturnToHomeOperator(StoryboardOperator):
             layout.prop(self, "use_smart_rth")
             if use_smart_rth:
                 layout.prop(self, "to_aerial_grid")
+                # === Starlight: Group selection ===
+                layout.separator()
+                layout.prop(self, "rth_group")
 
     def invoke(self, context, event):
         self.start_frame = max(
@@ -238,8 +260,19 @@ class ReturnToHomeOperator(StoryboardOperator):
             operator=self,
         )
 
-        run_rth = self._run_smart_rth if use_smart_rth else self._run_base_rth
-        result = run_rth(storyboard, source=source, target=target, context=context)
+        if use_smart_rth and self.rth_group != "ALL":
+            result = self._run_smart_rth_for_group(
+                storyboard, source=source, target=target, context=context,
+                group=self.rth_group,
+            )
+        elif use_smart_rth:
+            result = self._run_smart_rth(
+                storyboard, source=source, target=target, context=context,
+            )
+        else:
+            result = self._run_base_rth(
+                storyboard, source=source, target=target, context=context,
+            )
 
         # Recalculate the transition leading to the target formation
         bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
@@ -384,6 +417,161 @@ class ReturnToHomeOperator(StoryboardOperator):
                 for keyframe in keyframes:
                     keyframe.interpolation = "LINEAR"
             # Commit the insertions that we've made in "fast" mode
+            for f_curve in f_curves:
+                f_curve.update()
+
+        return True
+
+    def _run_smart_rth_for_group(
+        self,
+        storyboard: Storyboard,
+        *,
+        source: Sequence[Coordinate3D],
+        target: Sequence[Coordinate3D],
+        context: Context,
+        group: str,
+    ) -> bool:
+        """Smart RTH for ONE group only - other groups keep their position.
+
+        Creates a SINGLE storyboard entry tagged with limit_to_group=<group>.
+        Drones not in the selected group simply keep their previous position
+        (no constraint added for them).
+
+        User can run this operator multiple times (with different start frames
+        and groups) to control each group's return independently.
+        """
+        from sbstudio.plugin.utils.drone_groups import get_drone_group
+
+        drones = list(Collections.find_drones().objects)
+        group_idx = [i for i, d in enumerate(drones) if get_drone_group(d) == group]
+
+        if not group_idx:
+            self.report(
+                {"WARNING"},
+                f"No drones tagged as {group}. Falling back to standard smart RTH.",
+            )
+            return self._run_smart_rth(
+                storyboard, source=source, target=target, context=context
+            )
+
+        # Plan and create one entry, with formation containing only this group's
+        # source positions, and limit_to_group set so non-group drones are skipped.
+        group_source = [source[i] for i in group_idx]
+        group_target = [target[i] for i in group_idx]
+        name = f"Smart RTH ({group.title()})"
+
+        return self._create_smart_rth_entry_for_group(
+            storyboard,
+            source=group_source,
+            target=group_target,
+            start_frame=self.start_frame,
+            name=name,
+            group=group,
+            context=context,
+        )
+
+    def _create_smart_rth_entry_for_group(
+        self,
+        storyboard: Storyboard,
+        *,
+        source: Sequence[Coordinate3D],
+        target: Sequence[Coordinate3D],
+        start_frame: int,
+        name: str,
+        group: str,
+        context: Context,
+        purpose: StoryboardEntryPurpose = StoryboardEntryPurpose.UNSPECIFIED,
+    ) -> bool:
+        """Plan smart RTH for a subset of drones and create one storyboard entry.
+
+        Mirrors the core logic of ``_run_smart_rth`` but parameterized for a
+        single drone group:
+        - Calls ``plan_smart_rth`` API on only this group's source/target.
+        - Creates an entry with ``limit_to_group=group`` and the given name.
+        - Animates the entry's formation markers via f-curves.
+        """
+        fps = context.scene.render.fps
+        settings = getattr(context.scene.skybrush, "settings", None)
+        max_acceleration = settings.max_acceleration if settings else 4
+        to_aerial_grid = self._should_return_to_aerial_grid()
+        land_speed = min(self.velocity_z, 0.5)
+        land_duration = 0 if to_aerial_grid else self.altitude / land_speed
+
+        eps = 2e-3
+        with call_api_from_blender_operator(self) as api:
+            plan = api.plan_smart_rth(
+                source,
+                target,
+                max_velocity_xy=self.velocity - eps,
+                max_velocity_z=self.velocity_z - eps,
+                max_acceleration=max_acceleration,
+                min_distance=self.spacing,
+                rth_model="straight_line_with_neck_to_layers"
+                if to_aerial_grid
+                else "straight_line_with_neck",
+            )
+        if not plan.start_times or not plan.durations:
+            return False
+
+        entry = storyboard.add_new_entry(
+            formation=create_formation(name, source),
+            frame_start=start_frame,
+            duration=int(ceil((plan.duration + land_duration) * fps)),
+            select=True,
+            purpose=purpose,
+            context=context,
+        )
+        assert entry is not None
+        entry.limit_to_group = group
+
+        markers = get_markers_from_formation(entry.formation)
+        for marker in markers:
+            assert isinstance(marker, Object)
+            ensure_animation_data_exists_for_object(marker, clean=True)
+
+        for start_time, duration, inner_points, p, q, marker in zip(
+            plan.start_times,
+            plan.durations,
+            plan.inner_points,
+            source,
+            target,
+            markers,
+            strict=True,
+        ):
+            f_curves = []
+            for i in range(3):
+                f_curve = ensure_f_curve_exists_for_data_path_and_index(
+                    marker, data_path="location", index=i
+                )
+                f_curves.append(f_curve)
+            insert = [
+                partial(f_curve.keyframe_points.insert, options={"FAST"})
+                for f_curve in f_curves
+            ]
+            path_points = []
+            if start_time > 0:
+                path_points.append((0, *p))
+            path_points.append((start_time, *p))
+            path_points.extend(tuple(inner_points))
+            path_points.append((start_time + duration, *q))
+            if not to_aerial_grid:
+                path_points.append(
+                    (
+                        start_time + duration + land_duration,
+                        q[0],
+                        q[1],
+                        0,
+                    )
+                )
+            for point in path_points:
+                frame = round(start_frame + point[0] * fps)
+                keyframes = (
+                    insert[0](frame, point[1]),
+                    insert[1](frame, point[2]),
+                    insert[2](frame, point[3]),
+                )
+                for keyframe in keyframes:
+                    keyframe.interpolation = "LINEAR"
             for f_curve in f_curves:
                 f_curve.update()
 

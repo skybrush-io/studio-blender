@@ -19,6 +19,7 @@ from sbstudio.plugin.actions import (
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.keyframes import set_keyframes, update_fcurves
+from sbstudio.plugin.utils.drone_groups import get_participating_indices
 from sbstudio.plugin.model.formation import (
     get_markers_and_related_objects_from_formation,
     get_world_coordinates_of_markers_from_formation,
@@ -236,7 +237,11 @@ def get_coordinates_of_formation(formation, *, frame: int) -> list[tuple[float, 
 
 
 def calculate_mapping_for_transition_into_storyboard_entry(
-    entry: StoryboardEntry, source, *, num_targets: int
+    entry: StoryboardEntry,
+    source,
+    *,
+    num_targets: int,
+    participating_indices: list[int] | None = None,
 ) -> Mapping:
     """Calculates the mapping of source points (i.e. the current positions
     of the drones) and target points (i.e. marker positions for a storyboard
@@ -271,6 +276,14 @@ def calculate_mapping_for_transition_into_storyboard_entry(
 
     result: Mapping = [None] * num_drones
 
+    # Starlight: per-entry drone group filter. Only participating drones are
+    # passed to the matching API; non-participating drones get ``None`` in the
+    # mapping (their constraint will be removed -> they keep position from the
+    # previous entry).
+    if participating_indices is None:
+        participating_indices = list(range(num_drones))
+    filtered_source = [source[i] for i in participating_indices]
+
     # We need to create a transition between the places where the drones
     # are at the end of the previous formation and the points of the
     # current formation
@@ -278,25 +291,27 @@ def calculate_mapping_for_transition_into_storyboard_entry(
         # Auto mapping with our API
         target = get_coordinates_of_formation(formation, frame=entry.frame_start)
         try:
-            match, clearance = get_api().match_points(source, target, radius=0)
+            match, clearance = get_api().match_points(filtered_source, target, radius=0)
         except Exception as ex:
             if not isinstance(ex, SkybrushStudioAPIError):
                 raise SkybrushStudioAPIError from ex
             else:
                 raise
 
-        # At this point we have the inverse mapping: match[i] tells the
-        # index of the drone that the i-th target point was matched to, or
-        # ``None`` if the target point was left unmatched. We need to invert
-        # the mapping
-        for target_index, drone_index in enumerate(match):
-            if drone_index is not None:
-                result[drone_index] = target_index
+        # ``match[target_index]`` is the index of the drone _within the
+        # filtered list_ that was matched to the target, or ``None`` if the
+        # target point was left unmatched. Translate back to global drone
+        # indices.
+        for target_index, filtered_drone_index in enumerate(match):
+            if filtered_drone_index is not None:
+                global_drone_index = participating_indices[filtered_drone_index]
+                result[global_drone_index] = target_index
 
     else:
-        # Manual mapping
-        length = min(num_drones, num_targets)
-        result[:length] = range(length)
+        # Manual mapping: i-th participating drone -> i-th marker
+        length = min(len(participating_indices), num_targets)
+        for i in range(length):
+            result[participating_indices[i]] = i
 
     return result
 
@@ -577,10 +592,16 @@ def update_transition_for_storyboard_entry(
                 f"and the first formation for consistency."
             )
 
+    # Starlight: per-entry drone group filter. Determine which drones
+    # participate in this transition based on ``entry.limit_to_group``.
+    limit = getattr(entry, "limit_to_group", "ALL") or "ALL"
+    participating_indices = get_participating_indices(drones, limit)
+
     mapping = calculate_mapping_for_transition_into_storyboard_entry(
         entry,
         start_points,
         num_targets=num_markers,
+        participating_indices=participating_indices,
     )
 
     # Store mapping in Blender-compatible format for later use
@@ -648,8 +669,17 @@ def update_transition_for_storyboard_entry(
                 # Determine the index of the drone in the departure sequence
                 # so we can look up whether there is an override for it. Note
                 # that we do not need to do this again if we already have the
-                # departure index
-                if departure_index is None:
+                # departure index.
+                #
+                # Starlight: if the entry has a group filter, the
+                # ``previous_mapping`` contains ``None`` for non-participating
+                # drones, which would make ``calculate_departure_index_of_drone``
+                # return 0 for ALL filtered drones, causing schedule overrides
+                # keyed by global drone index to collapse onto a single entry.
+                # When filtered, use the drone's global index directly.
+                if limit != "ALL":
+                    departure_index = drone_index
+                elif departure_index is None:
                     departure_index = calculate_departure_index_of_drone(
                         drone,
                         drone_index,
