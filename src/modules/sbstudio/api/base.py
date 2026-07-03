@@ -6,6 +6,7 @@ from http.client import HTTPResponse
 from io import IOBase, TextIOWrapper
 from json import dumps as json_dumps
 from json import load as json_load
+from json import loads as json_loads
 from pathlib import Path
 from shutil import copyfileobj
 from ssl import CERT_NONE, create_default_context
@@ -264,7 +265,7 @@ class SkybrushStudioBaseAPI:
                     # response body
                     body = "{}"
                 try:
-                    decoded_body = json.loads(body)
+                    decoded_body = json_loads(body)
                 except Exception:
                     # response body is not valid JSON, let's pretend that we
                     # got an empty object
@@ -282,10 +283,20 @@ class SkybrushStudioBaseAPI:
                     "Skybrush Studio Server."
                 ) from None
 
-            # No detailed information about the error so use a generic message
+            # No detailed information about the error so use a generic message.
+            # State that this is probably a server-side issue if the status code
+            # does not start with 4 -- status codes between 400 and 499 are client-side
+            # issues.
             raise SkybrushStudioAPIError(
-                f"{self._http_status[ex.status]} ({ex.status}). "
-                f"This is most likely a server-side issue; please contact us and let us know."
+                f"{self._http_status[ex.status]} ({ex.status})"
+                + (
+                    (
+                        ". This is most likely a server-side issue; please contact us "
+                        "and let us know."
+                    )
+                    if ex.status is None or ex.status < 400 or ex.status > 499
+                    else ""
+                )
             ) from ex
 
     def _sign_request_body(self, data: bytes) -> str | None:

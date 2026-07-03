@@ -104,11 +104,11 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
             if not _base_color_cache:
                 # This is the first time we are evaluating this frame, so fill
                 # the base color cache in parallel to the colors list
-                arr = np.zeros((len(drones), 4), dtype=np.float32)
+                arr = np.empty((len(drones), 4), dtype=np.float32)
                 get_colors_of_drones_fast(drones, dest=arr.ravel())
                 colors: list[MutableRGBAColor] = arr.tolist()
                 for drone, color in zip(drones, colors):
-                    _base_color_cache[id(drone)] = tuple(color)
+                    _base_color_cache[id(drone)] = tuple(color)  # ty:ignore[invalid-assignment]
             else:
                 # Initialize the colors list from the cached base colors
                 colors = [
