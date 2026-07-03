@@ -4,7 +4,7 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from operator import itemgetter
-from typing import Any, Protocol, Set, cast
+from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import bpy
@@ -193,9 +193,7 @@ def output_type_supports_mapping_mode(type: str) -> bool:
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
 
-def test_containment(
-    bvh_tree: BVHTree | None, point: Coordinate3D, drone_obj: Object
-) -> bool:
+def test_containment(bvh_tree: BVHTree | None, point: Coordinate3D) -> bool:
     """Given a point and a BVH-tree, tests whether the point is _probably_
     within the mesh represented by the BVH-tree.
 
@@ -217,16 +215,7 @@ def test_containment(
     return True
 
 
-def test_is_in_dronegroup(drones, point: Coordinate3D, drone_obj: Object) -> bool:
-    if drone_obj in drones:
-        return True
-    else:
-        return False
-
-
-def test_is_in_front_of(
-    plane: Plane | None, point: Coordinate3D, drone_obj: Object
-) -> bool:
+def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
     """Given a point and a plane, tests whether the point is on the front side
     of the plane.
 
@@ -234,10 +223,7 @@ def test_is_in_front_of(
         True if the point is on the front side of the plane or if the plane is
         ``None``
     """
-    if plane:
-        return plane.is_front(point)
-    else:
-        return True
+    return plane is None or plane.is_front(point)
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -465,7 +451,7 @@ class LightEffect(PropertyGroup):
         description="Color function of the light effect",
     )
 
-    mesh = PointerProperty(
+    mesh: Object | None = PointerProperty(
         type=Object,
         name="Mesh",
         description=(
@@ -476,11 +462,12 @@ class LightEffect(PropertyGroup):
         poll=object_has_mesh_data,
     )
 
-    drone_group = PointerProperty(
+    drone_group: Collection | None = PointerProperty(
         type=Collection,
         name="Drone Group",
         description=(
-            "The drones within the drone group will be subject to the influence of the light effect"
+            "Drone group related to the light effect; the light effect will only be "
+            "targeted to the drones in this group"
         ),
         poll=collection_is_drone_group,
     )
@@ -497,7 +484,6 @@ class LightEffect(PropertyGroup):
             ("ALL", "All drones", "", 1),
             ("INSIDE_MESH", "Inside the mesh", "", 2),
             ("FRONT_SIDE", "Front side of plane", "", 3),
-            ("DRONE_GROUP", "Drone group", "", 4),
         ],
         default="ALL",
     )
@@ -758,13 +744,17 @@ class LightEffect(PropertyGroup):
                 self.output_y, self.output_mapping_mode_y, self.output_function_y
             )
 
+        # Get the set of drones that the effect is targeting (if applicable)
+        targeted_drones = self._get_drones_in_group()
+
         # Get the additional predicate required to evaluate whether the effect
         # will be applied at a given position
         condition = self._get_spatial_effect_predicate()
 
         for index, position in enumerate(positions):
-            # Drone object
-            drone = drones[index]
+            # Check containment of drone in the associated drone group
+            if targeted_drones is not None and drones[index] not in targeted_drones:
+                continue
 
             # Take the base color to modify
             color = colors[index]
@@ -805,9 +795,7 @@ class LightEffect(PropertyGroup):
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
             alpha = max(
-                min(
-                    self._evaluate_influence_at(drone, position, frame, condition), 1.0
-                ),
+                min(self._evaluate_influence_at(position, frame, condition), 1.0),
                 0.0,
             )
 
@@ -1172,7 +1160,6 @@ class LightEffect(PropertyGroup):
 
     def _evaluate_influence_at(
         self,
-        drone,
         position,
         frame: int,
         condition: Callable[[Coordinate3D], bool] | None,
@@ -1187,7 +1174,7 @@ class LightEffect(PropertyGroup):
                 with the position; otherwise the effect will not be applied at all
         """
         # Apply mesh containment constraint
-        if condition and not condition(position, drone):
+        if condition and not condition(position):
             return 0.0
 
         influence = self.influence
@@ -1233,9 +1220,13 @@ class LightEffect(PropertyGroup):
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
 
-    def _get_drones_in_group(self) -> Set | None:
-        if self.drone_group:
-            return set(self.drone_group.objects) or None
+    def _get_drones_in_group(self) -> set[Object] | None:
+        """Returns the set of drones in the drone group associated to this light effect,
+        or `None` if the light effect has no associated drone group.
+
+        Note that the function returns an empty set for empty drone groups.
+        """
+        return set(self.drone_group.objects) if self.drone_group is not None else None
 
     def _get_plane_from_mesh(self) -> Plane | None:
         """Returns a plane that is an infinite expansion of the first face of the
@@ -1261,12 +1252,6 @@ class LightEffect(PropertyGroup):
         elif self.target == "FRONT_SIDE":
             plane = self._get_plane_from_mesh()
             func = partial(test_is_in_front_of, plane)
-        elif self.target == "DRONE_GROUP":
-            drones_in_group = self._get_drones_in_group()
-            if drones_in_group:
-                func = partial(test_is_in_dronegroup, drones_in_group)
-            else:
-                func = None
         else:
             func = None
 

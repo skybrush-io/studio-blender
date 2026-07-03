@@ -171,7 +171,7 @@ class LightEffectsPanel(Panel):
             col.prop(entry, "fade_out_duration")
             col.separator()
             col.prop(entry, "mesh")
-            col.prop(entry, "dronegroup")
+            col.prop(entry, "drone_group")
             col.separator()
             if entry.type == "COLOR_RAMP" or entry.type == "IMAGE":
                 col.prop(entry, "output")
