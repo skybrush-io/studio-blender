@@ -11,7 +11,9 @@ from typing import (
 )
 
 import bpy
-from bpy.types import Collection
+from bpy.types import Collection, Object
+
+from sbstudio.plugin.objects import create_object
 
 from .materials import create_colored_material, create_glowing_material
 from .meshes import create_cone, create_icosphere
@@ -70,6 +72,9 @@ class Collections:
     FORMATIONS: ClassVar[str] = "Formations"
     """Name of the collection that holds the formations"""
 
+    TAKEOFF_PODS: ClassVar[str] = "Takeoff pods"
+    """Name of the collection that holds predefined takeoff pod layouts"""
+
     TEMPLATES: ClassVar[str] = "Templates"
     """Name of the collection that holds the object templates"""
 
@@ -108,6 +113,18 @@ class Collections:
     @classmethod
     def find_formations(cls, *, create: bool = True):
         return cls._find(cls.FORMATIONS, create=create)
+
+    @classmethod
+    @overload
+    def find_takeoff_pods(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_takeoff_pods(cls, *, create: bool) -> Collection | None: ...
+
+    @classmethod
+    def find_takeoff_pods(cls, *, create: bool = True):
+        return cls._find(cls.TAKEOFF_PODS, create=create)
 
     @classmethod
     @overload
@@ -208,6 +225,87 @@ class Formations:
             )
         else:
             return None
+
+
+class TakeoffPods:
+    DRONEMAX: ClassVar[str] = "DroneMax"
+    """Name of the DroneMax takeoff pod object, containing 8 vertices."""
+
+    @classmethod
+    def create_takeoff_pods(cls) -> None:
+        """Creates the predefined takeoff pod template objects."""
+        takeoff_pods = Collections.find_takeoff_pods()
+        coll = takeoff_pods.objects
+
+        for name, factory in zip(
+            [
+                cls.DRONEMAX,
+                # TODO: add more templates from more manufacturers
+            ],
+            [
+                cls._create_dronemax_pod,
+                # TODO: add more templates from more manufacturers
+            ],
+            strict=True,
+        ):
+            ensure_object_exists_in_collection(coll, name, factory)
+
+    @classmethod
+    def find_pod(cls, name: str) -> Object | None:
+        """Returns the mesh object associated with the given takeoff pod,
+        or `None` if no such takeoff pod template exists.
+
+        Args:
+            name: the name of the pod to search for
+
+        Returns:
+            the pod object with the given name
+        """
+        takeoff_pods = Collections.find_takeoff_pods(create=False)
+        if takeoff_pods:
+            coll = takeoff_pods.objects
+            return get_object_in_collection(coll, name, default=None)
+        else:
+            return None
+
+    @staticmethod
+    def _create_dronemax_pod():
+        verts = [
+            (-0.18, -0.545, 0.0),
+            (0.18, -0.545, 0.0),
+            (-0.18, -0.215, 0.0),
+            (0.18, -0.215, 0.0),
+            (-0.18, 0.165, 0.0),
+            (0.18, 0.165, 0.0),
+            (-0.18, 0.495, 0.0),
+            (0.18, 0.495, 0.0),
+        ]
+        edges = []
+        faces = []
+        mesh = bpy.data.meshes.new(TakeoffPods.DRONEMAX)
+        mesh.from_pydata(verts, edges, faces)
+        mesh.update()
+        object = create_object(TakeoffPods.DRONEMAX, mesh)
+        TakeoffPods._prepare_new_pod_object(object)
+        return object
+
+    @staticmethod
+    def _prepare_new_pod_object(object) -> None:
+        """Prepares a new pod object for the takeoff pods collection."""
+        # We remove the object from all collections it is in.
+        for collection in bpy.data.collections:
+            if object.name in collection.objects:
+                collection.objects.unlink(object)
+        if object.name in bpy.context.scene.collection.objects:
+            bpy.context.scene.collection.objects.unlink(object)
+
+        # Hide the object from the viewport and the render
+        object.hide_viewport = True
+        object.hide_select = True
+        object.hide_render = True
+
+        # Make sure that the object is not selected
+        object.select_set(False)
 
 
 class Templates:

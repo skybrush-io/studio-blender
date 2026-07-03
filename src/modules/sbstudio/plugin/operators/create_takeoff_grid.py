@@ -1,14 +1,15 @@
 import bpy
-from bpy.props import BoolProperty, FloatProperty, IntProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.colors import create_keyframe_for_color_of_drone
-from sbstudio.plugin.constants import Collections, Formations, Templates
+from sbstudio.plugin.constants import Collections, Formations, TakeoffPods, Templates
 from sbstudio.plugin.materials import get_material_for_pyro
 from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
 from sbstudio.plugin.model.storyboard import StoryboardEntryPurpose, get_storyboard
+from sbstudio.plugin.objects import get_vertices_of_object
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_pyro_material_from_drone_template,
 )
@@ -59,6 +60,7 @@ def create_points_of_takeoff_grid(
     spacing_col: float = 1,
     intra_slot_spacing_row: float = 0.5,
     intra_slot_spacing_col: float = 0.5,
+    takeoff_pod: str = "",
 ) -> list[Coordinate3D]:
     """Creates the points of a takeoff grid centered at the given coordinate.
 
@@ -72,6 +74,7 @@ def create_points_of_takeoff_grid(
         spacing_col: the column spacing of points in the grid
         intra_slot_spacing_row: the row spacing within a single slot of the grid
         intra_slot_spacing_col: the column spacing within a single slot of the grid
+        takeoff_pod: optional takeoff pod mesh name to use at each position as a subgrid
 
     Returns:
         the list of points in the grid
@@ -118,7 +121,28 @@ def create_points_of_takeoff_grid(
         coords += tile(template, (columns * rows, 1))
         xs, ys, zs = coords[:, 0], coords[:, 1], coords[:, 2]
 
+    # Finally, multiple the entire grid with the takeoff pods
+    if takeoff_pod and (pod_obj := TakeoffPods.find_pod(takeoff_pod)) is not None:
+        vertices = get_vertices_of_object(pod_obj)
+        num_drones_per_pod = len(vertices)
+        slot_template = array([v.co[:] for v in vertices])
+
+        grid = column_stack((xs, ys, zs))
+        coords = repeat(grid, num_drones_per_pod, axis=0)
+        coords += tile(slot_template, (len(grid), 1))
+        xs, ys, zs = coords[:, 0], coords[:, 1], coords[:, 2]
+
     return list(zip(xs, ys, zs))
+
+
+def _get_num_drones_per_pod(operator):
+    if hasattr(operator, "takeoff_pod"):
+        pod_obj = TakeoffPods.find_pod(operator.takeoff_pod)
+        if pod_obj is not None:
+            return max(1, len(get_vertices_of_object(pod_obj)))
+
+    # backwards compatibility
+    return 1
 
 
 def _get_num_drones_per_slot(operator):
@@ -144,7 +168,13 @@ def _get_num_drones_per_slot_col(operator):
 
 
 def _get_max_possible_drone_count(operator):
-    return operator.rows * operator.columns * _get_num_drones_per_slot(operator)
+
+    return (
+        operator.rows
+        * operator.columns
+        * _get_num_drones_per_slot(operator)
+        * _get_num_drones_per_pod(operator)
+    )
 
 
 def _ensure_rows_columns_and_counts_consistent(operator, context):
@@ -166,6 +196,10 @@ def _handle_drone_count_change(operator, context):
 
 
 def _handle_drones_per_slot_change(operator, context):
+    _ensure_rows_columns_and_counts_consistent(operator, context)
+
+
+def _handle_takeoff_pod_change(operator, context):
     _ensure_rows_columns_and_counts_consistent(operator, context)
 
 
@@ -230,6 +264,13 @@ class CreateTakeoffGridOperator(Operator):
     )
 
     # advanced parameters below
+
+    takeoff_pod = StringProperty(
+        name="Takeoff pod",
+        description="Select a predefined takeoff pod template to use at each point of the main grid",
+        default="",
+        update=_handle_takeoff_pod_change,
+    )
 
     use_separate_column_spacing = BoolProperty(
         name="Use seperate column spacing",
@@ -305,6 +346,10 @@ class CreateTakeoffGridOperator(Operator):
             layout.prop(self, "drones_per_slot_col")
             layout.prop(self, "intra_slot_spacing_row")
             layout.prop(self, "intra_slot_spacing_col")
+            # takeoff pods
+            pods = Collections.find_takeoff_pods(create=False)
+            if pods:
+                layout.prop_search(self, "takeoff_pod", pods, "objects")
 
     def execute(self, context):
         # This code path is invoked after an undo-redo
@@ -312,6 +357,9 @@ class CreateTakeoffGridOperator(Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        # make sure predefined takeoff pods are created before we
+        # invoke the takeoff grid operator
+        TakeoffPods.create_takeoff_pods()
         return context.window_manager.invoke_props_dialog(self)
         # The code below is used to trigger the settings panel in the lower
         # left hand corner, see:
@@ -340,6 +388,7 @@ class CreateTakeoffGridOperator(Operator):
             else self.spacing,
             intra_slot_spacing_row=self.intra_slot_spacing_row,
             intra_slot_spacing_col=self.intra_slot_spacing_col,
+            takeoff_pod=self.takeoff_pod,
         )[: self.drones]
 
         settings = context.scene.skybrush.settings
