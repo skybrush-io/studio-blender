@@ -91,9 +91,8 @@ def setup_takeoff_pods(*args):
     can add their own pods or select from predefined ones.
     """
     takeoff_pods = Collections.find_takeoff_pods(create=True)
-    scene = bpy.context.scene
-    if takeoff_pods and scene:
-        link_object_to_scene(takeoff_pods, scene=scene, allow_nested=True)
+    if takeoff_pods:
+        link_object_to_scene(takeoff_pods, allow_nested=True)
         TakeoffPods.create_takeoff_pods()
 
 
