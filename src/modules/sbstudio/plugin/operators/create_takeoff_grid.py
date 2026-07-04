@@ -390,9 +390,6 @@ class CreateTakeoffGridOperator(Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        # make sure predefined takeoff pods are created before we
-        # invoke the takeoff grid operator
-        TakeoffPods.create_takeoff_pods()
         return context.window_manager.invoke_props_dialog(self)
         # The code below is used to trigger the settings panel in the lower
         # left hand corner, see:
