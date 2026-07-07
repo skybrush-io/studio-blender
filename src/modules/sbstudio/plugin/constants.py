@@ -228,8 +228,11 @@ class Formations:
 
 
 class TakeoffPods:
-    DRONEMAX: ClassVar[str] = "DroneMax"
-    """Name of the DroneMax takeoff pod object, containing 8 vertices."""
+    DRONEMAX: ClassVar[str] = "DroneMax (2x4)"
+    """Name of the DroneMax takeoff pod object, containing 2x4 vertices."""
+
+    LIGHT_DYNAMIX_PIXEL: ClassVar[str] = "LightDynamix Pixel (2x3)"
+    """Name of the LightDynamix Pixel takeoff pod object, containing 2x3 vertices."""
 
     @classmethod
     def create_takeoff_pods(cls) -> None:
@@ -240,10 +243,12 @@ class TakeoffPods:
         for name, factory in zip(
             [
                 cls.DRONEMAX,
+                cls.LIGHT_DYNAMIX_PIXEL,
                 # TODO: add more templates from more manufacturers
             ],
             [
                 cls._create_dronemax_pod,
+                cls._create_light_dynamix_pixel_pod,
                 # TODO: add more templates from more manufacturers
             ],
             strict=True,
@@ -270,7 +275,7 @@ class TakeoffPods:
 
     @staticmethod
     def _create_dronemax_pod():
-        verts = [
+        vertices = [
             (-0.18, -0.545, 0.0),
             (0.18, -0.545, 0.0),
             (-0.18, -0.215, 0.0),
@@ -280,18 +285,36 @@ class TakeoffPods:
             (-0.18, 0.495, 0.0),
             (0.18, 0.495, 0.0),
         ]
-        edges = []
-        faces = []
-        mesh = bpy.data.meshes.new(TakeoffPods.DRONEMAX)
-        mesh.from_pydata(verts, edges, faces)
-        mesh.update()
-        object = create_object(TakeoffPods.DRONEMAX, mesh)
-        TakeoffPods._prepare_new_pod_object(object)
-        return object
+        return TakeoffPods._prepare_new_pod_object(TakeoffPods.DRONEMAX, vertices)
 
     @staticmethod
-    def _prepare_new_pod_object(object) -> None:
-        """Prepares a new pod object for the takeoff pods collection."""
+    def _create_light_dynamix_pixel_pod():
+        vertices = [
+            (-0.175, -0.35, 0.0),
+            (0.175, -0.35, 0.0),
+            (-0.175, 0, 0.0),
+            (0.175, 0, 0.0),
+            (-0.175, 0.35, 0.0),
+            (0.175, 0.35, 0.0),
+        ]
+        return TakeoffPods._prepare_new_pod_object(
+            TakeoffPods.LIGHT_DYNAMIX_PIXEL, vertices
+        )
+
+    @staticmethod
+    def _prepare_new_pod_object(
+        name: str, vertices: list[tuple[float, float, float]]
+    ) -> Object:
+        """Prepares a new pod object from vertices for the takeoff pods collection."""
+
+        # create object from raw vertices
+        edges = []
+        faces = []
+        mesh = bpy.data.meshes.new(name)
+        mesh.from_pydata(vertices, edges, faces)
+        mesh.update()
+        object = create_object(name, mesh)
+
         # We remove the object from all collections it is in.
         for collection in bpy.data.collections:
             if object.name in collection.objects:
@@ -306,6 +329,8 @@ class TakeoffPods:
 
         # Make sure that the object is not selected
         object.select_set(False)
+
+        return object
 
 
 class Templates:
