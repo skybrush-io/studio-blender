@@ -16,26 +16,26 @@ For a regular takeoff grid you can define the number of rows and columns, the ex
 
 For advanced settings enable the btn:[Advanced] checkbox.
 
-If you wish to have a separate column and row spacing for your basic takeoff grid, enable the btn:[Use separate column spacing] checkbox and
-setup a separate column spacing.
+If you wish to have a separate column and row spacing for your basic takeoff grid, enable the btn:[Use separate column spacing] checkbox and setup a separate column spacing.
 
-If you wish to take off (and land) in layers, you can also define a more complex takeoff grid with slots, where each slot contains more than one drone with typically, but not necessarily smaller spacing (see the *Intra-slot* parameters). With such a takeoff grid it will be guaranteed that only one drone will takeoff from (and land to) every slot at a time, using layered takeoff and land operations automatically.
+You can also define a more complex takeoff grid with slots, where each slot contains more than one drone with typically, but not necessarily smaller spacing (see the *Intra-slot* parameters).
+
+TIP: Once the takeoff grid is created, you are free to modify the "Takeoff grid" formation to rearrange the placement of the drones using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions by simply changing the takeoff positions in the "Takeoff grid" formation.
 
 The *Create takeoff grid* operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you need for your drone show, adds the first "Takeoff grid" entry to the storyboard and initializes your drones in the 3D Viewport editor.
 
-TIP: Once the takeoff grid is created, you are free to modify the "Takeoff grid" formation to rearrange the placement of the drones using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions by simply changing the takeoff positions in the "Takeoff grid" formation.
 
 == Takeoff
 
 The btn:[Takeoff] button adds a takeoff maneuver to a specified altitude and with a specified _average_ vertical velocity from your initial takeoff grid. The start frame of the maneuver can be customized, although it is usually the same as the first frame of the scene.
 
-If the minimum distance between drones in the takeoff grid is smaller than the given spacing parameter, the takeoff is automatically performed in layers with no drones closer to each other than the spacing.
+If the minimum distance between drones in the takeoff grid is smaller than the spacing parameter of the btn:[Takeoff] operator, a layered takeoff procedure is generated automatically. This procedure ensures that no two drones come closer to each other, either within a layer or between layers, than the specified spacing. Furthermore, the order of the layers is optimized to minimize the effects of drone downwash, making the takeoff procedure as safe as possible.
 
-In such cases (i.e., when you set a small spacing parameter or the takeoff grid was created with more than one drones per slot), use the *layer height* parameter to setup the altitude difference between additional target layers above the default layer during the layered takeoff operation.
+If you need a greater distance between takeoff layers than the specified takeoff spacing, use the *Layer height* parameter to define an explicit altitude difference between the default layer and any additional target layers above during the layered takeoff procedure.
 
 image::panels/formations/takeoff.jpg[Takeoff]
 
-This button should ideally be pressed right after the takeoff grid is created, but before any other formations are added. It is also possible to use the operator later after having defined the first few formations, but you must ensure that there is enough time before the first formation to perform the takeoff _and_ get to the first formation in time.
+The btn:[Takeoff] button should ideally be pressed right after the takeoff grid is created, but before any other formations are added. It is also possible to use the operator later after having defined the first few formations, but you must ensure that there is enough time before the first formation to perform the takeoff _and_ get to the first formation in time.
 
 NOTE: Skybrush requires you to specify the _average_ vertical velocity of the drones during takeoff. This lets you gauge easily how much time the takeoff will need (e.g., taking off to 6 meters with an average velocity of 1.5 m/s takes 4 seconds), but since the drones need time to accelerate and decelerate, their _maximum_ vertical velocity will be higher than the average velocity to compensate for the time lost during acceleration and deceleration. Make sure to take this into account in order not to overshoot the vertical velocity limits of the drones.
 
