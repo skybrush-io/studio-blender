@@ -1,14 +1,18 @@
+from math import ceil, radians
+
 import bpy
-from bpy.props import BoolProperty, FloatProperty, IntProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import Operator
+from mathutils import Matrix
 from numpy import array, column_stack, mgrid, repeat, tile, zeros
 
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.colors import create_keyframe_for_color_of_drone
-from sbstudio.plugin.constants import Collections, Formations, Templates
+from sbstudio.plugin.constants import Collections, Formations, TakeoffPods, Templates
 from sbstudio.plugin.materials import get_material_for_pyro
 from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
 from sbstudio.plugin.model.storyboard import StoryboardEntryPurpose, get_storyboard
+from sbstudio.plugin.objects import get_vertices_of_object
 from sbstudio.plugin.operators.detach_materials_from_template import (
     detach_pyro_material_from_drone_template,
 )
@@ -59,6 +63,8 @@ def create_points_of_takeoff_grid(
     spacing_col: float = 1,
     intra_slot_spacing_row: float = 0.5,
     intra_slot_spacing_col: float = 0.5,
+    takeoff_pod: str = "",
+    takeoff_pod_rotation: float = 0,
 ) -> list[Coordinate3D]:
     """Creates the points of a takeoff grid centered at the given coordinate.
 
@@ -72,6 +78,8 @@ def create_points_of_takeoff_grid(
         spacing_col: the column spacing of points in the grid
         intra_slot_spacing_row: the row spacing within a single slot of the grid
         intra_slot_spacing_col: the column spacing within a single slot of the grid
+        takeoff_pod: optional takeoff pod mesh name to use at each position as a subgrid
+        takeoff_pod_rotation: optional rotation of the takeoff pod around axis Z, in [rad]
 
     Returns:
         the list of points in the grid
@@ -118,7 +126,38 @@ def create_points_of_takeoff_grid(
         coords += tile(template, (columns * rows, 1))
         xs, ys, zs = coords[:, 0], coords[:, 1], coords[:, 2]
 
+    # Finally, multiple the entire grid with the takeoff pods
+    if takeoff_pod and (pod_obj := TakeoffPods.find_pod(takeoff_pod)) is not None:
+        vertices = get_vertices_of_object(pod_obj)
+        num_drones_per_pod = len(vertices)
+        rotation_matrix = Matrix.Rotation(takeoff_pod_rotation, 3, "Z")
+        slot_template = array(
+            [(rotation_matrix @ v.co)[:] for v in vertices], dtype=float
+        )
+
+        grid = column_stack((xs, ys, zs))
+        coords = repeat(grid, num_drones_per_pod, axis=0)
+        coords += tile(slot_template, (len(grid), 1))
+        xs, ys, zs = coords[:, 0], coords[:, 1], coords[:, 2]
+
     return list(zip(xs, ys, zs))
+
+
+def _get_num_drones_per_pod(operator):
+    if hasattr(operator, "takeoff_pod"):
+        pod_obj = TakeoffPods.find_pod(operator.takeoff_pod)
+        if pod_obj is not None:
+            return max(1, len(get_vertices_of_object(pod_obj)))
+
+    # backwards compatibility
+    return 1
+
+
+def _get_number_of_pods(operator):
+    if hasattr(operator, "takeoff_pod") and operator.takeoff_pod:
+        return ceil(operator.drones / _get_num_drones_per_pod(operator))
+
+    return 0
 
 
 def _get_num_drones_per_slot(operator):
@@ -144,7 +183,13 @@ def _get_num_drones_per_slot_col(operator):
 
 
 def _get_max_possible_drone_count(operator):
-    return operator.rows * operator.columns * _get_num_drones_per_slot(operator)
+
+    return (
+        operator.rows
+        * operator.columns
+        * _get_num_drones_per_slot(operator)
+        * _get_num_drones_per_pod(operator)
+    )
 
 
 def _ensure_rows_columns_and_counts_consistent(operator, context):
@@ -166,6 +211,10 @@ def _handle_drone_count_change(operator, context):
 
 
 def _handle_drones_per_slot_change(operator, context):
+    _ensure_rows_columns_and_counts_consistent(operator, context)
+
+
+def _handle_takeoff_pod_change(operator, context):
     _ensure_rows_columns_and_counts_consistent(operator, context)
 
 
@@ -231,6 +280,23 @@ class CreateTakeoffGridOperator(Operator):
 
     # advanced parameters below
 
+    takeoff_pod = StringProperty(
+        name="Takeoff pod",
+        description="Select a predefined takeoff pod template to use at each point of the main grid",
+        default="",
+        update=_handle_takeoff_pod_change,
+    )
+
+    takeoff_pod_rotation = FloatProperty(
+        name="Pod rotation",
+        description="Rotation of the takeoff pod around the vertical axis",
+        default=radians(0),
+        soft_min=radians(-180),
+        soft_max=radians(180),
+        step=100,  # Note that while min and max are expressed in radians, step must be expressed in 100*degrees to work properly
+        unit="ROTATION",
+    )
+
     use_separate_column_spacing = BoolProperty(
         name="Use seperate column spacing",
         default=False,
@@ -289,7 +355,13 @@ class CreateTakeoffGridOperator(Operator):
         # general settings
         layout.prop(self, "rows")
         layout.prop(self, "columns")
-        layout.prop(self, "drones")
+        num_pods = _get_number_of_pods(self)
+        if num_pods > 0:
+            row = layout.row()
+            row.prop(self, "drones")
+            row.label(text=f"  ({num_pods} pods)")
+        else:
+            layout.prop(self, "drones")
         layout.prop(self, "spacing")
         layout.prop(self, "use_advanced_settings")
         # advanced settings
@@ -305,6 +377,12 @@ class CreateTakeoffGridOperator(Operator):
             layout.prop(self, "drones_per_slot_col")
             layout.prop(self, "intra_slot_spacing_row")
             layout.prop(self, "intra_slot_spacing_col")
+            # takeoff pods
+            pods = Collections.find_takeoff_pods(create=False)
+            if pods:
+                layout.prop_search(self, "takeoff_pod", pods, "objects")
+                if self.takeoff_pod:
+                    layout.prop(self, "takeoff_pod_rotation")
 
     def execute(self, context):
         # This code path is invoked after an undo-redo
@@ -340,6 +418,8 @@ class CreateTakeoffGridOperator(Operator):
             else self.spacing,
             intra_slot_spacing_row=self.intra_slot_spacing_row,
             intra_slot_spacing_col=self.intra_slot_spacing_col,
+            takeoff_pod=self.takeoff_pod,
+            takeoff_pod_rotation=self.takeoff_pod_rotation,
         )[: self.drones]
 
         settings = context.scene.skybrush.settings

@@ -354,7 +354,9 @@ class Mesh(ID):
     edges: bpy_prop_collection[MeshEdge]
     polygons: bpy_prop_collection[MeshPolygon]
 
+    def from_pydata(self, vertices, edges, faces, shade_flat=True) -> None: ...
     def transform(self, matrix: Matrix, shape_keys: bool = False) -> None: ...
+    def update(self) -> None: ...
 
 class NodeTree(ID):
     nodes: bpy_prop_collection[Node]

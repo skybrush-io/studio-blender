@@ -4,7 +4,8 @@ from random import randint
 
 import bpy
 
-from sbstudio.plugin.constants import RANDOM_SEED_MAX, Collections
+from sbstudio.plugin.constants import RANDOM_SEED_MAX, Collections, TakeoffPods
+from sbstudio.plugin.objects import link_object_to_scene
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 
@@ -81,6 +82,20 @@ def regenerate_storyboard_entries_or_transitions(*args):
         scene.skybrush.storyboard._regenerate_entries_or_transitions()
 
 
+def setup_takeoff_pods(*args):
+    """Creates the "Takeoff pods" collection and generates predefined pods.
+
+    Note that we need to create this collection earlier than the others
+    that are only created in prepare.py, as the Takeoff pods collection
+    is needed in advance, before takeoff grid creation, so that users
+    can add their own pods or select from predefined ones.
+    """
+    takeoff_pods = Collections.find_takeoff_pods(create=True)
+    if takeoff_pods:
+        link_object_to_scene(takeoff_pods, allow_nested=True)
+        TakeoffPods.create_takeoff_pods()
+
+
 def _config_logging(*args):
     import logging
 
@@ -109,6 +124,7 @@ class InitializationTask(Task):
             setup_random_seed,
             update_pyro_particles_of_drones,
             regenerate_storyboard_entries_or_transitions,
+            setup_takeoff_pods,
             # enable this below for neat logs
             # _config_logging,
             perform_migrations,
