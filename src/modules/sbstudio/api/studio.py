@@ -592,6 +592,30 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             inner_points=list(inner_points),
         )
 
+    def plan_takeoff(
+        self,
+        points: Sequence[Coordinate3D],
+        *,
+        min_distance: float,
+    ) -> list[int]:
+        """Decomposes a set of points into multiple groups for layered takeoff,
+        ensuring that the minimum distance of points within the same group is at
+        least as large as the given threshold and that the downwash between layers
+        is minimized.
+        """
+        data = {
+            "version": 1,
+            "min_distance": float(min_distance),
+            "points": points,
+        }
+        with self._send_request("operations/plan-takeoff", json=data) as response:
+            result = response.as_json()
+
+        if result.get("version") != 1:
+            raise SkybrushStudioAPIError("invalid response version")
+
+        return result.get("groups")
+
     def plan_transition(
         self,
         source: Sequence[Coordinate3D],
