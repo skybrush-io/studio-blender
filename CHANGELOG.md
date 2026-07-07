@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Performance improvements to light effects, thanks to [@jefrau](https://github.com/jefrau).
 
-- Takeoff layer planner uses downwash minimization through a new dedicated api call.
+- Takeoff layer planner uses downwash minimization through a new dedicated API call.
   Thanks for the idea to [@PeiYi](https://github.com/UavShow/).
 
 ### Fixed
