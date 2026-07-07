@@ -44,6 +44,8 @@ include::pages/panels/skybrush/show.adoc[]
 
 include::pages/panels/skybrush/swarm.adoc[]
 
+include::pages/panels/skybrush/drone_groups.adoc[]
+
 :leveloffset: -1
 
 include::pages/panels/formations.adoc[]

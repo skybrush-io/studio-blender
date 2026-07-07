@@ -8,7 +8,7 @@ image::panels/swarm/swarm.jpg[Swarm panel]
 
 == Drone collection
 
-Click on the btn:[Drones] button to select the collection that is your primary source of your drone objects. By default you do not have to change this setting, the btn:[Create Takeoff Grid] button below will create a "Drones" collection and set it as your primary source automatically.
+Click on the btn:[Drone collection] dropdown to select the collection that is your primary source of your drone objects. By default you do not have to change this setting, the btn:[Create Takeoff Grid] button below will create a "Drones" collection and set it as your primary source automatically.
 
 IMPORTANT: Any mesh that is placed in the collection selected here will be treated as a drone by *Skybrush Studio*, and it may adjust the constraints and other properties of the mesh as needed when performing certain operations. Make sure that there are no other objects in the collection that you select here, only the ones that you want to consider drones.
 

@@ -9,6 +9,7 @@
 *** xref:panels/skybrush/setup.adoc[Setup panel]
 *** xref:panels/skybrush/show.adoc[Show panel]
 *** xref:panels/skybrush/swarm.adoc[Swarm panel]
+*** xref:panels/skybrush/drone_groups.adoc[Drone groups]
 ** xref:panels/formations.adoc[Formations tab]
 *** xref:panels/formations/formations.adoc[Formations panel]
 *** xref:panels/formations/storyboard.adoc[Storyboard panel]
