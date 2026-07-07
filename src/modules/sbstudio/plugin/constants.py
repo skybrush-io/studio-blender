@@ -72,7 +72,7 @@ class Collections:
     FORMATIONS: ClassVar[str] = "Formations"
     """Name of the collection that holds the formations"""
 
-    TAKEOFF_PODS: ClassVar[str] = "Takeoff pods"
+    TAKEOFF_PODS: ClassVar[str] = "Takeoff Pods"
     """Name of the collection that holds predefined takeoff pod layouts"""
 
     TEMPLATES: ClassVar[str] = "Templates"
