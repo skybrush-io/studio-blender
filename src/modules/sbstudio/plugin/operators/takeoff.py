@@ -1,11 +1,17 @@
+import logging
 from math import ceil, inf
+from typing import Sequence
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
 from bpy.types import Context
 
+from sbstudio.api import SkybrushStudioAPI
+from sbstudio.api.types import Version
+from sbstudio.api.version import is_backend_version_at_least
 from sbstudio.errors import SkybrushStudioError
 from sbstudio.math.nearest_neighbors import find_nearest_neighbors
+from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections, Formations
 from sbstudio.plugin.model.formation import (
@@ -27,6 +33,11 @@ from sbstudio.plugin.utils.evaluator import create_position_evaluator
 from .base import StoryboardOperator
 
 __all__ = ("TakeoffOperator",)
+
+#############################################################################
+# configure logger
+
+log = logging.getLogger(__name__)
 
 
 def use_custom_spacing_updated(self, context: Context):
@@ -366,14 +377,10 @@ def create_helper_formation_for_takeoff_and_landing(
     _, _, dist = find_nearest_neighbors(source)
     if dist < min_distance:
         if operator is not None:
-            with call_api_from_blender_operator(operator, "point decomposition") as api:
-                groups = api.decompose_points(
-                    source, min_distance=min_distance, method="greedy"
-                )
+            with call_api_from_blender_operator(operator, "takeoff planner") as api:
+                groups = plan_takeoff_with_api(source, min_distance, api)
         else:
-            groups = get_api().decompose_points(
-                source, min_distance=min_distance, method="greedy"
-            )
+            groups = plan_takeoff_with_api(source, min_distance, get_api())
     else:
         # We can save an API call here
         groups = [0] * len(source)
@@ -387,3 +394,19 @@ def create_helper_formation_for_takeoff_and_landing(
     ]
 
     return source, target, groups
+
+
+def plan_takeoff_with_api(
+    source: Sequence[Coordinate3D], min_distance: float, api: SkybrushStudioAPI
+) -> list[int]:
+    if is_backend_version_at_least(Version(2, 43, 0), api=api):
+        return api.plan_takeoff(source, min_distance=min_distance)
+    else:
+        groups = api.decompose_points(
+            source, min_distance=min_distance, method="greedy"
+        )
+        if any(groups):
+            log.warning(
+                "Update your Studio Server to the latest version to plan takeoff with downwash minimization between layers"
+            )
+        return groups
