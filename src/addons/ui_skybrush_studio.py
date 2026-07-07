@@ -48,12 +48,14 @@ for candidate in candidates:
 
 from sbstudio.i18n.translations import translations_dict
 from sbstudio.plugin.lists import (
+    SKYBRUSH_UL_dronegrouplist,
     SKYBRUSH_UL_lightfxlist,
     SKYBRUSH_UL_scheduleoverridelist,
 )
 from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.model import (
     ColorFunctionProperties,
+    DroneGroupsProperties,
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
     DroneShowAddonObjectProperties,
@@ -81,8 +83,11 @@ from sbstudio.plugin.operators import (
     AddMarkersFromSVGOperator,
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromZippedDSSOperator,
+    AddSelectedDronesToDroneGroupOperator,
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
+    ClearDroneGroupOperator,
+    CreateDroneGroupOperator,
     CreateFormationOperator,
     CreateLightEffectOperator,
     CreateNewScheduleOverrideEntryOperator,
@@ -113,6 +118,7 @@ from sbstudio.plugin.operators import (
     RecalculateTransitionsOperator,
     RefreshFileFormatsOperator,
     RegisterHardwareIDOperator,
+    RemoveDroneGroupOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
     RemoveScheduleOverrideEntryOperator,
@@ -121,6 +127,7 @@ from sbstudio.plugin.operators import (
     ReturnToHomeOperator,
     RunAllMigrationOperators,
     RunFullProximityCheckOperator,
+    SelectDronesFromDroneGroup,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     SetGatewayURLOperator,
@@ -146,6 +153,7 @@ from sbstudio.plugin.operators import (
     VVIZExportOperator,
 )
 from sbstudio.plugin.panels import (
+    DroneGroupsPanel,
     DroneShowAddonObjectPropertiesPanel,
     ExportPanel,
     FormationsPanel,
@@ -190,6 +198,7 @@ from sbstudio.plugin.tasks import (
 
 types = (
     FormationsPanelProperties,
+    DroneGroupsProperties,
     ColorFunctionProperties,
     ScheduleOverride,
     StoryboardEntry,
@@ -276,12 +285,21 @@ operators = (
     RegisterHardwareIDOperator,
     RunAllMigrationOperators,
     SetupSceneOperator,
+    AddSelectedDronesToDroneGroupOperator,
+    CreateDroneGroupOperator,
+    RemoveDroneGroupOperator,
+    ClearDroneGroupOperator,
+    SelectDronesFromDroneGroup,
 )
 """Operators in this addon; operators that require other operators must come
 later in the list than their dependencies."""
 
 
-lists = (SKYBRUSH_UL_lightfxlist, SKYBRUSH_UL_scheduleoverridelist)
+lists = (
+    SKYBRUSH_UL_dronegrouplist,
+    SKYBRUSH_UL_lightfxlist,
+    SKYBRUSH_UL_scheduleoverridelist,
+)
 """List widgets in this addon."""
 
 menus = (GenerateMarkersMenu,)
@@ -293,6 +311,7 @@ panels = (
     SwarmPanel,
     FormationsPanel,
     StoryboardEditor,
+    DroneGroupsPanel,
     TransitionEditorFromCurrentFormation,
     TransitionEditorIntoCurrentFormation,
     LEDControlPanel,

@@ -19,6 +19,7 @@ from bpy.props import (
     StringProperty,
 )
 from bpy.types import (
+    Collection,
     ColorRamp,
     Context,
     Image,
@@ -34,8 +35,8 @@ from mathutils.bvhtree import BVHTree
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, MutableRGBAColor
-from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
+from sbstudio.model.types import Coordinate3D, Jsonable, MutableRGBAColor
+from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
@@ -138,6 +139,11 @@ class CustomLightEffectFunction(Protocol):
     ) -> float: ...
 
 
+def collection_is_drone_group(self, col: Collection) -> bool:
+    drone_groups = Collections.find_drone_groups(create=False)
+    return drone_groups is not None and col.name in drone_groups.children
+
+
 def effect_type_supports_randomization(type: str) -> bool:
     """Returns whether the light effect type given in the argument supports
     randomization.
@@ -165,11 +171,11 @@ def get_color_function_names(self, context: Context) -> list[tuple[str, str, str
     return [(name, name, "") for name in names]
 
 
-def object_has_mesh_data(self, obj) -> bool:
+def object_has_mesh_data(self, obj: Object) -> bool:
     """Filter function that accepts only those Blender objects that have a mesh
     as their associated data.
     """
-    return obj.data and isinstance(obj.data, Mesh)
+    return isinstance(obj.data, Mesh)
 
 
 def output_type_is_experimental(type: str) -> bool:
@@ -217,10 +223,7 @@ def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
         True if the point is on the front side of the plane or if the plane is
         ``None``
     """
-    if plane:
-        return plane.is_front(point)
-    else:
-        return True
+    return plane is None or plane.is_front(point)
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -248,7 +251,7 @@ class ColorFunctionProperties(PropertyGroup):
         if name := data.get("name"):
             self.name = name
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> Jsonable:
         # TODO: reading self.name invokes error, but why?:
         # WARN (bpy.rna:1360): pyrna_enum_to_py: current value '0' matches no enum in
         # 'ColorFunctionProperties', '', 'name'
@@ -448,7 +451,7 @@ class LightEffect(PropertyGroup):
         description="Color function of the light effect",
     )
 
-    mesh = PointerProperty(
+    mesh: Object | None = PointerProperty(
         type=Object,
         name="Mesh",
         description=(
@@ -459,12 +462,22 @@ class LightEffect(PropertyGroup):
         poll=object_has_mesh_data,
     )
 
+    drone_group: Collection | None = PointerProperty(
+        type=Collection,
+        name="Drone Group",
+        description=(
+            "Drone group related to the light effect; the light effect will only be "
+            "targeted to the drones in this group"
+        ),
+        poll=collection_is_drone_group,
+    )
+
     target = EnumProperty(
         name="Target",
         description=(
             "Specifies whether to apply this light effect to all drones or only"
             " to those drones that are inside the given mesh or are in front of"
-            " the plane of the first face of the mesh. See also the 'Invert'"
+            " the plane of the first face of the mesh or are in drone group. See also the 'Invert'"
             " property"
         ),
         items=[
@@ -513,6 +526,7 @@ class LightEffect(PropertyGroup):
     def apply_on_colors(
         self,
         colors: Sequence[MutableRGBAColor],
+        drones: Sequence[Object],
         positions: Sequence[Coordinate3D],
         mapping: list[int] | None,
         *,
@@ -524,6 +538,7 @@ class LightEffect(PropertyGroup):
 
         Parameters:
             colors: the colors to modify in-place
+            drones: the drone objects
             positions: the spatial positions of the drones having the given
                 colors in 3D space
             mapping: optional mapping of positions to match colors;
@@ -725,11 +740,18 @@ class LightEffect(PropertyGroup):
             self.output, self.output_mapping_mode, self.output_function
         )
 
+        # Get the set of drones that the effect is targeting (if applicable)
+        targeted_drones = self._get_drones_in_group()
+
         # Get the additional predicate required to evaluate whether the effect
         # will be applied at a given position
         condition = self._get_spatial_effect_predicate()
 
         for index, position in enumerate(positions):
+            # Check containment of drone in the associated drone group
+            if targeted_drones is not None and drones[index] not in targeted_drones:
+                continue
+
             # Take the base color to modify
             color = colors[index]
 
@@ -848,7 +870,7 @@ class LightEffect(PropertyGroup):
             # Apply the new color with alpha blending
             blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
 
-    def as_dict(self):
+    def as_dict(self) -> Jsonable:
         """Creates a dictionary representation of the light effect."""
         # Hint: synchronize content of this function with self.update_from()
         return {
@@ -861,6 +883,7 @@ class LightEffect(PropertyGroup):
             "outputY": self.output_y,
             "influence": self.influence,
             "meshName": self.mesh.name if self.mesh else None,
+            "droneGroupName": self.drone_group.name if self.drone_group else None,
             "target": self.target,
             "randomness": self.randomness,
             "outputMappingMode": self.output_mapping_mode,
@@ -1032,6 +1055,7 @@ class LightEffect(PropertyGroup):
         self.output_y = other.output_y
         self.influence = other.influence
         self.mesh = other.mesh
+        self.drone_group = other.drone_group
         self.target = other.target
         self.randomness = other.randomness
         self.output_mapping_mode = other.output_mapping_mode
@@ -1086,6 +1110,13 @@ class LightEffect(PropertyGroup):
             else:
                 warnings.append(
                     f"Could not import mesh: object {mesh_name!r} is not part of the current file"
+                )
+        if drone_group_name := data.get("droneGroupName"):
+            if drone_group_name in bpy.data.collections:
+                self.drone_group = bpy.data.collections[drone_group_name]
+            else:
+                warnings.append(
+                    f"Could not import drone group: collection {drone_group_name!r} is not part of the current file"
                 )
         if target := data.get("target"):
             self.target = target
@@ -1148,7 +1179,10 @@ class LightEffect(PropertyGroup):
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
     def _evaluate_influence_at(
-        self, position, frame: int, condition: Callable[[Coordinate3D], bool] | None
+        self,
+        position,
+        frame: int,
+        condition: Callable[[Coordinate3D], bool] | None,
     ) -> float:
         """Eveluates the effective influence of the effect on the given position
         in space and at the given frame.
@@ -1205,6 +1239,14 @@ class LightEffect(PropertyGroup):
                     b_mesh.transform(mesh.matrix_world)
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
+
+    def _get_drones_in_group(self) -> set[Object] | None:
+        """Returns the set of drones in the drone group associated to this light effect,
+        or `None` if the light effect has no associated drone group.
+
+        Note that the function returns an empty set for empty drone groups.
+        """
+        return set(self.drone_group.objects) if self.drone_group is not None else None
 
     def _get_plane_from_mesh(self) -> Plane | None:
         """Returns a plane that is an infinite expansion of the first face of the

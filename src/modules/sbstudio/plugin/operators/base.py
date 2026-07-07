@@ -24,6 +24,7 @@ from sbstudio.plugin.actions import (
     ensure_f_curve_exists_for_data_path_and_index,
 )
 from sbstudio.plugin.errors import StoryboardValidationError
+from sbstudio.plugin.model.drone_groups import DroneGroupsProperties, get_drone_groups
 from sbstudio.plugin.model.formation import (
     add_points_to_formation,
     get_markers_from_formation,
@@ -140,6 +141,35 @@ class StoryboardEntryOperator(Operator):
     def execute_on_storyboard_entry(
         self, entry: StoryboardEntry | None, context: Context
     ):
+        raise NotImplementedError
+
+
+class DroneGroupOperator(Operator):
+    """Operator mixin that allows an operator to be executed if we have a
+    selected drone group in the drone groups panel.
+    """
+
+    @classmethod
+    def poll(cls, context: Context):
+        return (
+            context.scene.skybrush
+            and context.scene.skybrush.drone_groups
+            and context.scene.skybrush.drone_groups.active_group
+        )
+
+    def execute(self, context: Context):
+        drone_groups = get_drone_groups(context=context)
+
+        group = drone_groups.active_group
+        if group is None:
+            self.report({"ERROR"}, "No drone group selected")
+            return {"CANCELLED"}
+
+        return self.execute_on_drone_group(group, drone_groups, context)
+
+    def execute_on_drone_group(
+        self, group: Collection, drone_groups: DroneGroupsProperties, context: Context
+    ) -> set[str]:
         raise NotImplementedError
 
 

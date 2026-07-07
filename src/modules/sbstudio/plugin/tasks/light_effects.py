@@ -98,6 +98,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         if drones is None:
             # The only allocations should be concentrated here
             drones = Collections.find_drones().objects
+            drones_tuple = tuple(drones.values())
             positions = [get_position_of_object(drone) for drone in drones]
             mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
             if not _base_color_cache:
@@ -120,6 +121,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 
         effect.apply_on_colors(
             colors,
+            drones=drones_tuple,
             positions=positions,
             mapping=mapping,
             frame=frame,

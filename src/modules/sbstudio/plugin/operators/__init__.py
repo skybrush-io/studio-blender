@@ -1,5 +1,6 @@
 """Blender operators registered by Skybrush Studio for Blender."""
 
+from .add_drones_selected_to_drone_group import AddSelectedDronesToDroneGroupOperator
 from .add_markers_from_qr_code import AddMarkersFromQRCodeOperator
 from .add_markers_from_static_csv import AddMarkersFromStaticCSVOperator
 from .add_markers_from_svg import AddMarkersFromSVGOperator
@@ -7,6 +8,8 @@ from .add_markers_from_zipped_csv import AddMarkersFromZippedCSVOperator
 from .add_markers_from_zipped_dss import AddMarkersFromZippedDSSOperator
 from .append_formation_to_storyboard import AppendFormationToStoryboardOperator
 from .apply_color import ApplyColorsToSelectedDronesOperator
+from .clear_drone_group import ClearDroneGroupOperator
+from .create_drone_group import CreateDroneGroupOperator
 from .create_formation import CreateFormationOperator
 from .create_light_effect import CreateLightEffectOperator
 from .create_new_schedule_override_entry import CreateNewScheduleOverrideEntryOperator
@@ -44,6 +47,7 @@ from .prepare import PrepareSceneOperator
 from .recalculate_transitions import RecalculateTransitionsOperator
 from .refresh_file_formats import RefreshFileFormatsOperator
 from .register_hardware_id import RegisterHardwareIDOperator
+from .remove_drone_group import RemoveDroneGroupOperator
 from .remove_formation import RemoveFormationOperator
 from .remove_light_effect import RemoveLightEffectOperator
 from .remove_schedule_override_entry import RemoveScheduleOverrideEntryOperator
@@ -52,6 +56,7 @@ from .reorder_formation_markers import ReorderFormationMarkersOperator
 from .return_to_home import ReturnToHomeOperator
 from .run_all_migrations import RunAllMigrationOperators
 from .run_full_proximity_check import RunFullProximityCheckOperator
+from .select_drones_from_drone_group import SelectDronesFromDroneGroup
 from .select_formation import DeselectFormationOperator, SelectFormationOperator
 from .select_storyboard_entry import SelectStoryboardEntryForCurrentFrameOperator
 from .set_gateway_url import SetGatewayURLOperator
@@ -81,8 +86,11 @@ __all__ = (
     "AddMarkersFromSVGOperator",
     "AddMarkersFromZippedCSVOperator",
     "AddMarkersFromZippedDSSOperator",
+    "AddSelectedDronesToDroneGroupOperator",
     "AppendFormationToStoryboardOperator",
     "ApplyColorsToSelectedDronesOperator",
+    "ClearDroneGroupOperator",
+    "CreateDroneGroupOperator",
     "CreateFormationOperator",
     "CreateLightEffectOperator",
     "CreateNewScheduleOverrideEntryOperator",
@@ -113,6 +121,8 @@ __all__ = (
     "RecalculateTransitionsOperator",
     "RefreshFileFormatsOperator",
     "RegisterHardwareIDOperator",
+    "RemoveDroneGroupOperator",
+    "RemoveDronesFromDroneGroupOperator",
     "RemoveFormationOperator",
     "RemoveLightEffectOperator",
     "RemoveScheduleOverrideEntryOperator",
@@ -121,6 +131,7 @@ __all__ = (
     "ReturnToHomeOperator",
     "RunAllMigrationOperators",
     "RunFullProximityCheckOperator",
+    "SelectDronesFromDroneGroup",
     "SelectFormationOperator",
     "SelectStoryboardEntryForCurrentFrameOperator",
     "SetLightEffectEndFrameOperator",

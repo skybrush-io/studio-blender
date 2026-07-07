@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import bpy
-from bpy.types import UIList
+from bpy.types import Context, UILayout, UIList, bpy_struct
 
-if TYPE_CHECKING:
-    from bpy.types import Context
-
-    from sbstudio.plugin.model.light_effects import LightEffect
+from sbstudio.plugin.model.light_effects import LightEffect
 
 __all__ = ("SKYBRUSH_UL_lightfxlist",)
 
@@ -19,13 +14,14 @@ class SKYBRUSH_UL_lightfxlist(UIList):
     def draw_item(
         self,
         context: Context,
-        layout,
-        data,
+        layout: UILayout,
+        data: bpy_struct,
         item: LightEffect,
-        icon,
-        active_data,
-        active_propname,
-        index,
+        icon: int,
+        active_data: bpy_struct,
+        active_propname: str,
+        index: int = 0,
+        flt_flag: int = 0,
     ):
         if self.layout_type in {"DEFAULT", "COMPACT"}:
             frame = context.scene.frame_current
@@ -37,15 +33,14 @@ class SKYBRUSH_UL_lightfxlist(UIList):
 
             checkbox = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
             row.prop(item, "enabled", emboss=False, text="", icon=checkbox)
-
             row.prop(item, "name", text="", emboss=False)
 
             if item.contains_frame(frame):
-                icon = "SEQUENCE_COLOR_04" if item.enabled else "SEQUENCE_COLOR_03"
+                item_icon = "SEQUENCE_COLOR_04" if item.enabled else "SEQUENCE_COLOR_03"
                 if bpy.app.version >= (4, 4, 0):
-                    icon = icon.replace("SEQUENCE_", "STRIP_")
+                    item_icon = item_icon.replace("SEQUENCE_", "STRIP_")
 
-                row.label(text="", translate=False, icon=icon)
+                row.label(text="", translate=False, icon=item_icon)
 
         elif self.layout_type in {"GRID"}:
             # Removed in Blender 5 but we need to keep it for backward compatibility

@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from bpy.types import Context, UILayout, UIList, bpy_struct
+from bpy.types import Collection, Context, UILayout, UIList, bpy_struct
 
-from sbstudio.plugin.model.storyboard import ScheduleOverride
-
-__all__ = ("SKYBRUSH_UL_scheduleoverridelist",)
+__all__ = ("SKYBRUSH_UL_dronegrouplist",)
 
 
-class SKYBRUSH_UL_scheduleoverridelist(UIList):
-    """Customized Blender UI list for transition schedule overrides."""
+class SKYBRUSH_UL_dronegrouplist(UIList):
+    """Customized Blender UI list for drone groups that also show the group size."""
 
     def draw_item(
         self,
         context: Context,
         layout: UILayout,
         data: bpy_struct,
-        item: ScheduleOverride,
+        item: Collection,
         icon: int,
         active_data: bpy_struct,
         active_propname: str,
@@ -29,6 +27,10 @@ class SKYBRUSH_UL_scheduleoverridelist(UIList):
             # Removed in Blender 5 but we need to keep it for backward compatibility
             layout.alignment = "CENTER"
 
-        checkbox = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
-        layout.prop(item, "enabled", emboss=False, text="", icon=checkbox)
-        layout.label(text=item.label)
+        split = layout.split(factor=0.9)
+        split.prop(item, "name", text="", emboss=False, icon="OUTLINER_OB_POINTCLOUD")
+
+        right = split.row()
+        right.alignment = "RIGHT"
+        right.enabled = False
+        right.label(text=str(len(item.objects)), translate=False)
