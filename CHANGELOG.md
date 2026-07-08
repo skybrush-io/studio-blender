@@ -39,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that they may break or their behaviour might change in the future at any time. A
   separate entry will be added in the changelog when they are considered final.
 
+- Added support for drone groups, with a new "Drone Groups" panel on the Skybrush tab
+  and a "Drone group" selector for light effects.
+
 ### Changed
 
 - The default velocity profile of the takeoff operation was changed to "linear",
