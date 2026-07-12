@@ -146,7 +146,7 @@ def get_material_for_pyro(drone) -> Material | None:
 
 def detach_pyro_material_from_drone_template(
     drone, template_material: Material | None = None
-) -> None:
+) -> Material | None:
     if template_material is None:
         from .constants import Templates
 
