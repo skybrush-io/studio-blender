@@ -74,20 +74,14 @@ class ColorCache:
     """Index of the last frame that was evaluated with `update_light_effects()`"""
 
     _session: LightEffectUpdateSession
+    """The light effect update session that allows the user to apply light effects
+    on the current array of drones and base colors, and to retrieve the final colors
+    and the color updates to perform at the end.
+    """
 
     def __init__(self):
         self._base_colors = {}
         self._session = LightEffectUpdateSession(self)
-
-    def clear_final_colors(self) -> LightEffectUpdate:
-        """Clears the final color cache.
-
-        Returns:
-            a no-op light effect update object
-        """
-        assert not self._session.active
-        self._session.reset()
-        return LightEffectUpdate.NOP
 
     def get_base_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) base color of the drone at the current frame
@@ -103,15 +97,23 @@ class ColorCache:
         result = final_colors.get(id(drone)) if final_colors else None
         return result or self.get_base_color_of_drone(drone)
 
+    def run_empty_session(self) -> LightEffectUpdate:
+        """Runs an empty update session that keeps each drone at its base color in the
+        current frame.
+
+        Returns:
+            a no-op light effect update object
+        """
+        self._ensure_session_not_running()
+        self._session.reset()
+        return LightEffectUpdate.NOP
+
     @contextmanager
     def start_updates(
         self, scene: Scene, frame: int
     ) -> Iterator[LightEffectUpdateSession]:
         """Starts a new update session for the given frame."""
-        if self._session.active:
-            raise RuntimeError(
-                "Cannot start a new update session while another session is active."
-            )
+        self._ensure_session_not_running()
 
         if self._last_frame != frame:
             self._last_frame = frame
@@ -122,6 +124,10 @@ class ColorCache:
             yield self._session
         finally:
             self._session.finalize()
+
+    def _clear_base_colors(self) -> None:
+        """Clears the base color cache."""
+        self._base_colors.clear()
 
     def _create_mutable_color_array_for_drones(
         self, drones: CollectionObjects
@@ -146,6 +152,17 @@ class ColorCache:
             ]
 
         return colors
+
+    def _ensure_session_not_running(self) -> None:
+        """Ensures that no session is currently active."""
+        if self._session.active:
+            raise RuntimeError(
+                "Cannot start a new update session while another session is active."
+            )
+
+    def _has_base_colors(self) -> bool:
+        """Returns whether there are already some cached base colors in the cache."""
+        return bool(self._base_colors)
 
 
 class LightEffectUpdateSession:
@@ -198,6 +215,10 @@ class LightEffectUpdateSession:
         return self._scene is not None
 
     def apply_effect(self, effect: LightEffect) -> None:
+        """Applies the given light effect to the current state of the session.
+
+        Must be called only if the session is active.
+        """
         assert self._scene is not None
         assert self._frame is not None
 
@@ -263,7 +284,7 @@ class LightEffectUpdateSession:
         assert self._frame is not None
 
         state = self._state
-        if state is None and self._color_cache._base_colors:
+        if state is None and self._color_cache._has_base_colors():
             # No color updates were applied in this session but the user has just turned
             # off the last color effect so pretend that there were some effects
             state = self._ensure_state()
@@ -283,7 +304,7 @@ class LightEffectUpdateSession:
         }
 
         if clear_base_color_cache_at_end:
-            self._color_cache._base_colors.clear()
+            self._color_cache._clear_base_colors()
 
     def get_updates_to_apply(self) -> LightEffectUpdate:
         """Returns the drones and their final colors to be applied to the scene.
@@ -314,7 +335,7 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 
     light_effects = scene.skybrush.light_effects
     if not light_effects or not light_effects.enabled:
-        updates = _color_cache.clear_final_colors()
+        updates = _color_cache.run_empty_session()
     else:
         frame = scene.frame_current
         with _color_cache.start_updates(scene, frame) as session:
