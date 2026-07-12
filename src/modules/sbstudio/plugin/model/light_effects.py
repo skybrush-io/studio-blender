@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from functools import partial
 from operator import itemgetter
-from typing import Any, Protocol, cast
+from typing import Any, ClassVar, Protocol, cast
 from uuid import uuid4
 
 import bpy
@@ -120,9 +120,14 @@ class LightEffectUpdate:
     colors to apply to them, in the same order.
     """
 
+    NOP: ClassVar[LightEffectUpdate]
+
     drones: Sequence[Object]
     colors: Sequence[RGBAColor]
     has_active_effects: bool
+
+
+LightEffectUpdate.NOP = LightEffectUpdate((), (), False)
 
 
 class CustomLightEffectFunction(Protocol):

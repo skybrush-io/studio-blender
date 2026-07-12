@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Iterator, cast
 import bpy
 import numpy as np
 from bpy.types import CollectionObjects, Object
+from numpy.typing import NDArray
 
 from sbstudio.api.types import Mapping
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
@@ -78,10 +79,15 @@ class ColorCache:
         self._base_colors = {}
         self._session = LightEffectUpdateSession(self)
 
-    def clear_final_colors(self):
-        """Clears the final color cache."""
+    def clear_final_colors(self) -> LightEffectUpdate:
+        """Clears the final color cache.
+
+        Returns:
+            a no-op light effect update object
+        """
         assert not self._session.active
         self._session.reset()
+        return LightEffectUpdate.NOP
 
     def get_base_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) base color of the drone at the current frame
@@ -96,39 +102,6 @@ class ColorCache:
         final_colors = self._session._final_colors
         result = final_colors.get(id(drone)) if final_colors else None
         return result or self.get_base_color_of_drone(drone)
-
-    def create_mutable_color_array_for_drones(
-        self, drones: CollectionObjects
-    ) -> list[MutableRGBAColor]:
-        """Creates two numpy arrays for the base and final colors of the given drones.
-
-        The first array contains the base colors of the drones, while the second
-        array contains the final colors of the drones. The arrays are created in
-        a way that they can be used directly in the light effect calculations.
-
-        Args:
-            drones: Sequence of drone objects.
-
-        Returns:
-            A tuple containing two numpy arrays: (base_colors_array, final_colors_array).
-        """
-        colors: list[MutableRGBAColor]
-
-        if not self._base_colors:
-            # This is the first time we are evaluating this frame, so fill
-            # the base color cache in parallel to the colors list
-            arr = np.empty((len(drones), 4), dtype=np.float32)
-            get_colors_of_drones_fast(drones, dest=arr.ravel())
-            colors = arr.tolist()
-            for drone, color in zip(drones, colors):
-                self._base_colors[id(drone)] = tuple(color)
-        else:
-            # Initialize the colors list from the cached base colors
-            colors = [
-                list(self._base_colors.get(id(drone)) or WHITE) for drone in drones
-            ]
-
-        return colors
 
     @contextmanager
     def start_updates(
@@ -149,6 +122,30 @@ class ColorCache:
             yield self._session
         finally:
             self._session.finalize()
+
+    def _create_mutable_color_array_for_drones(
+        self, drones: CollectionObjects
+    ) -> list[MutableRGBAColor]:
+        """Creates a mutable color array from the given collection of drones that can
+        be used during light effect calculations to update the colors.
+        """
+        colors: list[MutableRGBAColor]
+
+        if not self._base_colors:
+            # This is the first time we are evaluating this frame, so fill
+            # the base color cache in parallel to the colors list
+            arr: NDArray[np.float32] = np.empty((len(drones), 4), dtype=np.float32)
+            get_colors_of_drones_fast(drones, dest=arr.ravel())
+            colors = arr.tolist()
+            for drone, color in zip(drones, colors):
+                self._base_colors[id(drone)] = tuple(color)
+        else:
+            # Initialize the colors list from the cached base colors
+            colors = [
+                list(self._base_colors.get(id(drone)) or WHITE) for drone in drones
+            ]
+
+        return colors
 
 
 class LightEffectUpdateSession:
@@ -224,7 +221,7 @@ class LightEffectUpdateSession:
             drones = Collections.find_drones().objects
             self._state = self.State(
                 drones=tuple(drones),
-                colors=self._color_cache.create_mutable_color_array_for_drones(drones),
+                colors=self._color_cache._create_mutable_color_array_for_drones(drones),
                 positions=[get_position_of_object(drone) for drone in drones],
                 mapping=self._scene.skybrush.storyboard.get_mapping_at_frame(
                     self._frame
@@ -297,7 +294,7 @@ class LightEffectUpdateSession:
             off just now
         """
         if self._final_color_list is None or self._state is None:
-            return LightEffectUpdate((), (), False)
+            return LightEffectUpdate.NOP
         else:
             return LightEffectUpdate(self._state.drones, self._final_color_list, True)
 
@@ -317,23 +314,16 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
 
     light_effects = scene.skybrush.light_effects
     if not light_effects or not light_effects.enabled:
-        _color_cache.clear_final_colors()
-        updates = LightEffectUpdate((), (), False)
-        final_color_updated_callbacks(updates)
-        return
-
-    frame = scene.frame_current
-
-    with _color_cache.start_updates(scene, frame) as session:
-        for effect in light_effects.iter_active_effects_in_frame(frame):
-            session.apply_effect(effect)
-
-    updates = session.get_updates_to_apply()
+        updates = _color_cache.clear_final_colors()
+    else:
+        frame = scene.frame_current
+        with _color_cache.start_updates(scene, frame) as session:
+            for effect in light_effects.iter_active_effects_in_frame(frame):
+                session.apply_effect(effect)
+        updates = session.get_updates_to_apply()
 
     # Wrap the callback calls to our suspension logic internally
     if not color_update_callbacks_suspension.active:
-        # Note that we need to call the callbacks even if we did not change anything,
-        # and we imitate a single color change also on last light effect removal
         final_color_updated_callbacks(updates)
 
 
