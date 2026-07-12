@@ -41,6 +41,7 @@ from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
 from sbstudio.plugin.presets.light_effects import (
+    NULL_PRESET_ID,
     get_preset_enum_items,
     get_preset_function,
 )
@@ -407,9 +408,9 @@ class LightEffect(PropertyGroup):
 
     preset_id = EnumProperty(
         name="Preset",
-        description="Built-in light effect preset (portable across machines)",
+        description="Built-in light effect preset",
         items=get_preset_enum_items,
-        default=0,
+        default=0,  # needs to be an int, cannot refer to NULL_PRESET_ID directly
         options=set(),
     )
 
@@ -1065,7 +1066,13 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
-        self.preset_id = other.preset_id
+        try:
+            self.preset_id = other.preset_id
+        except TypeError:
+            # This happens if other.preset_id is empty or some other unsupported value
+            # that is not present in the enum spec any more
+            self.preset_id = NULL_PRESET_ID
+
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
         self.output_function_y.update_from(other.output_function_y)

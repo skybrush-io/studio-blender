@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, MutableMapping, Sequence
+from typing import TYPE_CHECKING, Final, MutableMapping, Sequence
 
 if TYPE_CHECKING:
     from bpy.types import Context
@@ -15,6 +15,7 @@ __all__ = (
     "get_preset_function",
     "iter_preset_mapping",
     "register_preset",
+    "NULL_PRESET_ID",
 )
 
 
@@ -27,8 +28,13 @@ class PresetMeta:
     translations: dict[str, str] = field(default_factory=dict)  # language code -> label
 
 
-# Insertion-ordered.  Order here = order in the UI dropdown = circled number.
 _PRESETS: MutableMapping[str, PresetMeta] = OrderedDict()
+"""Insertion-ordered.  Order here = order in the UI dropdown = circled number."""
+
+NULL_PRESET_ID: Final[str] = "_null"
+"""Special preset ID for the case when a preset is not selected. Note that it cannot be
+an empty string because Blender filters those.
+"""
 
 
 def register_preset(
@@ -85,7 +91,7 @@ def _build_enum_items() -> list[tuple[str, str, str]]:
     Numbering format: 「1」「2」「3」... (full-width brackets)
     Order: v5.1 custom effects first, then original effects (reversed order)
     """
-    items: list[tuple[str, str, str]] = [("", "<None>", "")]
+    items: list[tuple[str, str, str]] = [(NULL_PRESET_ID, "<None>", "None")]
     for index, meta in enumerate(iter_preset_mapping(), 1):
         # Use full-width brackets 「」 for numbering
         prefix = f"「{index}」"
