@@ -1,10 +1,11 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
 from math import inf
 from re import compile, fullmatch
-from typing import Any
+from typing import Any, TypeAlias
 
-Mapping = list[int | None]
+Mapping: TypeAlias = Sequence[int | None]
 """Type alias for mappings from drone indices to the corresponding target
 marker indices.
 """

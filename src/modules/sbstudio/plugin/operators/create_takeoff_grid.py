@@ -6,12 +6,12 @@ from numpy import array, column_stack, mgrid, repeat, tile, zeros
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.colors import create_keyframe_for_color_of_drone
 from sbstudio.plugin.constants import Collections, Formations, Templates
-from sbstudio.plugin.materials import get_material_for_pyro
+from sbstudio.plugin.materials import (
+    detach_pyro_material_from_drone_template,
+    get_material_for_pyro,
+)
 from sbstudio.plugin.model.formation import add_points_to_formation, create_formation
 from sbstudio.plugin.model.storyboard import StoryboardEntryPurpose, get_storyboard
-from sbstudio.plugin.operators.detach_materials_from_template import (
-    detach_pyro_material_from_drone_template,
-)
 from sbstudio.plugin.selection import select_only
 from sbstudio.plugin.utils import propose_names
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed

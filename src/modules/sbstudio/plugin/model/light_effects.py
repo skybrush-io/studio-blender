@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import types
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass
 from functools import partial
 from operator import itemgetter
 from typing import Any, Protocol, cast
@@ -32,10 +33,11 @@ from bpy.types import (
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+from sbstudio.api.types import Mapping
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, Jsonable, MutableRGBAColor
+from sbstudio.model.types import Coordinate3D, Jsonable, MutableRGBAColor, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
@@ -59,6 +61,7 @@ __all__ = (
     "ColorFunctionProperties",
     "LightEffect",
     "LightEffectCollection",
+    "LightEffectUpdate",
     "effect_type_supports_randomization",
     "output_type_is_experimental",
     "output_type_supports_mapping_mode",
@@ -109,6 +112,17 @@ of drones to a given axis of the light effect color space"""
 
 
 _always_true = constant(True)
+
+
+@dataclass(frozen=True)
+class LightEffectUpdate:
+    """Simple dataclass containing a list of drones to update and the corresponding
+    colors to apply to them, in the same order.
+    """
+
+    drones: Sequence[Object]
+    colors: Sequence[RGBAColor]
+    has_active_effects: bool
 
 
 class CustomLightEffectFunction(Protocol):
@@ -529,7 +543,7 @@ class LightEffect(PropertyGroup):
         colors: Sequence[MutableRGBAColor],
         drones: Sequence[Object],
         positions: Sequence[Coordinate3D],
-        mapping: list[int] | None,
+        mapping: Mapping | None,
         *,
         frame: int,
         random_seq: RandomSequence,

@@ -6,18 +6,23 @@ light effects.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, cast
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Iterator, cast
 
 import bpy
 import numpy as np
-from bpy.types import CollectionObjects
+from bpy.types import CollectionObjects, Object
 
+from sbstudio.api.types import Mapping
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
 from sbstudio.plugin.callbacks import final_color_updated_callbacks
 from sbstudio.plugin.colors import (
     get_colors_of_drones_fast,
 )
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.model import LightEffect
+from sbstudio.plugin.model.light_effects import LightEffectUpdate
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.views import redraw_all_3d_views
 
@@ -64,23 +69,19 @@ class ColorCache:
     reference of a drone if the user deletes it and Blender decides to free the
     associated memory area."""
 
-    _final_colors: dict[int, RGBAColor]
-    """Cache for the "final" color of every drone in the current frame after we
-    apply the light effects on them. Cleared when there are no light effects. The
-    mapping is keyed by the _ids_ of the drones so we do not hang on to a
-    reference of a drone if the user deletes it and Blender decides to free the
-    associated memory area."""
-
     _last_frame: int | None = None
     """Index of the last frame that was evaluated with `update_light_effects()`"""
 
+    _session: LightEffectUpdateSession
+
     def __init__(self):
         self._base_colors = {}
-        self._final_colors = {}
+        self._session = LightEffectUpdateSession(self)
 
     def clear_final_colors(self):
         """Clears the final color cache."""
-        self._final_colors.clear()
+        assert not self._session.active
+        self._session.reset()
 
     def get_base_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) base color of the drone at the current frame
@@ -92,7 +93,9 @@ class ColorCache:
         """Returns the (cached) final color of the drone at the current frame
         after all active light effects are applied on it.
         """
-        return self._final_colors.get(id(drone)) or self.get_base_color_of_drone(drone)
+        final_colors = self._session._final_colors
+        result = final_colors.get(id(drone)) if final_colors else None
+        return result or self.get_base_color_of_drone(drone)
 
     def create_mutable_color_array_for_drones(
         self, drones: CollectionObjects
@@ -127,37 +130,176 @@ class ColorCache:
 
         return colors
 
-    def store_final_colors(
-        self, drones: CollectionObjects, colors: list[MutableRGBAColor]
-    ) -> Sequence[RGBAColor]:
-        """Stores the final colors of the given drones in the cache."""
-        for drone, color in zip(drones, colors, strict=True):
-            self._final_colors[id(drone)] = color  # ty:ignore[invalid-assignment]
-        return cast(Sequence[RGBAColor], colors)
+    @contextmanager
+    def start_updates(
+        self, scene: Scene, frame: int
+    ) -> Iterator[LightEffectUpdateSession]:
+        """Starts a new update session for the given frame."""
+        if self._session.active:
+            raise RuntimeError(
+                "Cannot start a new update session while another session is active."
+            )
 
-    def notify_frame_change(self, frame: int) -> None:
-        """Notifies the cache that the frame might have changed."""
         if self._last_frame != frame:
             self._last_frame = frame
             self._base_colors.clear()
 
-    def notify_no_effects_applied(self) -> Sequence[RGBAColor] | None:
-        """Notifies the cache that no light effects were applied in the current frame.
+        try:
+            self._session.reset(scene, frame)
+            yield self._session
+        finally:
+            self._session.finalize()
 
-        Args:
-            drones: sequence of drone objects.
+
+class LightEffectUpdateSession:
+    """Context manager that manages the update session of the color cache."""
+
+    @dataclass(frozen=True)
+    class State:
+        """Class that stores the state of the light effect update session."""
+
+        drones: Sequence[Object]
+        colors: list[MutableRGBAColor]
+        positions: list[tuple[float, float, float]]
+        mapping: Mapping | None
+
+    _color_cache: ColorCache
+    """Color cache that owns this update session."""
+
+    _scene: Scene | None
+    """The scene that is being updated."""
+
+    _frame: int | None
+    """The frame that is being updated."""
+
+    _state: State | None = None
+
+    _final_colors: dict[int, RGBAColor] | None = None
+    """Mapping from every drone in the current frame to the final color of this drone,
+    after we have applied the light effects on them. Populated when calling the
+    `finalize()` method.
+
+    The mapping is keyed by the _ids_ of the drones so we do not hang on to a
+    reference of a drone if the user deletes it and Blender decides to free the
+    associated memory area.
+    """
+
+    _final_color_list: Sequence[RGBAColor] | None = None
+    """List of the final colors of the drones in the current frame, after we have
+    applied the light effects on them. Populated when calling the `finalize()` method.
+    The order of the colors in this list is the same as the order of the drones in
+    the `drones` attribute of the `_State` object returned by the `get_state()` method.
+    """
+
+    def __init__(self, color_cache: ColorCache):
+        self._color_cache = color_cache
+        self.reset(None, None)
+
+    @property
+    def active(self) -> bool:
+        """Returns whether the session is active."""
+        return self._scene is not None
+
+    def apply_effect(self, effect: LightEffect) -> None:
+        assert self._scene is not None
+        assert self._frame is not None
+
+        random_seq = self._scene.skybrush.settings.random_sequence_root
+        state = self._ensure_state()
+        effect.apply_on_colors(
+            state.colors,
+            drones=state.drones,
+            positions=state.positions,
+            mapping=state.mapping,
+            frame=self._frame,
+            random_seq=random_seq,
+        )
+
+    def _ensure_state(self) -> State:
+        """Returns the state of the update session, creating it if needed."""
+        assert self._scene is not None
+        assert self._frame is not None
+
+        if self._state is None:
+            drones = Collections.find_drones().objects
+            self._state = self.State(
+                drones=tuple(drones),
+                colors=self._color_cache.create_mutable_color_array_for_drones(drones),
+                positions=[get_position_of_object(drone) for drone in drones],
+                mapping=self._scene.skybrush.storyboard.get_mapping_at_frame(
+                    self._frame
+                ),
+            )
+
+        return self._state
+
+    def _get_state(self) -> State | None:
+        """Returns the state of the update session if it exists, otherwise None.
+
+        Should be used only from the `ColorCache` class to avoid creating a new state
+        when it is not needed.
+        """
+        return self._state
+
+    def reset(self, scene: Scene | None = None, frame: int | None = None) -> None:
+        """Resets the update session."""
+        self._scene = scene
+        self._frame = frame
+
+        self._final_colors = None
+        self._final_color_list = None
+        self._state = None
+
+    def finalize(self) -> None:
+        try:
+            self._finalize()
+        finally:
+            self._scene = None
+            self._frame = None
+
+    def _finalize(self) -> None:
+        """Stores the final colors of the given drones from the state if at least one
+        effect was applied, or copies the colors from the base color cache if no effects
+        were applied.
+        """
+        assert self._scene is not None
+        assert self._frame is not None
+
+        state = self._state
+        if state is None and self._color_cache._base_colors:
+            # No color updates were applied in this session but the user has just turned
+            # off the last color effect so pretend that there were some effects
+            state = self._ensure_state()
+            clear_base_color_cache_at_end = True
+        else:
+            clear_base_color_cache_at_end = False
+
+        if state is None:
+            # No color updates were applied and it has been like this even in the
+            # previous frame so no need to calculate the final colors
+            return
+
+        self._final_color_list = cast(Sequence[RGBAColor], state.colors)
+        self._final_colors = {
+            id(drone): color
+            for drone, color in zip(state.drones, self._final_color_list, strict=True)
+        }
+
+        if clear_base_color_cache_at_end:
+            self._color_cache._base_colors.clear()
+
+    def get_updates_to_apply(self) -> LightEffectUpdate:
+        """Returns the drones and their final colors to be applied to the scene.
 
         Returns:
-            sequence of final colors of the drones to apply, or None if we know that the
-            drones are using the right color
+            A tuple containing the drones and their final colors, and whether there
+            was at least one active light effect or the last active effect was turned
+            off just now
         """
-        if not self._base_colors:
-            return None
-
-        drones = Collections.find_drones().objects
-        colors = [self._base_colors.get(id(drone)) or list(WHITE) for drone in drones]
-        self._base_colors.clear()
-        return cast(Sequence[RGBAColor], colors)
+        if self._final_color_list is None or self._state is None:
+            return LightEffectUpdate((), (), False)
+        else:
+            return LightEffectUpdate(self._state.drones, self._final_color_list, True)
 
 
 _color_cache: ColorCache = ColorCache()
@@ -176,62 +318,23 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
     light_effects = scene.skybrush.light_effects
     if not light_effects or not light_effects.enabled:
         _color_cache.clear_final_colors()
-        final_color_updated_callbacks([], [], False)
+        updates = LightEffectUpdate((), (), False)
+        final_color_updated_callbacks(updates)
         return
-
-    random_seq = scene.skybrush.settings.random_sequence_root
 
     frame = scene.frame_current
 
-    drones: CollectionObjects | None = None
-    colors: Sequence[MutableRGBAColor] | None = None
+    with _color_cache.start_updates(scene, frame) as session:
+        for effect in light_effects.iter_active_effects_in_frame(frame):
+            session.apply_effect(effect)
 
-    _color_cache.notify_frame_change(frame)
-
-    has_active_effects = False
-
-    for effect in light_effects.iter_active_effects_in_frame(frame):
-        if drones is None:
-            # The only allocations should be concentrated here
-            drones = Collections.find_drones().objects
-            drones_tuple = tuple(drones.values())
-            positions = [get_position_of_object(drone) for drone in drones]
-            mapping = scene.skybrush.storyboard.get_mapping_at_frame(frame)
-            colors = _color_cache.create_mutable_color_array_for_drones(drones)
-            has_active_effects = True
-
-        assert colors is not None
-
-        effect.apply_on_colors(
-            colors,
-            drones=drones_tuple,
-            positions=positions,
-            mapping=mapping,
-            frame=frame,
-            random_seq=random_seq,
-        )
-
-    if has_active_effects:
-        # store final colors for later use if there are active light effects
-        assert drones is not None
-        assert colors is not None
-        final_colors = _color_cache.store_final_colors(drones, colors)
-    else:
-        # let the color cache know that there were no active light effects in this frame
-        # so it can just use the base colors as the final colors
-        final_colors = _color_cache.notify_no_effects_applied()
-        if final_colors is not None:
-            # Need one final update if the last effect has just been turned off
-            drones = Collections.find_drones().objects
-            has_active_effects = True
+    updates = session.get_updates_to_apply()
 
     # Wrap the callback calls to our suspension logic internally
     if not color_update_callbacks_suspension.active:
         # Note that we need to call the callbacks even if we did not change anything,
         # and we imitate a single color change also on last light effect removal
-        final_color_updated_callbacks(
-            drones or [], final_colors or [], has_active_effects
-        )
+        final_color_updated_callbacks(updates)
 
 
 def get_base_color_of_drone(drone: Object) -> RGBAColor:

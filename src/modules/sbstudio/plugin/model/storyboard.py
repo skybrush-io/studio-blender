@@ -754,7 +754,7 @@ class Storyboard(PropertyGroup, ListMixin[StoryboardEntry]):
 
         return closest
 
-    def get_mapping_at_frame(self, frame: int):
+    def get_mapping_at_frame(self, frame: int) -> Mapping | None:
         """Returns the mapping of drones at a given frame based on mappings
         stored in formations.
 
