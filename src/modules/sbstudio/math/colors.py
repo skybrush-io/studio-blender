@@ -1,10 +1,7 @@
-from collections.abc import Callable
 from enum import IntEnum, auto
 
-from numpy import float32
+from numpy import float32, maximum, minimum, where
 from numpy.typing import NDArray
-
-from sbstudio.model.types import MutableRGBAColor, RGBAColor
 
 __all__ = ("blend_in_place", "BlendMode")
 
@@ -21,119 +18,10 @@ class BlendMode(IntEnum):
 
     # Do not change the order of items above to remain compatible with already
     # saved Blender scenes.
-    #
-    # When adding a new blend mode, also add a new function to the end of
-    # _blend_funcs below
 
     @property
     def description(self) -> str:
         return self.name.lower().replace("_", " ").capitalize()
-
-
-def _blend_normal(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        backdrop[i] = a * source[i] + b * backdrop[i]
-
-
-def _blend_multiply(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        backdrop[i] = a * backdrop[i] * source[i] + b * backdrop[i]
-
-
-def _blend_screen(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        backdrop[i] = a * (1 - (1 - backdrop[i]) * (1 - source[i])) + b * backdrop[i]
-
-
-def _blend_darken(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        backdrop[i] = a * min(backdrop[i], source[i]) + b * backdrop[i]
-
-
-def _blend_lighten(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        backdrop[i] = a * max(backdrop[i], source[i]) + b * backdrop[i]
-
-
-def _blend_overlay(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        if backdrop[i] >= 0.5:
-            backdrop[i] = (
-                a * (1 - (2 - 2 * backdrop[i]) * (1 - source[i])) + b * backdrop[i]
-            )
-        else:
-            backdrop[i] = a * (2 * backdrop[i]) * source[i] + b * backdrop[i]
-
-
-def _blend_hard_light(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    for i in range(3):
-        if source[i] <= 0.5:
-            backdrop[i] = a * backdrop[i] * (2 * source[i]) + b * backdrop[i]
-        else:
-            backdrop[i] = (
-                a * (1 - (1 - backdrop[i]) * (2 - 2 * source[i])) + b * backdrop[i]
-            )
-
-
-def _blend_soft_light(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    # There are multiple variants for this mode; the variant below is the W3C
-    # recommendation, _not_ the one in Photoshop.
-    # See: https://imagineer.in/blog/math-behind-blend-modes/
-    for i in range(3):
-        if source[i] <= 0.5:
-            backdrop[i] = (
-                a
-                * (backdrop[i] - (1 - 2 * source[i]) * backdrop[i] * (1 - backdrop[i]))
-                + b * backdrop[i]
-            )
-        else:
-            if backdrop[i] <= 0.25:
-                d = ((16 * backdrop[i] - 12) * backdrop[i] + 4) * backdrop[i]
-            else:
-                d = backdrop[i] ** 0.5
-            backdrop[i] = (
-                a * (backdrop[i] + (2 * source[i] - 1) * (d - backdrop[i]))
-                + b * backdrop[i]
-            )
-
-
-def _blend_nop(
-    source: RGBAColor, backdrop: MutableRGBAColor, a: float, b: float
-) -> None:
-    pass
-
-
-_blend_funcs: list[Callable[[RGBAColor, MutableRGBAColor, float, float], None]] = [
-    _blend_nop,
-    _blend_normal,
-    _blend_multiply,
-    _blend_screen,
-    _blend_darken,
-    _blend_lighten,
-    _blend_overlay,
-    _blend_soft_light,
-    _blend_hard_light,
-]
-
-
-if len(_blend_funcs) != len(BlendMode) + 1:
-    raise RuntimeError("one or more blend modes are unimplemented")
 
 
 def blend_in_place(
@@ -141,37 +29,89 @@ def blend_in_place(
     backdrop: NDArray[float32],
     mode: BlendMode = BlendMode.NORMAL,
 ) -> None:
-    """Blends two colors according to standard alpha compositing rules, using
-    the given blending mode and updating the second color in-place.
+    """Blends two color arrays according to standard alpha compositing rules,
+    using the given blending mode and updating the backdrop array in-place.
+
+    Operates on multiple RGBA colors at once.
 
     Args:
-        source: The source color, as an RGBA array of floats in the range [0, 1].
-        backdrop: The backdrop color, as an RGBA array of floats in the range [0, 1].
-        mode: The blending mode to use. Defaults to BlendMode.NORMAL.
+        source: Source colors, shape ``(n, 4)``, RGBA each in ``[0, 1]``.
+        backdrop: Backdrop colors, shape ``(n, 4)``, modified in-place.
+        mode: The blending mode to use. Defaults to ``BlendMode.NORMAL``.
     """
-    alpha_source = source[3]
-
-    if alpha_source <= 0:
-        # Shortcut for fully transparent source
+    alpha_source = source[:, 3]
+    mask_active = alpha_source > 0
+    if not mask_active.any():
+        # Shortcut for fully transparent sources
         return
 
-    if alpha_source >= 1 and mode is BlendMode.NORMAL:
+    if mode is BlendMode.NORMAL:
         # Shortcut for the common case when the source is opaque and the
-        # mode is NORMAL
-        backdrop[:] = source
-        return
+        # mode is NORMAL. Applied only for those rows where the source is fully opaque;
+        # the procedure continues with the remaining rows later.
+        mask_opaque = alpha_source >= 1
+        backdrop[mask_opaque] = source[mask_opaque]
+        mask_active &= ~mask_opaque
+        if not mask_active.any():
+            return
 
-    # Apply the blending mode to the RGB part of the source and the backdrop
+    source = source[mask_active]
+    work = backdrop[mask_active]
 
-    alpha_backdrop = backdrop[3]
+    alpha_source = source[:, 3]
+    alpha_backdrop = work[:, 3]
 
-    if alpha_backdrop >= 1:
-        alpha_overlay = 1
-        a = alpha_source
-    else:
-        alpha_overlay = 1 - (1 - alpha_source) * (1 - alpha_backdrop)
-        a = alpha_source / alpha_overlay
+    alpha_overlay = where(
+        alpha_backdrop >= 1,
+        1.0,
+        1.0 - (1.0 - alpha_source) * (1.0 - alpha_backdrop),
+    )
+    a = where(alpha_backdrop >= 1, alpha_source, alpha_source / alpha_overlay)[:, None]
 
-    blend = _blend_funcs[mode]
-    blend(source, backdrop, a, 1 - a)
-    backdrop[3] = alpha_overlay
+    source_rgb = source[:, :3]
+    backdrop_rgb = work[:, :3]
+    a3 = a * source_rgb
+    b3 = (1.0 - a) * backdrop_rgb
+
+    match mode:
+        case BlendMode.NORMAL:
+            work[:, :3] = a3 + b3
+        case BlendMode.MULTIPLY:
+            work[:, :3] = a3 * backdrop_rgb + b3
+        case BlendMode.SCREEN:
+            work[:, :3] = a * (1.0 - (1.0 - backdrop_rgb) * (1.0 - source_rgb)) + b3
+        case BlendMode.DARKEN:
+            work[:, :3] = a * minimum(backdrop_rgb, source_rgb) + b3
+        case BlendMode.LIGHTEN:
+            work[:, :3] = a * maximum(backdrop_rgb, source_rgb) + b3
+        case BlendMode.OVERLAY:
+            mask = backdrop_rgb >= 0.5
+            work[:, :3] = where(
+                mask,
+                a * (1.0 - (2.0 - 2.0 * backdrop_rgb) * (1.0 - source_rgb)) + b3,
+                a * (2.0 * backdrop_rgb) * source_rgb + b3,
+            )
+        case BlendMode.HARD_LIGHT:
+            mask = source_rgb <= 0.5
+            work[:, :3] = where(
+                mask,
+                a * backdrop_rgb * (2.0 * source_rgb) + b3,
+                a * (1.0 - (1.0 - backdrop_rgb) * (2.0 - 2.0 * source_rgb)) + b3,
+            )
+        case BlendMode.SOFT_LIGHT:
+            mask_src = source_rgb <= 0.5
+            result_le = backdrop_rgb - (1.0 - 2.0 * source_rgb) * backdrop_rgb * (
+                1.0 - backdrop_rgb
+            )
+            mask_bd = backdrop_rgb <= 0.25
+            d_val = where(
+                mask_bd,
+                ((16.0 * backdrop_rgb - 12.0) * backdrop_rgb + 4.0) * backdrop_rgb,
+                backdrop_rgb**0.5,
+            )
+            result_gt = backdrop_rgb + (2.0 * source_rgb - 1.0) * (d_val - backdrop_rgb)
+            result = where(mask_src, result_le, result_gt)
+            work[:, :3] = a * result + b3
+
+    work[:, 3] = alpha_overlay
+    backdrop[mask_active] = work

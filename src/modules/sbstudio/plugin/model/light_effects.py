@@ -778,13 +778,13 @@ class LightEffect(PropertyGroup):
         color_ramp = self.color_ramp
         color_image = self.color_image
         color_function_ref = self.color_function_ref
-        new_color: NDArray[float32] = zeros((4,), dtype=float32)
 
         # Evaluate the X and Y values for each drone
-        # TODO(ntamas): pre-allocate outputs_x, outputs_y and alphas
+        # TODO(ntamas): pre-allocate outputs_x, outputs_y, new_colors and alphas
         outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
         outputs_y: NDArray[float32] = zeros((num_positions,), dtype=float32)
-        alphas: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        influences: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        new_colors: NDArray[float32] = zeros((num_positions, 4), dtype=float32)
         has_output_y = color_image is not None
         get_output_based_on_output_type(
             self.output, self.output_mapping_mode, self.output_function, out=outputs_x
@@ -822,15 +822,15 @@ class LightEffect(PropertyGroup):
 
         # Calculate the influence of the effect, depending on the fade-in and fade-out
         # durations and the spatial predicate
-        self._evaluate_influences_at(positions, frame, condition, out=alphas)
+        self._evaluate_influences_at(positions, frame, condition, out=influences)
 
         for index, position in enumerate(positions):
             # Check containment of drone in the associated drone group
             if targeted_drones is not None and drones[index] not in targeted_drones:
                 continue
 
-            alpha = alphas[index]
-            if alpha <= 0.0:
+            influence = influences[index]
+            if influence <= 0.0:
                 # Alpha channel is zero so this color will not affect the base color
                 # so we can skip the rest of the calculations
                 continue
@@ -851,11 +851,11 @@ class LightEffect(PropertyGroup):
             # way that they are set to `None` if they are not applicable, so only one of
             # the branches will apply below.
             if color_ramp is not None:
-                new_color[:] = color_ramp.evaluate(output_x)
+                new_colors[index, :] = color_ramp.evaluate(output_x)
 
             elif color_function_ref is not None:
                 try:
-                    new_color[:] = color_function_ref(
+                    new_colors[index, :] = color_function_ref(
                         frame=frame,
                         time_fraction=time_fraction,
                         drone_index=index,
@@ -887,38 +887,39 @@ class LightEffect(PropertyGroup):
                 # This check is needed to cater for the cases when the calculated
                 # pixel coordinate is out of the bounds of the image, in which
                 # case get_pixel() returns an empty list or a short list
-                if len(pixel_color) == len(new_color):
+                if len(pixel_color) == 4:
                     # If the conversion to linear space ever becomes a bottleneck,
                     # we can convert the image in advance when it is stored into
                     # the pixel cache if we can vectorize the operation somehow
                     # or offload it to C.
                     if color_image.colorspace_settings.is_data:
-                        new_color[:] = pixel_color
+                        new_colors[index, :] = pixel_color
                     else:
                         match color_image.colorspace_settings.name:
                             case "sRGB":
-                                new_color[:] = convert_from_srgb_to_linear(pixel_color)  # ty:ignore[invalid-argument-type]
+                                new_colors[index, :] = convert_from_srgb_to_linear(
+                                    pixel_color  # ty:ignore[invalid-argument-type]
+                                )
                             case "Linear Rec.709":
-                                new_color[:] = pixel_color
+                                new_colors[index, :] = pixel_color
                             case _:
                                 # Note that we do NOT handle conversion from other color spaces here,
                                 # just use the colors as they are. If other color spaces are used frequently,
                                 # explicit conversion needs to be implemented for them as well.
-                                new_color[:] = pixel_color
+                                new_colors[index, :] = pixel_color
 
                 else:
-                    new_color.fill(0.0)
-                    new_color[3] = 1.0
+                    new_colors[index, :].fill(0.0)
+                    new_colors[index, 3] = 1.0
 
             else:
                 # should not happen
-                new_color.fill(1.0)
+                new_colors[index, :].fill(1.0)
 
-            new_color[3] *= alpha
+        new_colors[:, 3] *= influences
 
-            # Apply the new color with alpha blending
-            # TODO(ntamas): vectorize this!
-            blend_in_place(new_color, colors[index, :], BlendMode[self.blend_mode])
+        # Apply the new color with alpha blending
+        blend_in_place(new_colors, colors, BlendMode[self.blend_mode])
 
     def as_dict(self) -> Jsonable:
         """Creates a dictionary representation of the light effect."""
