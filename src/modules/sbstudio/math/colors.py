@@ -155,13 +155,13 @@ def blend_in_place(
         # Shortcut for fully transparent source
         return
 
-    # Apply the blending mode to the RGB part of the source and the backdrop
-
     if alpha_source >= 1 and mode is BlendMode.NORMAL:
         # Shortcut for the common case when the source is opaque and the
         # mode is NORMAL
         backdrop[:] = source
         return
+
+    # Apply the blending mode to the RGB part of the source and the backdrop
 
     alpha_backdrop = backdrop[3]
 
