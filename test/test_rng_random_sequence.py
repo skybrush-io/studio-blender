@@ -174,7 +174,7 @@ class TestGetArray01:
         arr = seq.get_array_01(0, 5)
         assert isinstance(arr, np.ndarray)
         assert arr.shape == (5,)
-        assert arr.dtype == np.float64
+        assert arr.dtype == np.float32
 
     def test_get_array_01_values_in_range(self):
         seq = RandomSequence(seed=42, max=1000)
@@ -185,13 +185,13 @@ class TestGetArray01:
     def test_get_array_01_matches_get_float(self):
         seq = RandomSequence(seed=42, max=1000)
         arr = seq.get_array_01(0, 10)
-        expected = np.array([seq.get_float(i) for i in range(10)], dtype=np.float64)
+        expected = np.array([seq.get_float(i) for i in range(10)], dtype=np.float32)
         assert arr == pytest.approx(expected)
 
     def test_get_array_01_matches_get_array_divided(self):
         seq = RandomSequence(seed=42, max=1000)
         arr = seq.get_array_01(3, 7)
-        expected = seq.get_array(3, 7).astype(np.float64) / seq.max
+        expected = seq.get_array(3, 7).astype(np.float32) / seq.max
         assert arr == pytest.approx(expected)
 
     def test_get_array_01_zero_max(self):

@@ -5,7 +5,7 @@ from random import Random
 from threading import Lock
 from typing import Self, overload
 
-from numpy import array, concatenate, float64, int_
+from numpy import array, concatenate, float32, int_
 from numpy.typing import NDArray
 
 _GROWTH_BLOCK_SIZE = 4096
@@ -135,7 +135,7 @@ class RandomSequence(Sequence[int]):
             self._ensure_length_is_at_least(stop)
         return self._cache[start:stop].copy()
 
-    def get_array_01(self, start: int, length: int) -> NDArray[float64]:
+    def get_array_01(self, start: int, length: int) -> NDArray[float32]:
         """Returns a NumPy array of floats in [0, 1] of the given length,
         containing the random numbers from ``start`` onward in the sequence
         divided by the maximum value of the sequence.
@@ -151,9 +151,9 @@ class RandomSequence(Sequence[int]):
             a NumPy array of shape ``(length,)`` with dtype float64
         """
         if self.max > 0:
-            return self.get_array(start, length).astype(float64) / self.max
+            return self.get_array(start, length).astype(float32) / self.max
         else:
-            return self.get_array(start, length).astype(float64) * 0 + 0.5
+            return self.get_array(start, length).astype(float32) * 0 + 0.5
 
     def get_float(self, index: int) -> float:
         """Returns the random number at the given index in the sequence, divided
