@@ -4,7 +4,6 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from functools import partial
-from operator import itemgetter
 from typing import Any, ClassVar, Protocol, cast
 from uuid import uuid4
 
@@ -32,12 +31,25 @@ from bpy.types import (
 )
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from numpy import (
+    argsort,
+    array,
+    divide,
+    float32,
+    isnan,
+    lexsort,
+    linspace,
+    nan,
+    rot90,
+    zeros,
+)
+from numpy.typing import NDArray
 
 from sbstudio.api.types import Mapping
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, Jsonable, MutableRGBAColor, RGBAColor
+from sbstudio.model.types import Coordinate3D, Jsonable, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
@@ -53,7 +65,7 @@ from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
-from sbstudio.utils import constant, distance_sq_of, load_module, negate
+from sbstudio.utils import constant, load_module, negate
 
 from .mixins import ListMixin
 
@@ -71,7 +83,7 @@ __all__ = (
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
 """Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
-OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
+OUTPUT_TYPE_TO_AXES = {
     "GRADIENT_XYZ": (0, 1, 2),
     "GRADIENT_XZY": (0, 2, 1),
     "GRADIENT_YXZ": (1, 0, 2),
@@ -81,10 +93,6 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     "default": (0, 0, 0),
 }
 """Axis mapping for the gradient-based output types"""
-
-OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
-    key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY.items()
-}
 
 OUTPUT_ITEMS = [
     ("FIRST_COLOR", "First color", "", 1),
@@ -545,9 +553,9 @@ class LightEffect(PropertyGroup):
 
     def apply_on_colors(
         self,
-        colors: Sequence[MutableRGBAColor],
+        colors: NDArray[float32],
         drones: Sequence[Object],
-        positions: Sequence[Coordinate3D],
+        positions: NDArray[float32],
         mapping: Mapping | None,
         *,
         frame: int,
@@ -573,31 +581,33 @@ class LightEffect(PropertyGroup):
             output_type: str,
             mapping_mode: str,
             output_function,
-        ) -> tuple[list[float | None] | None, float | None]:
-            """Get the float output(s) for color ramp or image indexing based on the output type.
+            *,
+            out: NDArray[float32],
+        ) -> None:
+            """Get the float outputs for color ramp or image indexing based on the
+            output type.
 
             Args:
                 output_type: the output type used for indexing
                 mapping_mode: mapping mode corresponding to the output type
-
-            Returns:
-                individual and common outputs
+                dest: destination array to write the result to
             """
-            outputs: list[float | None] | None = None
-            common_output: float | None = None
-            order: list[int] | None = None
-
             if output_type == "FIRST_COLOR":
-                common_output = 0.0
+                out.fill(0.0)
+
             elif output_type == "LAST_COLOR":
-                common_output = 1.0
+                out.fill(1.0)
+
             elif output_type == "TEMPORAL":
-                common_output = time_fraction
+                out.fill(time_fraction)
+
             elif output_type_supports_mapping_mode(output_type):
                 # There are two options here:
-                # 1. Legacy, non-proportional mode. We sort the drones based on the
-                #    sort key derived above and then space them out equally on the
-                #    color ramp or image axis.
+                #
+                # 1. Legacy, non-proportional mode. We sort the drones based on a
+                #    sort key and then space them out equally on the color ramp or
+                #    image axis.
+                #
                 # 2. Proportional mode. Same as above, but we assign drones to
                 #    positions on the color ramp or image axis in a way that their
                 #    distances on the color ramp or image axis are proportional to
@@ -605,65 +615,60 @@ class LightEffect(PropertyGroup):
                 #    _scalar_ sorting key so we ignore all but the principal axis
                 #    for gradient output types.
                 proportional = mapping_mode == "PROPORTIONAL"
+                sort_keys: NDArray[float32] | None
 
                 if output_type == "DISTANCE":
                     if self.mesh:
-                        position_of_mesh = get_position_of_object(self.mesh)
-                        sort_key = lambda index: distance_sq_of(
-                            positions[index], position_of_mesh
+                        position_of_mesh = array(
+                            get_position_of_object(self.mesh), dtype=float32
                         )
+                        sort_keys = ((positions - position_of_mesh) ** 2).sum(axis=1)
                     else:
-                        sort_key = None
+                        sort_keys = None
 
-                    # sort_key is guaranteed to return a scalar here
                 else:
                     query_axes = (
-                        OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
-                        or OUTPUT_TYPE_TO_AXIS_SORT_KEY["default"]
+                        OUTPUT_TYPE_TO_AXES.get(output_type)
+                        or OUTPUT_TYPE_TO_AXES["default"]
                     )
                     if proportional:
                         # In proportional mode, we are using the primary axis only
                         # because we need a scalar
-                        sort_key = lambda index: query_axes(positions[index])[0]
+                        sort_keys = positions[:, query_axes[0]]
                     else:
-                        # In non-proportional mode, we are sorting along multiple
-                        # axes
-                        sort_key = lambda index: query_axes(positions[index])
+                        # In non-proportional mode, we are sorting along multiple axes
+                        sort_keys = positions[:, query_axes]
 
-                outputs = [1.0] * num_positions
-                order = list(range(num_positions))
-                if num_positions > 1:
-                    if proportional and sort_key is not None:
-                        # Proportional mode -- calculate the sort key for each item,
-                        # and distribute them along the color axis proportionally
-                        # to the differences between the numeric values of the sort
-                        # keys
-                        evaluated_sort_keys = [sort_key(i) for i in order]
-                        min_value, max_value = (
-                            min(evaluated_sort_keys),
-                            max(evaluated_sort_keys),
-                        )
-                        diff = max_value - min_value
-                        if diff > 0:
-                            outputs = [
-                                (value - min_value) / diff
-                                for value in evaluated_sort_keys
-                            ]
+                if num_positions < 2 or sort_keys is None:
+                    # Just assign all drones to the last color of the ramp
+                    out.fill(1.0)
+                elif proportional:
+                    # In proportional mode, sort_keys is always 1D and we need to just
+                    # re-scale the values to the 0-1 range
+                    assert sort_keys.ndim == 1
+                    if len(sort_keys) > 0:
+                        lo, hi = sort_keys.min(), sort_keys.max()
+                        if hi > lo:
+                            sort_keys -= lo
+                            divide(sort_keys, hi - lo, out=out)
+                else:
+                    # In legacy mode, sort_keys is either 1D or 2D
+                    if sort_keys.ndim == 2:
+                        # 2D case, we need to do a lexicographic sort
+                        order = lexsort(rot90(sort_keys))
                     else:
-                        if sort_key is not None:
-                            order.sort(key=sort_key)
+                        assert sort_keys.ndim == 1
+                        order = argsort(sort_keys)
 
-                        assert outputs is not None
-                        for u, v in enumerate(order):
-                            outputs[v] = u / (num_positions - 1)
+                    out[:] = argsort(order)
+                    out /= num_positions - 1
 
             elif output_type == "INDEXED_BY_DRONES":
                 # Gradient based on drone index
                 if num_positions > 1:
-                    np_m1 = num_positions - 1
-                    outputs = [index / np_m1 for index in range(num_positions)]
+                    out[:] = linspace(0.0, 1.0, num=num_positions)
                 else:
-                    common_output = 1.0
+                    out.fill(1.0)
 
             elif output_type == "INDEXED_BY_FORMATION":
                 # Gradient based on formation index
@@ -677,22 +682,23 @@ class LightEffect(PropertyGroup):
 
                     # reduce mapping of all positions to rank, in case formation size
                     # is smaller than the number of drones
+                    # TODO(ntamas): this would probably be faster with NumPy
                     if None in mapping:
                         sorted_valid_mapping = sorted(
                             x for x in mapping if x is not None
                         )
                         np_m1 = max(len(sorted_valid_mapping) - 1, 1)
-                        outputs = [
-                            None if x is None else sorted_valid_mapping.index(x) / np_m1
+                        out[:] = [
+                            nan if x is None else sorted_valid_mapping.index(x) / np_m1
                             for x in mapping
                         ]
                     # otherwise just normalize full mapping to [0, 1]
                     else:
                         np_m1 = max(num_positions - 1, 1)
-                        outputs = [None if x is None else x / np_m1 for x in mapping]
+                        divide(cast(Sequence[int], mapping), np_m1, out=out)
                 else:
                     # if there is no mapping at all, we do not change color of drones
-                    outputs = [None] * num_positions
+                    out.fill(nan)
 
             elif output_type == "CUSTOM":
                 absolute_path = abspath(output_function.path)
@@ -701,7 +707,7 @@ class LightEffect(PropertyGroup):
                     fn = cast(
                         CustomLightEffectFunction, getattr(module, output_function.name)
                     )
-                    outputs = [
+                    out[:] = [
                         fn(
                             frame=frame,
                             time_fraction=time_fraction,
@@ -715,14 +721,16 @@ class LightEffect(PropertyGroup):
                         for index in range(num_positions)
                     ]
                 else:
-                    common_output = 1.0
+                    out.fill(1.0)
+
+                # TODO(ntamas): add CUSTOM_VECTORIZED type
 
             elif output_type == "LIGHT_PRESET":
                 preset_fn = (
                     get_preset_function(self.preset_id) if self.preset_id else None
                 )
                 if preset_fn is not None:
-                    outputs = [
+                    out[:] = [
                         preset_fn(
                             frame=frame,
                             time_fraction=time_fraction,
@@ -736,13 +744,11 @@ class LightEffect(PropertyGroup):
                         for index in range(num_positions)
                     ]
                 else:
-                    common_output = 1.0
+                    out.fill(1.0)
 
             else:
                 # Should not get here
-                common_output = 1.0
-
-            return outputs, common_output
+                out.fill(1.0)
 
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
@@ -754,11 +760,22 @@ class LightEffect(PropertyGroup):
         color_ramp = self.color_ramp
         color_image = self.color_image
         color_function_ref = self.color_function_ref
-        new_color = [0.0] * 4
+        new_color: NDArray[float32] = zeros((4,), dtype=float32)
 
-        outputs_x, common_output_x = get_output_based_on_output_type(
-            self.output, self.output_mapping_mode, self.output_function
+        # Evaluate the X and Y values for each drone
+        # TODO(ntamas): pre-allocate outputs_x and outputs_y
+        outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        outputs_y: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        get_output_based_on_output_type(
+            self.output, self.output_mapping_mode, self.output_function, out=outputs_x
         )
+        if color_image is not None:
+            get_output_based_on_output_type(
+                self.output,
+                self.output_mapping_mode,
+                self.output_function,
+                out=outputs_y,
+            )
 
         # Get the set of drones that the effect is targeting (if applicable)
         targeted_drones = self._get_drones_in_group()
@@ -767,39 +784,30 @@ class LightEffect(PropertyGroup):
         # will be applied at a given position
         condition = self._get_spatial_effect_predicate()
 
+        # TODO(ntamas): move randomization of outputs_x and outputs_y here
+
         for index, position in enumerate(positions):
             # Check containment of drone in the associated drone group
             if targeted_drones is not None and drones[index] not in targeted_drones:
                 continue
-
-            # Take the base color to modify
-            color = colors[index]
 
             # Calculate the influence of the effect, depending on the fade-in
             # and fade-out durations and the optional mesh
             alpha = max(
                 min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
             )
-
             if alpha <= 0.0:
                 # Alpha channel is zero so this color will not affect the base color
                 # so we can skip the rest of the calculations
-                new_color[:] = color
-                new_color[3] = 0.0
                 continue
 
             # Calculate the output value of the effect that goes through the color
             # ramp or image mapper
-            if common_output_x is not None:
-                output_x = common_output_x
-            else:
-                assert outputs_x is not None
+            output_x: float = outputs_x[index]
+            if isnan(output_x):
                 # if this specific output is disabled, we
                 # skip the effect
-                if outputs_x[index] is None:
-                    continue
-                output_x = outputs_x[index]
-            assert isinstance(output_x, float)
+                continue
 
             # Randomize the output value if needed
             if self.randomness != 0:
@@ -832,26 +840,18 @@ class LightEffect(PropertyGroup):
                     raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
 
             elif color_image is not None:
-                outputs_y, common_output_y = get_output_based_on_output_type(
-                    self.output, self.output_mapping_mode, self.output_function
-                )
-
-                if common_output_y is not None:
-                    output_y = common_output_y
-                else:
-                    assert outputs_y is not None
+                output_y: float = outputs_y[index]
+                if isnan(output_y):
                     # if this specific output is disabled, we
                     # skip the effect
-                    if outputs_y[index] is None:
-                        continue
-                    output_y = outputs_y[index]
-                assert isinstance(output_y, float)
+                    continue
 
                 if self.randomness != 0:
                     offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
                     output_y = (offset_y + output_y) % 1.0
 
                 width, height = color_image.size
+                # TODO(ntamas): use NumPy arrays in the pixel cache!
                 pixels = self.get_image_pixels()
 
                 x = int(width * output_x) if output_x < 1 else width - 1
@@ -872,7 +872,7 @@ class LightEffect(PropertyGroup):
                     else:
                         match color_image.colorspace_settings.name:
                             case "sRGB":
-                                new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
+                                new_color[:] = convert_from_srgb_to_linear(pixel_color)  # ty:ignore[invalid-argument-type]
                             case "Linear Rec.709":
                                 new_color[:] = pixel_color
                             case _:
@@ -881,14 +881,19 @@ class LightEffect(PropertyGroup):
                                 # explicit conversion needs to be implemented for them as well.
                                 new_color[:] = pixel_color
 
+                else:
+                    new_color.fill(0.0)
+                    new_color[3] = 1.0
+
             else:
                 # should not happen
-                new_color[:] = (1.0, 1.0, 1.0, 1.0)
+                new_color.fill(1.0)
 
             new_color[3] *= alpha
 
             # Apply the new color with alpha blending
-            blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
+            # TODO(ntamas): vectorize this!
+            blend_in_place(new_color, colors[index, :], BlendMode[self.blend_mode])
 
     def as_dict(self) -> Jsonable:
         """Creates a dictionary representation of the light effect."""

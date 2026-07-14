@@ -15,6 +15,7 @@ from .decorators import with_context
 __all__ = (
     "create_position_evaluator",
     "get_position_of_object",
+    "get_positions_of_objects_fast",
     "get_xyz_euler_rotation_of_object",
     "get_quaternion_rotation_of_object",
 )
@@ -145,7 +146,7 @@ def get_positions_of_objects_fast(
         locations of object in the world frame
     """
     matrices = np.empty((len(objects), 16), dtype=np.float32)
-    objects.foreach_get("matrix_world", matrices.ravel())
+    objects.foreach_get("matrix_world", matrices.ravel())  # ty:ignore[no-matching-overload]
     if dest is None:
         return matrices[:, 12:15]
     else:

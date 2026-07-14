@@ -1,6 +1,9 @@
 from collections.abc import Callable
 from enum import IntEnum, auto
 
+from numpy import float32
+from numpy.typing import NDArray
+
 from sbstudio.model.types import MutableRGBAColor, RGBAColor
 
 __all__ = ("blend_in_place", "BlendMode")
@@ -134,12 +137,17 @@ if len(_blend_funcs) != len(BlendMode) + 1:
 
 
 def blend_in_place(
-    source: RGBAColor,
-    backdrop: MutableRGBAColor,
+    source: NDArray[float32],
+    backdrop: NDArray[float32],
     mode: BlendMode = BlendMode.NORMAL,
 ) -> None:
     """Blends two colors according to standard alpha compositing rules, using
     the given blending mode and updating the second color in-place.
+
+    Args:
+        source: The source color, as an RGBA array of floats in the range [0, 1].
+        backdrop: The backdrop color, as an RGBA array of floats in the range [0, 1].
+        mode: The blending mode to use. Defaults to BlendMode.NORMAL.
     """
     alpha_source = source[3]
 
