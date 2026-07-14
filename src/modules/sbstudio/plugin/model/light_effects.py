@@ -1303,8 +1303,16 @@ class LightEffect(PropertyGroup):
                 # hidden? Use self.mesh directly
                 mesh_data = cast(Mesh, mesh.data)
                 with use_b_mesh() as b_mesh:
-                    b_mesh.from_mesh(mesh_data)
+                    # We don't request the normals here because we need to update them
+                    # anyway after calling transform(). normal_update() is mandatory,
+                    # otherwise there are slight issues with the containment test such
+                    # that it does not give the same result when the mesh is hidden
+                    # (not in the deps graph).
+                    b_mesh.from_mesh(
+                        mesh_data, vertex_normals=False, face_normals=False
+                    )
                     b_mesh.transform(mesh.matrix_world)
+                    b_mesh.normal_update()
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
 
