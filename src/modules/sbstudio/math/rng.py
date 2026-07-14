@@ -140,6 +140,9 @@ class RandomSequence(Sequence[int]):
         containing the random numbers from ``start`` onward in the sequence
         divided by the maximum value of the sequence.
 
+        When the maximum value of the sequence is 0, this function returns an array
+        containing 0.5 at each index.
+
         Args:
             start: the starting index (must be non-negative)
             length: the number of elements to return
@@ -147,7 +150,10 @@ class RandomSequence(Sequence[int]):
         Returns:
             a NumPy array of shape ``(length,)`` with dtype float64
         """
-        return self.get_array(start, length).astype(float64) / self.max
+        if self.max > 0:
+            return self.get_array(start, length).astype(float64) / self.max
+        else:
+            return self.get_array(start, length).astype(float64) * 0 + 0.5
 
     def get_float(self, index: int) -> float:
         """Returns the random number at the given index in the sequence, divided

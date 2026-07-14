@@ -195,11 +195,9 @@ class TestGetArray01:
         assert arr == pytest.approx(expected)
 
     def test_get_array_01_zero_max(self):
-        import math
-
         seq = RandomSequence(seed=42, max=0)
         arr = seq.get_array_01(0, 1)
-        assert math.isnan(arr[0])
+        assert arr[0] == 0.5
 
     def test_get_array_01_extends_cache(self):
         seq = RandomSequence(seed=42, max=100)
