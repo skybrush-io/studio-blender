@@ -168,6 +168,46 @@ class TestGetArray:
         assert list(arr) == [seq[i] for i in range(1000)]
 
 
+class TestGetArray01:
+    def test_get_array_01_shape_and_dtype(self):
+        seq = RandomSequence(seed=42, max=1000)
+        arr = seq.get_array_01(0, 5)
+        assert isinstance(arr, np.ndarray)
+        assert arr.shape == (5,)
+        assert arr.dtype == np.float64
+
+    def test_get_array_01_values_in_range(self):
+        seq = RandomSequence(seed=42, max=1000)
+        arr = seq.get_array_01(0, 100)
+        assert (arr >= 0).all()
+        assert (arr <= 1).all()
+
+    def test_get_array_01_matches_get_float(self):
+        seq = RandomSequence(seed=42, max=1000)
+        arr = seq.get_array_01(0, 10)
+        expected = np.array([seq.get_float(i) for i in range(10)], dtype=np.float64)
+        assert arr == pytest.approx(expected)
+
+    def test_get_array_01_matches_get_array_divided(self):
+        seq = RandomSequence(seed=42, max=1000)
+        arr = seq.get_array_01(3, 7)
+        expected = seq.get_array(3, 7).astype(np.float64) / seq.max
+        assert arr == pytest.approx(expected)
+
+    def test_get_array_01_zero_max(self):
+        import math
+
+        seq = RandomSequence(seed=42, max=0)
+        arr = seq.get_array_01(0, 1)
+        assert math.isnan(arr[0])
+
+    def test_get_array_01_extends_cache(self):
+        seq = RandomSequence(seed=42, max=100)
+        arr = seq.get_array_01(0, 20)
+        assert len(arr) == 20
+        assert len(seq) >= 20
+
+
 class TestFork:
     def test_fork_deterministic(self):
         parent = RandomSequence(seed=42)

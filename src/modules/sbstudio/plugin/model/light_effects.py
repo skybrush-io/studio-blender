@@ -766,16 +766,32 @@ class LightEffect(PropertyGroup):
         # TODO(ntamas): pre-allocate outputs_x and outputs_y
         outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
         outputs_y: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        has_output_y = color_image is not None
         get_output_based_on_output_type(
             self.output, self.output_mapping_mode, self.output_function, out=outputs_x
         )
-        if color_image is not None:
+        if has_output_y:
             get_output_based_on_output_type(
                 self.output,
                 self.output_mapping_mode,
                 self.output_function,
                 out=outputs_y,
             )
+
+        # Randomize the outputs if needed. NaNs in the output arrays are okay, they will
+        # remain NaN
+        if self.randomness != 0:
+            offsets = (
+                random_seq.get_array_01(0, num_positions) - 0.5
+            ) * self.randomness
+            outputs_x += offsets
+            outputs_x %= 1.0
+            if has_output_y:
+                offsets = (
+                    random_seq.get_array_01(num_positions, num_positions) - 0.5
+                ) * self.randomness
+                outputs_y += offsets
+                outputs_y %= 1.0
 
         # Get the set of drones that the effect is targeting (if applicable)
         targeted_drones = self._get_drones_in_group()
@@ -809,11 +825,6 @@ class LightEffect(PropertyGroup):
                 # skip the effect
                 continue
 
-            # Randomize the output value if needed
-            if self.randomness != 0:
-                offset_x = (random_seq.get_float(index) - 0.5) * self.randomness
-                output_x = (offset_x + output_x) % 1.0
-
             # Apply the color ramp, image or function to get the new color. The order
             # of conditions below is according to their expected frequency of use, with
             # the most common case first.
@@ -845,10 +856,6 @@ class LightEffect(PropertyGroup):
                     # if this specific output is disabled, we
                     # skip the effect
                     continue
-
-                if self.randomness != 0:
-                    offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
-                    output_y = (offset_y + output_y) % 1.0
 
                 width, height = color_image.size
                 # TODO(ntamas): use NumPy arrays in the pixel cache!
