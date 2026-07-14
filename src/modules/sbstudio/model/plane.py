@@ -1,4 +1,8 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
+
+from numpy import array, bool_, float32, ndarray
+from numpy.typing import ArrayLike, NDArray
 
 from .types import Coordinate3D
 
@@ -12,11 +16,23 @@ class Plane:
     plane and `d` is the offset.
     """
 
-    normal: Coordinate3D
-    """The normal vector of the plane."""
+    normal: NDArray[float32]
+    """The normal vector of the plane, stored as a NumPy array of shape ``(3,)``."""
 
     offset: float
     """The offset parameter of the plane equation."""
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Plane):
+            return NotImplemented
+        return (self.normal == other.normal).all() and self.offset == other.offset
+
+    def __hash__(self) -> int:
+        return hash((tuple(map(float, self.normal)), self.offset))
+
+    def __repr__(self) -> str:
+        normal = f"({self.normal[0]}, {self.normal[1]}, {self.normal[2]})"
+        return f"Plane(normal={normal}, offset={self.offset})"
 
     @classmethod
     def from_points(cls, p: Coordinate3D, q: Coordinate3D, r: Coordinate3D):
@@ -43,7 +59,7 @@ class Plane:
         return cls.from_normal_and_point(normal, p)
 
     @classmethod
-    def from_normal_and_point(cls, normal: Coordinate3D, point: Coordinate3D):
+    def from_normal_and_point(cls, normal: Sequence[float], point: Sequence[float]):
         """Constructs a plane from its normal vector and an arbitrary point
         on the plane.
 
@@ -52,12 +68,36 @@ class Plane:
             point: the point on the plane
         """
         offset = point[0] * normal[0] + point[1] * normal[1] + point[2] * normal[2]
-        return cls(normal, offset)
+        return cls.from_normal_and_offset(normal, offset)
+
+    @classmethod
+    def from_normal_and_offset(cls, normal: ArrayLike, offset: float):
+        """Constructs a plane from its normal vector and offset value.
+
+        Args:
+            normal: the normal vector
+            point: the offset value
+        """
+        if not isinstance(normal, ndarray):
+            normal_array = array(normal, dtype=float32)
+        else:
+            normal_array = normal.astype(float32)  # ty:ignore[no-matching-overload]
+        return cls(normal_array, offset)
 
     def is_front(self, p: Coordinate3D) -> bool:
         """Returns whether the given point is on the front side of the plane.
         Points that lie exactly on the plane are considered to be on the front
         side.
         """
-        x = self.normal[0] * p[0] + self.normal[1] * p[1] + self.normal[2] * p[2]
-        return x >= self.offset
+        return bool(self.normal @ p >= self.offset)
+
+    def is_front_many(self, points: NDArray[float32], out: NDArray[bool_]) -> None:
+        """Returns whether each point in the given array is on the front side
+        of the plane.
+
+        Args:
+            points: a NumPy array of shape ``(n, 3)``, one coordinate per row
+            out: a Boolean NumPy array of ``shape(n, )`` where the result will be
+                written.
+        """
+        out[:] = points @ self.normal >= self.offset

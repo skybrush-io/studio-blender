@@ -34,12 +34,16 @@ from mathutils.bvhtree import BVHTree
 from numpy import (
     argsort,
     array,
+    bool_,
+    clip,
     divide,
+    empty,
     float32,
     isnan,
     lexsort,
     linspace,
     nan,
+    nonzero,
     rot90,
     zeros,
 )
@@ -65,7 +69,7 @@ from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
 from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
-from sbstudio.utils import constant, load_module, negate
+from sbstudio.utils import load_module
 
 from .mixins import ListMixin
 
@@ -117,9 +121,6 @@ OUTPUT_ITEMS = [
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
-
-
-_always_true = constant(True)
 
 
 @dataclass(frozen=True)
@@ -221,37 +222,54 @@ def output_type_supports_mapping_mode(type: str) -> bool:
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
 
-def test_containment(bvh_tree: BVHTree | None, point: Coordinate3D) -> bool:
-    """Given a point and a BVH-tree, tests whether the point is _probably_
-    within the mesh represented by the BVH-tree.
+def test_containment(
+    bvh_tree: BVHTree, points: NDArray[float32], out: NDArray[bool_]
+) -> None:
+    """Given a point and a BVH-tree, tests whether a list of points are _probably_
+    within the mesh represented by the BVH-tree, under the assumption that most points
+    are more likely to be outside than inside.
 
-    This is done by casting three rays in the X, Y and Z directions. The point
-    is assumed to be within the mesh if all three rays hit the mesh.
+    It is assumed that the normal vectors of the faces of the mesh are oriented such
+    that they point towards the outside of the mesh.
 
-    Returns True if the BVH-tree is missing.
+    For a single point, the calculation is done by finding the nearest point on the mesh
+    and then checking the dot product of the vector pointing _from_ the point _to_ the
+    nearest point with the normal vector of the mesh at the nearest point. If the dot
+    product is positive, the point is on the positive (external) side of the face
+    containing the nearest point, so it cannot be inside.
+
+    If the dot product is negative, we cast three rays from the point in the positive X,
+    Y and Z directions and check whether they intersect the mesh. If at least one of the
+    rays does not intersect the mesh, we conclude that the point is outside the mesh.
+
+    In all other cases, we assume that the point is inside the mesh. Note that this may
+    lead to a small number of false positives.
+
+    Args:
+        bvh_tree: the BVH-tree representing the mesh
+        points: the points to test for containment
+        out: an array of booleans to write the results to; must have the same length as
+            ``points``
     """
-    global CONTAINMENT_TEST_AXES
+    num_points = len(points)
+    nearest = empty((num_points, 3), dtype=float32)
+    normal = empty((num_points, 3), dtype=float32)
 
-    if not bvh_tree:
-        return True
+    # Unfortunately bvh_tree.ray_cast is not vectorized
+    for index, point in enumerate(points):
+        nearest[index, :], normal[index, :], _, _ = bvh_tree.find_nearest(point)
 
-    for axis in CONTAINMENT_TEST_AXES:
-        _, _, _, dist = bvh_tree.ray_cast(point, axis)
-        if dist is None or dist == -1:
-            return False
+    nearest -= points
+    nearest *= normal
+    out[:] = nearest.sum(axis=1) < 0
 
-    return True
-
-
-def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
-    """Given a point and a plane, tests whether the point is on the front side
-    of the plane.
-
-    Returns:
-        True if the point is on the front side of the plane or if the plane is
-        ``None``
-    """
-    return plane is None or plane.is_front(point)
+    for index in nonzero(out)[0]:
+        point = points[index, :]
+        for axis in CONTAINMENT_TEST_AXES:
+            _, _, _, dist = bvh_tree.ray_cast(point, axis)  # ty:ignore[invalid-argument-type]
+            if dist is None or dist < 0:
+                out[index] = False
+                break
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -763,9 +781,10 @@ class LightEffect(PropertyGroup):
         new_color: NDArray[float32] = zeros((4,), dtype=float32)
 
         # Evaluate the X and Y values for each drone
-        # TODO(ntamas): pre-allocate outputs_x and outputs_y
+        # TODO(ntamas): pre-allocate outputs_x, outputs_y and alphas
         outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
         outputs_y: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        alphas: NDArray[float32] = zeros((num_positions,), dtype=float32)
         has_output_y = color_image is not None
         get_output_based_on_output_type(
             self.output, self.output_mapping_mode, self.output_function, out=outputs_x
@@ -778,8 +797,16 @@ class LightEffect(PropertyGroup):
                 out=outputs_y,
             )
 
+        # Get the set of drones that the effect is targeting (if applicable)
+        targeted_drones = self._get_drones_in_group()
+
+        # Get the additional predicate required to evaluate whether the effect
+        # will be applied at a given position
+        condition = self._get_spatial_effect_predicate()
+
         # Randomize the outputs if needed. NaNs in the output arrays are okay, they will
-        # remain NaN
+        # remain NaN.
+        # TODO(ntamas): if possible, calculate only for the targeted drones
         if self.randomness != 0:
             offsets = (
                 random_seq.get_array_01(0, num_positions) - 0.5
@@ -793,25 +820,16 @@ class LightEffect(PropertyGroup):
                 outputs_y += offsets
                 outputs_y %= 1.0
 
-        # Get the set of drones that the effect is targeting (if applicable)
-        targeted_drones = self._get_drones_in_group()
-
-        # Get the additional predicate required to evaluate whether the effect
-        # will be applied at a given position
-        condition = self._get_spatial_effect_predicate()
-
-        # TODO(ntamas): move randomization of outputs_x and outputs_y here
+        # Calculate the influence of the effect, depending on the fade-in and fade-out
+        # durations and the spatial predicate
+        self._evaluate_influences_at(positions, frame, condition, out=alphas)
 
         for index, position in enumerate(positions):
             # Check containment of drone in the associated drone group
             if targeted_drones is not None and drones[index] not in targeted_drones:
                 continue
 
-            # Calculate the influence of the effect, depending on the fade-in
-            # and fade-out durations and the optional mesh
-            alpha = max(
-                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
-            )
+            alpha = alphas[index]
             if alpha <= 0.0:
                 # Alpha channel is zero so this color will not affect the base color
                 # so we can skip the rest of the calculations
@@ -1216,25 +1234,26 @@ class LightEffect(PropertyGroup):
             )
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
-    def _evaluate_influence_at(
+    def _evaluate_influences_at(
         self,
-        position,
+        positions: NDArray[float32],
         frame: int,
-        condition: Callable[[Coordinate3D], bool] | None,
-    ) -> float:
-        """Eveluates the effective influence of the effect on the given position
+        condition: Callable[[NDArray[float32], NDArray[bool_]], None] | None,
+        *,
+        out: NDArray[float32],
+    ) -> None:
+        """Eveluates the effective influence of the effect on the given positions
         in space and at the given frame.
 
         Parameters:
-            position: the position to evaluate the influence at
+            position: the positions to evaluate the influence at
             frame: the frame count
-            condition: additional condition that must evaluate to true when called
-                with the position; otherwise the effect will not be applied at all
+            condition: additional vectorized condition that must evaluate to true when
+                called with a position; otherwise the effect will not be applied at all.
+                Note that it is _vectorized_, i.e. it must take an array of 3D points
+                and return a Boolean array.
+            out: the output array to store the influence values in
         """
-        # Apply mesh containment constraint
-        if condition and not condition(position):
-            return 0.0
-
         influence = self.influence
 
         # Apply fade-in
@@ -1249,7 +1268,17 @@ class LightEffect(PropertyGroup):
             if diff < self.fade_out_duration:
                 influence *= diff / self.fade_out_duration
 
-        return influence
+        if condition is None:
+            out.fill(influence)
+        else:
+            # Apply the additional condition to the influence values
+            # TODO(ntamas): move this allocation outside somehow
+            mask = empty((len(positions),), dtype=bool_)
+            condition(positions, mask)
+            out[:] = mask
+            out *= influence
+
+        clip(out, 0.0, 1.0, out=out)
 
     def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
         """Returns a BVH-tree data structure from the mesh associated to this
@@ -1298,25 +1327,40 @@ class LightEffect(PropertyGroup):
                 normal = local_to_world.to_3x3() @ polygon.normal
                 center = local_to_world @ polygon.center
                 try:
-                    return Plane.from_normal_and_point(normal, center)  # ty:ignore[invalid-argument-type]
+                    return Plane.from_normal_and_point(normal, center)
                 except Exception:
                     # probably all-zero normal vector
                     pass
 
-    def _get_spatial_effect_predicate(self) -> Callable[[Coordinate3D], bool] | None:
+    def _get_spatial_effect_predicate(
+        self,
+    ) -> Callable[[NDArray[float32], NDArray[bool_]], None] | None:
         if self.target == "INSIDE_MESH":
             bvh_tree = self._get_bvh_tree_from_mesh()
-            func = partial(test_containment, bvh_tree)
+            func = partial(test_containment, bvh_tree) if bvh_tree is not None else None
         elif self.target == "FRONT_SIDE":
             plane = self._get_plane_from_mesh()
-            func = partial(test_is_in_front_of, plane)
+            func = plane.is_front_many if plane is not None else None
         else:
             func = None
 
         if self.invert_target:
-            func = negate(func or _always_true)
+            if func is not None:
 
-        return func
+                def negated(arr: NDArray[float32], out: NDArray[bool_]) -> None:
+                    func(arr, out)
+                    out[:] = ~out
+
+                return negated
+
+            else:
+
+                def constant_false(arr: NDArray[float32], out: NDArray[bool_]) -> None:
+                    out.fill(False)
+
+                return constant_false
+        else:
+            return func
 
     def _create_texture(self) -> ImageTexture:
         """Creates the texture associated to the light effect."""
