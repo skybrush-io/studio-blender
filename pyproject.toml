@@ -18,7 +18,16 @@ Pepository = "https://github.com/skybrush-io/studio-plugin-blender"
 Documentation = "https://doc.collmot.com/public/skybrush-plugin-blender/latest/"
 
 [dependency-groups]
-dev = ["numpy", "poethepoet>=0.42.1", "pyclean>=2.0.0", "ruff>=0.15.5", "ty>=0.0.21"]
+dev = [
+    "coverage[toml]>=7.15.1",
+    "numpy",
+    "poethepoet>=0.42.1",
+    "pyclean>=2.0.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.5",
+    "ty>=0.0.21",
+]
 
 [tool.poe.tasks]
 
@@ -32,6 +41,8 @@ ty = "ty check src/"
 
 check.sequence = ["format", "lint"]
 check.ignore_fail = "return_non_zero"
+
+test.cmd = "python -m pytest test"
 
 [tool.uv.build-backend]
 module-root = "src/modules"
