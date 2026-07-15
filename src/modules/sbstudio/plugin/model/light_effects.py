@@ -4,7 +4,7 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, ClassVar, Protocol, cast
+from typing import Any, ClassVar, Literal, Protocol, cast
 from uuid import uuid4
 
 import bpy
@@ -601,184 +601,10 @@ class LightEffect(PropertyGroup):
                 randomization is turned on
         """
 
-        def get_output_based_on_output_type(
-            output_type: str,
-            mapping_mode: str,
-            output_function,
-            *,
-            out: NDArray[float32],
-        ) -> None:
-            """Get the float outputs for color ramp or image indexing based on the
-            output type.
-
-            Args:
-                output_type: the output type used for indexing
-                mapping_mode: mapping mode corresponding to the output type
-                dest: destination array to write the result to
-            """
-            if output_type == "FIRST_COLOR":
-                out.fill(0.0)
-
-            elif output_type == "LAST_COLOR":
-                out.fill(1.0)
-
-            elif output_type == "TEMPORAL":
-                out.fill(time_fraction)
-
-            elif output_type_supports_mapping_mode(output_type):
-                # There are two options here:
-                #
-                # 1. Legacy, non-proportional mode. We sort the drones based on a
-                #    sort key and then space them out equally on the color ramp or
-                #    image axis.
-                #
-                # 2. Proportional mode. Same as above, but we assign drones to
-                #    positions on the color ramp or image axis in a way that their
-                #    distances on the color ramp or image axis are proportional to
-                #    the differences in their sort keys. Note that this needs a
-                #    _scalar_ sorting key so we ignore all but the principal axis
-                #    for gradient output types.
-                proportional = mapping_mode == "PROPORTIONAL"
-                sort_keys: NDArray[float32] | None
-
-                if output_type == "DISTANCE":
-                    if self.mesh:
-                        position_of_mesh = array(
-                            get_position_of_object(self.mesh), dtype=float32
-                        )
-                        sort_keys = ((positions - position_of_mesh) ** 2).sum(axis=1)
-                    else:
-                        sort_keys = None
-
-                else:
-                    query_axes = (
-                        OUTPUT_TYPE_TO_AXES.get(output_type)
-                        or OUTPUT_TYPE_TO_AXES["default"]
-                    )
-                    if proportional:
-                        # In proportional mode, we are using the primary axis only
-                        # because we need a scalar
-                        sort_keys = positions[:, query_axes[0]]
-                    else:
-                        # In non-proportional mode, we are sorting along multiple axes
-                        sort_keys = positions[:, query_axes]
-
-                if num_positions < 2 or sort_keys is None:
-                    # Just assign all drones to the last color of the ramp
-                    out.fill(1.0)
-                elif proportional:
-                    # In proportional mode, sort_keys is always 1D and we need to just
-                    # re-scale the values to the 0-1 range
-                    assert sort_keys.ndim == 1
-                    if len(sort_keys) > 0:
-                        lo, hi = sort_keys.min(), sort_keys.max()
-                        if hi > lo:
-                            sort_keys -= lo
-                            divide(sort_keys, hi - lo, out=out)
-                else:
-                    # In legacy mode, sort_keys is either 1D or 2D
-                    if sort_keys.ndim == 2:
-                        # 2D case, we need to do a lexicographic sort
-                        order = lexsort(rot90(sort_keys))
-                    else:
-                        assert sort_keys.ndim == 1
-                        order = argsort(sort_keys)
-
-                    out[:] = argsort(order)
-                    out /= num_positions - 1
-
-            elif output_type == "INDEXED_BY_DRONES":
-                # Gradient based on drone index
-                if num_positions > 1:
-                    out[:] = linspace(0.0, 1.0, num=num_positions)
-                else:
-                    out.fill(1.0)
-
-            elif output_type == "INDEXED_BY_FORMATION":
-                # Gradient based on formation index
-                if mapping is not None:
-                    assert num_positions == len(mapping)
-
-                    # TODO: this now works only if the number of valid entries in the mapping
-                    # is consistent with the number of drones in the given formation;
-                    # e.g., it will not work with two formations of half size at the same time
-                    # for this case, single-formation specific mapping would be needed
-
-                    # reduce mapping of all positions to rank, in case formation size
-                    # is smaller than the number of drones
-                    # TODO(ntamas): this would probably be faster with NumPy
-                    if None in mapping:
-                        sorted_valid_mapping = sorted(
-                            x for x in mapping if x is not None
-                        )
-                        np_m1 = max(len(sorted_valid_mapping) - 1, 1)
-                        out[:] = [
-                            nan if x is None else sorted_valid_mapping.index(x) / np_m1
-                            for x in mapping
-                        ]
-                    # otherwise just normalize full mapping to [0, 1]
-                    else:
-                        np_m1 = max(num_positions - 1, 1)
-                        divide(cast(Sequence[int], mapping), np_m1, out=out)
-                else:
-                    # if there is no mapping at all, we do not change color of drones
-                    out.fill(nan)
-
-            elif output_type == "CUSTOM":
-                absolute_path = abspath(output_function.path)
-                module = load_module(absolute_path) if absolute_path else None
-                if output_function.name:
-                    fn = cast(
-                        CustomLightEffectFunction, getattr(module, output_function.name)
-                    )
-                    out[:] = [
-                        fn(
-                            frame=frame,
-                            time_fraction=time_fraction,
-                            drone_index=index,
-                            formation_index=(
-                                mapping[index] if mapping is not None else None
-                            ),
-                            position=positions[index],
-                            drone_count=num_positions,
-                        )
-                        for index in range(num_positions)
-                    ]
-                else:
-                    out.fill(1.0)
-
-                # TODO(ntamas): add CUSTOM_VECTORIZED type
-
-            elif output_type == "LIGHT_PRESET":
-                preset_fn = (
-                    get_preset_function(self.preset_id) if self.preset_id else None
-                )
-                if preset_fn is not None:
-                    out[:] = [
-                        preset_fn(
-                            frame=frame,
-                            time_fraction=time_fraction,
-                            drone_index=index,
-                            formation_index=(
-                                mapping[index] if mapping is not None else None
-                            ),
-                            position=positions[index],
-                            drone_count=num_positions,
-                        )
-                        for index in range(num_positions)
-                    ]
-                else:
-                    out.fill(1.0)
-
-            else:
-                # Should not get here
-                out.fill(1.0)
-
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        time_fraction = (frame - self.frame_start) / max(self.duration - 1, 1)
         num_positions = len(positions)
 
         color_ramp = self.color_ramp
@@ -811,15 +637,12 @@ class LightEffect(PropertyGroup):
 
         # Evaluate the X and Y values for each drone
         has_output_y = color_image is not None
-        get_output_based_on_output_type(
-            self.output, self.output_mapping_mode, self.output_function, out=outputs_x
+        self._get_output_based_on_output_type(
+            frame, positions, mapping, "x", out=outputs_x
         )
         if has_output_y:
-            get_output_based_on_output_type(
-                self.output,
-                self.output_mapping_mode,
-                self.output_function,
-                out=outputs_y,
+            self._get_output_based_on_output_type(
+                frame, positions, mapping, "y", out=outputs_y
             )
 
         # Mask all drones where the output value dictates that the color does not need
@@ -861,6 +684,7 @@ class LightEffect(PropertyGroup):
 
         elif color_function_ref is not None:
             # TODO(ntamas): output_x is not needed here at all
+            time_fraction = self._get_time_fraction_for_frame(frame)
             for index in unmasked:
                 try:
                     new_colors[index, :] = color_function_ref(
@@ -1370,6 +1194,9 @@ class LightEffect(PropertyGroup):
                     # probably all-zero normal vector
                     pass
 
+    def _get_time_fraction_for_frame(self, frame: int) -> float:
+        return (frame - self.frame_start) / max(self.duration - 1, 1)
+
     def _get_spatial_effect_predicate(
         self,
     ) -> Callable[[NDArray[float32], NDArray[bool_]], None] | None:
@@ -1385,6 +1212,187 @@ class LightEffect(PropertyGroup):
             case "FRONT_SIDE":
                 plane = self._get_plane_from_mesh()
                 return plane.is_front_many if plane is not None else None
+
+    def _get_output_based_on_output_type(
+        self,
+        frame: int,
+        positions: NDArray[float32],
+        mapping: Mapping | None,
+        axis: Literal["x", "y"],
+        *,
+        out: NDArray[float32],
+    ) -> None:
+        """Get the float outputs for color ramp or image indexing based on the
+        output type.
+
+        Args:
+            out: destination array to write the result to
+        """
+        output_type = self.output_y if axis == "y" else self.output
+        num_positions = len(positions)
+
+        if output_type == "FIRST_COLOR":
+            out.fill(0.0)
+
+        elif output_type == "LAST_COLOR":
+            out.fill(1.0)
+
+        elif output_type == "TEMPORAL":
+            time_fraction = self._get_time_fraction_for_frame(frame)
+            out.fill(time_fraction)
+
+        elif output_type_supports_mapping_mode(output_type):
+            # There are two options here:
+            #
+            # 1. Legacy, non-proportional mode. We sort the drones based on a
+            #    sort key and then space them out equally on the color ramp or
+            #    image axis.
+            #
+            # 2. Proportional mode. Same as above, but we assign drones to
+            #    positions on the color ramp or image axis in a way that their
+            #    distances on the color ramp or image axis are proportional to
+            #    the differences in their sort keys. Note that this needs a
+            #    _scalar_ sorting key so we ignore all but the principal axis
+            #    for gradient output types.
+            mapping_mode = (
+                self.output_mapping_mode_y if axis == "y" else self.output_mapping_mode
+            )
+            proportional = mapping_mode == "PROPORTIONAL"
+            sort_keys: NDArray[float32] | None
+
+            if output_type == "DISTANCE":
+                if self.mesh:
+                    position_of_mesh = array(
+                        get_position_of_object(self.mesh), dtype=float32
+                    )
+                    sort_keys = ((positions - position_of_mesh) ** 2).sum(axis=1)
+                else:
+                    sort_keys = None
+
+            else:
+                query_axes = (
+                    OUTPUT_TYPE_TO_AXES.get(output_type)
+                    or OUTPUT_TYPE_TO_AXES["default"]
+                )
+                if proportional:
+                    # In proportional mode, we are using the primary axis only
+                    # because we need a scalar
+                    sort_keys = positions[:, query_axes[0]]
+                else:
+                    # In non-proportional mode, we are sorting along multiple axes
+                    sort_keys = positions[:, query_axes]
+
+            if num_positions < 2 or sort_keys is None:
+                # Just assign all drones to the last color of the ramp
+                out.fill(1.0)
+            elif proportional:
+                # In proportional mode, sort_keys is always 1D and we need to just
+                # re-scale the values to the 0-1 range
+                assert sort_keys.ndim == 1
+                if len(sort_keys) > 0:
+                    lo, hi = sort_keys.min(), sort_keys.max()
+                    if hi > lo:
+                        sort_keys -= lo
+                        divide(sort_keys, hi - lo, out=out)
+            else:
+                # In legacy mode, sort_keys is either 1D or 2D
+                if sort_keys.ndim == 2:
+                    # 2D case, we need to do a lexicographic sort
+                    order = lexsort(rot90(sort_keys))
+                else:
+                    assert sort_keys.ndim == 1
+                    order = argsort(sort_keys)
+
+                out[:] = argsort(order)
+                out /= num_positions - 1
+
+        elif output_type == "INDEXED_BY_DRONES":
+            # Gradient based on drone index
+            if num_positions > 1:
+                out[:] = linspace(0.0, 1.0, num=num_positions)
+            else:
+                out.fill(1.0)
+
+        elif output_type == "INDEXED_BY_FORMATION":
+            # Gradient based on formation index
+            if mapping is not None:
+                assert num_positions == len(mapping)
+
+                # TODO: this now works only if the number of valid entries in the mapping
+                # is consistent with the number of drones in the given formation;
+                # e.g., it will not work with two formations of half size at the same time
+                # for this case, single-formation specific mapping would be needed
+
+                # reduce mapping of all positions to rank, in case formation size
+                # is smaller than the number of drones
+                # TODO(ntamas): this would probably be faster with NumPy
+                if None in mapping:
+                    sorted_valid_mapping = sorted(x for x in mapping if x is not None)
+                    np_m1 = max(len(sorted_valid_mapping) - 1, 1)
+                    out[:] = [
+                        nan if x is None else sorted_valid_mapping.index(x) / np_m1
+                        for x in mapping
+                    ]
+                # otherwise just normalize full mapping to [0, 1]
+                else:
+                    np_m1 = max(num_positions - 1, 1)
+                    divide(cast(Sequence[int], mapping), np_m1, out=out)
+            else:
+                # if there is no mapping at all, we do not change color of drones
+                out.fill(nan)
+
+        elif output_type == "CUSTOM":
+            output_function = (
+                self.output_function_y if axis == "y" else self.output_function
+            )
+            absolute_path = abspath(output_function.path)
+            module = load_module(absolute_path) if absolute_path else None
+            if output_function.name:
+                fn = cast(
+                    CustomLightEffectFunction, getattr(module, output_function.name)
+                )
+                time_fraction = self._get_time_fraction_for_frame(frame)
+                out[:] = [
+                    fn(
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=(
+                            mapping[index] if mapping is not None else None
+                        ),
+                        position=positions[index],
+                        drone_count=num_positions,
+                    )
+                    for index in range(num_positions)
+                ]
+            else:
+                out.fill(1.0)
+
+            # TODO(ntamas): add CUSTOM_VECTORIZED type
+
+        elif output_type == "LIGHT_PRESET":
+            preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
+            if preset_fn is not None:
+                time_fraction = self._get_time_fraction_for_frame(frame)
+                out[:] = [
+                    preset_fn(
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=(
+                            mapping[index] if mapping is not None else None
+                        ),
+                        position=positions[index],
+                        drone_count=num_positions,
+                    )
+                    for index in range(num_positions)
+                ]
+            else:
+                out.fill(1.0)
+
+        else:
+            # Should not get here
+            out.fill(1.0)
 
     def _mask_drones_not_in_group(
         self, mask: NDArray[bool_], all_drones: Sequence[Object]
