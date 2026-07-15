@@ -37,6 +37,7 @@ from numpy import (
     bool_,
     divide,
     empty,
+    empty_like,
     flatnonzero,
     float32,
     isnan,
@@ -45,6 +46,7 @@ from numpy import (
     nan,
     rot90,
     zeros,
+    zeros_like,
 )
 from numpy.typing import NDArray
 
@@ -783,30 +785,29 @@ class LightEffect(PropertyGroup):
         color_image = self.color_image
         color_function_ref = self.color_function_ref
 
-        # Allocate required buffers
-        # TODO(ntamas): pre-allocate these
+        # Allocate mask
         mask: NDArray[bool_] = zeros((num_positions,), dtype=bool_)
-        outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
-        outputs_y: NDArray[float32] = zeros((num_positions,), dtype=float32)
-        influences: NDArray[float32] = zeros((num_positions,), dtype=float32)
-        new_colors: NDArray[float32] = zeros((num_positions, 4), dtype=float32)
 
         # Mask all the drones that are not in the group being targeted by this effect
+        # or are not matched by the spatial predicate associated to this effect
         self._mask_drones_not_in_group(mask, drones)
+        self._mask_drones_not_matching_spatial_predicate(mask, positions)
 
-        # Get the additional predicate required to evaluate whether the effect
-        # will be applied at a given position
-        condition = self._get_spatial_effect_predicate()
+        # Bail out here if no drones remained
+        if mask.all():
+            return
 
         # Calculate the influence of the effect, depending on the fade-in and fade-out
         # durations and the spatial predicate
-        self._evaluate_influences_at(mask, positions, frame, condition, out=influences)
+        influences: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        self._evaluate_influences_at(mask, frame, out=influences)
 
-        # Mask all drones that will not be affected in this frame, then bail out if no
-        # drones remained
-        mask |= influences <= 0
+        # Bail out here if no drones remained
         if mask.all():
             return
+
+        outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
+        outputs_y: NDArray[float32] = zeros_like(outputs_x)
 
         # Evaluate the X and Y values for each drone
         has_output_y = color_image is not None
@@ -852,6 +853,7 @@ class LightEffect(PropertyGroup):
         # Note that the getters that these values come from are constructed in a
         # way that they are set to `None` if they are not applicable, so only one of
         # the branches will apply below.
+        new_colors: NDArray[float32] = zeros_like(colors)
         if color_ramp is not None:
             for index in unmasked:
                 output_x: float = outputs_x[index]
@@ -1295,9 +1297,7 @@ class LightEffect(PropertyGroup):
     def _evaluate_influences_at(
         self,
         mask: NDArray[bool_],
-        positions: NDArray[float32],
         frame: int,
-        condition: Callable[[NDArray[float32], NDArray[bool_]], None] | None,
         *,
         out: NDArray[float32],
     ) -> None:
@@ -1308,29 +1308,15 @@ class LightEffect(PropertyGroup):
             mask: mask array that contains False for drones that participate in the
                 current effect and True otherwise. It will be updated in-place if the
                 influence value turns out to be zero or negative.
-            position: the positions to evaluate the influence at
             frame: the frame count
-            condition: additional vectorized condition that must evaluate to true when
-                called with a position; otherwise the effect will not be applied at all.
-                Note that it is _vectorized_, i.e. it must take an array of 3D points
-                and return a Boolean array.
             out: the output array to store the influence values in
         """
         influence = self._evaluate_influence(frame)
         if influence <= 0:
             mask.fill(True)
-            return
-
-        if condition is None:
-            out.fill(influence)
         else:
-            # Apply the additional condition to the influence values
-            # TODO(ntamas): move this allocation outside somehow
-            submask = empty((len(positions),), dtype=bool_)
-            condition(positions, submask)
-            mask |= ~submask
-            out[:] = ~mask
-            out *= influence
+            out.fill(influence)
+            out[mask] = 0.0
 
     def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
         """Returns a BVH-tree data structure from the mesh associated to this
@@ -1387,44 +1373,52 @@ class LightEffect(PropertyGroup):
     def _get_spatial_effect_predicate(
         self,
     ) -> Callable[[NDArray[float32], NDArray[bool_]], None] | None:
-        if self.target == "INSIDE_MESH":
-            bvh_tree = self._get_bvh_tree_from_mesh()
-            func = partial(test_containment, bvh_tree) if bvh_tree is not None else None
-        elif self.target == "FRONT_SIDE":
-            plane = self._get_plane_from_mesh()
-            func = plane.is_front_many if plane is not None else None
-        else:
-            func = None
+        match self.target:
+            case "INSIDE_MESH":
+                bvh_tree = self._get_bvh_tree_from_mesh()
+                return (
+                    partial(test_containment, bvh_tree)
+                    if bvh_tree is not None
+                    else None
+                )
 
-        if self.invert_target:
-            if func is not None:
-
-                def negated(arr: NDArray[float32], out: NDArray[bool_]) -> None:
-                    func(arr, out)
-                    out[:] = ~out
-
-                return negated
-
-            else:
-
-                def constant_false(arr: NDArray[float32], out: NDArray[bool_]) -> None:
-                    out.fill(False)
-
-                return constant_false
-        else:
-            return func
+            case "FRONT_SIDE":
+                plane = self._get_plane_from_mesh()
+                return plane.is_front_many if plane is not None else None
 
     def _mask_drones_not_in_group(
         self, mask: NDArray[bool_], all_drones: Sequence[Object]
     ) -> None:
-        """When a drone group is associated to the effect, masks all drones that are not
-        in this group. No-op if the effect has no associated group.
+        """Masks all drones that are not in the drone group associated with this effect.
+        No-op if the effect has no associated group.
         """
-        if self.drone_group is not None:
-            drones_in_group = set(self.drone_group.objects)
-            for index, drone in enumerate(all_drones):
-                if drone in drones_in_group:
-                    mask[index] = True
+        if self.drone_group is None:
+            return
+
+        drones_in_group = set(self.drone_group.objects)
+        for index, drone in enumerate(all_drones):
+            if drone in drones_in_group:
+                mask[index] = True
+
+    def _mask_drones_not_matching_spatial_predicate(
+        self, mask: NDArray[bool_], positions: NDArray[float32]
+    ) -> None:
+        """Masks all drones that do not match the spatial predicate associated with this
+        effect. No-op if the effect has no spatial predicate.
+        """
+        predicate: Callable[[NDArray[float32], NDArray[bool_]], None] | None = (
+            self._get_spatial_effect_predicate()
+        )
+        if not predicate:
+            if self.invert_target:
+                mask.fill(True)
+            return
+
+        # TODO(ntamas): re-write predicates so they update the mask and do not
+        # even bother testing those drones that are already excluded at this point
+        result = empty_like(mask)
+        predicate(positions, result)
+        mask |= result if self.invert_target else ~result
 
 
 class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
