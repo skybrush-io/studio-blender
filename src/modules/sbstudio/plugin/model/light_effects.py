@@ -235,7 +235,7 @@ def test_containment(
     For a single point, the calculation is done by finding the nearest point on the mesh
     and then checking the dot product of the vector pointing _from_ the point _to_ the
     nearest point with the normal vector of the mesh at the nearest point. If the dot
-    product is positive, the point is on the positive (external) side of the face
+    product is negative, the point is on the positive (external) side of the face
     containing the nearest point, so it cannot be inside.
 
     If the dot product is negative, we cast three rays from the point in the positive X,
@@ -261,7 +261,12 @@ def test_containment(
 
     nearest -= points
     nearest *= normal
-    out[:] = nearest.sum(axis=1) < 0
+    out[:] = nearest.sum(axis=1) > 0
+
+    # At this point out[i] is True if the point is _probably_ inside the mesh, and
+    # False if it is definitely outside. For all the values that are True, we need to
+    # cast rays to check whether they intersect the mesh. If at least one of the rays
+    # does not intersect the mesh, we conclude that the point is outside the mesh.
 
     for index in nonzero(out)[0]:
         point = points[index, :]
