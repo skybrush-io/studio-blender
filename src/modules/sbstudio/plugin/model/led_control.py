@@ -55,6 +55,9 @@ def _visualization_callback_for_materials(update: LightEffectUpdate) -> None:
     if not update.has_active_effects:
         return
 
+    if update.colors is None:
+        return
+
     for drone, color in zip(update.drones, update.colors, strict=True):
         set_color_of_drone(drone, color)
 

@@ -52,7 +52,7 @@ from sbstudio.api.types import Mapping
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, Jsonable, RGBAColor
+from sbstudio.model.types import Coordinate3D, Jsonable
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
@@ -131,11 +131,11 @@ class LightEffectUpdate:
     NOP: ClassVar[LightEffectUpdate]
 
     drones: Sequence[Object]
-    colors: Sequence[RGBAColor]
+    colors: NDArray[float32] | None
     has_active_effects: bool
 
 
-LightEffectUpdate.NOP = LightEffectUpdate((), (), False)
+LightEffectUpdate.NOP = LightEffectUpdate((), None, False)
 
 
 class CustomLightEffectFunction(Protocol):

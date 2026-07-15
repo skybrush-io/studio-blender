@@ -8,11 +8,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, Iterator
 
 import bpy
-import numpy as np
 from bpy.types import CollectionObjects, Object
+from numpy import empty, float32
 from numpy.typing import NDArray
 
 from sbstudio.api.types import Mapping
@@ -63,7 +63,7 @@ class ColorCache:
     not supposed to be modified by the light effects.
     """
 
-    _base_colors_array: NDArray[np.float32]
+    _base_colors: NDArray[float32]
     """NumPy array of shape (N, 4) containing the base color of every drone
     that was cached for the current frame."""
 
@@ -80,7 +80,7 @@ class ColorCache:
     """
 
     def __init__(self):
-        self._base_colors_array = np.empty((0, 4), dtype=np.float32)
+        self._base_colors = empty((0, 4), dtype=float32)
         self._drone_id_to_row_index = {}
         self._session = LightEffectUpdateSession(self)
 
@@ -93,16 +93,23 @@ class ColorCache:
         """
         idx = self._drone_id_to_row_index.get(id(drone))
         if idx is not None:
-            return tuple(self._base_colors_array[idx])
+            return tuple(self._base_colors[idx])
         return WHITE
 
     def get_final_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) final color of the drone at the current frame
         after all active light effects are applied on it.
         """
+        idx = self._drone_id_to_row_index.get(id(drone))
+        if idx is None:
+            return WHITE
+
         final_colors = self._session._final_colors
-        result = final_colors.get(id(drone)) if final_colors else None
-        return result or self.get_base_color_of_drone(drone)
+        return (
+            tuple(final_colors[idx])
+            if final_colors is not None
+            else tuple(self._base_colors[idx])
+        )
 
     def run_empty_session(self) -> LightEffectUpdate:
         """Runs an empty update session that keeps each drone at its base color in the
@@ -135,11 +142,11 @@ class ColorCache:
     def _clear_base_colors(self) -> None:
         """Clears the base color cache."""
         self._drone_id_to_row_index.clear()
-        self._base_colors_array = np.empty((0, 4), dtype=np.float32)
+        self._base_colors = empty((0, 4), dtype=float32)
 
     def _create_mutable_color_array_for_drones(
         self, drones: CollectionObjects
-    ) -> NDArray[np.float32]:
+    ) -> NDArray[float32]:
         """Creates a mutable color array from the given collection of drones that can
         be used during light effect calculations to update the colors.
 
@@ -147,7 +154,7 @@ class ColorCache:
         collection. The i-th row stores the color of the i-th drone, in RGBA order.
         """
         n = len(drones)
-        if not self._drone_id_to_row_index or n != self._base_colors_array.shape[0]:
+        if not self._drone_id_to_row_index or n != self._base_colors.shape[0]:
             # Either we have no base colors yet, or the number of drones has changed.
             # Query the base colors from the drones.
             #
@@ -161,13 +168,13 @@ class ColorCache:
             # These are shortcomings that we can live with for now as they can easily
             # be fixed by changing to a different frame and then back to the current
             # frame.
-            self._base_colors_array = np.empty((n, 4), dtype=np.float32)
-            get_colors_of_drones_fast(drones, dest=self._base_colors_array.ravel())
+            self._base_colors = empty((n, 4), dtype=float32)
+            get_colors_of_drones_fast(drones, dest=self._base_colors.ravel())
             self._drone_id_to_row_index = {
                 id(drone): i for i, drone in enumerate(drones)
             }
 
-        return self._base_colors_array.copy()
+        return self._base_colors.copy()
 
     def _ensure_session_not_running(self) -> None:
         """Ensures that no session is currently active."""
@@ -189,8 +196,8 @@ class LightEffectUpdateSession:
         """Class that stores the state of the light effect update session."""
 
         drones: Sequence[Object]
-        colors: NDArray[np.float32]
-        positions: NDArray[np.float32]
+        colors: NDArray[float32]
+        positions: NDArray[float32]
         mapping: Mapping | None
 
     _color_cache: ColorCache
@@ -202,24 +209,16 @@ class LightEffectUpdateSession:
     _frame: int | None
     """The frame that is being updated."""
 
-    _state: State | None = None
-
-    _final_colors: dict[int, RGBAColor] | None = None
-    """Mapping from every drone in the current frame to the final color of this drone,
-    after we have applied the light effects on them. Populated when calling the
+    _final_colors: NDArray[float32] | None = None
+    """Array of the final colors of the drones in the current frame, after we have
+    applied the light effects on them. One drone per row. Populated when calling the
     `finalize()` method.
 
-    The mapping is keyed by the _ids_ of the drones so we do not hang on to a
-    reference of a drone if the user deletes it and Blender decides to free the
-    associated memory area.
-    """
-
-    _final_color_list: Sequence[RGBAColor] | None = None
-    """List of the final colors of the drones in the current frame, after we have
-    applied the light effects on them. Populated when calling the `finalize()` method.
     The order of the colors in this list is the same as the order of the drones in
     the `drones` attribute of the `_State` object returned by the `get_state()` method.
     """
+
+    _state: State | None = None
 
     def __init__(self, color_cache: ColorCache):
         self._color_cache = color_cache
@@ -281,7 +280,6 @@ class LightEffectUpdateSession:
         self._frame = frame
 
         self._final_colors = None
-        self._final_color_list = None
         self._state = None
 
     def finalize(self) -> None:
@@ -313,11 +311,7 @@ class LightEffectUpdateSession:
             # previous frame so no need to calculate the final colors
             return
 
-        self._final_color_list = cast(Sequence[RGBAColor], state.colors)
-        self._final_colors = {
-            id(drone): color
-            for drone, color in zip(state.drones, self._final_color_list, strict=True)
-        }
+        self._final_colors = state.colors
 
         if clear_base_color_cache_at_end:
             self._color_cache._clear_base_colors()
@@ -330,10 +324,10 @@ class LightEffectUpdateSession:
             was at least one active light effect or the last active effect was turned
             off just now
         """
-        if self._final_color_list is None or self._state is None:
+        if self._final_colors is None or self._state is None:
             return LightEffectUpdate.NOP
         else:
-            return LightEffectUpdate(self._state.drones, self._final_color_list, True)
+            return LightEffectUpdate(self._state.drones, self._final_colors, True)
 
 
 _color_cache: ColorCache = ColorCache()
