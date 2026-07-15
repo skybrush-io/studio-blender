@@ -843,26 +843,23 @@ class LightEffect(PropertyGroup):
                 outputs_y += offsets
                 outputs_y %= 1.0
 
-        for index in flatnonzero(~mask):
-            # Calculate the output value of the effect that goes through the color
-            # ramp or image mapper
-            output_x: float = outputs_x[index]
-            if isnan(output_x):
-                # if this specific output is disabled, we
-                # skip the effect
-                continue
+        unmasked = flatnonzero(~mask)
 
-            # Apply the color ramp, image or function to get the new color. The order
-            # of conditions below is according to their expected frequency of use, with
-            # the most common case first.
-            #
-            # Note that the getters that these values come from are constructed in a
-            # way that they are set to `None` if they are not applicable, so only one of
-            # the branches will apply below.
-            if color_ramp is not None:
+        # Apply the color ramp, image or function to get the new color. The order
+        # of conditions below is according to their expected frequency of use, with
+        # the most common case first.
+        #
+        # Note that the getters that these values come from are constructed in a
+        # way that they are set to `None` if they are not applicable, so only one of
+        # the branches will apply below.
+        if color_ramp is not None:
+            for index in unmasked:
+                output_x: float = outputs_x[index]
                 new_colors[index, :] = color_ramp.evaluate(output_x)
 
-            elif color_function_ref is not None:
+        elif color_function_ref is not None:
+            # TODO(ntamas): output_x is not needed here at all
+            for index in unmasked:
                 try:
                     new_colors[index, :] = color_function_ref(
                         frame=frame,
@@ -877,16 +874,15 @@ class LightEffect(PropertyGroup):
                 except Exception as exc:
                     raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
 
-            elif color_image is not None:
-                output_y: float = outputs_y[index]
-                if isnan(output_y):
-                    # if this specific output is disabled, we
-                    # skip the effect
-                    continue
+        elif color_image is not None:
+            width, height = color_image.size
+            # TODO(ntamas): use NumPy arrays in the pixel cache!
+            pixels = self.get_image_pixels()
 
-                width, height = color_image.size
-                # TODO(ntamas): use NumPy arrays in the pixel cache!
-                pixels = self.get_image_pixels()
+            for index in unmasked:
+                # TODO(ntamas): vectorize coordinate calculations
+                output_x: float = outputs_x[index]
+                output_y: float = outputs_y[index]
 
                 x = int(width * output_x) if output_x < 1 else width - 1
                 y = int(height * output_y) if output_y < 1 else height - 1
@@ -921,9 +917,9 @@ class LightEffect(PropertyGroup):
                     new_colors[index, :].fill(0.0)
                     new_colors[index, 3] = 1.0
 
-            else:
-                # should not happen
-                new_colors[index, :].fill(1.0)
+        else:
+            # should not happen
+            new_colors.fill(1.0)
 
         new_colors[:, 3] *= influences
 
