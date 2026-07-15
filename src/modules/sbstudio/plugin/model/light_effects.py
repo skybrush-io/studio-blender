@@ -45,6 +45,7 @@ from numpy import (
     linspace,
     nan,
     rot90,
+    where,
     zeros,
     zeros_like,
 )
@@ -625,11 +626,8 @@ class LightEffect(PropertyGroup):
 
         # Calculate the influence of the effect, depending on the fade-in and fade-out
         # durations and the spatial predicate
-        influences: NDArray[float32] = zeros((num_positions,), dtype=float32)
-        self._evaluate_influences_at(mask, frame, out=influences)
-
-        # Bail out here if no drones remained
-        if mask.all():
+        influence = self._evaluate_influence(frame)
+        if influence <= 0:
             return
 
         outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
@@ -747,7 +745,8 @@ class LightEffect(PropertyGroup):
             # should not happen
             new_colors.fill(1.0)
 
-        new_colors[:, 3] *= influences
+        # Scale the alpha channel of the new colors with the influence
+        new_colors[:, 3] *= where(mask, 0, influence)
 
         # Apply the new color with alpha blending
         blend_in_place(new_colors, colors, BlendMode[self.blend_mode])
@@ -1117,30 +1116,6 @@ class LightEffect(PropertyGroup):
                 influence *= diff / self.fade_out_duration
 
         return min(max(influence, 0), 1)
-
-    def _evaluate_influences_at(
-        self,
-        mask: NDArray[bool_],
-        frame: int,
-        *,
-        out: NDArray[float32],
-    ) -> None:
-        """Eveluates the effective influence of the effect on the given positions
-        in space and at the given frame.
-
-        Parameters:
-            mask: mask array that contains False for drones that participate in the
-                current effect and True otherwise. It will be updated in-place if the
-                influence value turns out to be zero or negative.
-            frame: the frame count
-            out: the output array to store the influence values in
-        """
-        influence = self._evaluate_influence(frame)
-        if influence <= 0:
-            mask.fill(True)
-        else:
-            out.fill(influence)
-            out[mask] = 0.0
 
     def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
         """Returns a BVH-tree data structure from the mesh associated to this
