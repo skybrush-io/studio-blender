@@ -1,9 +1,11 @@
 import importlib.util
 from collections import OrderedDict
 from collections.abc import Callable, Iterable, MutableMapping, Sequence
+from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from time import monotonic_ns
+from typing import Any, Generic, Iterator, TypeVar
 
 import numpy as np
 
@@ -14,6 +16,7 @@ __all__ = (
     "constant",
     "create_path_and_open",
     "distance_sq_of",
+    "measure_time",
     "simplify_path",
 )
 
@@ -100,6 +103,23 @@ def get_ends(items: Iterable[T] | None) -> tuple[T, T] | None:
         last = item
 
     return (first, last)
+
+
+@contextmanager
+def measure_time(message: str, *, enabled: bool = True) -> Iterator[None]:
+    """Context manager that measures the time spent in the execution context and
+    prints a message to the console with the measured time upon exiting the context.
+    """
+    if not enabled:
+        yield
+        return
+
+    start = monotonic_ns()
+    try:
+        yield
+    finally:
+        elapsed_msec = (monotonic_ns() - start) / 100_000
+        print(f"{message}: {elapsed_msec:.6f} msec")
 
 
 def negate(func: Callable[..., bool]) -> Callable[..., bool]:
