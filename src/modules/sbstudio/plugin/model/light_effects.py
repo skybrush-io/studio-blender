@@ -630,35 +630,36 @@ class LightEffect(PropertyGroup):
         if influence <= 0:
             return
 
-        outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
-        outputs_y: NDArray[float32] = zeros_like(outputs_x)
+        # Determine whether we will need the X and the Y output values
+        needs_output_y = color_image is not None
+        needs_output_x = color_ramp is not None or color_image is not None
 
         # Evaluate the X and Y values for each drone
-        has_output_y = color_image is not None
-        self._get_output_based_on_output_type(
-            frame, positions, mapping, "x", out=outputs_x
-        )
-        if has_output_y:
+        if needs_output_x:
+            outputs_x: NDArray[float32] = zeros_like(mask, dtype=float32)
+            self._get_output_based_on_output_type(
+                frame, positions, mapping, "x", out=outputs_x
+            )
+            mask |= isnan(outputs_x)
+
+        if needs_output_y:
+            outputs_y: NDArray[float32] = zeros_like(outputs_x)
             self._get_output_based_on_output_type(
                 frame, positions, mapping, "y", out=outputs_y
             )
-
-        # Mask all drones where the output value dictates that the color does not need
-        # to change
-        mask |= isnan(outputs_x)
-        if has_output_y:
             mask |= isnan(outputs_y)
 
         # Randomize the outputs if needed. NaNs in the output arrays are okay, they will
         # remain NaN.
         # TODO(ntamas): if possible, calculate only for the non-masked drones
         if self.randomness != 0:
-            offsets = (
-                random_seq.get_array_01(0, num_positions) - 0.5
-            ) * self.randomness
-            outputs_x += offsets
-            outputs_x %= 1.0
-            if has_output_y:
+            if needs_output_x:
+                offsets = (
+                    random_seq.get_array_01(0, num_positions) - 0.5
+                ) * self.randomness
+                outputs_x += offsets
+                outputs_x %= 1.0
+            if needs_output_y:
                 offsets = (
                     random_seq.get_array_01(num_positions, num_positions) - 0.5
                 ) * self.randomness
@@ -676,12 +677,14 @@ class LightEffect(PropertyGroup):
         # the branches will apply below.
         new_colors: NDArray[float32] = zeros_like(colors)
         if color_ramp is not None:
+            # TODO(ntamas): if all the values in output_x are the same, there is no
+            # need to evaluate it multiple times on the color ramp
+            assert needs_output_x
             for index in unmasked:
                 output_x: float = outputs_x[index]
                 new_colors[index, :] = color_ramp.evaluate(output_x)
 
         elif color_function_ref is not None:
-            # TODO(ntamas): output_x is not needed here at all
             time_fraction = self._get_time_fraction_for_frame(frame)
             for index in unmasked:
                 try:
@@ -699,6 +702,8 @@ class LightEffect(PropertyGroup):
                     raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
 
         elif color_image is not None:
+            assert needs_output_x and needs_output_y
+
             width, height = color_image.size
             # TODO(ntamas): use NumPy arrays in the pixel cache!
             pixels = self.get_image_pixels()
