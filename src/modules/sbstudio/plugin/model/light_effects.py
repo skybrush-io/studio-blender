@@ -35,15 +35,14 @@ from numpy import (
     argsort,
     array,
     bool_,
-    clip,
     divide,
     empty,
+    flatnonzero,
     float32,
     isnan,
     lexsort,
     linspace,
     nan,
-    nonzero,
     rot90,
     zeros,
 )
@@ -268,7 +267,7 @@ def test_containment(
     # cast rays to check whether they intersect the mesh. If at least one of the rays
     # does not intersect the mesh, we conclude that the point is outside the mesh.
 
-    for index in nonzero(out)[0]:
+    for index in flatnonzero(out):
         point = points[index, :]
         for axis in CONTAINMENT_TEST_AXES:
             _, _, _, dist = bvh_tree.ray_cast(point, axis)  # ty:ignore[invalid-argument-type]
@@ -397,33 +396,33 @@ class LightEffect(PropertyGroup):
         description="The internal storage for the storyboard entry/transition attached to this light effect",
     )
 
-    frame_start = IntProperty(
+    frame_start: int = IntProperty(
         name="Start Frame",
         description="Frame when this light effect should start in the show",
         default=0,
         options=set(),
     )
-    duration = IntProperty(
+    duration: int = IntProperty(
         name="Duration",
         description="Duration of this light effect",
         min=1,
         default=1,
         options=set(),
     )
-    frame_end = IntProperty(
+    frame_end: int = IntProperty(
         name="End Frame",
         description="Frame when this light effect should end in the show",
         get=_get_frame_end,
         set=_set_frame_end,
         options=set(),
     )
-    fade_in_duration = IntProperty(
+    fade_in_duration: int = IntProperty(
         name="Fade in",
         description="Duration of the fade-in part of this light effect",
         default=0,
         options=set(),
     )
-    fade_out_duration = IntProperty(
+    fade_out_duration: int = IntProperty(
         name="Fade out",
         description="Duration of the fade-out part of this light effect",
         default=0,
@@ -476,7 +475,7 @@ class LightEffect(PropertyGroup):
         items=[("ORDERED", "Ordered", "", 1), ("PROPORTIONAL", "Proportional", "", 2)],
     )
 
-    influence = FloatProperty(
+    influence: float = FloatProperty(
         name="Influence",
         description="Influence of this light effect on the final color of drones",
         default=1,
@@ -784,12 +783,32 @@ class LightEffect(PropertyGroup):
         color_image = self.color_image
         color_function_ref = self.color_function_ref
 
-        # Evaluate the X and Y values for each drone
-        # TODO(ntamas): pre-allocate outputs_x, outputs_y, new_colors and alphas
+        # Allocate required buffers
+        # TODO(ntamas): pre-allocate these
+        mask: NDArray[bool_] = zeros((num_positions,), dtype=bool_)
         outputs_x: NDArray[float32] = zeros((num_positions,), dtype=float32)
         outputs_y: NDArray[float32] = zeros((num_positions,), dtype=float32)
         influences: NDArray[float32] = zeros((num_positions,), dtype=float32)
         new_colors: NDArray[float32] = zeros((num_positions, 4), dtype=float32)
+
+        # Mask all the drones that are not in the group being targeted by this effect
+        self._mask_drones_not_in_group(mask, drones)
+
+        # Get the additional predicate required to evaluate whether the effect
+        # will be applied at a given position
+        condition = self._get_spatial_effect_predicate()
+
+        # Calculate the influence of the effect, depending on the fade-in and fade-out
+        # durations and the spatial predicate
+        self._evaluate_influences_at(mask, positions, frame, condition, out=influences)
+
+        # Mask all drones that will not be affected in this frame, then bail out if no
+        # drones remained
+        mask |= influences <= 0
+        if mask.all():
+            return
+
+        # Evaluate the X and Y values for each drone
         has_output_y = color_image is not None
         get_output_based_on_output_type(
             self.output, self.output_mapping_mode, self.output_function, out=outputs_x
@@ -802,16 +821,15 @@ class LightEffect(PropertyGroup):
                 out=outputs_y,
             )
 
-        # Get the set of drones that the effect is targeting (if applicable)
-        targeted_drones = self._get_drones_in_group()
-
-        # Get the additional predicate required to evaluate whether the effect
-        # will be applied at a given position
-        condition = self._get_spatial_effect_predicate()
+        # Mask all drones where the output value dictates that the color does not need
+        # to change
+        mask |= isnan(outputs_x)
+        if has_output_y:
+            mask |= isnan(outputs_y)
 
         # Randomize the outputs if needed. NaNs in the output arrays are okay, they will
         # remain NaN.
-        # TODO(ntamas): if possible, calculate only for the targeted drones
+        # TODO(ntamas): if possible, calculate only for the non-masked drones
         if self.randomness != 0:
             offsets = (
                 random_seq.get_array_01(0, num_positions) - 0.5
@@ -825,21 +843,7 @@ class LightEffect(PropertyGroup):
                 outputs_y += offsets
                 outputs_y %= 1.0
 
-        # Calculate the influence of the effect, depending on the fade-in and fade-out
-        # durations and the spatial predicate
-        self._evaluate_influences_at(positions, frame, condition, out=influences)
-
-        for index, position in enumerate(positions):
-            # Check containment of drone in the associated drone group
-            if targeted_drones is not None and drones[index] not in targeted_drones:
-                continue
-
-            influence = influences[index]
-            if influence <= 0.0:
-                # Alpha channel is zero so this color will not affect the base color
-                # so we can skip the rest of the calculations
-                continue
-
+        for index in flatnonzero(~mask):
             # Calculate the output value of the effect that goes through the color
             # ramp or image mapper
             output_x: float = outputs_x[index]
@@ -867,7 +871,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=position,
+                        position=positions[index],
                         drone_count=num_positions,
                     )
                 except Exception as exc:
@@ -1240,25 +1244,41 @@ class LightEffect(PropertyGroup):
             )
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
-    def _evaluate_influences_at(
-        self,
-        positions: NDArray[float32],
-        frame: int,
-        condition: Callable[[NDArray[float32], NDArray[bool_]], None] | None,
-        *,
-        out: NDArray[float32],
-    ) -> None:
-        """Eveluates the effective influence of the effect on the given positions
-        in space and at the given frame.
+    def _create_texture(self) -> ImageTexture:
+        """Creates the texture associated to the light effect."""
+        tex = bpy.data.textures.new(
+            name=f"Texture for light effect {self.name!r}", type="IMAGE"
+        )
+        tex.use_color_ramp = True
+        tex.image = None
 
-        Parameters:
-            position: the positions to evaluate the influence at
-            frame: the frame count
-            condition: additional vectorized condition that must evaluate to true when
-                called with a position; otherwise the effect will not be applied at all.
-                Note that it is _vectorized_, i.e. it must take an array of 3D points
-                and return a Boolean array.
-            out: the output array to store the influence values in
+        # Clear alpha from color ramp
+        elts = tex.color_ramp.elements
+        for elt in elts:
+            elt.color[3] = 1.0
+
+        self.texture = tex
+        return self.texture
+
+    def _remove_texture(self) -> None:
+        """Removes the texture associated to the light effect from the Textures
+        collection if there are no other users for the texture in the scene.
+        """
+        if isinstance(self.texture, ImageTexture):
+            if self.texture.image is not None:
+                remove_if_unused(self.texture.image, from_=bpy.data.images)
+
+        remove_if_unused(self.texture, from_=bpy.data.textures)
+
+    ####################################################################################
+    ## Helper functions for effect evaluation only
+    ####################################################################################
+
+    def _evaluate_influence(self, frame: int) -> float:
+        """Returns the common influence value of this effect, modifying it in the
+        fade-in and fade-out periods as needed.
+
+        The returned value is guaranteed to be in [0; 1].
         """
         influence = self.influence
 
@@ -1274,17 +1294,47 @@ class LightEffect(PropertyGroup):
             if diff < self.fade_out_duration:
                 influence *= diff / self.fade_out_duration
 
+        return min(max(influence, 0), 1)
+
+    def _evaluate_influences_at(
+        self,
+        mask: NDArray[bool_],
+        positions: NDArray[float32],
+        frame: int,
+        condition: Callable[[NDArray[float32], NDArray[bool_]], None] | None,
+        *,
+        out: NDArray[float32],
+    ) -> None:
+        """Eveluates the effective influence of the effect on the given positions
+        in space and at the given frame.
+
+        Parameters:
+            mask: mask array that contains False for drones that participate in the
+                current effect and True otherwise. It will be updated in-place if the
+                influence value turns out to be zero or negative.
+            position: the positions to evaluate the influence at
+            frame: the frame count
+            condition: additional vectorized condition that must evaluate to true when
+                called with a position; otherwise the effect will not be applied at all.
+                Note that it is _vectorized_, i.e. it must take an array of 3D points
+                and return a Boolean array.
+            out: the output array to store the influence values in
+        """
+        influence = self._evaluate_influence(frame)
+        if influence <= 0:
+            mask.fill(True)
+            return
+
         if condition is None:
             out.fill(influence)
         else:
             # Apply the additional condition to the influence values
             # TODO(ntamas): move this allocation outside somehow
-            mask = empty((len(positions),), dtype=bool_)
-            condition(positions, mask)
-            out[:] = mask
+            submask = empty((len(positions),), dtype=bool_)
+            condition(positions, submask)
+            mask |= ~submask
+            out[:] = ~mask
             out *= influence
-
-        clip(out, 0.0, 1.0, out=out)
 
     def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
         """Returns a BVH-tree data structure from the mesh associated to this
@@ -1320,14 +1370,6 @@ class LightEffect(PropertyGroup):
                     b_mesh.normal_update()
                     tree = BVHTree.FromBMesh(b_mesh)
             return tree
-
-    def _get_drones_in_group(self) -> set[Object] | None:
-        """Returns the set of drones in the drone group associated to this light effect,
-        or `None` if the light effect has no associated drone group.
-
-        Note that the function returns an empty set for empty drone groups.
-        """
-        return set(self.drone_group.objects) if self.drone_group is not None else None
 
     def _get_plane_from_mesh(self) -> Plane | None:
         """Returns a plane that is an infinite expansion of the first face of the
@@ -1376,31 +1418,17 @@ class LightEffect(PropertyGroup):
         else:
             return func
 
-    def _create_texture(self) -> ImageTexture:
-        """Creates the texture associated to the light effect."""
-        tex = bpy.data.textures.new(
-            name=f"Texture for light effect {self.name!r}", type="IMAGE"
-        )
-        tex.use_color_ramp = True
-        tex.image = None
-
-        # Clear alpha from color ramp
-        elts = tex.color_ramp.elements
-        for elt in elts:
-            elt.color[3] = 1.0
-
-        self.texture = tex
-        return self.texture
-
-    def _remove_texture(self) -> None:
-        """Removes the texture associated to the light effect from the Textures
-        collection if there are no other users for the texture in the scene.
+    def _mask_drones_not_in_group(
+        self, mask: NDArray[bool_], all_drones: Sequence[Object]
+    ) -> None:
+        """When a drone group is associated to the effect, masks all drones that are not
+        in this group. No-op if the effect has no associated group.
         """
-        if isinstance(self.texture, ImageTexture):
-            if self.texture.image is not None:
-                remove_if_unused(self.texture.image, from_=bpy.data.images)
-
-        remove_if_unused(self.texture, from_=bpy.data.textures)
+        if self.drone_group is not None:
+            drones_in_group = set(self.drone_group.objects)
+            for index, drone in enumerate(all_drones):
+                if drone in drones_in_group:
+                    mask[index] = True
 
 
 class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):
