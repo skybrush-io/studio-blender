@@ -24,8 +24,9 @@ from sbstudio.plugin.colors import (
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model import LightEffect
 from sbstudio.plugin.model.light_effects import LightEffectUpdate
-from sbstudio.plugin.utils.evaluator import get_positions_of_objects_fast
+from sbstudio.plugin.utils.evaluator import ObjectPositions
 from sbstudio.plugin.views import redraw_all_3d_views
+from sbstudio.utils import measure_time
 
 from .base import Task
 from .utils import Suspension
@@ -197,7 +198,7 @@ class LightEffectUpdateSession:
 
         drones: Sequence[Object]
         colors: NDArray[float32]
-        positions: NDArray[float32]
+        positions: ObjectPositions
         mapping: Mapping | None
 
     _color_cache: ColorCache
@@ -258,7 +259,7 @@ class LightEffectUpdateSession:
             self._state = self.State(
                 drones=tuple(drones),
                 colors=self._color_cache._create_mutable_color_array_for_drones(drones),
-                positions=get_positions_of_objects_fast(drones),
+                positions=ObjectPositions.from_objects(drones),
                 mapping=self._scene.skybrush.storyboard.get_mapping_at_frame(
                     self._frame
                 ),
@@ -350,7 +351,10 @@ def update_light_effects(scene: Scene, depsgraph: Depsgraph):
         frame = scene.frame_current
         with _color_cache.start_updates(scene, frame) as session:
             for effect in light_effects.iter_active_effects_in_frame(frame):
-                session.apply_effect(effect)
+                with measure_time(
+                    f"Applying light effect: {effect.name}", enabled=False
+                ):
+                    session.apply_effect(effect)
         updates = session.get_updates_to_apply()
 
     # Wrap the callback calls to our suspension logic internally

@@ -36,7 +36,6 @@ from numpy import (
     array,
     bool_,
     divide,
-    empty,
     empty_like,
     flatnonzero,
     float32,
@@ -68,7 +67,7 @@ from sbstudio.plugin.presets.light_effects import (
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
-from sbstudio.plugin.utils.evaluator import get_position_of_object
+from sbstudio.plugin.utils.evaluator import ObjectPositions, get_position_of_object
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import load_module
@@ -224,28 +223,35 @@ def output_type_supports_mapping_mode(type: str) -> bool:
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
 
+def test_in_front_of(
+    plane: Plane, positions: ObjectPositions, out: NDArray[bool_]
+) -> None:
+    """Tests whether a list of points are in front of a given plane.
+
+    Args:
+        plane: the plane to test against
+        positions: the points to test
+        out: an array of booleans to write the results to; must have the same length as
+            ``positions``
+    """
+    points = positions.as_array
+    plane.is_front_many(points, out=out)
+
+
 def test_containment(
-    bvh_tree: BVHTree, points: NDArray[float32], out: NDArray[bool_]
+    bvh_tree: BVHTree, points: ObjectPositions, out: NDArray[bool_]
 ) -> None:
     """Given a point and a BVH-tree, tests whether a list of points are _probably_
     within the mesh represented by the BVH-tree, under the assumption that most points
     are more likely to be outside than inside.
 
-    It is assumed that the normal vectors of the faces of the mesh are oriented such
-    that they point towards the outside of the mesh.
-
-    For a single point, the calculation is done by finding the nearest point on the mesh
-    and then checking the dot product of the vector pointing _from_ the point _to_ the
-    nearest point with the normal vector of the mesh at the nearest point. If the dot
-    product is negative, the point is on the positive (external) side of the face
-    containing the nearest point, so it cannot be inside.
-
-    If the dot product is negative, we cast three rays from the point in the positive X,
-    Y and Z directions and check whether they intersect the mesh. If at least one of the
-    rays does not intersect the mesh, we conclude that the point is outside the mesh.
+    For each point, we cast three rays from the point in the positive X, Y and Z
+    directions and check whether they intersect the mesh. If at least one of the rays
+    does not intersect the mesh, we conclude that the point is outside the mesh.
 
     In all other cases, we assume that the point is inside the mesh. Note that this may
-    lead to a small number of false positives.
+    lead to a small number of false positives near concave regions on the exterior of
+    the mesh, close to the surface.
 
     Args:
         bvh_tree: the BVH-tree representing the mesh
@@ -253,27 +259,14 @@ def test_containment(
         out: an array of booleans to write the results to; must have the same length as
             ``points``
     """
-    num_points = len(points)
-    nearest = empty((num_points, 3), dtype=float32)
-    normal = empty((num_points, 3), dtype=float32)
-
-    # Unfortunately bvh_tree.ray_cast is not vectorized
-    for index, point in enumerate(points):
-        nearest[index, :], normal[index, :], _, _ = bvh_tree.find_nearest(point)
-
-    nearest -= points
-    nearest *= normal
-    out[:] = nearest.sum(axis=1) > 0
-
-    # At this point out[i] is True if the point is _probably_ inside the mesh, and
-    # False if it is definitely outside. For all the values that are True, we need to
-    # cast rays to check whether they intersect the mesh. If at least one of the rays
-    # does not intersect the mesh, we conclude that the point is outside the mesh.
-
-    for index in flatnonzero(out):
-        point = points[index, :]
+    # We could do a check for the angle between the vector pointing from the point to
+    # the nearest point on the mesh and the normal vector of the mesh at the nearest
+    # point, but benchmarks have shown that it is actually slower than the simple
+    # multi-axis test done below.
+    out.fill(True)
+    for index, point in enumerate(points.as_vectors):
         for axis in CONTAINMENT_TEST_AXES:
-            _, _, _, dist = bvh_tree.ray_cast(point, axis)  # ty:ignore[invalid-argument-type]
+            _, _, _, dist = bvh_tree.ray_cast(point, axis)
             if dist is None or dist < 0:
                 out[index] = False
                 break
@@ -580,7 +573,7 @@ class LightEffect(PropertyGroup):
         self,
         colors: NDArray[float32],
         drones: Sequence[Object],
-        positions: NDArray[float32],
+        positions: ObjectPositions,
         mapping: Mapping | None,
         *,
         frame: int,
@@ -606,7 +599,8 @@ class LightEffect(PropertyGroup):
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        num_positions = len(positions)
+        position_array = positions.as_array
+        num_positions = len(position_array)
 
         color_ramp = self.color_ramp
         color_image = self.color_image
@@ -686,6 +680,7 @@ class LightEffect(PropertyGroup):
 
         elif color_function_ref is not None:
             time_fraction = self._get_time_fraction_for_frame(frame)
+            position_array = positions.as_array
             for index in unmasked:
                 try:
                     new_colors[index, :] = color_function_ref(
@@ -695,7 +690,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=positions[index],
+                        position=position_array[index],
                         drone_count=num_positions,
                     )
                 except Exception as exc:
@@ -1179,7 +1174,7 @@ class LightEffect(PropertyGroup):
 
     def _get_spatial_effect_predicate(
         self,
-    ) -> Callable[[NDArray[float32], NDArray[bool_]], None] | None:
+    ) -> Callable[[ObjectPositions, NDArray[bool_]], None] | None:
         match self.target:
             case "INSIDE_MESH":
                 bvh_tree = self._get_bvh_tree_from_mesh()
@@ -1191,12 +1186,12 @@ class LightEffect(PropertyGroup):
 
             case "FRONT_SIDE":
                 plane = self._get_plane_from_mesh()
-                return plane.is_front_many if plane is not None else None
+                return partial(test_in_front_of, plane) if plane is not None else None
 
     def _get_output_based_on_output_type(
         self,
         frame: int,
-        positions: NDArray[float32],
+        positions: ObjectPositions,
         mapping: Mapping | None,
         axis: Literal["x", "y"],
         *,
@@ -1257,10 +1252,10 @@ class LightEffect(PropertyGroup):
                 if proportional:
                     # In proportional mode, we are using the primary axis only
                     # because we need a scalar
-                    sort_keys = positions[:, query_axes[0]]
+                    sort_keys = positions.as_array[:, query_axes[0]]
                 else:
                     # In non-proportional mode, we are sorting along multiple axes
-                    sort_keys = positions[:, query_axes]
+                    sort_keys = positions.as_array[:, query_axes]
 
             if num_positions < 2 or sort_keys is None:
                 # Just assign all drones to the last color of the ramp
@@ -1322,6 +1317,7 @@ class LightEffect(PropertyGroup):
                 out.fill(nan)
 
         elif output_type == "CUSTOM":
+            position_array = positions.as_array
             output_function = (
                 self.output_function_y if axis == "y" else self.output_function
             )
@@ -1340,7 +1336,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=positions[index],
+                        position=position_array[index],
                         drone_count=num_positions,
                     )
                     for index in range(num_positions)
@@ -1351,6 +1347,7 @@ class LightEffect(PropertyGroup):
             # TODO(ntamas): add CUSTOM_VECTORIZED type
 
         elif output_type == "LIGHT_PRESET":
+            position_array = positions.as_array
             preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
             if preset_fn is not None:
                 time_fraction = self._get_time_fraction_for_frame(frame)
@@ -1362,7 +1359,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=positions[index],
+                        position=position_array[index],
                         drone_count=num_positions,
                     )
                     for index in range(num_positions)
@@ -1389,12 +1386,12 @@ class LightEffect(PropertyGroup):
                 mask[index] = True
 
     def _mask_drones_not_matching_spatial_predicate(
-        self, mask: NDArray[bool_], positions: NDArray[float32]
+        self, mask: NDArray[bool_], positions: ObjectPositions
     ) -> None:
         """Masks all drones that do not match the spatial predicate associated with this
         effect. No-op if the effect has no spatial predicate.
         """
-        predicate: Callable[[NDArray[float32], NDArray[bool_]], None] | None = (
+        predicate: Callable[[ObjectPositions, NDArray[bool_]], None] | None = (
             self._get_spatial_effect_predicate()
         )
         if not predicate:

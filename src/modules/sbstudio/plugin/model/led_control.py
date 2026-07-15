@@ -6,6 +6,8 @@ import numpy as np
 from bpy.app.handlers import persistent
 from bpy.props import EnumProperty, IntProperty
 from bpy.types import Context, PropertyGroup
+from numpy import float32
+from numpy.typing import NDArray
 
 from sbstudio.plugin.callbacks import final_color_updated_callbacks
 from sbstudio.plugin.colors import get_colors_of_drones_fast, set_color_of_drone
@@ -36,10 +38,11 @@ for some reason; Blender PropertyGroup objects are weird.
 def _visualization_callback_for_markers(update: LightEffectUpdate) -> None:
     if not update.has_active_effects:
         drones = Collections.find_drones().objects
-        arr = np.zeros((len(drones), 4), dtype=np.float32)
+        arr: NDArray[float32] = np.zeros((len(drones), 4), dtype=np.float32)
         get_colors_of_drones_fast(drones, dest=arr.ravel())
-        colors = arr.tolist()
+        colors = arr
     else:
+        assert update.colors is not None
         drones = update.drones
         colors = update.colors
 
@@ -47,7 +50,7 @@ def _visualization_callback_for_markers(update: LightEffectUpdate) -> None:
     overlay_markers: Sequence[LEDsOverlayMarker] = [
         (get_position_of_object(drone), color)
         for drone, color in zip(drones, colors, strict=True)
-    ]  # ty:ignore[invalid-assignment]
+    ]
     led_control.update_overlay_markers(overlay_markers)
 
 
