@@ -612,6 +612,12 @@ class LightEffect(PropertyGroup):
         color_image = self.color_image
         color_function_ref = self.color_function_ref
 
+        # Calculate the influence of the effect, depending on the fade-in and fade-out
+        # durations and the spatial predicate
+        influence = self._evaluate_influence(frame)
+        if influence <= 0:
+            return
+
         # Allocate mask
         mask: NDArray[bool_] = zeros((num_positions,), dtype=bool_)
 
@@ -622,12 +628,6 @@ class LightEffect(PropertyGroup):
 
         # Bail out here if no drones remained
         if mask.all():
-            return
-
-        # Calculate the influence of the effect, depending on the fade-in and fade-out
-        # durations and the spatial predicate
-        influence = self._evaluate_influence(frame)
-        if influence <= 0:
             return
 
         # Determine whether we will need the X and the Y output values
