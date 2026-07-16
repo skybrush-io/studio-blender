@@ -157,7 +157,9 @@ class LightEffectUpdate:
             assert self.drones is not None
             return self.drones, self.colors
 
-    def get_positions_and_colors(self) -> tuple[NDArray[float32], NDArray[float32]]:
+    def get_positions_and_colors(
+        self,
+    ) -> tuple[Sequence[Coordinate3D], NDArray[float32]]:
         if not self.has_active_effects:
             from sbstudio.plugin.colors import get_colors_of_drones_fast
 
@@ -169,11 +171,11 @@ class LightEffectUpdate:
             colors: NDArray[float32] = empty((len(drones), 4), dtype=float32)
             get_colors_of_drones_fast(drones, dest=colors.ravel())
 
-            return positions, colors
+            return positions, colors  # ty:ignore[invalid-return-type]
         else:
             assert self.positions is not None
             assert self.colors is not None
-            return self.positions.as_array, self.colors
+            return self.positions.as_coordinate_sequence, self.colors
 
 
 LightEffectUpdate.NOP = LightEffectUpdate(None, None, None, False)
@@ -638,8 +640,7 @@ class LightEffect(PropertyGroup):
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        position_array = positions.as_array
-        num_positions = len(position_array)
+        num_positions = len(positions)
 
         color_ramp = self.color_ramp
         color_image = self.color_image
@@ -724,7 +725,7 @@ class LightEffect(PropertyGroup):
 
         elif color_function_ref is not None:
             time_fraction = self._get_time_fraction_for_frame(frame)
-            position_array = positions.as_array
+            position_seq = positions.as_coordinate_sequence
             for index in unmasked:
                 try:
                     new_colors[index, :] = color_function_ref(
@@ -734,7 +735,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=position_array[index],
+                        position=position_seq[index],
                         drone_count=num_positions,
                     )
                 except Exception as exc:
@@ -1367,7 +1368,7 @@ class LightEffect(PropertyGroup):
                 out.fill(nan)
 
         elif output_type == "CUSTOM":
-            position_array = positions.as_array
+            position_seq = positions.as_coordinate_sequence
             output_function = (
                 self.output_function_y if axis == "y" else self.output_function
             )
@@ -1386,7 +1387,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=position_array[index],
+                        position=position_seq[index],
                         drone_count=num_positions,
                     )
                     for index in range(num_positions)
@@ -1398,7 +1399,7 @@ class LightEffect(PropertyGroup):
             # TODO(ntamas): add CUSTOM_VECTORIZED type
 
         elif output_type == "LIGHT_PRESET":
-            position_array = positions.as_array
+            position_seq = positions.as_coordinate_sequence
             preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
             if preset_fn is not None:
                 time_fraction = self._get_time_fraction_for_frame(frame)
@@ -1410,7 +1411,7 @@ class LightEffect(PropertyGroup):
                         formation_index=(
                             mapping[index] if mapping is not None else None
                         ),
-                        position=position_array[index],
+                        position=position_seq[index],
                         drone_count=num_positions,
                     )
                     for index in range(num_positions)

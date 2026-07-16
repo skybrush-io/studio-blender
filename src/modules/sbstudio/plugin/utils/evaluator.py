@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence, Sized
+from collections.abc import Callable, Sequence, Sized
 from contextlib import contextmanager
 from functools import partial
 from math import degrees
@@ -187,60 +187,57 @@ class ObjectPositions(Sized):
     This object is useful for cases when the same list of positions has to be passed
     on to NumPy and `mathutils` APIs at the same time; NumPy arrays are faster with
     NumPy functions while vectors are faster with `mathutils` APIs.
-
-    The primary representation is the NumPy matrix. The vectors are constructed
-    on the fly when they are first accessed.
     """
 
-    _as_array: NDArray[float32]
+    _as_array: NDArray[float32] | None = None
     """NumPy array of shape (N, 3) and dtype `float32` containing the positions."""
 
-    _as_vectors: list[Vector] | None
+    _as_vectors: list[Vector] | None = None
     """List of Blender `mathutils.Vector` objects corresponding to the positions.
     Constructed on the fly when first accessed.
     """
 
-    _objects: Iterable[Object] | None = None
+    _objects: CollectionObjects
     """Reference to the Blender collection from which the positions were constructed,
     if any. Used to produce the position vectors more efficiently when this is known.
     """
 
-    @classmethod
-    def from_objects(cls, objects: CollectionObjects) -> ObjectPositions:
-        """Constructs an `ObjectPositions` instance from a collection of Blender
-        objects.
+    def __init__(self, objects: CollectionObjects):
+        """Constructor.
 
         Parameters:
             objects: a Blender collection holding the objects
-
-        Returns:
-            an `ObjectPositions` instance containing the positions of the objects
         """
-        result = cls(get_positions_of_objects_fast(objects))
-        result._objects = objects
-        return result
-
-    def __init__(self, positions: NDArray[float32]) -> None:
-        self._as_array = positions
-        self._as_vectors = None
+        self._objects = objects
 
     @property
     def as_array(self) -> NDArray[float32]:
         """Returns the positions as a NumPy array of shape (N, 3) and dtype `float32`."""
+        if self._as_array is None:
+            self._as_array = get_positions_of_objects_fast(self._objects)
         return self._as_array
 
     @property
     def as_vectors(self) -> Sequence[Vector]:
         """Returns the positions as a list of Blender `mathutils.Vector` objects."""
         if self._as_vectors is None:
-            if self._objects is not None:
-                self._as_vectors = [
-                    obj.matrix_world.translation for obj in self._objects
-                ]
-            else:
-                self._as_vectors = [Vector(pos) for pos in self._as_array]
+            self._as_vectors = [obj.matrix_world.translation for obj in self._objects]
         return self._as_vectors
+
+    @property
+    def as_coordinate_sequence(self) -> Sequence[Coordinate3D]:
+        """Returns the positions as a sequence of Coordinate3D_ objects.
+
+        Since the only guarantee about a Coordinate3D_ object is that it behaves like
+        a tuple of length 3, we are free to return the NumPy array or the list of
+        vectors. If one of these is already constructed, we return that; otherwise, we
+        construct the array and return that.
+        """
+        if self._as_vectors is not None:
+            return self._as_vectors  # ty:ignore[invalid-return-type]
+        else:
+            return self.as_array  # ty:ignore[invalid-return-type]
 
     def __len__(self) -> int:
         """Returns the number of positions stored in this object."""
-        return len(self._as_array)
+        return len(self._objects)

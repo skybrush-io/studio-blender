@@ -258,7 +258,7 @@ class LightEffectUpdateSession:
             self._state = self.State(
                 drones=drones,
                 colors=self._color_cache._create_mutable_color_array_for_drones(drones),
-                positions=ObjectPositions.from_objects(drones),
+                positions=ObjectPositions(drones),
                 mapping=self._scene.skybrush.storyboard.get_mapping_at_frame(
                     self._frame
                 ),
