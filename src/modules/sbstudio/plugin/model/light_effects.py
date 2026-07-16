@@ -631,7 +631,7 @@ class LightEffect(PropertyGroup):
         # Evaluate the X and Y values for each drone
         if needs_output_x:
             outputs_x: NDArray[float32] = zeros_like(mask, dtype=float32)
-            self._get_output_based_on_output_type(
+            outputs_x_is_constant = self._get_output_based_on_output_type(
                 frame, positions, mapping, "x", out=outputs_x
             )
             mask |= isnan(outputs_x)
@@ -653,6 +653,7 @@ class LightEffect(PropertyGroup):
                 ) * self.randomness
                 outputs_x += offsets
                 outputs_x %= 1.0
+                outputs_x_is_constant = False
             if needs_output_y:
                 offsets = (
                     random_seq.get_array_01(num_positions, num_positions) - 0.5
@@ -674,9 +675,13 @@ class LightEffect(PropertyGroup):
             # TODO(ntamas): if all the values in output_x are the same, there is no
             # need to evaluate it multiple times on the color ramp
             assert needs_output_x
-            for index in unmasked:
-                output_x: float = outputs_x[index]
-                new_colors[index, :] = color_ramp.evaluate(output_x)
+
+            if outputs_x_is_constant and num_positions > 0:
+                # Optimize for the common case when the output is constant
+                new_colors[unmasked, :] = color_ramp.evaluate(outputs_x[0])
+            else:
+                for index in unmasked:
+                    new_colors[index, :] = color_ramp.evaluate(outputs_x[index])
 
         elif color_function_ref is not None:
             time_fraction = self._get_time_fraction_for_frame(frame)
@@ -1196,25 +1201,31 @@ class LightEffect(PropertyGroup):
         axis: Literal["x", "y"],
         *,
         out: NDArray[float32],
-    ) -> None:
+    ) -> bool:
         """Get the float outputs for color ramp or image indexing based on the
         output type.
 
         Args:
             out: destination array to write the result to
+
+        Returns:
+            whether the output is constant
         """
         output_type = self.output_y if axis == "y" else self.output
         num_positions = len(positions)
 
         if output_type == "FIRST_COLOR":
             out.fill(0.0)
+            return True
 
         elif output_type == "LAST_COLOR":
             out.fill(1.0)
+            return True
 
         elif output_type == "TEMPORAL":
             time_fraction = self._get_time_fraction_for_frame(frame)
             out.fill(time_fraction)
+            return True
 
         elif output_type_supports_mapping_mode(output_type):
             # There are two options here:
@@ -1343,6 +1354,7 @@ class LightEffect(PropertyGroup):
                 ]
             else:
                 out.fill(1.0)
+                return True
 
             # TODO(ntamas): add CUSTOM_VECTORIZED type
 
@@ -1366,10 +1378,14 @@ class LightEffect(PropertyGroup):
                 ]
             else:
                 out.fill(1.0)
+                return True
 
         else:
             # Should not get here
             out.fill(1.0)
+            return True
+
+        return False
 
     def _mask_drones_not_in_group(
         self, mask: NDArray[bool_], all_drones: Sequence[Object]
