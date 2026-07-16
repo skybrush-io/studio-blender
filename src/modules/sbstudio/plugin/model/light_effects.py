@@ -74,7 +74,7 @@ from sbstudio.plugin.utils.evaluator import (
     get_position_of_object,
     get_positions_of_objects_fast,
 )
-from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
+from sbstudio.plugin.utils.image import convert_from_srgb_to_linear_many
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import load_module
 
@@ -745,46 +745,34 @@ class LightEffect(PropertyGroup):
             assert needs_output_x and needs_output_y
 
             width, height = color_image.size
-            # TODO(ntamas): use NumPy arrays in the pixel cache!
+            colorspace = color_image.colorspace_settings
             pixels = self.get_image_pixels()
 
-            for index in unmasked:
-                # TODO(ntamas): vectorize coordinate calculations
-                output_x: float = outputs_x[index]
-                output_y: float = outputs_y[index]
+            if pixels is None:
+                new_colors.fill(0.0)
+            else:
+                xs = (width * outputs_x[unmasked]).astype(int)
+                ys = (height * outputs_y[unmasked]).astype(int)
+                xs = where(xs < width, xs, width - 1)
+                ys = where(ys < height, ys, height - 1)
 
-                x = int(width * output_x) if output_x < 1 else width - 1
-                y = int(height * output_y) if output_y < 1 else height - 1
-                offset = (x + y * width) * 4
-                pixel_color = pixels[offset : offset + 4]
+                chosen_pixels: NDArray[float32] = pixels[ys, xs]
 
-                # This check is needed to cater for the cases when the calculated
-                # pixel coordinate is out of the bounds of the image, in which
-                # case get_pixel() returns an empty list or a short list
-                if len(pixel_color) == 4:
-                    # If the conversion to linear space ever becomes a bottleneck,
-                    # we can convert the image in advance when it is stored into
-                    # the pixel cache if we can vectorize the operation somehow
-                    # or offload it to C.
-                    if color_image.colorspace_settings.is_data:
-                        new_colors[index, :] = pixel_color
-                    else:
-                        match color_image.colorspace_settings.name:
-                            case "sRGB":
-                                new_colors[index, :] = convert_from_srgb_to_linear(
-                                    pixel_color  # ty:ignore[invalid-argument-type]
-                                )
-                            case "Linear Rec.709":
-                                new_colors[index, :] = pixel_color
-                            case _:
-                                # Note that we do NOT handle conversion from other color spaces here,
-                                # just use the colors as they are. If other color spaces are used frequently,
-                                # explicit conversion needs to be implemented for them as well.
-                                new_colors[index, :] = pixel_color
+                if not colorspace.is_data:
+                    match colorspace.name:
+                        case "sRGB":
+                            convert_from_srgb_to_linear_many(
+                                chosen_pixels, out=chosen_pixels
+                            )
+                        case "Linear Rec.709":
+                            pass  # nothing to do, already linear
+                        case _:
+                            # Note that we do NOT handle conversion from other color spaces here,
+                            # just use the colors as they are. If other color spaces are used frequently,
+                            # explicit conversion needs to be implemented for them as well.
+                            pass
 
-                else:
-                    new_colors[index, :].fill(0.0)
-                    new_colors[index, 3] = 1.0
+                new_colors[unmasked, :] = chosen_pixels
 
         else:
             # should not happen
@@ -926,17 +914,18 @@ class LightEffect(PropertyGroup):
         else:
             return 0
 
-    def get_image_pixels(self) -> Sequence[float]:
+    def get_image_pixels(self) -> NDArray[float32] | None:
         """Returns the pixel-level representation of the color image of the light
         effect, caching the result for future use.
         """
         global _pixel_cache
         pixels = _pixel_cache.get(self.id)
         if pixels is None and self.color_image is not None:
-            pixels = self.color_image.pixels[:]
-            _pixel_cache.add(self.id, pixels, is_static=not self.is_animated)
+            pixels = _pixel_cache.add_image(
+                self.id, self.color_image, is_static=not self.is_animated
+            )
 
-        return pixels or ()
+        return pixels
 
     @property
     def id(self) -> str:

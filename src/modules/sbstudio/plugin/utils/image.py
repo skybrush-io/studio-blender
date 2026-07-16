@@ -2,10 +2,17 @@
 
 import bpy
 from bpy.types import Image
+from numpy import array, float32, pow
+from numpy.typing import NDArray
 
 from sbstudio.model.types import RGBAColor
 
-__all__ = ["convert_from_srgb_to_linear", "find_image_by_name", "get_pixel"]
+__all__ = [
+    "convert_from_srgb_to_linear",
+    "convert_from_srgb_to_linear_many",
+    "find_image_by_name",
+    "get_pixel",
+]
 
 
 def convert_from_srgb_to_linear(color: RGBAColor) -> RGBAColor:
@@ -22,6 +29,24 @@ def convert_from_srgb_to_linear(color: RGBAColor) -> RGBAColor:
     # in the first place, and this is probably overkill.
     r, g, b, a = color
     return (r**2.2, g**2.2, b**2.2, a)
+
+
+_SRGB_TO_LINEAR_EXPONENTS = array([2.2, 2.2, 2.2, 1.0], dtype=float32)
+
+
+def convert_from_srgb_to_linear_many(
+    colors: NDArray[float32], *, out: NDArray[float32] | None = None
+) -> NDArray[float32]:
+    """Converts a color from sRGB to linear space, vectorized variant.
+
+    Args:
+        color: The colors to convert, one color per row, in a NumPy array.
+        out: Destination array to write the result to; `None` to create a new array.
+
+    Returns:
+        the destination array
+    """
+    return pow(colors, _SRGB_TO_LINEAR_EXPONENTS, out=out)
 
 
 def find_image_by_name(name: str) -> Image | None:
