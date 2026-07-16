@@ -1,13 +1,13 @@
 from collections.abc import Iterator, Mapping
 
 from bpy.types import Image
-from numpy import empty, float32
-from numpy.typing import NDArray
+
+from sbstudio.plugin.utils.image import PixelsWithColorspace
 
 __all__ = ("PixelCache",)
 
 
-class PixelCache(Mapping[str, NDArray[float32]]):
+class PixelCache(Mapping[str, PixelsWithColorspace]):
     """Mapping that associates string keys (e.g. light effect UUIDs) to pixel
     data.
 
@@ -26,7 +26,7 @@ class PixelCache(Mapping[str, NDArray[float32]]):
     this cache, keyed by the UUIDs, and cleaning it up periodically.
     """
 
-    _items: dict[str, NDArray[float32]]
+    _items: dict[str, PixelsWithColorspace]
     """The cached pixels, keyed by the UUIDs of the light effects."""
 
     _dynamic_keys: set[str]
@@ -40,14 +40,18 @@ class PixelCache(Mapping[str, NDArray[float32]]):
         self._items = {}
 
     def add(
-        self, key: str, value: NDArray[float32], *, is_static: bool = False
+        self,
+        key: str,
+        value: PixelsWithColorspace,
+        *,
+        is_static: bool = False,
     ) -> None:
         """Adds a cached pixel-level representation of an image to the cache
         with the given key.
 
         Args:
             key: the key of the entry to add
-            value: the cached pixel-level representation
+            value: the cached pixel-level representation and its color space
             is_static: whether the image is assumed to be static (i.e. the same
                 in every frame). Images not marked as static are invalidated
                 when Blender changes its current frame.
@@ -60,7 +64,7 @@ class PixelCache(Mapping[str, NDArray[float32]]):
 
     def add_image(
         self, key: str, image: Image, *, is_static: bool = False
-    ) -> NDArray[float32]:
+    ) -> PixelsWithColorspace:
         """Adds a cached pixel-level representation of an image to the cache
         with the given key.
 
@@ -74,10 +78,14 @@ class PixelCache(Mapping[str, NDArray[float32]]):
         Returns:
             the pixel data of the image in the form it was stored in the cache
         """
-        pixel_data = image.pixels
-        pixels: NDArray[float32] = empty(len(pixel_data), dtype=float32)
-        pixel_data.foreach_get(pixels)
-        pixels = pixels.reshape(tuple(image.size) + (-1,))
+        pixels = PixelsWithColorspace.from_image(image)
+        if is_static:
+            # For static images it is probably more performant if we convert the
+            # entire image to linear colorspace once and store it that way in the cache.
+            # Dynamic images are invalidated in every frame so we do not gain much
+            # there.
+            pixels.to_linear()
+
         self.add(key, pixels, is_static=is_static)
         return pixels
 
@@ -98,7 +106,7 @@ class PixelCache(Mapping[str, NDArray[float32]]):
         del self._items[key]
         self._dynamic_keys.discard(key)
 
-    def __getitem__(self, key: str) -> NDArray[float32]:
+    def __getitem__(self, key: str) -> PixelsWithColorspace:
         return self._items[key]
 
     def __iter__(self) -> Iterator[str]:

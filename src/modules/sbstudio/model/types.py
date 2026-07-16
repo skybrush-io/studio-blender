@@ -1,5 +1,5 @@
 from collections.abc import MutableSequence
-from typing import Mapping, Protocol, Sequence, TypeAlias, overload
+from typing import Generic, Mapping, Protocol, Sequence, TypeAlias, TypeVar, overload
 
 from numpy.typing import NDArray
 
@@ -53,7 +53,10 @@ Quaternion: TypeAlias = tuple[float, float, float, float]
 """Type alias for 4D quaternions."""
 
 
-class SupportsForEach(Protocol):
+T = TypeVar("T")
+
+
+class SupportsForEach(Generic[T], Protocol):
     """Protocol for objects that support the `foreach_get()` and `foreach_set()`
     methods.
 
@@ -61,15 +64,11 @@ class SupportsForEach(Protocol):
     """
 
     @overload
-    def foreach_get(self, attr: str, seq: Sequence[float]) -> None: ...
-    @overload
-    def foreach_get(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def foreach_get(self, attr: str, seq: MutableSequence[T]) -> None: ...
     @overload
     def foreach_get(self, attr: str, seq: NDArray) -> None: ...
     @overload
-    def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
-    @overload
-    def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def foreach_set(self, attr: str, seq: Sequence[T]) -> None: ...
     @overload
     def foreach_set(self, attr: str, seq: NDArray) -> None: ...
     def __len__(self) -> int: ...

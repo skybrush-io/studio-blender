@@ -74,7 +74,10 @@ from sbstudio.plugin.utils.evaluator import (
     get_position_of_object,
     get_positions_of_objects_fast,
 )
-from sbstudio.plugin.utils.image import convert_from_srgb_to_linear_many
+from sbstudio.plugin.utils.image import (
+    PixelsWithColorspace,
+    convert_pixels_to_linear_in_place,
+)
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import load_module
 
@@ -745,10 +748,9 @@ class LightEffect(PropertyGroup):
             assert needs_output_x and needs_output_y
 
             width, height = color_image.size
-            colorspace = color_image.colorspace_settings
-            pixels = self.get_image_pixels()
+            pixels_with_colorspace = self.get_image_pixels()
 
-            if pixels is None:
+            if pixels_with_colorspace is None:
                 new_colors.fill(0.0)
             else:
                 xs = (width * outputs_x[unmasked]).astype(int)
@@ -756,21 +758,10 @@ class LightEffect(PropertyGroup):
                 xs = where(xs < width, xs, width - 1)
                 ys = where(ys < height, ys, height - 1)
 
-                chosen_pixels: NDArray[float32] = pixels[ys, xs]
-
-                if not colorspace.is_data:
-                    match colorspace.name:
-                        case "sRGB":
-                            convert_from_srgb_to_linear_many(
-                                chosen_pixels, out=chosen_pixels
-                            )
-                        case "Linear Rec.709":
-                            pass  # nothing to do, already linear
-                        case _:
-                            # Note that we do NOT handle conversion from other color spaces here,
-                            # just use the colors as they are. If other color spaces are used frequently,
-                            # explicit conversion needs to be implemented for them as well.
-                            pass
+                chosen_pixels: NDArray[float32] = pixels_with_colorspace.pixels[ys, xs]
+                convert_pixels_to_linear_in_place(
+                    chosen_pixels, pixels_with_colorspace.colorspace
+                )
 
                 new_colors[unmasked, :] = chosen_pixels
 
@@ -914,7 +905,7 @@ class LightEffect(PropertyGroup):
         else:
             return 0
 
-    def get_image_pixels(self) -> NDArray[float32] | None:
+    def get_image_pixels(self) -> PixelsWithColorspace | None:
         """Returns the pixel-level representation of the color image of the light
         effect, caching the result for future use.
         """
