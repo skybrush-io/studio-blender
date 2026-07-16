@@ -20,6 +20,7 @@ from bpy.props import (
 )
 from bpy.types import (
     Collection,
+    CollectionObjects,
     ColorRamp,
     Context,
     Image,
@@ -36,6 +37,7 @@ from numpy import (
     array,
     bool_,
     divide,
+    empty,
     empty_like,
     flatnonzero,
     float32,
@@ -67,7 +69,11 @@ from sbstudio.plugin.presets.light_effects import (
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
-from sbstudio.plugin.utils.evaluator import ObjectPositions, get_position_of_object
+from sbstudio.plugin.utils.evaluator import (
+    ObjectPositions,
+    get_position_of_object,
+    get_positions_of_objects_fast,
+)
 from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
 from sbstudio.utils import load_module
@@ -132,12 +138,45 @@ class LightEffectUpdate:
 
     NOP: ClassVar[LightEffectUpdate]
 
-    drones: Sequence[Object]
+    drones: CollectionObjects | None
+    positions: ObjectPositions | None
     colors: NDArray[float32] | None
     has_active_effects: bool
 
+    def get_drones_and_colors(self) -> tuple[CollectionObjects, NDArray[float32]]:
+        if not self.has_active_effects:
+            from sbstudio.plugin.colors import get_colors_of_drones_fast
 
-LightEffectUpdate.NOP = LightEffectUpdate((), None, False)
+            drones = Collections.find_drones().objects
+            colors: NDArray[float32] = empty((len(drones), 4), dtype=float32)
+            get_colors_of_drones_fast(drones, dest=colors.ravel())
+
+            return drones, colors
+        else:
+            assert self.colors is not None
+            assert self.drones is not None
+            return self.drones, self.colors
+
+    def get_positions_and_colors(self) -> tuple[NDArray[float32], NDArray[float32]]:
+        if not self.has_active_effects:
+            from sbstudio.plugin.colors import get_colors_of_drones_fast
+
+            drones = Collections.find_drones().objects
+
+            positions: NDArray[float32] = empty((len(drones), 4), dtype=float32)
+            get_positions_of_objects_fast(drones, dest=positions.ravel())
+
+            colors: NDArray[float32] = empty((len(drones), 4), dtype=float32)
+            get_colors_of_drones_fast(drones, dest=colors.ravel())
+
+            return positions, colors
+        else:
+            assert self.positions is not None
+            assert self.colors is not None
+            return self.positions.as_array, self.colors
+
+
+LightEffectUpdate.NOP = LightEffectUpdate(None, None, None, False)
 
 
 class CustomLightEffectFunction(Protocol):

@@ -5,7 +5,6 @@ light effects.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Iterator
@@ -196,7 +195,7 @@ class LightEffectUpdateSession:
     class State:
         """Class that stores the state of the light effect update session."""
 
-        drones: Sequence[Object]
+        drones: CollectionObjects
         colors: NDArray[float32]
         positions: ObjectPositions
         mapping: Mapping | None
@@ -257,7 +256,7 @@ class LightEffectUpdateSession:
         if self._state is None:
             drones = Collections.find_drones().objects
             self._state = self.State(
-                drones=tuple(drones),
+                drones=drones,
                 colors=self._color_cache._create_mutable_color_array_for_drones(drones),
                 positions=ObjectPositions.from_objects(drones),
                 mapping=self._scene.skybrush.storyboard.get_mapping_at_frame(
@@ -328,7 +327,9 @@ class LightEffectUpdateSession:
         if self._final_colors is None or self._state is None:
             return LightEffectUpdate.NOP
         else:
-            return LightEffectUpdate(self._state.drones, self._final_colors, True)
+            return LightEffectUpdate(
+                self._state.drones, self._state.positions, self._final_colors, True
+            )
 
 
 _color_cache: ColorCache = ColorCache()

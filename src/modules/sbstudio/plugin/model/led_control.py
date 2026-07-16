@@ -2,23 +2,18 @@ from collections.abc import Sequence
 from typing import Literal, TypeAlias, overload
 
 import bpy
-import numpy as np
 from bpy.app.handlers import persistent
 from bpy.props import EnumProperty, IntProperty
 from bpy.types import Context, PropertyGroup
-from numpy import float32
-from numpy.typing import NDArray
 
 from sbstudio.plugin.callbacks import final_color_updated_callbacks
-from sbstudio.plugin.colors import get_colors_of_drones_fast, set_color_of_drone
-from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.colors import set_colors_of_drones_fast
 from sbstudio.plugin.model.light_effects import LightEffectUpdate
 from sbstudio.plugin.overlays.leds import (
     LEDsOverlay,
     LEDsOverlayMarker,
 )
 from sbstudio.plugin.props import ColorProperty
-from sbstudio.plugin.utils.evaluator import get_position_of_object
 from sbstudio.plugin.views import find_all_3d_views
 
 __all__ = (
@@ -36,21 +31,11 @@ for some reason; Blender PropertyGroup objects are weird.
 
 
 def _visualization_callback_for_markers(update: LightEffectUpdate) -> None:
-    if not update.has_active_effects:
-        drones = Collections.find_drones().objects
-        arr: NDArray[float32] = np.zeros((len(drones), 4), dtype=np.float32)
-        get_colors_of_drones_fast(drones, dest=arr.ravel())
-        colors = arr
-    else:
-        assert update.colors is not None
-        drones = update.drones
-        colors = update.colors
-
     led_control = bpy.context.scene.skybrush.led_control
-    overlay_markers: Sequence[LEDsOverlayMarker] = [
-        (get_position_of_object(drone), color)
-        for drone, color in zip(drones, colors, strict=True)
-    ]
+    positions, colors = update.get_positions_and_colors()
+    overlay_markers: Sequence[LEDsOverlayMarker] = list(
+        zip(positions, colors, strict=True)
+    )
     led_control.update_overlay_markers(overlay_markers)
 
 
@@ -58,22 +43,19 @@ def _visualization_callback_for_materials(update: LightEffectUpdate) -> None:
     if not update.has_active_effects:
         return
 
-    if update.colors is None:
+    if update.drones is None or update.colors is None:
         return
 
-    for drone, color in zip(update.drones, update.colors, strict=True):
-        set_color_of_drone(drone, color)
+    # Slower method:
+    # for drone, color in zip(update.drones, update.colors, strict=True):
+    #     set_color_of_drone(drone, color)
+    #
+    # I expected the fast solution to be significantly faster, but this does not
+    # seem to be the case. But it is not slower either.
 
-    # TODO: experiment with the "fast" solution below, which is actually slower for
-    # the time being, but maybe there is a way to make it faster by calling the
-    # proper update function...
-
-    # from numpy import array, float32
-    # from sbstudio.plugin.colors import set_colors_of_drones_fast
-
-    # set_colors_of_drones_fast(drones, array(colors, dtype=float32).ravel())
-    # for drone in drones:
-    #     drone.update_tag()
+    set_colors_of_drones_fast(update.drones, update.colors.ravel())
+    for drone in update.drones:
+        drone.update_tag()
 
 
 ViewportShaderConfig: TypeAlias = tuple[
