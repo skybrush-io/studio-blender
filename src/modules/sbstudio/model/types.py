@@ -1,6 +1,8 @@
 from collections.abc import MutableSequence
 from typing import Mapping, Protocol, Sequence, TypeAlias, overload
 
+from numpy.typing import NDArray
+
 __all__ = (
     "Color",
     "ColorLike",
@@ -63,9 +65,13 @@ class SupportsForEach(Protocol):
     @overload
     def foreach_get(self, attr: str, seq: Sequence[bool]) -> None: ...
     @overload
+    def foreach_get(self, attr: str, seq: NDArray) -> None: ...
+    @overload
     def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
     @overload
     def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    @overload
+    def foreach_set(self, attr: str, seq: NDArray) -> None: ...
     def __len__(self) -> int: ...
 
 

@@ -5,6 +5,7 @@ from contextlib import AbstractContextManager
 from typing import Any, Iterable, Literal, TypeAlias, TypeVar, overload
 
 from mathutils import Matrix, Vector
+from numpy.typing import NDArray
 from sbstudio.plugin.model import (
     DroneShowAddonObjectProperties,
     DroneShowAddonProperties,
@@ -69,9 +70,13 @@ class bpy_prop_collection(Sequence[T]):
     @overload
     def foreach_get(self, attr: str, seq: Sequence[bool]) -> None: ...
     @overload
+    def foreach_get(self, attr: str, seq: NDArray) -> None: ...
+    @overload
     def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
     @overload
     def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    @overload
+    def foreach_set(self, attr: str, seq: NDArray) -> None: ...
     @overload
     def get(self, key: str) -> T | None: ...
     @overload
