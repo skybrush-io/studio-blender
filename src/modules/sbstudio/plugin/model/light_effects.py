@@ -250,29 +250,32 @@ class LightEffectOutputFunctionV2(Protocol):
     """Type of the v2 custom light effect function, used when the output type of a light
     effect is set to "CUSTOM_V2". The function takes the following arguments:
 
+    - effect: the light effect being evaluated. Can be used to convert the frame index
+      to a relative time fraction of the effect duration.
     - context: a context object containing the drones in the current frame, their
-      positions, and other relevant information. It also provides the array in which
-      the colors should be modified by the function
+      positions, a mask indicating which drones are not targeted by the current effect,
+      and other relevant information
     - frame: the current frame index
-    - time_fraction: the fraction of time passed in the current light effect relative to
-      its total duration, in the [0; 1] range
-    - mask: a NumPy array mask that contains `True` for _inactive_ drones (i.e. drones
-      that are not affected by the current effect) and `False` for active ones
-    - active: a NumPy array containing the indices of active drones
+    - out: the output array
 
     Each cell in the output array represents the associated output value of a single
     drone. These output values are mapped to the color ramp or associated image in a
     subsequent step.
+
+    If the function would return the same value for all drones, it can return the
+    common value instead of writing it in the `out` array. This is slightly more
+    efficient because the color ramp is evaluated only once for this single value
+    instead of evaluating it as many times as the number of drones.
     """
 
     def __call__(
         self,
-        *,
+        effect: LightEffect,
         context: LightEffectEvaluationContext,
         frame: int,
-        time_fraction: float,
+        *,
         out: NDArray[float32],
-    ) -> None: ...
+    ) -> float | None: ...
 
 
 @dataclass(frozen=True)
@@ -775,7 +778,7 @@ class LightEffect(PropertyGroup):
 
         # Calculate the influence of the effect, depending on the fade-in and fade-out
         # durations and the spatial predicate
-        influence = self._evaluate_influence(frame)
+        influence = self.get_influence(frame)
         if influence <= 0:
             return
 
@@ -865,7 +868,7 @@ class LightEffect(PropertyGroup):
                     colors[index, :] = color_ramp.evaluate(outputs_x[index])
 
         elif color_function_ref is not None:
-            time_fraction = self._get_time_fraction_for_frame(frame)
+            time_fraction = self.get_time_fraction_for_frame(frame)
             position_seq = positions.as_coordinate_sequence
             for index in unmasked:
                 try:
@@ -1057,6 +1060,31 @@ class LightEffect(PropertyGroup):
             )
 
         return pixels
+
+    def get_influence(self, frame: int) -> float:
+        """Returns the common influence value of this effect, modifying it in the
+        fade-in and fade-out periods as needed.
+
+        The returned value is guaranteed to be in [0; 1].
+        """
+        influence = self.influence
+
+        # Apply fade-in
+        if self.fade_in_duration > 0:
+            diff = frame - self.frame_start + 1
+            if diff < self.fade_in_duration:
+                influence *= diff / self.fade_in_duration
+
+        # Apply fade_out
+        if self.fade_out_duration > 0:
+            diff = self.frame_end - frame
+            if diff < self.fade_out_duration:
+                influence *= diff / self.fade_out_duration
+
+        return min(max(influence, 0), 1)
+
+    def get_time_fraction_for_frame(self, frame: int) -> float:
+        return (frame - self.frame_start) / max(self.duration - 1, 1)
 
     @property
     def id(self) -> str:
@@ -1260,28 +1288,6 @@ class LightEffect(PropertyGroup):
     ## Helper functions for effect evaluation only
     ####################################################################################
 
-    def _evaluate_influence(self, frame: int) -> float:
-        """Returns the common influence value of this effect, modifying it in the
-        fade-in and fade-out periods as needed.
-
-        The returned value is guaranteed to be in [0; 1].
-        """
-        influence = self.influence
-
-        # Apply fade-in
-        if self.fade_in_duration > 0:
-            diff = frame - self.frame_start + 1
-            if diff < self.fade_in_duration:
-                influence *= diff / self.fade_in_duration
-
-        # Apply fade_out
-        if self.fade_out_duration > 0:
-            diff = self.frame_end - frame
-            if diff < self.fade_out_duration:
-                influence *= diff / self.fade_out_duration
-
-        return min(max(influence, 0), 1)
-
     def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
         """Returns a BVH-tree data structure from the mesh associated to this
         light effect for easy containment detection, or `None` if the light
@@ -1334,9 +1340,6 @@ class LightEffect(PropertyGroup):
                     # probably all-zero normal vector
                     pass
 
-    def _get_time_fraction_for_frame(self, frame: int) -> float:
-        return (frame - self.frame_start) / max(self.duration - 1, 1)
-
     def _get_spatial_effect_predicate(
         self,
     ) -> Callable[[ObjectPositions, NDArray[bool_]], None] | None:
@@ -1384,8 +1387,7 @@ class LightEffect(PropertyGroup):
             return 1.0
 
         elif output_type == "TEMPORAL":
-            time_fraction = self._get_time_fraction_for_frame(frame)
-            return time_fraction
+            return self.get_time_fraction_for_frame(frame)
 
         elif output_type_supports_mapping_mode(output_type):
             # There are two options here:
@@ -1495,7 +1497,7 @@ class LightEffect(PropertyGroup):
             if not fn:
                 return 1.0
 
-            time_fraction = self._get_time_fraction_for_frame(frame)
+            time_fraction = self.get_time_fraction_for_frame(frame)
             out[:] = [
                 fn(
                     frame=frame,
@@ -1511,16 +1513,7 @@ class LightEffect(PropertyGroup):
         elif output_type == "CUSTOM_V2":
             fn_spec = self.output_function_y if axis == "y" else self.output_function
             fn = fn_spec.load(LightEffectOutputFunctionV2)
-            if not fn:
-                return 1.0
-
-            time_fraction = self._get_time_fraction_for_frame(frame)
-            fn(
-                context=context,
-                frame=frame,
-                time_fraction=time_fraction,
-                out=out,
-            )
+            return fn(self, context, frame, out=out) if fn else 1.0
 
         elif output_type == "LIGHT_PRESET":
             position_seq = positions.as_coordinate_sequence
@@ -1528,7 +1521,7 @@ class LightEffect(PropertyGroup):
             if preset_fn is None:
                 return 1.0
 
-            time_fraction = self._get_time_fraction_for_frame(frame)
+            time_fraction = self.get_time_fraction_for_frame(frame)
             out[:] = [
                 preset_fn(
                     frame=frame,
