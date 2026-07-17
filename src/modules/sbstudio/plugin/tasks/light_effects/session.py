@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from bpy.types import Scene
-from numpy import empty, float32
+from numpy import empty, empty_like, float32
 from numpy.typing import NDArray
 
 from sbstudio.plugin.constants import Collections
@@ -68,9 +68,9 @@ class LightEffectUpdateSession:
 
         if self._context is None:
             drones = Collections.find_drones().objects
+            base_colors = self._owner._create_mutable_color_array_for_drones(drones)
             self._context = LightEffectEvaluationContext(
                 drones=drones,
-                colors=self._owner._create_mutable_color_array_for_drones(drones),
                 positions=ObjectPositions(drones),
                 mapping=self._scene.skybrush.storyboard.get_mapping_at_frame(
                     self._frame
@@ -79,6 +79,8 @@ class LightEffectUpdateSession:
                 # evaluate a new effect
                 mask=empty((len(drones),), dtype=bool),
                 random_seq=self._scene.skybrush.settings.random_sequence_root,
+                backdrop=base_colors,
+                colors=empty_like(base_colors),
             )
 
         return self._context
@@ -130,8 +132,8 @@ class LightEffectUpdateSession:
             # previous frame so no need to calculate the final colors
             return LightEffectUpdate.NOP
 
-        self._final_colors = state.colors
+        self._final_colors = state.backdrop
         if clear_base_color_cache_at_end:
             self._owner._clear_base_colors()
 
-        return LightEffectUpdate(state.drones, state.positions, state.colors, True)
+        return LightEffectUpdate(state.drones, state.positions, state.backdrop, True)

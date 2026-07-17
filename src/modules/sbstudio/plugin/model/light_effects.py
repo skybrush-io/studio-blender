@@ -307,8 +307,18 @@ class LightEffectEvaluationContext:
     `True` for drones that are not targeted by the current effect.
     """
 
+    backdrop: NDArray[float32]
+    """Array in which the current colors of the drones are being stored.
+
+    This is used as a backdrop into which the colors calculated by a light effect are
+    blended. Typically you do not need to modify the backdrop if you are implementing
+    your own light effect function.
+    """
+
     colors: NDArray[float32]
-    """Array in which the final colors of the drones are being stored."""
+    """Array that stores the colors calculated by the current light effect before they
+    are blended into the backdrop.
+    """
 
 
 def collection_is_drone_group(self, col: Collection) -> bool:
@@ -752,7 +762,6 @@ class LightEffect(PropertyGroup):
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        colors = context.colors
         drones = context.drones
         positions = context.positions
         mapping = context.mapping
@@ -842,24 +851,25 @@ class LightEffect(PropertyGroup):
         # Note that the getters that these values come from are constructed in a
         # way that they are set to `None` if they are not applicable, so only one of
         # the branches will apply below.
-        new_colors: NDArray[float32] = zeros_like(colors)
+        colors = context.colors
+        colors.fill(0.0)
         if color_ramp is not None:
             # Color ramp based 1D light effect
             assert needs_output_x
 
             if constant_output_x is not None and num_positions > 0:
                 # Optimize for the common case when the output is constant
-                new_colors[unmasked, :] = color_ramp.evaluate(constant_output_x)
+                colors[unmasked, :] = color_ramp.evaluate(constant_output_x)
             else:
                 for index in unmasked:
-                    new_colors[index, :] = color_ramp.evaluate(outputs_x[index])
+                    colors[index, :] = color_ramp.evaluate(outputs_x[index])
 
         elif color_function_ref is not None:
             time_fraction = self._get_time_fraction_for_frame(frame)
             position_seq = positions.as_coordinate_sequence
             for index in unmasked:
                 try:
-                    new_colors[index, :] = color_function_ref(
+                    colors[index, :] = color_function_ref(
                         frame=frame,
                         time_fraction=time_fraction,
                         drone_index=index,
@@ -882,7 +892,7 @@ class LightEffect(PropertyGroup):
             pixels_with_colorspace = self.get_image_pixels()
 
             if pixels_with_colorspace is None:
-                new_colors.fill(0.0)
+                colors.fill(0.0)
             else:
                 xs = (width * outputs_x[unmasked]).astype(int)
                 ys = (height * outputs_y[unmasked]).astype(int)
@@ -894,17 +904,17 @@ class LightEffect(PropertyGroup):
                     chosen_pixels, pixels_with_colorspace.colorspace
                 )
 
-                new_colors[unmasked, :] = chosen_pixels
+                colors[unmasked, :] = chosen_pixels
 
         else:
             # should not happen
-            new_colors.fill(1.0)
+            colors.fill(1.0)
 
         # Scale the alpha channel of the new colors with the influence
-        new_colors[:, 3] *= where(mask, 0, influence)
+        colors[:, 3] *= where(mask, 0, influence)
 
         # Apply the new color with alpha blending
-        blend_in_place(new_colors, colors, BlendMode[self.blend_mode])
+        blend_in_place(colors, context.backdrop, BlendMode[self.blend_mode])
 
     def as_dict(self) -> Jsonable:
         """Creates a dictionary representation of the light effect."""
