@@ -55,7 +55,7 @@ from sbstudio.api.types import Mapping
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, Jsonable
+from sbstudio.model.types import Coordinate3D, Jsonable, RGBAColor
 from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
@@ -185,6 +185,36 @@ class LightEffectUpdate:
 
 
 LightEffectUpdate.NOP = LightEffectUpdate(None, None, None, False)
+
+
+class CustomLightEffectFunction(Protocol):
+    """Type of a completely custom light effect function, used when the light effect
+    type is set to "FUNCTION". The function takes the following arguments:
+
+    - frame: the current frame index
+    - time_fraction: the fraction of time passed in the current light effect relative to
+      its total duration, in the [0; 1] range
+    - drone_index: the index of the drone for which the output is being calculated, in
+      the range [0; num_drones - 1]
+    - formation_index: the index of the formation to which the drone belongs, in the
+      range [0; num_formations - 1], or None if there is no formation information available
+    - position: the 3D position of the drone
+    - drone_count: the total number of drones in the show
+
+    The function must return a sequence of 4 float objects, representing the output
+    color. Note that the color ramp or the associated image is not involved in the
+    color calculation.
+    """
+
+    def __call__(
+        self,
+        frame: int,
+        time_fraction: float,
+        drone_index: int,
+        formation_index: int | None,
+        position: Coordinate3D,
+        drone_count: int,
+    ) -> RGBAColor: ...
 
 
 class LightEffectOutputFunctionV1(Protocol):
@@ -940,11 +970,15 @@ class LightEffect(PropertyGroup):
         self.invalidate_color_image()
 
     @property
-    def color_function_ref(self) -> Callable | None:
+    def color_function_ref(self) -> CustomLightEffectFunction | None:
         """The color function used to calculate the effect, if it exists and is being
         used according to the type of the effect.
         """
-        return self.color_function.load() if self.color_function else None
+        return (
+            self.color_function.load(CustomLightEffectFunction)
+            if self.color_function
+            else None
+        )
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
