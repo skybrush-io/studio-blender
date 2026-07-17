@@ -67,7 +67,7 @@ class ColorCache:
     """NumPy array of shape (N, 4) containing the base color of every drone
     that was cached for the current frame."""
 
-    _drone_id_to_row_index: dict[int, int]
+    _drone_to_row_index: dict[Object, int]
     """Mapping from drone object IDs to row indices in `_base_colors_array`."""
 
     _last_frame: int | None = None
@@ -81,7 +81,7 @@ class ColorCache:
 
     def __init__(self):
         self._base_colors = empty((0, 4), dtype=float32)
-        self._drone_id_to_row_index = {}
+        self._drone_to_row_index = {}
         self._session = LightEffectUpdateSession(self)
 
     def get_base_color_of_drone(self, drone: Object) -> RGBAColor:
@@ -91,7 +91,7 @@ class ColorCache:
         The returned value is a copy of the color in the cache. It can be modified, but
         the modifications will not affect the cached value.
         """
-        idx = self._drone_id_to_row_index.get(id(drone))
+        idx = self._drone_to_row_index.get(drone)
         if idx is not None:
             return tuple(self._base_colors[idx])
         return WHITE
@@ -100,7 +100,7 @@ class ColorCache:
         """Returns the (cached) final color of the drone at the current frame
         after all active light effects are applied on it.
         """
-        idx = self._drone_id_to_row_index.get(id(drone))
+        idx = self._drone_to_row_index.get(drone)
         if idx is None:
             return WHITE
 
@@ -141,7 +141,7 @@ class ColorCache:
 
     def _clear_base_colors(self) -> None:
         """Clears the base color cache."""
-        self._drone_id_to_row_index.clear()
+        self._drone_to_row_index.clear()
         self._base_colors = empty((0, 4), dtype=float32)
 
     def _create_mutable_color_array_for_drones(
@@ -154,7 +154,7 @@ class ColorCache:
         collection. The i-th row stores the color of the i-th drone, in RGBA order.
         """
         n = len(drones)
-        if not self._drone_id_to_row_index or n != self._base_colors.shape[0]:
+        if not self._drone_to_row_index or n != self._base_colors.shape[0]:
             # Either we have no base colors yet, or the number of drones has changed.
             # Query the base colors from the drones.
             #
@@ -170,9 +170,7 @@ class ColorCache:
             # frame.
             self._base_colors = empty((n, 4), dtype=float32)
             get_colors_of_drones_fast(drones, dest=self._base_colors.ravel())
-            self._drone_id_to_row_index = {
-                id(drone): i for i, drone in enumerate(drones)
-            }
+            self._drone_to_row_index = {drone: i for i, drone in enumerate(drones)}
 
         return self._base_colors.copy()
 
@@ -185,7 +183,7 @@ class ColorCache:
 
     def _has_base_colors(self) -> bool:
         """Returns whether there are already some cached base colors in the cache."""
-        return bool(self._drone_id_to_row_index)
+        return bool(self._drone_to_row_index)
 
 
 class LightEffectUpdateSession:
