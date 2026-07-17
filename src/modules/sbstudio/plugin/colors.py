@@ -10,7 +10,9 @@ from sbstudio.plugin.keyframes import set_keyframes
 __all__ = (
     "create_keyframe_for_color_of_drone",
     "get_color_of_drone",
+    "get_colors_of_drones_fast",
     "set_color_of_drone",
+    "set_colors_of_drones_fast",
 )
 
 
