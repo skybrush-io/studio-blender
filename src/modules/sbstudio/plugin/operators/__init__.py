@@ -34,6 +34,9 @@ from .export_to_vviz import VVIZExportOperator
 from .fix_constraint_ordering import FixConstraintOrderingOperator
 from .get_formation_stats import GetFormationStatisticsOperator
 from .import_light_effects import ImportLightEffectsOperator
+from .invalidate_light_effect_pixel_cache import (
+    InvalidateLightEffectPixelCacheOperator,
+)
 from .land import LandOperator
 from .move_light_effect import (
     MoveLightEffectDownOperator,
@@ -110,6 +113,7 @@ __all__ = (
     "FixConstraintOrderingOperator",
     "GetFormationStatisticsOperator",
     "ImportLightEffectsOperator",
+    "InvalidateLightEffectPixelCacheOperator",
     "LandOperator",
     "KMZExportOperator",
     "LitebeeExportOperator",

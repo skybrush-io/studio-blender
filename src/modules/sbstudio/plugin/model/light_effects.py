@@ -374,7 +374,8 @@ _pixel_cache = PixelCache()
 
 def invalidate_pixel_cache(static: bool = True, dynamic: bool = True) -> None:
     """Invalidates the cached pixel-based representations. Called when a new
-    file is opened in Blender.
+    file is opened in Blender or when we move between frames or update the
+    deps graph.
     """
     global _pixel_cache
     if static:

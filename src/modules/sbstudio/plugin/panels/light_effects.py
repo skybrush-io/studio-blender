@@ -17,6 +17,9 @@ from sbstudio.plugin.operators import (
     SetLightEffectEndFrameOperator,
     SetLightEffectStartFrameOperator,
 )
+from sbstudio.plugin.operators.invalidate_light_effect_pixel_cache import (
+    InvalidateLightEffectPixelCacheOperator,
+)
 from sbstudio.plugin.utils.warnings import draw_experimental_feature_warning
 
 
@@ -97,7 +100,13 @@ class LightEffectsPanel(Panel):
                     col.prop_search(entry.texture, "image", bpy.data, "images", text="")
 
                     col = row.column(align=True)
-                    col.operator("image.open", icon="FILE_FOLDER", text="")
+                    subrow = col.row(align=True)
+                    subrow.operator("image.open", icon="FILE_FOLDER", text="")
+                    subrow.operator(
+                        InvalidateLightEffectPixelCacheOperator.bl_idname,
+                        icon="FILE_REFRESH",
+                        text="",
+                    )
                 elif entry.type == "FUNCTION":
                     row = self.layout.box()
                     row.prop(entry.color_function, "path", text="")
