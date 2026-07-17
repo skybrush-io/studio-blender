@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from math import pi, sin
 from typing import TYPE_CHECKING
 
+from numpy import clip, float32, pi, sin
+from numpy.typing import NDArray
+
 from .base import register_preset
+from .utils import get_formation_indices
 
 if TYPE_CHECKING:
-    from sbstudio.model.types import Coordinate3D
+    from sbstudio.plugin.model.light_effects import (
+        LightEffect,
+        LightEffectEvaluationContext,
+    )
 
 
 @register_preset(
@@ -15,15 +21,14 @@ if TYPE_CHECKING:
     translations=(("zh", "奇偶脉冲"), ("ja", "奇数偶数パルス")),
 )
 def odd_even_pulse(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    is_odd = (formation_index or 0) % 2
-    return (sin(frame * 0.1 + is_odd * pi) + 1) / 2
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = (sin(frame * 0.1 + (fi % 2) * pi) + 1) / 2
 
 
 @register_preset(
@@ -32,15 +37,14 @@ def odd_even_pulse(
     translations=(("zh", "奇偶恒亮"), ("ja", "奇数偶数定常")),
 )
 def odd_even_constant(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    is_odd = (formation_index or 0) % 2
-    return 1.0 if is_odd else 0.5
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = fi % 2
 
 
 @register_preset(
@@ -49,14 +53,21 @@ def odd_even_constant(
     translations=(("zh", "简单渐亮"), ("ja", "シンプルグラデーション")),
 )
 def simple_filling(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    if not drone_count:
-        return 0.0
-    factor = (formation_index or 0) / drone_count
-    return factor * time_fraction
+    *,
+    out: NDArray[float32],
+) -> None:
+    N = len(out)
+    if N == 0:
+        return
+
+    fi = get_formation_indices(context, dtype=float32)
+    time_fraction = effect.get_time_fraction_for_frame(frame)
+
+    if N > 1:
+        out[:] = 2 * time_fraction - fi / (N - 1)
+        clip(out, 0, 1)
+    else:
+        out[:] = time_fraction

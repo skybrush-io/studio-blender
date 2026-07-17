@@ -1,25 +1,31 @@
 from __future__ import annotations
 
-from math import cos, sin
 from typing import TYPE_CHECKING
 
+from numpy import cos, float32, int32, sin, where
+from numpy.typing import NDArray
+
 from .base import register_preset
+from .utils import get_formation_indices
 
 if TYPE_CHECKING:
-    from sbstudio.model.types import Coordinate3D
+    from sbstudio.plugin.model.light_effects import (
+        LightEffect,
+        LightEffectEvaluationContext,
+    )
 
 CHASE_SPEED = 0.12
 CHASE_SPATIAL_K = 0.1
 
 
 def _chasing_tails_core(
-    position: Coordinate3D, axis: int, frame: int, formation_index: int | None
-) -> float:
-    coord = position[axis]
-    fi = formation_index if formation_index is not None else 0
+    positions: NDArray[float32], axis: int, frame: int, fi: NDArray[int32]
+) -> NDArray[float32]:
+    coord = positions[:, axis]
     travel_phase = frame * CHASE_SPEED - coord * CHASE_SPATIAL_K
-    v = cos(travel_phase) if fi % 2 else sin(travel_phase)
-    return (v + 1) / 2
+    cos_result = (cos(travel_phase) + 1) / 2
+    sin_result = (sin(travel_phase) + 1) / 2
+    return where(fi % 2 == 0, sin_result, cos_result)
 
 
 @register_preset(
@@ -28,14 +34,14 @@ def _chasing_tails_core(
     translations=(("zh", "追逐尾巴 X"), ("ja", "追跡 X")),
 )
 def chasing_tails_x(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _chasing_tails_core(position, 0, frame, formation_index)
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = _chasing_tails_core(context.positions.as_array, 0, frame, fi)
 
 
 @register_preset(
@@ -44,14 +50,14 @@ def chasing_tails_x(
     translations=(("zh", "追逐尾巴 Y"), ("ja", "追跡 Y")),
 )
 def chasing_tails_y(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _chasing_tails_core(position, 1, frame, formation_index)
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = _chasing_tails_core(context.positions.as_array, 1, frame, fi)
 
 
 @register_preset(
@@ -60,11 +66,11 @@ def chasing_tails_y(
     translations=(("zh", "追逐尾巴 Z"), ("ja", "追跡 Z")),
 )
 def chasing_tails_z(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _chasing_tails_core(position, 2, frame, formation_index)
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = _chasing_tails_core(context.positions.as_array, 2, frame, fi)

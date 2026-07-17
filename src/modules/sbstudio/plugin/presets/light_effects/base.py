@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Final, MutableMapping, Sequence
 if TYPE_CHECKING:
     from bpy.types import Context
 
-    from sbstudio.plugin.model.light_effects import LightEffectOutputFunctionV1
+    from sbstudio.plugin.model.light_effects import LightEffectOutputFunctionV2
 
 __all__ = (
     "get_preset_enum_items",
@@ -23,7 +23,7 @@ __all__ = (
 class PresetMeta:
     id: str
     label: str  # English label (used as the i18n source string)
-    function: LightEffectOutputFunctionV1
+    function: LightEffectOutputFunctionV2
     description: str = ""
     translations: dict[str, str] = field(default_factory=dict)  # language code -> label
 
@@ -44,9 +44,7 @@ def register_preset(
     description: str = "",
     translations: Sequence[tuple[str, str]] = (),
 ):
-    def decorator(
-        fn: LightEffectOutputFunctionV1,
-    ) -> LightEffectOutputFunctionV1:
+    def decorator(fn: LightEffectOutputFunctionV2) -> LightEffectOutputFunctionV2:
         if id in _PRESETS:
             raise ValueError(f"Duplicate light effect preset ID: {id!r}")
         _PRESETS[id] = PresetMeta(
@@ -61,7 +59,7 @@ def register_preset(
     return decorator
 
 
-def get_preset_function(preset_id: str) -> LightEffectOutputFunctionV1 | None:
+def get_preset_function(preset_id: str) -> LightEffectOutputFunctionV2 | None:
     meta = _PRESETS.get(preset_id)
     return meta.function if meta is not None else None
 

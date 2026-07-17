@@ -1,217 +1,258 @@
 from __future__ import annotations
 
-from math import atan2, degrees
 from typing import TYPE_CHECKING
 
+from numpy import arctan2, degrees, float32, where
+from numpy.typing import NDArray
+
 from .base import register_preset
+from .utils import get_formation_indices
 
 if TYPE_CHECKING:
-    from sbstudio.model.types import Coordinate3D
+    from sbstudio.plugin.model.light_effects import (
+        LightEffect,
+        LightEffectEvaluationContext,
+    )
 
 
-RADAR_ANGULAR_SPEED = 2400.0 / 34.0
-RADAR_FRAMERATE = 24.0
+def _get_fan_phase_and_width(
+    positions: NDArray[float32], cx: float, cy: float, n: int
+) -> tuple[NDArray[float32], float]:
+    dx = positions[:, 0] - cx
+    dy = positions[:, 1] - cy
+    angles = degrees(arctan2(dy, dx)) % 360
+    span = 360.0 / n
+    half_span = span / 2
+    return angles, half_span
 
 
-def _radar_scan_core(
-    position, plane: tuple[int, int], fan_angle_deg: float, frame: int
-) -> float:
-    time_sec = frame / RADAR_FRAMERATE
-    rotation_angle_deg = (time_sec * RADAR_ANGULAR_SPEED) % 360.0
-
-    coord_a, coord_b = position[plane[0]], position[plane[1]]
-    drone_angle_deg = degrees(atan2(coord_b, coord_a))
-    if drone_angle_deg < 0:
-        drone_angle_deg += 360.0
-
-    fan_start = rotation_angle_deg
-    fan_end = (rotation_angle_deg + fan_angle_deg) % 360.0
-    if fan_start <= fan_end:
-        in_fan = fan_start <= drone_angle_deg <= fan_end
-    else:
-        in_fan = (drone_angle_deg >= fan_start) or (drone_angle_deg <= fan_end)
-
-    return 1.0 if in_fan else 0.0
-
-
-XY = (0, 1)
-YZ = (1, 2)
-XZ = (0, 2)
+def _is_in_fan(
+    angles: NDArray[float32], center: float, half_span: float
+) -> NDArray[float32]:
+    diff = (angles - center) % 360
+    return (diff >= 0) & (diff <= 2 * half_span)
 
 
 @register_preset(
-    id="radar_scan_60_xy",
-    label="Radar Scan 60° XY",
-    translations=(("zh", "雷达扫描 60度 XY"), ("ja", "レーダースキャン 60° XY")),
+    id="radar_scan",
+    label="Radar Scan",
+    translations=(("zh", "雷达扫描"), ("ja", "レーダースキャン")),
 )
-def radar_scan_60_xy(
+def radar_scan(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, XY, 60.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    pos = context.positions.as_array
+    cx, cy, _ = context.swarm_center.as_array
+    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
+    indices = get_formation_indices(context)
+    center_angle = (frame * 2) % 360
+    out[:] = where(
+        _is_in_fan(angles, center_angle, half_span),
+        (indices % 2 + 0.5).astype(float32),
+        0.0,
+    )
 
 
 @register_preset(
-    id="radar_scan_90_xy",
-    label="Radar Scan 90° XY",
-    translations=(("zh", "雷达扫描 90度 XY"), ("ja", "レーダースキャン 90° XY")),
+    id="radar_scan_2",
+    label="Radar Scan 2",
+    translations=(("zh", "雷达扫描2"), ("ja", "レーダースキャン2")),
 )
-def radar_scan_90_xy(
+def radar_scan_2(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, XY, 90.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    pos = context.positions.as_array
+    cx, cy, _ = context.swarm_center.as_array
+    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
+    center_angle = (-frame * 2) % 360
+    out[:] = where(
+        _is_in_fan(angles, center_angle, half_span),
+        (n // 2 - abs(get_formation_indices(context) - n // 2)).astype(float32)
+        / (n // 2),
+        0.0,
+    )
 
 
 @register_preset(
-    id="radar_scan_120_xy",
-    label="Radar Scan 120° XY",
-    translations=(("zh", "雷达扫描 120度 XY"), ("ja", "レーダースキャン 120° XY")),
+    id="radar_scan_3",
+    label="Radar Scan 3",
+    translations=(("zh", "雷达扫描3"), ("ja", "レーダースキャン3")),
 )
-def radar_scan_120_xy(
+def radar_scan_3(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, XY, 120.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    pos = context.positions.as_array
+    cx, cy, _ = context.swarm_center.as_array
+    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
+    center_angle = (frame * 2) % 360
+    fi = get_formation_indices(context)
+    out[:] = where(
+        _is_in_fan(angles, center_angle, half_span),
+        where(fi % 3 == 0, 0.9, where(fi % 3 == 1, 0.5, 0.2)),
+        0.0,
+    )
 
 
 @register_preset(
-    id="radar_scan_60_xz",
-    label="Radar Scan 60° XZ",
-    translations=(("zh", "雷达扫描 60度 XZ"), ("ja", "レーダースキャン 60° XZ")),
+    id="radar_scan_4",
+    label="Radar Scan 4",
+    translations=(("zh", "雷达扫描4"), ("ja", "レーダースキャン4")),
 )
-def radar_scan_60_xz(
+def radar_scan_4(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, XZ, 60.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    pos = context.positions.as_array
+    cx, cy, _ = context.swarm_center.as_array
+    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
+    center_angle = (frame * 3) % 360
+    out[:] = where(
+        _is_in_fan(angles, center_angle, half_span),
+        0.8,
+        0.0,
+    )
 
 
 @register_preset(
-    id="radar_scan_90_xz",
-    label="Radar Scan 90° XZ",
-    translations=(("zh", "雷达扫描 90度 XZ"), ("ja", "レーダースキャン 90° XZ")),
+    id="radar_scan_5",
+    label="Radar Scan 5",
+    translations=(("zh", "雷达扫描5"), ("ja", "レーダースキャン5")),
 )
-def radar_scan_90_xz(
+def radar_scan_5(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, XZ, 90.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    pos = context.positions.as_array
+    cx, cy, _ = context.swarm_center.as_array
+    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
+    center_angle = (-frame * 3) % 360
+    out[:] = where(
+        _is_in_fan(angles, center_angle, half_span),
+        0.8,
+        0.0,
+    )
 
 
 @register_preset(
-    id="radar_scan_120_xz",
-    label="Radar Scan 120° XZ",
-    translations=(("zh", "雷达扫描 120度 XZ"), ("ja", "レーダースキャン 120° XZ")),
+    id="continuous_radar_scan_test",
+    label="Continuous Radar Scan Test",
+    translations=(("zh", "持续雷达扫描测试"), ("ja", "連続レーダースキャンテスト")),
 )
-def radar_scan_120_xz(
+def continuous_radar_scan_test(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, XZ, 120.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    pos = context.positions.as_array
+    cx, cy, _ = context.swarm_center.as_array
+    angles, _ = _get_fan_phase_and_width(pos, cx, cy, n)
+    center_angle = (frame * 2) % 360
+    diff = ((angles - center_angle + 180) % 360) - 180
+    brightness = (1 - abs(diff / 30)).clip(0, 1)
+    out[:] = brightness.astype(float32)
 
 
 @register_preset(
-    id="radar_scan_60_yz",
-    label="Radar Scan 60° YZ",
-    translations=(("zh", "雷达扫描 60度 YZ"), ("ja", "レーダースキャン 60° YZ")),
+    id="paint_on_test_1",
+    label="Paint on Test 1",
+    translations=(("zh", "飞入测试1"), ("ja", "ペイントオンテスト1")),
 )
-def radar_scan_60_yz(
+def paint_on_test_1(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, YZ, 60.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    fi = get_formation_indices(context)
+    total_drones = n
+    progress = frame / 100
+    active_count = int(total_drones * min(progress, 1))
+    out[:] = where(fi < active_count, 1.0, 0.0)
 
 
 @register_preset(
-    id="radar_scan_90_yz",
-    label="Radar Scan 90° YZ",
-    translations=(("zh", "雷达扫描 90度 YZ"), ("ja", "レーダースキャン 90° YZ")),
+    id="paint_on_test_2",
+    label="Paint on Test 2",
+    translations=(("zh", "飞入测试2"), ("ja", "ペイントオンテスト2")),
 )
-def radar_scan_90_yz(
+def paint_on_test_2(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, YZ, 90.0, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    fi = get_formation_indices(context)
+    total_drones = n
+    progress = frame / 100
+    active_count = int(total_drones * min(progress, 1))
+    out[:] = where(fi < active_count, (fi % 3 + 1) / 3.0, 0.0)
 
 
 @register_preset(
-    id="radar_scan_120_yz",
-    label="Radar Scan 120° YZ",
-    translations=(("zh", "雷达扫描 120度 YZ"), ("ja", "レーダースキャン 120° YZ")),
+    id="paint_on_test_3",
+    label="Paint on Test 3",
+    translations=(("zh", "飞入测试3"), ("ja", "ペイントオンテスト3")),
 )
-def radar_scan_120_yz(
+def paint_on_test_3(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _radar_scan_core(position, YZ, 120.0, frame)
-
-
-PAINT_DURATION_FRAMES = 120
-PAINT_FRAMERATE = 24.0
-
-
-def _paint_on_core(position: Coordinate3D, plane: tuple[int, int], frame: int) -> float:
-    coord_a, coord_b = position[plane[0]], position[plane[1]]
-    drone_angle_deg = degrees(atan2(coord_b, coord_a))
-    if drone_angle_deg < 0:
-        drone_angle_deg += 360.0
-
-    phase = min(frame / max(PAINT_DURATION_FRAMES, 1), 1.0)
-    current_angle_deg = phase * 360.0
-    if drone_angle_deg <= current_angle_deg:
-        return 1.0
-    else:
-        return 0.0
-
-
-@register_preset(
-    id="pattern_paint_on_xy",
-    label="Pattern Paint-On XY",
-    translations=(("zh", "图案逐渐点亮 XY"), ("ja", "パターンペイント XY")),
-)
-def pattern_paint_on_xy(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _paint_on_core(position, XY, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    fi = get_formation_indices(context)
+    total_drones = n
+    out[:] = where(
+        fi < int(total_drones * min(frame / 100, 1)),
+        (2 - abs(fi - total_drones // 2) / (total_drones // 2)).clip(0, 1),
+        0.0,
+    )

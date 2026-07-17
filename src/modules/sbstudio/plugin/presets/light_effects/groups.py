@@ -1,23 +1,22 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from numpy import float32, int32, select
+from numpy.typing import NDArray
+
 from .base import register_preset
+from .utils import get_formation_indices
 
 if TYPE_CHECKING:
-    from sbstudio.model.types import Coordinate3D
+    from sbstudio.plugin.model.light_effects import (
+        LightEffect,
+        LightEffectEvaluationContext,
+    )
 
-
-def _ranges_lookup(
-    ranges: Sequence[tuple[int, int, float]], formation_index: int | None
-) -> float:
-    fi = formation_index or 0
-    for start, end, brightness in ranges:
-        if start <= fi <= end:
-            return brightness
-    return 0.0
-
+# TODO(ntamas): the range tables are hard-coded for formations with exactly
+# 100 drones; this should eventually become a configurable parameter on the
+# light effect
 
 _RANGES_3 = (
     (0, 17, 0.1),
@@ -36,6 +35,14 @@ _RANGES_5 = (
 )
 
 
+def _ranges_lookup(
+    ranges: tuple[tuple[int, int, float], ...], fi: NDArray[int32]
+) -> NDArray[float32]:
+    conditions = [(fi >= start) & (fi <= end) for start, end, _ in ranges]
+    values = [brightness for _, _, brightness in ranges]
+    return select(conditions, values, default=0.0).astype(float32)
+
+
 @register_preset(
     id="group_ranges_3",
     label="3 Group Ranges",
@@ -43,14 +50,14 @@ _RANGES_5 = (
     translations=(("zh", "三段亮度分区"), ("ja", "3グループ範囲")),
 )
 def group_ranges_3(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ranges_lookup(_RANGES_3, formation_index)
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = _ranges_lookup(_RANGES_3, fi)
 
 
 @register_preset(
@@ -60,11 +67,11 @@ def group_ranges_3(
     translations=(("zh", "五段亮度分区"), ("ja", "5グループ範囲")),
 )
 def group_ranges_5(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ranges_lookup(_RANGES_5, formation_index)
+    *,
+    out: NDArray[float32],
+) -> None:
+    fi = get_formation_indices(context)
+    out[:] = _ranges_lookup(_RANGES_5, fi)

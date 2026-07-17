@@ -1,184 +1,188 @@
 from __future__ import annotations
 
-from math import sin
 from typing import TYPE_CHECKING
+
+from numpy import abs, clip, float32, sin
+from numpy.typing import NDArray
 
 from .base import register_preset
 
 if TYPE_CHECKING:
-    from sbstudio.model.types import Coordinate3D
+    from sbstudio.plugin.model.light_effects import (
+        LightEffect,
+        LightEffectEvaluationContext,
+    )
 
 
 @register_preset(
-    id="ramp_down_wave",
-    label="Ramp-Down Wave",
-    translations=(("zh", "递减坡形波"), ("ja", "ランプダウン波")),
+    id="wave_sawtooth",
+    label="Sawtooth Wave",
+    translations=(("zh", "锯齿波"), ("ja", "ノコギリ波")),
 )
-def ramp_down_wave(
+def wave_sawtooth(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    wave_length = 50
-    return 1 - ((frame + (formation_index or 0)) % wave_length / wave_length)
-
-
-def _ramp_up(frame, formation_index, wave_length) -> float:
-    return (frame + (formation_index or 0)) % wave_length / wave_length
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    v = (frame * 0.05 + sin(positions[:, 0] * 0.1) * 0.5) % 1.0
+    out[:] = v.astype(float32)
 
 
 @register_preset(
-    id="ramp_up_wave_10",
-    label="Ramp-Up Wave 10",
-    translations=(("zh", "递增坡形波10"), ("ja", "ランプアップ波10")),
+    id="wave_sawtooth_2",
+    label="Sawtooth Wave 2",
+    translations=(("zh", "锯齿波2"), ("ja", "ノコギリ波2")),
 )
-def ramp_up_wave_10(
+def wave_sawtooth_2(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ramp_up(frame, formation_index, 10)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    v = (frame * 0.05 + sin(positions[:, 1] * 0.1) * 0.5) % 1.0
+    out[:] = v.astype(float32)
 
 
 @register_preset(
-    id="ramp_up_wave_15",
-    label="Ramp-Up Wave 15",
-    translations=(("zh", "递增坡形波15"), ("ja", "ランプアップ波15")),
+    id="wave_sawtooth_3",
+    label="Sawtooth Wave 3",
+    translations=(("zh", "锯齿波3"), ("ja", "ノコギリ波3")),
 )
-def ramp_up_wave_15(
+def wave_sawtooth_3(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ramp_up(frame, formation_index, 15)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    v = (frame * 0.05 + sin(positions[:, 2] * 0.1) * 0.5) % 1.0
+    out[:] = v.astype(float32)
 
 
 @register_preset(
-    id="ramp_up_wave_25",
-    label="Ramp-Up Wave 25",
-    translations=(("zh", "递增坡形波25"), ("ja", "ランプアップ波25")),
-)
-def ramp_up_wave_25(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ramp_up(frame, formation_index, 25)
-
-
-@register_preset(
-    id="ramp_up_wave_75",
-    label="Ramp-Up Wave 75",
-    translations=(("zh", "递增坡形波75"), ("ja", "ランプアップ波75")),
-)
-def ramp_up_wave_75(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ramp_up(frame, formation_index, 75)
-
-
-@register_preset(
-    id="ramp_up_wave_100",
-    label="Ramp-Up Wave 100",
-    translations=(("zh", "递增坡形波100"), ("ja", "ランプアップ波100")),
-)
-def ramp_up_wave_100(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ramp_up(frame, formation_index, 100)
-
-
-@register_preset(
-    id="ramp_up_wave_150",
-    label="Ramp-Up Wave 150",
-    translations=(("zh", "递增坡形波150"), ("ja", "ランプアップ波150")),
-)
-def ramp_up_wave_150(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _ramp_up(frame, formation_index, 150)
-
-
-@register_preset(
-    id="triangle_wave",
+    id="wave_triangle",
     label="Triangle Wave",
     translations=(("zh", "三角波"), ("ja", "三角波")),
 )
-def triangle_wave(
+def wave_triangle(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    wave_length = 50
-    offset = (frame + (formation_index or 0)) % wave_length / wave_length
-    return 1 - abs(2 * offset - 1)
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    v = (frame * 0.04 + sin(positions[:, 0] * 0.05)) % 1.0
+    out[:] = (1 - abs(2 * v - 1)).astype(float32)
 
 
 @register_preset(
     id="expanding_pulse",
     label="Expanding Pulse",
-    translations=(("zh", "扩散脉冲"), ("ja", "拡散パルス")),
+    translations=(("zh", "扩张脉冲"), ("ja", "拡張パルス")),
 )
 def expanding_pulse(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    fi = formation_index or 0
-    pulse_center = drone_count // 1 if drone_count else 0
-    distance_from_center = abs(fi - pulse_center)
-    pulse = (sin(frame * 0.1 - distance_from_center * 0.01) + 0.5) / 2
-    # Clamp into [0, 1] (the original returned [-0.25, 0.75])
-    return max(0.0, min(1.0, pulse))
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    dx = positions[:, 0] - context.swarm_center.as_array[0]
+    dy = positions[:, 1] - context.swarm_center.as_array[1]
+    r = (dx * dx + dy * dy) ** 0.5
+    r_max = r.max() if len(r) > 0 else 1.0
+    if r_max == 0:
+        r_max = 1.0
+    v = (frame * 0.04 - r / r_max) % 1.0
+    out[:] = (1 - abs(2 * v - 1)).astype(float32)
 
 
 @register_preset(
-    id="wave_effect",
-    label="Spatial Wave",
-    description="Sinusoidal wave traveling along the world X axis",
-    translations=(("zh", "空间波纹"), ("ja", "空間波")),
+    id="sawtooth_pulse",
+    label="Sawtooth Pulse",
+    translations=(("zh", "锯齿脉冲"), ("ja", "ノコギリパルス")),
 )
-def wave_effect(
+def sawtooth_pulse(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    speed = 0.1
-    distance = position[0] if position is not None else 0.0
-    return (sin(frame * speed - distance) + 1) / 2
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    dx = positions[:, 0] - context.swarm_center.as_array[0]
+    dy = positions[:, 1] - context.swarm_center.as_array[1]
+    r = (dx * dx + dy * dy) ** 0.5
+    r_max = r.max() if len(r) > 0 else 1.0
+    if r_max == 0:
+        r_max = 1.0
+    v = (frame * 0.04 - r / r_max) % 1.0
+    out[:] = v.astype(float32)
+
+
+@register_preset(
+    id="spatial_wave",
+    label="Spatial Wave",
+    translations=(("zh", "空间波动"), ("ja", "空間波")),
+)
+def spatial_wave(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
+    frame: int,
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    phase = (frame * 0.1 + positions[:, 0] * 0.2 + positions[:, 1] * 0.1) / 6.28
+    v = (phase - phase.astype(int)).astype(float32)
+    out[:] = clip(1.5 - abs(v - 0.5) * 4, 0, 1)
+
+
+@register_preset(
+    id="spatial_wave_2",
+    label="Spatial Wave 2",
+    translations=(("zh", "空间波动2"), ("ja", "空間波2")),
+)
+def spatial_wave_2(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
+    frame: int,
+    *,
+    out: NDArray[float32],
+) -> None:
+    n = len(out)
+    if n == 0:
+        return
+    positions = context.positions.as_array
+    phase = (frame * 0.1 + positions[:, 0] * 0.1 + positions[:, 1] * 0.3) / 6.28
+    v = (phase - phase.astype(int)).astype(float32)
+    out[:] = clip(1.5 - abs(v - 0.5) * 4, 0, 1)

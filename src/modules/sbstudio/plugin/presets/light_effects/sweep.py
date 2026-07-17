@@ -1,392 +1,302 @@
 from __future__ import annotations
 
-from math import sqrt
 from typing import TYPE_CHECKING
+
+from numpy import abs, clip, float32, sqrt, zeros
+from numpy.typing import NDArray
 
 from .base import register_preset
 
 if TYPE_CHECKING:
-    from sbstudio.model.types import Coordinate3D
+    from sbstudio.plugin.model.light_effects import (
+        LightEffect,
+        LightEffectEvaluationContext,
+    )
 
 
-SWEEP_RANGE_MIN = -30.0
-SWEEP_RANGE_MAX = 30.0
-SWEEP_ONEWAY_DURATION = 120
-SWEEP_ONEWAY_PAUSE = 48
-SWEEP_ROUNDTRIP_PAUSE = 24
-SWEEP_GRADIENT_WIDTH = 8.0
+def _axis_sweep_on(
+    positions: NDArray[float32], axis: int, frame: int, negate: bool = False
+) -> NDArray[float32]:
+    n = len(positions)
+    if n == 0:
+        return zeros(0, dtype=float32)
+    x = positions[:, axis] / 100  # normalize roughly
+    v = (frame * 0.04 + x) % 1.0 if not negate else (frame * 0.04 - x) % 1.0
+    return (1 - abs(2 * v - 1)).astype(float32)
 
 
-def _gradient_sweep_roundtrip(coord: float, direction: int, frame: int) -> float:
-    oneway_frames = SWEEP_ONEWAY_DURATION
-    pause_frames = SWEEP_ROUNDTRIP_PAUSE
-    full_cycle = 2 * (oneway_frames + pause_frames)
-    t = frame % full_cycle
-    if t < oneway_frames:
-        phase = t / max(oneway_frames, 1)
-    elif t < oneway_frames + pause_frames:
-        phase = 1.0
-    elif t < 2 * oneway_frames + pause_frames:
-        phase = 1.0 - (t - oneway_frames - pause_frames) / max(oneway_frames, 1)
-    else:
-        phase = 0.0
-    sweep_pos = SWEEP_RANGE_MIN + phase * (SWEEP_RANGE_MAX - SWEEP_RANGE_MIN)
-    if direction < 0:
-        sweep_pos = SWEEP_RANGE_MAX - (sweep_pos - SWEEP_RANGE_MIN)
-    dist = abs(coord - sweep_pos)
-    half_width = SWEEP_GRADIENT_WIDTH / 2.0
-    if dist >= half_width:
-        return 0.0
-    brightness = 1.0 - (dist / half_width)
-    return max(0.0, min(1.0, brightness))
+def _axis_sweep_off(
+    positions: NDArray[float32], axis: int, frame: int
+) -> NDArray[float32]:
+    return 1 - _axis_sweep_on(positions, axis, frame, negate=False)
 
 
-def _gradient_sweep_oneway_loop(coord: float, direction: int, frame: int) -> float:
-    oneway_frames = SWEEP_ONEWAY_DURATION
-    pause_frames = SWEEP_ONEWAY_PAUSE
-    full_cycle = oneway_frames + pause_frames
-    t = frame % full_cycle
-    if t < oneway_frames:
-        phase = t / max(oneway_frames, 1)
-    else:
-        return 0.0
-    if direction > 0:
-        sweep_pos = SWEEP_RANGE_MIN + phase * (SWEEP_RANGE_MAX - SWEEP_RANGE_MIN)
-    else:
-        sweep_pos = SWEEP_RANGE_MAX - phase * (SWEEP_RANGE_MAX - SWEEP_RANGE_MIN)
-    dist = abs(coord - sweep_pos)
-    half_width = SWEEP_GRADIENT_WIDTH / 2.0
-    if dist >= half_width:
-        return 0.0
-    brightness = 1.0 - (dist / half_width)
-    return max(0.0, min(1.0, brightness))
+def _radial_sweep_on(
+    positions: NDArray[float32], cx: float, cy: float, frame: int
+) -> NDArray[float32]:
+    n = len(positions)
+    if n == 0:
+        return zeros(0, dtype=float32)
+    dx = positions[:, 0] - cx
+    dy = positions[:, 1] - cy
+    r = sqrt(dx * dx + dy * dy)
+    r_max = r.max() if len(r) > 0 else 1.0
+    if r_max == 0:
+        r_max = 1.0
+    v = (frame * 0.05 + r / r_max) % 1.0
+    return (1 - abs(2 * v - 1)).astype(float32)
 
 
-def _gradient_sweep_diagonal(
-    pos_a: float, pos_b: float, direction: int, frame: int
-) -> float:
-    proj = (pos_a + pos_b) / sqrt(2)
-    oneway_frames = SWEEP_ONEWAY_DURATION
-    pause_frames = SWEEP_ONEWAY_PAUSE
-    full_cycle = oneway_frames + pause_frames
-    t = frame % full_cycle
-    if t < oneway_frames:
-        phase = t / max(oneway_frames, 1)
-    else:
-        return 0.0
-    if direction > 0:
-        sweep_pos = SWEEP_RANGE_MIN + phase * (SWEEP_RANGE_MAX - SWEEP_RANGE_MIN)
-    else:
-        sweep_pos = SWEEP_RANGE_MAX - phase * (SWEEP_RANGE_MAX - SWEEP_RANGE_MIN)
-    dist = abs(proj - sweep_pos)
-    half_width = SWEEP_GRADIENT_WIDTH / 2.0
-    if dist >= half_width:
-        return 0.0
-    brightness = 1.0 - (dist / half_width)
-    return max(0.0, min(1.0, brightness))
+def _radial_sweep_off(
+    positions: NDArray[float32], cx: float, cy: float, frame: int
+) -> NDArray[float32]:
+    return 1 - _radial_sweep_on(positions, cx, cy, frame)
 
 
 @register_preset(
-    id="roundtrip_sweep_ltr_x",
-    label="Roundtrip Sweep L→R X",
-    translations=(("zh", "往返扫光 左到右 X"), ("ja", "往復スイープ 左→右 X")),
+    id="sweep_positive_x",
+    label="Sweep Positive X",
+    translations=(("zh", "X正方向扫描"), ("ja", "スイープXプラス")),
 )
-def roundtrip_sweep_ltr_x(
+def sweep_positive_x(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_roundtrip(position[0], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 0, frame, negate=False)
 
 
 @register_preset(
-    id="roundtrip_sweep_rtl_x",
-    label="Roundtrip Sweep R→L X",
-    translations=(("zh", "往返扫光 右到左 X"), ("ja", "往復スイープ 右→左 X")),
+    id="sweep_positive_y",
+    label="Sweep Positive Y",
+    translations=(("zh", "Y正方向扫描"), ("ja", "スイープYプラス")),
 )
-def roundtrip_sweep_rtl_x(
+def sweep_positive_y(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_roundtrip(position[0], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 1, frame, negate=False)
 
 
 @register_preset(
-    id="roundtrip_sweep_ltr_y",
-    label="Roundtrip Sweep L→R Y",
-    translations=(("zh", "往返扫光 左到右 Y"), ("ja", "往復スイープ 左→右 Y")),
+    id="sweep_positive_z",
+    label="Sweep Positive Z",
+    translations=(("zh", "Z正方向扫描"), ("ja", "スイープZプラス")),
 )
-def roundtrip_sweep_ltr_y(
+def sweep_positive_z(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_roundtrip(position[1], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 2, frame, negate=False)
 
 
 @register_preset(
-    id="roundtrip_sweep_rtl_y",
-    label="Roundtrip Sweep R→L Y",
-    translations=(("zh", "往返扫光 右到左 Y"), ("ja", "往復スイープ 右→左 Y")),
+    id="sweep_negative_x",
+    label="Sweep Negative X",
+    translations=(("zh", "X负方向扫描"), ("ja", "スイープXマイナス")),
 )
-def roundtrip_sweep_rtl_y(
+def sweep_negative_x(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_roundtrip(position[1], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 0, frame, negate=True)
 
 
 @register_preset(
-    id="roundtrip_sweep_ltr_z",
-    label="Roundtrip Sweep L→R Z",
-    translations=(("zh", "往返扫光 左到右 Z"), ("ja", "往復スイープ 左→右 Z")),
+    id="sweep_negative_y",
+    label="Sweep Negative Y",
+    translations=(("zh", "Y负方向扫描"), ("ja", "スイープYマイナス")),
 )
-def roundtrip_sweep_ltr_z(
+def sweep_negative_y(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_roundtrip(position[2], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 1, frame, negate=True)
 
 
 @register_preset(
-    id="roundtrip_sweep_rtl_z",
-    label="Roundtrip Sweep R→L Z",
-    translations=(("zh", "往返扫光 右到左 Z"), ("ja", "往復スイープ 右→左 Z")),
+    id="sweep_negative_z",
+    label="Sweep Negative Z",
+    translations=(("zh", "Z负方向扫描"), ("ja", "スイープZマイナス")),
 )
-def roundtrip_sweep_rtl_z(
+def sweep_negative_z(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_roundtrip(position[2], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 2, frame, negate=True)
 
 
 @register_preset(
-    id="oneway_sweep_ltr_x",
-    label="Oneway Sweep L→R X",
-    translations=(("zh", "单向扫光 左到右 X"), ("ja", "片道スイープ 左→右 X")),
+    id="sweep_positive_x_off",
+    label="Sweep Positive X Off",
+    translations=(("zh", "X正方向扫描熄灭"), ("ja", "スイープXプラスオフ")),
 )
-def oneway_sweep_ltr_x(
+def sweep_positive_x_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_oneway_loop(position[0], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_off(context.positions.as_array, 0, frame)
 
 
 @register_preset(
-    id="oneway_sweep_rtl_x",
-    label="Oneway Sweep R→L X",
-    translations=(("zh", "单向扫光 右到左 X"), ("ja", "片道スイープ 右→左 X")),
+    id="sweep_positive_y_off",
+    label="Sweep Positive Y Off",
+    translations=(("zh", "Y正方向扫描熄灭"), ("ja", "スイープYプラスオフ")),
 )
-def oneway_sweep_rtl_x(
+def sweep_positive_y_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_oneway_loop(position[0], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_off(context.positions.as_array, 1, frame)
 
 
 @register_preset(
-    id="oneway_sweep_ltr_y",
-    label="Oneway Sweep L→R Y",
-    translations=(("zh", "单向扫光 左到右 Y"), ("ja", "片道スイープ 左→右 Y")),
+    id="sweep_positive_z_off",
+    label="Sweep Positive Z Off",
+    translations=(("zh", "Z正方向扫描熄灭"), ("ja", "スイープZプラスオフ")),
 )
-def oneway_sweep_ltr_y(
+def sweep_positive_z_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_oneway_loop(position[1], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_off(context.positions.as_array, 2, frame)
 
 
 @register_preset(
-    id="oneway_sweep_rtl_y",
-    label="Oneway Sweep R→L Y",
-    translations=(("zh", "单向扫光 右到左 Y"), ("ja", "片道スイープ 右→左 Y")),
+    id="sweep_negative_x_off",
+    label="Sweep Negative X Off",
+    translations=(("zh", "X负方向扫描熄灭"), ("ja", "スイープXマイナスオフ")),
 )
-def oneway_sweep_rtl_y(
+def sweep_negative_x_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_oneway_loop(position[1], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 0, frame, negate=True)
+    out[:] = 1 - out
 
 
 @register_preset(
-    id="oneway_sweep_ltr_z",
-    label="Oneway Sweep L→R Z",
-    translations=(("zh", "单向扫光 左到右 Z"), ("ja", "片道スイープ 左→右 Z")),
+    id="sweep_negative_y_off",
+    label="Sweep Negative Y Off",
+    translations=(("zh", "Y负方向扫描熄灭"), ("ja", "スイープYマイナスオフ")),
 )
-def oneway_sweep_ltr_yz(
+def sweep_negative_y_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_oneway_loop(position[2], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 1, frame, negate=True)
+    out[:] = 1 - out
 
 
 @register_preset(
-    id="oneway_sweep_rtl_z",
-    label="Oneway Sweep R→L Z",
-    translations=(("zh", "单向扫光 右到左 Z"), ("ja", "片道スイープ 右→左 Z")),
+    id="sweep_negative_z_off",
+    label="Sweep Negative Z Off",
+    translations=(("zh", "Z负方向扫描熄灭"), ("ja", "スイープZマイナスオフ")),
 )
-def oneway_sweep_rtl_yz(
+def sweep_negative_z_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_oneway_loop(position[2], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    out[:] = _axis_sweep_on(context.positions.as_array, 2, frame, negate=True)
+    out[:] = 1 - out
 
 
 @register_preset(
-    id="diagonal_sweep_lb_rt_xy",
-    label="Diagonal Sweep LB→RT XY",
-    translations=(
-        ("zh", "倾斜扫光 左下到右上 XY"),
-        ("ja", "斜めスイープ 左下→右上 XY"),
-    ),
+    id="radial_sweep_on",
+    label="Radial Sweep On",
+    translations=(("zh", "径向向外扫描"), ("ja", "放射状スイープオン")),
 )
-def diagonal_sweep_lb_rt_xy(
+def radial_sweep_on(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_diagonal(position[0], position[1], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    cx, cy, _ = context.swarm_center.as_array
+    out[:] = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
 
 
 @register_preset(
-    id="diagonal_sweep_rt_lb_xy",
-    label="Diagonal Sweep RT→LB XY",
-    translations=(
-        ("zh", "倾斜扫光 右上到左下 XY"),
-        ("ja", "斜めスイープ 右上→左下 XY"),
-    ),
+    id="radial_sweep_off",
+    label="Radial Sweep Off",
+    translations=(("zh", "径向向内扫描"), ("ja", "放射状スイープオフ")),
 )
-def diagonal_sweep_rt_lb_xy(
+def radial_sweep_off(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_diagonal(position[0], position[1], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    cx, cy, _ = context.swarm_center.as_array
+    out[:] = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
 
 
 @register_preset(
-    id="diagonal_sweep_lb_rt_xz",
-    label="Diagonal Sweep LB→RT XZ",
-    translations=(
-        ("zh", "倾斜扫光 左下到右上 XZ"),
-        ("ja", "斜めスイープ 左下→右上 XZ"),
-    ),
+    id="radial_sweep_on_2",
+    label="Radial Sweep On 2",
+    translations=(("zh", "径向向外扫描2"), ("ja", "放射状スイープオン2")),
 )
-def diagonal_sweep_lb_rt_xz(
+def radial_sweep_on_2(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_diagonal(position[0], position[2], +1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    cx, cy, _ = context.swarm_center.as_array
+    v = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
+    out[:] = clip(2 * (v - 0.25), 0, 1)
 
 
 @register_preset(
-    id="diagonal_sweep_rt_lb_xz",
-    label="Diagonal Sweep RT→LB XZ",
-    translations=(
-        ("zh", "倾斜扫光 右上到左下 XZ"),
-        ("ja", "斜めスイープ 右上→左下 XZ"),
-    ),
+    id="radial_sweep_off_2",
+    label="Radial Sweep Off 2",
+    translations=(("zh", "径向向内扫描2"), ("ja", "放射状スイープオフ2")),
 )
-def diagonal_sweep_rt_lb_xz(
+def radial_sweep_off_2(
+    effect: LightEffect,
+    context: LightEffectEvaluationContext,
     frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_diagonal(position[0], position[2], -1, frame)
-
-
-@register_preset(
-    id="diagonal_sweep_lb_rt_yz",
-    label="Diagonal Sweep LB→RT YZ",
-    translations=(
-        ("zh", "倾斜扫光 左下到右上 YZ"),
-        ("ja", "斜めスイープ 左下→右上 YZ"),
-    ),
-)
-def diagonal_sweep_lb_rt_yz(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_diagonal(position[1], position[2], +1, frame)
-
-
-@register_preset(
-    id="diagonal_sweep_rt_lb_yz",
-    label="Diagonal Sweep RT→LB YZ",
-    translations=(
-        ("zh", "倾斜扫光 右上到左下 YZ"),
-        ("ja", "斜めスイープ 右上→左下 YZ"),
-    ),
-)
-def diagonal_sweep_rt_lb_yz(
-    frame: int,
-    time_fraction: float,
-    drone_index: int,
-    formation_index: int | None,
-    position: Coordinate3D,
-    drone_count: int,
-) -> float:
-    return _gradient_sweep_diagonal(position[1], position[2], -1, frame)
+    *,
+    out: NDArray[float32],
+) -> None:
+    cx, cy, _ = context.swarm_center.as_array
+    v = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
+    out[:] = clip(2 * (v - 0.25), 0, 1)

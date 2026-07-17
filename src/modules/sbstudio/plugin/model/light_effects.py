@@ -323,6 +323,11 @@ class LightEffectEvaluationContext:
     are blended into the backdrop.
     """
 
+    @property
+    def num_drones(self) -> int:
+        """Returns the number of drones."""
+        return len(self.positions)
+
 
 def collection_is_drone_group(self, col: Collection) -> bool:
     drone_groups = Collections.find_drone_groups(create=False)
@@ -769,8 +774,7 @@ class LightEffect(PropertyGroup):
         positions = context.positions
         mapping = context.mapping
         mask = context.mask
-
-        num_positions = len(positions)
+        num_drones = context.num_drones
 
         color_ramp = self.color_ramp
         color_image = self.color_image
@@ -832,14 +836,14 @@ class LightEffect(PropertyGroup):
             random_seq = context.random_seq
             if needs_output_x:
                 offsets = (
-                    random_seq.get_array_01(0, num_positions) - 0.5
+                    random_seq.get_array_01(0, num_drones) - 0.5
                 ) * self.randomness
                 outputs_x += offsets
                 outputs_x %= 1.0
                 constant_output_x = None
             if needs_output_y:
                 offsets = (
-                    random_seq.get_array_01(num_positions, num_positions) - 0.5
+                    random_seq.get_array_01(num_drones, num_drones) - 0.5
                 ) * self.randomness
                 outputs_y += offsets
                 outputs_y %= 1.0
@@ -860,7 +864,7 @@ class LightEffect(PropertyGroup):
             # Color ramp based 1D light effect
             assert needs_output_x
 
-            if constant_output_x is not None and num_positions > 0:
+            if constant_output_x is not None and num_drones > 0:
                 # Optimize for the common case when the output is constant
                 colors[unmasked, :] = color_ramp.evaluate(constant_output_x)
             else:
@@ -880,7 +884,7 @@ class LightEffect(PropertyGroup):
                             mapping[index] if mapping is not None else None
                         ),
                         position=position_seq[index],
-                        drone_count=num_positions,
+                        drone_count=num_drones,
                     )
                 except Exception as exc:
                     raise RuntimeError(
@@ -1376,9 +1380,9 @@ class LightEffect(PropertyGroup):
         """
         output_type = self.output_y if axis == "y" else self.output
 
+        num_drones = context.num_drones
         positions = context.positions
         mapping = context.mapping
-        num_positions = len(positions)
 
         if output_type == "FIRST_COLOR":
             return 0.0
@@ -1430,7 +1434,7 @@ class LightEffect(PropertyGroup):
                     # In non-proportional mode, we are sorting along multiple axes
                     sort_keys = positions.as_array[:, query_axes]
 
-            if num_positions < 2 or sort_keys is None:
+            if num_drones < 2 or sort_keys is None:
                 # Just assign all drones to the last color of the ramp
                 return 1.0
 
@@ -1453,14 +1457,14 @@ class LightEffect(PropertyGroup):
                     order = argsort(sort_keys)
 
                 out[:] = argsort(order)
-                out /= num_positions - 1
+                out /= num_drones - 1
 
         elif output_type == "INDEXED_BY_DRONES":
             # Gradient based on drone index
-            if num_positions < 2:
+            if num_drones < 2:
                 return 1.0
 
-            out[:] = linspace(0.0, 1.0, num=num_positions)
+            out[:] = linspace(0.0, 1.0, num=num_drones)
 
         elif output_type == "INDEXED_BY_FORMATION":
             # Gradient based on formation index
@@ -1468,7 +1472,7 @@ class LightEffect(PropertyGroup):
                 # if there is no mapping at all, we do not change color of drones
                 return nan
 
-            assert num_positions == len(mapping)
+            assert num_drones == len(mapping)
 
             # TODO: this now works only if the number of valid entries in the mapping
             # is consistent with the number of drones in the given formation;
@@ -1487,7 +1491,7 @@ class LightEffect(PropertyGroup):
                 ]
             # otherwise just normalize full mapping to [0, 1]
             else:
-                np_m1 = max(num_positions - 1, 1)
+                np_m1 = max(num_drones - 1, 1)
                 divide(cast(Sequence[int], mapping), np_m1, out=out)
 
         elif output_type == "CUSTOM":
@@ -1505,9 +1509,9 @@ class LightEffect(PropertyGroup):
                     drone_index=index,
                     formation_index=(mapping[index] if mapping is not None else None),
                     position=position_seq[index],
-                    drone_count=num_positions,
+                    drone_count=num_drones,
                 )
-                for index in range(num_positions)
+                for index in range(num_drones)
             ]
 
         elif output_type == "CUSTOM_V2":
@@ -1516,23 +1520,8 @@ class LightEffect(PropertyGroup):
             return fn(self, context, frame, out=out) if fn else 1.0
 
         elif output_type == "LIGHT_PRESET":
-            position_seq = positions.as_coordinate_sequence
             preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
-            if preset_fn is None:
-                return 1.0
-
-            time_fraction = self.get_time_fraction_for_frame(frame)
-            out[:] = [
-                preset_fn(
-                    frame=frame,
-                    time_fraction=time_fraction,
-                    drone_index=index,
-                    formation_index=(mapping[index] if mapping is not None else None),
-                    position=position_seq[index],
-                    drone_count=num_positions,
-                )
-                for index in range(num_positions)
-            ]
+            return preset_fn(self, context, frame, out=out) if preset_fn else 1.0
 
         else:
             # Should not get here
