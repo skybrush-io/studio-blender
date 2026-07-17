@@ -4,7 +4,7 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, ClassVar, Literal, Protocol, cast
+from typing import Any, ClassVar, Literal, Protocol, Type, TypeVar, cast
 from uuid import uuid4
 
 import bpy
@@ -47,7 +47,6 @@ from numpy import (
     nan,
     rot90,
     where,
-    zeros,
     zeros_like,
 )
 from numpy.typing import NDArray
@@ -87,6 +86,9 @@ __all__ = (
     "ColorFunctionProperties",
     "LightEffect",
     "LightEffectCollection",
+    "LightEffectEvaluationContext",
+    "LightEffectOutputFunctionV1",
+    "LightEffectOutputFunctionV2",
     "LightEffectUpdate",
     "effect_type_supports_randomization",
     "output_type_is_experimental",
@@ -128,6 +130,7 @@ OUTPUT_ITEMS = [
         14,
     ),
     ("CUSTOM", "Custom expression", "", 12),
+    ("CUSTOM_V2", "Custom expression (experimental)", "", 13),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
@@ -184,8 +187,8 @@ class LightEffectUpdate:
 LightEffectUpdate.NOP = LightEffectUpdate(None, None, None, False)
 
 
-class CustomLightEffectFunction(Protocol):
-    """Type of the custom light effect function, used when the output type of a light
+class LightEffectOutputFunctionV1(Protocol):
+    """Type of the v1 custom light effect function, used when the output type of a light
     effect is set to "CUSTOM". The function takes the following arguments:
 
     - frame: the current frame index
@@ -198,8 +201,8 @@ class CustomLightEffectFunction(Protocol):
     - position: the 3D position of the drone
     - drone_count: the total number of drones in the show
 
-    The function returns a sequence of four floats in the [0; 1] range representing the
-    RGBA color on the current color ramp to apply to the drone.
+    The function returns a single float representing the output value, which is then
+    mapped to the color ramp or associated image.
     """
 
     def __call__(
@@ -211,6 +214,71 @@ class CustomLightEffectFunction(Protocol):
         position: Coordinate3D,
         drone_count: int,
     ) -> float: ...
+
+
+class LightEffectOutputFunctionV2(Protocol):
+    """Type of the v2 custom light effect function, used when the output type of a light
+    effect is set to "CUSTOM_V2". The function takes the following arguments:
+
+    - context: a context object containing the drones in the current frame, their
+      positions, and other relevant information. It also provides the array in which
+      the colors should be modified by the function
+    - frame: the current frame index
+    - time_fraction: the fraction of time passed in the current light effect relative to
+      its total duration, in the [0; 1] range
+    - mask: a NumPy array mask that contains `True` for _inactive_ drones (i.e. drones
+      that are not affected by the current effect) and `False` for active ones
+    - active: a NumPy array containing the indices of active drones
+
+    Each cell in the output array represents the associated output value of a single
+    drone. These output values are mapped to the color ramp or associated image in a
+    subsequent step.
+    """
+
+    def __call__(
+        self,
+        *,
+        context: LightEffectEvaluationContext,
+        frame: int,
+        time_fraction: float,
+        out: NDArray[float32],
+    ) -> None: ...
+
+
+@dataclass(frozen=True)
+class LightEffectEvaluationContext:
+    """Class that stores the context in which a light effect is being evaluated during
+    the update session.
+    """
+
+    drones: CollectionObjects
+    """The collection of drones being updated in this session."""
+
+    positions: ObjectPositions
+    """The positions of the drones."""
+
+    mapping: Mapping | None
+    """Mapping from drone indices to the indices of the markers in the current
+    formation that is in effect at the given frame. `None` if the frame is not in a
+    formation or if we do not know the mapping for that formation.
+    """
+
+    random_seq: RandomSequence
+    """Random sequence that can be used to generate random numbers in a deterministic
+    way for the given frame.
+
+    Note that "deterministic" only means that the results will be the same for the
+    same frame with the same version of the add-on. We reserve the right to change the
+    underlying implementation, in which case the output may change between versions.
+    """
+
+    mask: NDArray[bool_]
+    """Mask that contains `False` for drones that need to be evaluated further and
+    `True` for drones that are not targeted by the current effect.
+    """
+
+    colors: NDArray[float32]
+    """Array in which the final colors of the drones are being stored."""
 
 
 def collection_is_drone_group(self, col: Collection) -> bool:
@@ -316,6 +384,9 @@ def test_containment(
                 break
 
 
+T = TypeVar("T", bound="Callable[..., Any]")
+
+
 class ColorFunctionProperties(PropertyGroup):
     path = StringProperty(
         name="Color Function File",
@@ -329,6 +400,21 @@ class ColorFunctionProperties(PropertyGroup):
         items=get_color_function_names,
         default=0,
     )
+
+    def load(self, expected_type: Type[T] | None = None) -> T | None:
+        """Loads the function pointed to by the path and name properties and casts it
+        to the indicated expected type.
+
+        Returns:
+            the loaded function or `None` if the object does not point to a function or
+            the module cannot be imported.
+        """
+        if not self.path or not self.name:
+            return None
+
+        absolute_path = abspath(self.path)
+        module = load_module(absolute_path)
+        return getattr(module, self.name, None)
 
     def update_from(self, other) -> None:
         self.path = other.path
@@ -616,24 +702,16 @@ class LightEffect(PropertyGroup):
 
     def apply_on_colors(
         self,
-        colors: NDArray[float32],
-        drones: Sequence[Object],
-        positions: ObjectPositions,
-        mapping: Mapping | None,
+        context: LightEffectEvaluationContext,
         *,
         frame: int,
-        random_seq: RandomSequence,
     ) -> None:
         """Applies this effect to a given list of colors, each belonging to a
         given spatial position in the given frame.
 
         Parameters:
-            colors: the colors to modify in-place
-            drones: the drone objects
-            positions: the spatial positions of the drones having the given
-                colors in 3D space
-            mapping: optional mapping of positions to match colors;
-                used only by the ``INDEXED_BY_FORMATION`` output type
+            context: the light effect evaluation context that contains all the input
+                data and output arrays to manipulate during the evaluation.
             frame: the frame index
             random_seq: a random sequence that is used to spread out the items
                 on the color ramp or a principal axis of the image if
@@ -643,6 +721,12 @@ class LightEffect(PropertyGroup):
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
             return
+
+        colors = context.colors
+        drones = context.drones
+        positions = context.positions
+        mapping = context.mapping
+        mask = context.mask
 
         num_positions = len(positions)
 
@@ -656,8 +740,8 @@ class LightEffect(PropertyGroup):
         if influence <= 0:
             return
 
-        # Allocate mask
-        mask: NDArray[bool_] = zeros((num_positions,), dtype=bool_)
+        # Clear the mask so all drones are included in the beginning
+        mask.fill(False)
 
         # Mask all the drones that are not in the group being targeted by this effect
         # or are not matched by the spatial predicate associated to this effect
@@ -675,35 +759,49 @@ class LightEffect(PropertyGroup):
         # Evaluate the X and Y values for each drone
         if needs_output_x:
             outputs_x: NDArray[float32] = zeros_like(mask, dtype=float32)
-            outputs_x_is_constant = self._get_output_based_on_output_type(
-                frame, positions, mapping, "x", out=outputs_x
+            constant_output_x = self._get_output_based_on_output_type(
+                "x", context, frame, out=outputs_x
             )
-            mask |= isnan(outputs_x)
+            if constant_output_x is not None:
+                if isnan(constant_output_x):
+                    # If the output is constant but NaN, we can bail out here
+                    return
+                outputs_x.fill(constant_output_x)
+            else:
+                mask |= isnan(outputs_x)
 
         if needs_output_y:
             outputs_y: NDArray[float32] = zeros_like(outputs_x)
-            self._get_output_based_on_output_type(
-                frame, positions, mapping, "y", out=outputs_y
+            constant_output_y = self._get_output_based_on_output_type(
+                "y", context, frame, out=outputs_y
             )
-            mask |= isnan(outputs_y)
+            if constant_output_y is not None:
+                if isnan(constant_output_y):
+                    # If the output is constant but NaN, we can bail out here
+                    return
+                outputs_y.fill(constant_output_y)
+            else:
+                mask |= isnan(outputs_y)
 
         # Randomize the outputs if needed. NaNs in the output arrays are okay, they will
         # remain NaN.
         # TODO(ntamas): if possible, calculate only for the non-masked drones
         if self.randomness != 0:
+            random_seq = context.random_seq
             if needs_output_x:
                 offsets = (
                     random_seq.get_array_01(0, num_positions) - 0.5
                 ) * self.randomness
                 outputs_x += offsets
                 outputs_x %= 1.0
-                outputs_x_is_constant = False
+                constant_output_x = None
             if needs_output_y:
                 offsets = (
                     random_seq.get_array_01(num_positions, num_positions) - 0.5
                 ) * self.randomness
                 outputs_y += offsets
                 outputs_y %= 1.0
+                constant_output_y = None
 
         unmasked = flatnonzero(~mask)
 
@@ -716,13 +814,12 @@ class LightEffect(PropertyGroup):
         # the branches will apply below.
         new_colors: NDArray[float32] = zeros_like(colors)
         if color_ramp is not None:
-            # TODO(ntamas): if all the values in output_x are the same, there is no
-            # need to evaluate it multiple times on the color ramp
+            # Color ramp based 1D light effect
             assert needs_output_x
 
-            if outputs_x_is_constant and num_positions > 0:
+            if constant_output_x is not None and num_positions > 0:
                 # Optimize for the common case when the output is constant
-                new_colors[unmasked, :] = color_ramp.evaluate(outputs_x[0])
+                new_colors[unmasked, :] = color_ramp.evaluate(constant_output_x)
             else:
                 for index in unmasked:
                     new_colors[index, :] = color_ramp.evaluate(outputs_x[index])
@@ -743,9 +840,12 @@ class LightEffect(PropertyGroup):
                         drone_count=num_positions,
                     )
                 except Exception as exc:
-                    raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
+                    raise RuntimeError(
+                        f"Error while evaluating custom light effect function for {self.name!r}"
+                    ) from exc
 
         elif color_image is not None:
+            # Image based 2D light effect
             assert needs_output_x and needs_output_y
 
             width, height = color_image.size
@@ -844,12 +944,7 @@ class LightEffect(PropertyGroup):
         """The color function used to calculate the effect, if it exists and is being
         used according to the type of the effect.
         """
-        if self.type != "FUNCTION" or not self.color_function:
-            return None
-
-        absolute_path = abspath(self.color_function.path)
-        module = load_module(absolute_path)
-        return getattr(module, self.color_function.name, None)
+        return self.color_function.load() if self.color_function else None
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
@@ -1216,13 +1311,12 @@ class LightEffect(PropertyGroup):
 
     def _get_output_based_on_output_type(
         self,
-        frame: int,
-        positions: ObjectPositions,
-        mapping: Mapping | None,
         axis: Literal["x", "y"],
+        context: LightEffectEvaluationContext,
+        frame: int,
         *,
         out: NDArray[float32],
-    ) -> bool:
+    ) -> float | None:
         """Get the float outputs for color ramp or image indexing based on the
         output type.
 
@@ -1230,23 +1324,24 @@ class LightEffect(PropertyGroup):
             out: destination array to write the result to
 
         Returns:
-            whether the output is constant
+            a constant output to use for all cells in the destination array if the
+            output is constant, or `None` if the output is not constant
         """
         output_type = self.output_y if axis == "y" else self.output
+
+        positions = context.positions
+        mapping = context.mapping
         num_positions = len(positions)
 
         if output_type == "FIRST_COLOR":
-            out.fill(0.0)
-            return True
+            return 0.0
 
         elif output_type == "LAST_COLOR":
-            out.fill(1.0)
-            return True
+            return 1.0
 
         elif output_type == "TEMPORAL":
             time_fraction = self._get_time_fraction_for_frame(frame)
-            out.fill(time_fraction)
-            return True
+            return time_fraction
 
         elif output_type_supports_mapping_mode(output_type):
             # There are two options here:
@@ -1291,8 +1386,9 @@ class LightEffect(PropertyGroup):
 
             if num_positions < 2 or sort_keys is None:
                 # Just assign all drones to the last color of the ramp
-                out.fill(1.0)
-            elif proportional:
+                return 1.0
+
+            if proportional:
                 # In proportional mode, sort_keys is always 1D and we need to just
                 # re-scale the values to the 0-1 range
                 assert sort_keys.ndim == 1
@@ -1315,98 +1411,95 @@ class LightEffect(PropertyGroup):
 
         elif output_type == "INDEXED_BY_DRONES":
             # Gradient based on drone index
-            if num_positions > 1:
-                out[:] = linspace(0.0, 1.0, num=num_positions)
-            else:
-                out.fill(1.0)
+            if num_positions < 2:
+                return 1.0
+
+            out[:] = linspace(0.0, 1.0, num=num_positions)
 
         elif output_type == "INDEXED_BY_FORMATION":
             # Gradient based on formation index
-            if mapping is not None:
-                assert num_positions == len(mapping)
-
-                # TODO: this now works only if the number of valid entries in the mapping
-                # is consistent with the number of drones in the given formation;
-                # e.g., it will not work with two formations of half size at the same time
-                # for this case, single-formation specific mapping would be needed
-
-                # reduce mapping of all positions to rank, in case formation size
-                # is smaller than the number of drones
-                # TODO(ntamas): this would probably be faster with NumPy
-                if None in mapping:
-                    sorted_valid_mapping = sorted(x for x in mapping if x is not None)
-                    np_m1 = max(len(sorted_valid_mapping) - 1, 1)
-                    out[:] = [
-                        nan if x is None else sorted_valid_mapping.index(x) / np_m1
-                        for x in mapping
-                    ]
-                # otherwise just normalize full mapping to [0, 1]
-                else:
-                    np_m1 = max(num_positions - 1, 1)
-                    divide(cast(Sequence[int], mapping), np_m1, out=out)
-            else:
+            if mapping is None:
                 # if there is no mapping at all, we do not change color of drones
-                out.fill(nan)
+                return nan
+
+            assert num_positions == len(mapping)
+
+            # TODO: this now works only if the number of valid entries in the mapping
+            # is consistent with the number of drones in the given formation;
+            # e.g., it will not work with two formations of half size at the same time
+            # for this case, single-formation specific mapping would be needed
+
+            # reduce mapping of all positions to rank, in case formation size
+            # is smaller than the number of drones
+            # TODO(ntamas): this would probably be faster with NumPy
+            if None in mapping:
+                sorted_valid_mapping = sorted(x for x in mapping if x is not None)
+                np_m1 = max(len(sorted_valid_mapping) - 1, 1)
+                out[:] = [
+                    nan if x is None else sorted_valid_mapping.index(x) / np_m1
+                    for x in mapping
+                ]
+            # otherwise just normalize full mapping to [0, 1]
+            else:
+                np_m1 = max(num_positions - 1, 1)
+                divide(cast(Sequence[int], mapping), np_m1, out=out)
 
         elif output_type == "CUSTOM":
             position_seq = positions.as_coordinate_sequence
-            output_function = (
-                self.output_function_y if axis == "y" else self.output_function
-            )
-            absolute_path = abspath(output_function.path)
-            module = load_module(absolute_path) if absolute_path else None
-            if output_function.name:
-                fn = cast(
-                    CustomLightEffectFunction, getattr(module, output_function.name)
-                )
-                time_fraction = self._get_time_fraction_for_frame(frame)
-                out[:] = [
-                    fn(
-                        frame=frame,
-                        time_fraction=time_fraction,
-                        drone_index=index,
-                        formation_index=(
-                            mapping[index] if mapping is not None else None
-                        ),
-                        position=position_seq[index],
-                        drone_count=num_positions,
-                    )
-                    for index in range(num_positions)
-                ]
-            else:
-                out.fill(1.0)
-                return True
+            fn_spec = self.output_function_y if axis == "y" else self.output_function
+            fn = fn_spec.load(LightEffectOutputFunctionV1)
+            if not fn:
+                return 1.0
 
-            # TODO(ntamas): add CUSTOM_VECTORIZED type
+            time_fraction = self._get_time_fraction_for_frame(frame)
+            out[:] = [
+                fn(
+                    frame=frame,
+                    time_fraction=time_fraction,
+                    drone_index=index,
+                    formation_index=(mapping[index] if mapping is not None else None),
+                    position=position_seq[index],
+                    drone_count=num_positions,
+                )
+                for index in range(num_positions)
+            ]
+
+        elif output_type == "CUSTOM_V2":
+            fn_spec = self.output_function_y if axis == "y" else self.output_function
+            fn = fn_spec.load(LightEffectOutputFunctionV2)
+            if not fn:
+                return 1.0
+
+            time_fraction = self._get_time_fraction_for_frame(frame)
+            fn(
+                context=context,
+                frame=frame,
+                time_fraction=time_fraction,
+                out=out,
+            )
 
         elif output_type == "LIGHT_PRESET":
             position_seq = positions.as_coordinate_sequence
             preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
-            if preset_fn is not None:
-                time_fraction = self._get_time_fraction_for_frame(frame)
-                out[:] = [
-                    preset_fn(
-                        frame=frame,
-                        time_fraction=time_fraction,
-                        drone_index=index,
-                        formation_index=(
-                            mapping[index] if mapping is not None else None
-                        ),
-                        position=position_seq[index],
-                        drone_count=num_positions,
-                    )
-                    for index in range(num_positions)
-                ]
-            else:
-                out.fill(1.0)
-                return True
+            if preset_fn is None:
+                return 1.0
+
+            time_fraction = self._get_time_fraction_for_frame(frame)
+            out[:] = [
+                preset_fn(
+                    frame=frame,
+                    time_fraction=time_fraction,
+                    drone_index=index,
+                    formation_index=(mapping[index] if mapping is not None else None),
+                    position=position_seq[index],
+                    drone_count=num_positions,
+                )
+                for index in range(num_positions)
+            ]
 
         else:
             # Should not get here
-            out.fill(1.0)
-            return True
-
-        return False
+            return 1.0
 
     def _mask_drones_not_in_group(
         self, mask: NDArray[bool_], all_drones: Sequence[Object]
