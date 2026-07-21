@@ -125,7 +125,7 @@ OUTPUT_ITEMS = [
     ("DISTANCE", "Distance from mesh", "", 11),
     (
         "LIGHT_PRESET",
-        "Light preset",
+        "Light preset (experimental)",
         "Built-in light effect preset (portable across machines)",
         14,
     ),
