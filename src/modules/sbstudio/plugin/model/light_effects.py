@@ -1538,7 +1538,7 @@ class LightEffect(PropertyGroup):
 
         drones_in_group = set(self.drone_group.objects)
         for index, drone in enumerate(all_drones):
-            if drone in drones_in_group:
+            if drone not in drones_in_group:
                 mask[index] = True
 
     def _mask_drones_not_matching_spatial_predicate(
