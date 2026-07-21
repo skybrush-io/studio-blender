@@ -130,7 +130,7 @@ OUTPUT_ITEMS = [
         14,
     ),
     ("CUSTOM", "Custom expression", "", 12),
-    ("CUSTOM_V2", "Custom expression (experimental)", "", 13),
+    ("CUSTOM_V2", "Custom expression (experimental)", "", 15),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
