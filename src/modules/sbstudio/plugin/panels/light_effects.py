@@ -175,12 +175,14 @@ class LightEffectsPanel(Panel):
                     icon="TRIA_LEFT",
                     text="",
                 )
+
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")
+
             col.separator()
             col.prop(entry, "mesh")
-            col.prop(entry, "drone_group")
+
             col.separator()
             if entry.type == "COLOR_RAMP" or entry.type == "IMAGE":
                 col.prop(entry, "output")
@@ -202,8 +204,13 @@ class LightEffectsPanel(Panel):
                     col.prop(entry.output_function_y, "name", text="Fn name")
                 if output_type_supports_mapping_mode(entry.output_y):
                     col.prop(entry, "output_mapping_mode_y")
+
+            col.separator()
+            col.prop(entry, "drone_group")
             col.prop(entry, "target")
             col.prop(entry, "invert_target")
+
+            col.separator()
             col.prop(entry, "blend_mode")
             col.prop(entry, "influence", slider=True)
 
