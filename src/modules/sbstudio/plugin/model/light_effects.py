@@ -1417,7 +1417,9 @@ class LightEffect(PropertyGroup):
                     position_of_mesh = array(
                         get_position_of_object(self.mesh), dtype=float32
                     )
-                    sort_keys = ((positions - position_of_mesh) ** 2).sum(axis=1)
+                    sort_keys = ((positions.as_array - position_of_mesh) ** 2).sum(
+                        axis=1
+                    )
                 else:
                     sort_keys = None
 
