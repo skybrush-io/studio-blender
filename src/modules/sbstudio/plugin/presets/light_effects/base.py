@@ -93,8 +93,7 @@ def _build_enum_items() -> list[tuple[str, str, str]]:
     """
     items: list[tuple[str, str, str]] = [(NULL_PRESET_ID, "<None>", "None")]
     for index, meta in enumerate(iter_preset_mapping(), 1):
-        # Use full-width brackets 「」 for numbering
-        prefix = f"「{index}」"
+        prefix = f"[{index}] "
         display = f"{prefix}{meta.label}"
         items.append((meta.id, display, meta.description or meta.label))
     return items
