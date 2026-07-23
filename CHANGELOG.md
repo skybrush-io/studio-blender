@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [main]
+## [5.0.0] - 2026-07-23
 
 ### Breaking change
 
@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The cone template was simplified to use 12 segments only instead of 32.
 
 - Performance improvements to light effects, thanks to [@jefrau](https://github.com/jefrau).
+
+- Further performance improvements to light effects, by rewriting the entire workflow
+  to use numpy arrays.
 
 - Takeoff layer planner uses downwash minimization through a new dedicated API call.
   Thanks for the idea to [@PeiYi](https://github.com/UavShow/).
