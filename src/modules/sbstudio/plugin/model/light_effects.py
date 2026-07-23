@@ -702,7 +702,7 @@ class LightEffect(PropertyGroup):
         description=(
             "Specifies whether to apply this light effect to all drones or only"
             " to those drones that are inside the given mesh or are in front of"
-            " the plane of the first face of the mesh or are in drone group. See also the 'Invert'"
+            " the plane of the first face of the mesh. See also the 'Invert'"
             " property"
         ),
         items=[
