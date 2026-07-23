@@ -1523,7 +1523,7 @@ class LightEffect(PropertyGroup):
 
         elif output_type == "LIGHT_PRESET":
             preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
-            return preset_fn(self, context, frame, out=out) if preset_fn else 1.0
+            return preset_fn(self, context, frame, out=out) if preset_fn else nan
 
         else:
             # Should not get here
