@@ -38,7 +38,7 @@ the second material.
 
 == Marker size
 
-This options defines the size of the pyro overlay markers if the visualization type 
+This options defines the size of the pyro overlay markers if the visualization type
 is set to Markers. It is hidden otherwise.
 
 == Channel

@@ -24,7 +24,7 @@ Alternatively, you can use Blender's standard tools in the Outliner editor to mo
 
 The list of drone groups shows you the names and the number of drones in all groups. Select one group from the list to perform operations with it.
 
-=== Add 
+=== Add
 
 Press the btn:[Add] button on the bottom of the panel to add the currently selected drones to the given drone group.
 
