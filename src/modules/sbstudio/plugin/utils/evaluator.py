@@ -172,7 +172,7 @@ def get_positions_of_objects_fast(
         locations of object in the world frame
     """
     matrices = np.empty((len(objects), 16), dtype=np.float32)
-    objects.foreach_get("matrix_world", matrices.ravel())  # ty:ignore[no-matching-overload]
+    objects.foreach_get("matrix_world", matrices.ravel())
     if dest is None:
         return matrices[:, 12:15]
     else:

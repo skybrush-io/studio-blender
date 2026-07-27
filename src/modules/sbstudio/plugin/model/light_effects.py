@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import types
 from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, ClassVar, Literal, Protocol, Type, TypeVar, cast
+from typing import Any, ClassVar, Literal, Protocol, Type, TypedDict, TypeVar, cast
 from uuid import uuid4
 
 import bpy
@@ -278,6 +278,14 @@ class LightEffectOutputFunctionV2(Protocol):
     ) -> float | None: ...
 
 
+class _ContextCache(TypedDict, total=False):
+    """Cache for the light effect evaluation context, used to implement a mutable part
+    inside an otherwise immutable (frozen) object.
+    """
+
+    swarm_center: NDArray[float32]
+
+
 @dataclass(frozen=True)
 class LightEffectEvaluationContext:
     """Class that stores the context in which a light effect is being evaluated during
@@ -323,10 +331,23 @@ class LightEffectEvaluationContext:
     are blended into the backdrop.
     """
 
+    _cache: _ContextCache = field(default_factory=dict)
+    """Internal cache for lazily computed properties."""
+
     @property
     def num_drones(self) -> int:
         """Returns the number of drones."""
         return len(self.positions)
+
+    @property
+    def swarm_center(self) -> NDArray[float32]:
+        """Returns the barycenter of the swarm, cached after first computation."""
+        try:
+            return self._cache["swarm_center"]
+        except KeyError:
+            center = self.positions.as_array.mean(axis=0).astype("float32")
+            self._cache["swarm_center"] = center
+            return center
 
 
 def collection_is_drone_group(self, col: Collection) -> bool:

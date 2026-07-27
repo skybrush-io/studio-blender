@@ -6,6 +6,7 @@ from numpy import abs, clip, float32, sqrt, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
+from .utils import get_centered_positions
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -65,7 +66,7 @@ def sweep_positive_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 0, frame, negate=False)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=False)
 
 
 @register_preset(
@@ -80,7 +81,7 @@ def sweep_positive_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 1, frame, negate=False)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=False)
 
 
 @register_preset(
@@ -95,7 +96,7 @@ def sweep_positive_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 2, frame, negate=False)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=False)
 
 
 @register_preset(
@@ -110,7 +111,7 @@ def sweep_negative_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 0, frame, negate=True)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=True)
 
 
 @register_preset(
@@ -125,7 +126,7 @@ def sweep_negative_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 1, frame, negate=True)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=True)
 
 
 @register_preset(
@@ -140,7 +141,7 @@ def sweep_negative_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 2, frame, negate=True)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=True)
 
 
 @register_preset(
@@ -155,7 +156,7 @@ def sweep_positive_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context.positions.as_array, 0, frame)
+    out[:] = _axis_sweep_off(get_centered_positions(context), 0, frame)
 
 
 @register_preset(
@@ -170,7 +171,7 @@ def sweep_positive_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context.positions.as_array, 1, frame)
+    out[:] = _axis_sweep_off(get_centered_positions(context), 1, frame)
 
 
 @register_preset(
@@ -185,7 +186,7 @@ def sweep_positive_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context.positions.as_array, 2, frame)
+    out[:] = _axis_sweep_off(get_centered_positions(context), 2, frame)
 
 
 @register_preset(
@@ -200,7 +201,7 @@ def sweep_negative_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 0, frame, negate=True)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=True)
     out[:] = 1 - out
 
 
@@ -216,7 +217,7 @@ def sweep_negative_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 1, frame, negate=True)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=True)
     out[:] = 1 - out
 
 
@@ -232,7 +233,7 @@ def sweep_negative_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context.positions.as_array, 2, frame, negate=True)
+    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=True)
     out[:] = 1 - out
 
 

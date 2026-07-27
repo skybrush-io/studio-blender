@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import array, empty, int32
+from numpy import array, empty, float32, int32, subtract
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
@@ -25,3 +25,10 @@ def get_formation_indices(
         )
 
     return result
+
+
+def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[float32]:
+    """Returns drone positions centered around the swarm's barycenter."""
+    positions = context.positions.as_array
+    center = context.swarm_center
+    return subtract(positions, center, dtype=float32)

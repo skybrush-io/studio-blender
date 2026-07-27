@@ -6,7 +6,7 @@ from numpy import cos, float32, int32, sin, where
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import get_centered_positions, get_formation_indices
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -41,7 +41,7 @@ def chasing_tails_x(
     out: NDArray[float32],
 ) -> None:
     fi = get_formation_indices(context)
-    out[:] = _chasing_tails_core(context.positions.as_array, 0, frame, fi)
+    out[:] = _chasing_tails_core(get_centered_positions(context), 0, frame, fi)
 
 
 @register_preset(
@@ -57,7 +57,7 @@ def chasing_tails_y(
     out: NDArray[float32],
 ) -> None:
     fi = get_formation_indices(context)
-    out[:] = _chasing_tails_core(context.positions.as_array, 1, frame, fi)
+    out[:] = _chasing_tails_core(get_centered_positions(context), 1, frame, fi)
 
 
 @register_preset(
@@ -73,4 +73,4 @@ def chasing_tails_z(
     out: NDArray[float32],
 ) -> None:
     fi = get_formation_indices(context)
-    out[:] = _chasing_tails_core(context.positions.as_array, 2, frame, fi)
+    out[:] = _chasing_tails_core(get_centered_positions(context), 2, frame, fi)
