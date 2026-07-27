@@ -49,7 +49,7 @@ def radar_scan(
     if n == 0:
         return
     pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
     indices = get_formation_indices(context)
     center_angle = (frame * 2) % 360
@@ -76,7 +76,7 @@ def radar_scan_2(
     if n == 0:
         return
     pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
     center_angle = (-frame * 2) % 360
     out[:] = where(
@@ -103,7 +103,7 @@ def radar_scan_3(
     if n == 0:
         return
     pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
     center_angle = (frame * 2) % 360
     fi = get_formation_indices(context)
@@ -130,7 +130,7 @@ def radar_scan_4(
     if n == 0:
         return
     pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
     center_angle = (frame * 3) % 360
     out[:] = where(
@@ -156,7 +156,7 @@ def radar_scan_5(
     if n == 0:
         return
     pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
     center_angle = (-frame * 3) % 360
     out[:] = where(
@@ -182,7 +182,7 @@ def continuous_radar_scan_test(
     if n == 0:
         return
     pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     angles, _ = _get_fan_phase_and_width(pos, cx, cy, n)
     center_angle = (frame * 2) % 360
     diff = ((angles - center_angle + 180) % 360) - 180

@@ -27,7 +27,7 @@ def radial_diffusion(
     out: NDArray[float32],
 ) -> None:
     positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
@@ -49,7 +49,7 @@ def radial_diffusion_2(
     out: NDArray[float32],
 ) -> None:
     positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
@@ -71,7 +71,7 @@ def radial_diffusion_3(
     out: NDArray[float32],
 ) -> None:
     positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
@@ -93,7 +93,7 @@ def radial_convergence(
     out: NDArray[float32],
 ) -> None:
     positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
@@ -115,7 +115,7 @@ def radial_convergence_2(
     out: NDArray[float32],
 ) -> None:
     positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
@@ -137,7 +137,7 @@ def radial_convergence_3(
     out: NDArray[float32],
 ) -> None:
     positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:

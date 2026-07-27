@@ -249,7 +249,7 @@ def radial_sweep_on(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     out[:] = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
 
 
@@ -265,7 +265,7 @@ def radial_sweep_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     out[:] = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
 
 
@@ -281,7 +281,7 @@ def radial_sweep_on_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     v = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
     out[:] = clip(2 * (v - 0.25), 0, 1)
 
@@ -298,6 +298,6 @@ def radial_sweep_off_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center.as_array
+    cx, cy, _ = context.swarm_center
     v = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
     out[:] = clip(2 * (v - 0.25), 0, 1)

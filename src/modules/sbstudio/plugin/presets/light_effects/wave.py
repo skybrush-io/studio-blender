@@ -110,8 +110,8 @@ def expanding_pulse(
     if n == 0:
         return
     positions = context.positions.as_array
-    dx = positions[:, 0] - context.swarm_center.as_array[0]
-    dy = positions[:, 1] - context.swarm_center.as_array[1]
+    dx = positions[:, 0] - context.swarm_center[0]
+    dy = positions[:, 1] - context.swarm_center[1]
     r = (dx * dx + dy * dy) ** 0.5
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
@@ -136,8 +136,8 @@ def sawtooth_pulse(
     if n == 0:
         return
     positions = context.positions.as_array
-    dx = positions[:, 0] - context.swarm_center.as_array[0]
-    dy = positions[:, 1] - context.swarm_center.as_array[1]
+    dx = positions[:, 0] - context.swarm_center[0]
+    dy = positions[:, 1] - context.swarm_center[1]
     r = (dx * dx + dy * dy) ** 0.5
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
