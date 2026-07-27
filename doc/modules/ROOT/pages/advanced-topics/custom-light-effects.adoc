@@ -1,0 +1,91 @@
+= Custom light effects
+
+Skybrush Studio lets you write your own Python functions to control the color of each drone at each frame. This is the most direct way to create custom effects: your function picks the exact color for each drone.
+
+This guide explains how to write such a function step by step.
+
+== When to use this
+
+Choose this approach when you want full control over the final color of each drone, without using a color ramp or color image. If you would rather write a function that produces a _number_ which is then mapped through a color ramp, see the xref:advanced-topics/output-functions-legacy.adoc[legacy output function] or the xref:advanced-topics/output-functions-experimental.adoc[new output function] guides instead.
+
+== How it works
+
+In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once for each drone at each frame of the light effect, and the color your function returns is applied directly to that drone.
+
+== Function signature
+
+Your file must contain a function with this exact name and set of arguments:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    # Your code goes here
+    return (1.0, 1.0, 1.0, 1.0)
+```
+
+The function receives six arguments:
+
+frame:: The current frame number (an integer, e.g. 1, 2, 3, ...).
+
+time_fraction:: How far through the light effect we are, as a number between 0 and 1. At the start of the effect this is 0, at the end it is 1.
+
+drone_index:: Which drone this call is for, numbered from 0 to `drone_count - 1`.
+
+formation_index:: Which formation slot the drone is in (numbered from 0), or `None` if no formation information is available.
+
+position:: The 3D position of the drone as a tuple of three numbers `(x, y, z)`.
+
+drone_count:: The total number of drones in the show.
+
+Your function must return a color as a tuple of four numbers between 0 and 1: `(red, green, blue, alpha)`. An alpha of 1 means fully opaque (replaces the drone's base color); an alpha of 0 means fully transparent (leaves the drone's base color unchanged).
+
+== Simple example
+
+The following function makes every drone turn white with full opacity:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    return (1.0, 1.0, 1.0, 1.0)
+```
+
+== Pulsing effect
+
+This function makes all drones pulse between black and white over the duration of the effect:
+
+```python
+import math
+
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    brightness = (math.sin(time_fraction * 4 * math.pi) + 1) / 2
+    return (brightness, brightness, brightness, 1.0)
+```
+
+== Gradient based on position
+
+This function colors drones based on their X position -- drones on the left side of the scene turn red, drones on the right side turn blue, and those in the middle turn purple:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    x, y, z = position
+    # Normalize x to a 0-1 range (adjust the numbers to match your scene)
+    t = (x + 5) / 10  # assumes drones are spread across x from -5 to 5
+    t = max(0.0, min(1.0, t))  # clamp to 0-1
+    return (1.0 - t, 0.0, t, 1.0)  # red on the left, blue on the right
+```
+
+== Alternating drones
+
+This function makes odd-numbered drones red and even-numbered drones green:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    if drone_index % 2 == 0:
+        return (1.0, 0.0, 0.0, 1.0)  # red
+    else:
+        return (0.0, 1.0, 0.0, 1.0)  # green
+```
+
+== Tips
+
+* You do not need to understand every argument to get started. Many effects only use `time_fraction`, `drone_index`, and `position`.
+* The function is called very frequently (once per drone per frame), so keep it as simple as possible for smooth playback.
+* If you are comfortable with NumPy, you can import it for faster math, but it is not required.

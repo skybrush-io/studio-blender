@@ -1,0 +1,9 @@
+= Advanced topics
+
+This chapter covers advanced topics for users who want to extend Skybrush Studio with their own custom Python functions. You do not need to be a programmer to follow these guides -- a basic familiarity with Python is sufficient.
+
+The topics in this chapter are organized from simplest to most powerful:
+
+* xref:advanced-topics/custom-light-effects.adoc[Custom light effects] -- write a function that returns a color for each drone directly.
+* xref:advanced-topics/output-functions-legacy.adoc[Custom output functions (legacy)] -- write a function that returns a single number per drone, which is then mapped through a color ramp.
+* xref:advanced-topics/output-functions-experimental.adoc[Custom output functions (new)] -- write a function that sets values for all drones at once, with access to more information about the scene.
