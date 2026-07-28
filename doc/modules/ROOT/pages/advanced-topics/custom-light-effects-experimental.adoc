@@ -1,0 +1,133 @@
+= Custom light effects (new)
+
+Skybrush Studio includes a newer, more powerful way to write custom light effects that return RGBA colors directly. Like the xref:advanced-topics/custom-light-effects.adoc[legacy version], your function picks the exact color for each drone. However, this version gives you more information about the scene and can be faster for complex effects.
+
+This guide explains how to write such a function.
+
+== When to use this
+
+Choose this approach when you need information about all drones at once (for example, to calculate distances between them) or when you want to use NumPy for faster calculations. If your needs are simple, the xref:advanced-topics/custom-light-effects.adoc[legacy version] is easier to get started with.
+
+NOTE: This feature is currently experimental. The details of how the function works may change in future versions.
+
+== How it works
+
+In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once per frame. Your function writes an RGBA color for each drone into an array, and those colors are applied directly to the drones.
+
+== Function signature
+
+Your file must contain a function with this exact name and set of arguments:
+
+```python
+def my_effect(effect, context, frame, *, out):
+    # Your code goes here
+    ...
+```
+
+The function receives four arguments:
+
+effect:: The light effect being evaluated. You can use this to find out how far through the effect we are (see <<effect-properties>> below).
+
+context:: An object that gives you information about the drones in the current frame (see <<context-properties>> below).
+
+frame:: The current frame number (an integer, e.g. 1, 2, 3, ...).
+
+out:: A two-dimensional NumPy array with shape `(N, 4)` where `N` is the number of drones. Each row contains four numbers representing the RGBA color for the corresponding drone: `(red, green, blue, alpha)`. All values should be between 0 and 1. An alpha of 1 means fully opaque (replaces the drone's base color); an alpha of 0 means fully transparent (leaves the drone's base color unchanged).
+
+Your function should not return anything (or equivalently, return `None`).
+
+== Simple example
+
+The following example makes all drones pulse between black and white over the duration of the effect:
+
+```python
+from numpy import sin, pi
+
+def my_effect(effect, context, frame, *, out):
+    time_fraction = effect.get_time_fraction_for_frame(frame)
+    brightness = (sin(time_fraction * 4 * pi) + 1) / 2
+    out[:, 0:3] = brightness  # red, green, blue
+    out[:, 3] = 1.0           # alpha (optional)
+```
+
+== Working with individual drones
+
+If you need different colors for different drones, use `context.num_drones` to find out how many there are, and write to each row of the `out` array separately. For example, this function lights up drones one by one over the duration of the effect:
+
+```python
+def my_effect(effect, context, frame, *, out):
+    n = context.num_drones
+    time_fraction = effect.get_time_fraction_for_frame(frame)
+
+    for i in range(n):
+        threshold = i / max(n - 1, 1)
+        if time_fraction >= threshold:
+            out[i, :] = [1.0, 1.0, 1.0, 1.0]  # white, fully opaque
+        else:
+            out[i, :] = [0.0, 0.0, 0.0, 0.0]  # transparent
+```
+
+You can also use NumPy for faster calculations. For instance, to color drones based on their X position -- drones on the left side of the scene turn red, drones on the right side turn blue:
+
+```python
+import numpy as np
+
+def my_effect(effect, context, frame, *, out):
+    positions = context.positions.as_array  # Nx3 NumPy array
+    x = positions[:, 0]                     # X coordinates of all drones
+    # Normalize to [0, 1] range
+    x_min, x_max = x.min(), x.max()
+    if x_max > x_min:
+        t = (x - x_min) / (x_max - x_min)
+    else:
+        t = np.full(len(x), 0.5)
+
+    out[:, 0] = 1.0 - t   # red component
+    out[:, 1] = 0.0       # green component
+    out[:, 2] = t         # blue component
+    out[:, 3] = 1.0       # alpha
+```
+
+== Returning a single color
+
+If your function produces the same color for every drone, you can return that color directly instead of writing to `out`. This is slightly faster because the color is applied to all drones without writing to the array:
+
+```python
+from numpy import sin, pi
+
+def my_effect(effect, context, frame, *, out):
+    time_fraction = effect.get_time_fraction_for_frame(frame)
+    brightness = (sin(time_fraction * 4 * pi) + 1) / 2
+    return (brightness, brightness, brightness, 1.0)  # same color for all drones
+```
+
+[[context-properties]]
+== Properties available on the context object
+
+The `context` argument gives you access to the following properties:
+
+context.num_drones:: The total number of drones (an integer).
+
+context.positions:: The positions of all drones. Use `context.positions.as_array` to get a NumPy array of shape `(N, 3)` where `N` is the number of drones and the three columns are the X, Y and Z coordinates. Use `context.positions.as_vectors` to obtain a list of Blender `Vector` objects instead. In almost all cases the arrays are faster, except when you are calling functions from the Blender API that need vectors.
+
+context.mapping:: A list that maps each drone index to its corresponding marker index in the current formation, or `None` if no formation information is available. This is useful when you want to base your effect on the formation order rather than the drone order.
+
+context.mask:: A boolean NumPy array. `False` means the drone _is_ targeted by the current effect; `True` means it is _not_ (for example, because it falls outside a spatial constraint). In most cases you can ignore this array, but you can either use it to skip calculations for certain drones _or_ you can also update the mask to exclude drones from further consideration.
+
+[[effect-properties]]
+== Properties available on the effect object
+
+The `effect` argument gives you access to the light effect's own properties:
+
+effect.frame_start:: The start frame of the light effect.
+
+effect.duration:: The total duration of the light effect in frames.
+
+effect.get_time_fraction_for_frame(frame):: Converts a frame number to a value between 0 and 1 representing how far through the light effect we are (0 at the start, 1 at the end).
+
+== Tips
+
+* The function is called once per frame (not once per drone), so you have access to all drone positions at the same time. This makes it easy to create effects that depend on the relative positions of drones.
+* If you are comfortable with NumPy, you can use it for faster calculations. If not, a simple `for` loop works perfectly well.
+* The `out` array is reused between frames, so always write to every element. Do not leave any entry unset.
+* The file is automatically detected as a V2 function if it has fewer than six parameters. Make sure your function signature matches the one shown above.

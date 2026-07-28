@@ -4,7 +4,18 @@ import types
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, ClassVar, Literal, Protocol, Type, TypedDict, TypeVar, cast
+from inspect import signature
+from typing import (
+    Any,
+    ClassVar,
+    Literal,
+    Protocol,
+    Type,
+    TypedDict,
+    TypeVar,
+    cast,
+    overload,
+)
 from uuid import uuid4
 
 import bpy
@@ -41,6 +52,7 @@ from numpy import (
     empty_like,
     flatnonzero,
     float32,
+    int64,
     isnan,
     lexsort,
     linspace,
@@ -84,6 +96,8 @@ from .mixins import ListMixin
 
 __all__ = (
     "ColorFunctionProperties",
+    "CustomLightEffectFunctionV1",
+    "CustomLightEffectFunctionV2",
     "LightEffect",
     "LightEffectCollection",
     "LightEffectEvaluationContext",
@@ -187,9 +201,10 @@ class LightEffectUpdate:
 LightEffectUpdate.NOP = LightEffectUpdate(None, None, None, False)
 
 
-class CustomLightEffectFunction(Protocol):
+class CustomLightEffectFunctionV1(Protocol):
     """Type of a completely custom light effect function, used when the light effect
-    type is set to "FUNCTION". The function takes the following arguments:
+    type is set to "FUNCTION" and the function has 6 parameters. The function takes the
+    following arguments:
 
     - frame: the current frame index
     - time_fraction: the fraction of time passed in the current light effect relative to
@@ -215,6 +230,91 @@ class CustomLightEffectFunction(Protocol):
         position: Coordinate3D,
         drone_count: int,
     ) -> RGBAColor: ...
+
+
+class CustomLightEffectFunctionV2(Protocol):
+    """Type of the v2 custom light effect function, used when the output type of a light
+    effect is set to "FUNCTION" and the function has 3 positional and 1 keyword
+    arguments. The function takes the following arguments:
+
+    - effect: the light effect being evaluated. Can be used to convert the frame index
+      to a relative time fraction of the effect duration.
+    - context: a context object containing the drones in the current frame, their
+      positions, a mask indicating which drones are not targeted by the current effect,
+      and other relevant information
+    - frame: the current frame index
+    - out: the output array
+
+    Each row in the output array represents the associated color of a single drone.
+    The array is pre-sized to have as many rows as the number of drones.
+
+    If the function would return the same color for all drones, it can return the
+    common color instead of writing it in the `out` array.
+    """
+
+    def __call__(
+        self,
+        effect: LightEffect,
+        context: LightEffectEvaluationContext,
+        frame: int,
+        *,
+        out: NDArray[float32],
+    ) -> RGBAColor | None: ...
+
+
+class VersionedCustomLightEffectFunction:
+    """Wrapper for a custom light effect function and its API version."""
+
+    version: Literal[1, 2]
+    function: CustomLightEffectFunctionV1 | CustomLightEffectFunctionV2
+
+    def __init__(
+        self,
+        function: CustomLightEffectFunctionV1 | CustomLightEffectFunctionV2,
+        version: Literal[1, 2],
+    ):
+        self.function = function
+        self.version = version
+
+    def __call__(
+        self,
+        effect: LightEffect,
+        context: LightEffectEvaluationContext,
+        frame: int,
+        *,
+        out: NDArray[float32],
+    ) -> None:
+        match self.version:
+            case 1:
+                func_v1 = cast(CustomLightEffectFunctionV1, self.function)
+
+                time_fraction = effect.get_time_fraction_for_frame(frame)
+                position_seq = context.positions.as_coordinate_sequence
+                mapping = context.mapping
+                num_drones = len(out)
+
+                for index in context.active_drones:
+                    out[index, :] = func_v1(
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=(
+                            mapping[index] if mapping is not None else None
+                        ),
+                        position=position_seq[index],
+                        drone_count=num_drones,
+                    )
+
+            case 2:
+                func_v2 = cast(CustomLightEffectFunctionV2, self.function)
+                common_color = func_v2(effect, context, frame, out=out)
+                if common_color is not None:
+                    out[context.active_drones, :] = common_color
+
+            case _:
+                raise RuntimeError(
+                    f"unknown custon light effect function API version: {self.version}"
+                )
 
 
 class LightEffectOutputFunctionV1(Protocol):
@@ -333,6 +433,13 @@ class LightEffectEvaluationContext:
 
     _cache: _ContextCache = field(default_factory=dict)
     """Internal cache for lazily computed properties."""
+
+    @property
+    def active_drones(self) -> NDArray[int64]:
+        """Returns a NumPy array containing the indices of active (unmasked) drones."""
+        # TODO(ntamas): cache this if it becomes a bottleneck! Invalidation of the
+        # cache will have to be managed carefully then.
+        return flatnonzero(~self.mask)
 
     @property
     def num_drones(self) -> int:
@@ -470,7 +577,15 @@ class ColorFunctionProperties(PropertyGroup):
         default=0,
     )
 
-    def load(self, expected_type: Type[T] | None = None) -> T | None:
+    @overload
+    def load(self, expected_type: Type[T]) -> T | None: ...
+
+    @overload
+    def load(
+        self, expected_type: None = None
+    ) -> VersionedCustomLightEffectFunction | None: ...
+
+    def load(self, expected_type: Type[T] | None = None):
         """Loads the function pointed to by the path and name properties and casts it
         to the indicated expected type.
 
@@ -483,7 +598,19 @@ class ColorFunctionProperties(PropertyGroup):
 
         absolute_path = abspath(self.path)
         module = load_module(absolute_path)
-        return getattr(module, self.name, None)
+
+        func = getattr(module, self.name, None)
+        if func is None:
+            return None
+
+        if expected_type is not None:
+            return func
+
+        sig = signature(func)
+        if len(sig.parameters) == 6:
+            return VersionedCustomLightEffectFunction(func, version=1)
+        else:
+            return VersionedCustomLightEffectFunction(func, version=2)
 
     def update_from(self, other) -> None:
         self.path = other.path
@@ -793,13 +920,12 @@ class LightEffect(PropertyGroup):
 
         drones = context.drones
         positions = context.positions
-        mapping = context.mapping
         mask = context.mask
         num_drones = context.num_drones
 
         color_ramp = self.color_ramp
         color_image = self.color_image
-        color_function_ref = self.color_function_ref
+        color_function = self.get_versioned_color_function()
 
         # Calculate the influence of the effect, depending on the fade-in and fade-out
         # durations and the spatial predicate
@@ -870,7 +996,7 @@ class LightEffect(PropertyGroup):
                 outputs_y %= 1.0
                 constant_output_y = None
 
-        unmasked = flatnonzero(~mask)
+        active_drones = context.active_drones
 
         # Apply the color ramp, image or function to get the new color. The order
         # of conditions below is according to their expected frequency of use, with
@@ -887,30 +1013,10 @@ class LightEffect(PropertyGroup):
 
             if constant_output_x is not None and num_drones > 0:
                 # Optimize for the common case when the output is constant
-                colors[unmasked, :] = color_ramp.evaluate(constant_output_x)
+                colors[active_drones, :] = color_ramp.evaluate(constant_output_x)
             else:
-                for index in unmasked:
+                for index in active_drones:
                     colors[index, :] = color_ramp.evaluate(outputs_x[index])
-
-        elif color_function_ref is not None:
-            time_fraction = self.get_time_fraction_for_frame(frame)
-            position_seq = positions.as_coordinate_sequence
-            for index in unmasked:
-                try:
-                    colors[index, :] = color_function_ref(
-                        frame=frame,
-                        time_fraction=time_fraction,
-                        drone_index=index,
-                        formation_index=(
-                            mapping[index] if mapping is not None else None
-                        ),
-                        position=position_seq[index],
-                        drone_count=num_drones,
-                    )
-                except Exception as exc:
-                    raise RuntimeError(
-                        f"Error while evaluating custom light effect function for {self.name!r}"
-                    ) from exc
 
         elif color_image is not None:
             # Image based 2D light effect
@@ -922,8 +1028,8 @@ class LightEffect(PropertyGroup):
             if pixels_with_colorspace is None:
                 colors.fill(0.0)
             else:
-                xs = (width * outputs_x[unmasked]).astype(int)
-                ys = (height * outputs_y[unmasked]).astype(int)
+                xs = (width * outputs_x[active_drones]).astype(int)
+                ys = (height * outputs_y[active_drones]).astype(int)
                 xs = where(xs < width, xs, width - 1)
                 ys = where(ys < height, ys, height - 1)
 
@@ -932,7 +1038,16 @@ class LightEffect(PropertyGroup):
                     chosen_pixels, pixels_with_colorspace.colorspace
                 )
 
-                colors[unmasked, :] = chosen_pixels
+                colors[active_drones, :] = chosen_pixels
+
+        elif color_function is not None:
+            # Custom function based light effect
+            try:
+                color_function(self, context, frame, out=colors)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Error while evaluating custom light effect function for {self.name!r}"
+                ) from exc
 
         else:
             # should not happen
@@ -1007,16 +1122,11 @@ class LightEffect(PropertyGroup):
 
         self.invalidate_color_image()
 
-    @property
-    def color_function_ref(self) -> CustomLightEffectFunction | None:
-        """The color function used to calculate the effect, if it exists and is being
-        used according to the type of the effect.
+    def get_versioned_color_function(self) -> VersionedCustomLightEffectFunction | None:
+        """The color function used to calculate the effect, if it exists and is
+        being used according to the type of the effect, and its API version.
         """
-        return (
-            self.color_function.load(CustomLightEffectFunction)
-            if self.color_function
-            else None
-        )
+        return self.color_function.load() if self.color_function else None
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.

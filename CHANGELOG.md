@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [main]
+
+### Added
+
+- Added support for vectorized light effect functions, similarly to how vectorized
+  light effect _output_ functions were added in the previous version. The signature of
+  the light effect function is auto-detected; if the function has 6 arguments, then it
+  is assumed to be an old-style (non-vectorized) function. In all other cases, the
+  function is assumed to take the light effect, the evaluation context, the frame
+  index and an output color array as arguments. See the documentation for more details.
+
 ## [5.0.0] - 2026-07-23
 
 ### Breaking change

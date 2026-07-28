@@ -8,6 +8,8 @@ This guide explains how to write such a function step by step.
 
 Choose this approach when you want full control over the final color of each drone, without using a color ramp or color image. If you would rather write a function that produces a _number_ which is then mapped through a color ramp, see the xref:advanced-topics/output-functions-legacy.adoc[legacy output function] or the xref:advanced-topics/output-functions-experimental.adoc[new output function] guides instead.
 
+If you are writing a new function from scratch, consider using the xref:advanced-topics/custom-light-effects-experimental.adoc[new custom light effect function] instead, which provides more information and better performance.
+
 == How it works
 
 In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once for each drone at each frame of the light effect, and the color your function returns is applied directly to that drone.

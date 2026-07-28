@@ -4,6 +4,7 @@ This chapter covers advanced topics for users who want to extend Skybrush Studio
 
 The topics in this chapter are organized from simplest to most powerful:
 
-* xref:advanced-topics/custom-light-effects.adoc[Custom light effects] -- write a function that returns a color for each drone directly.
+* xref:advanced-topics/custom-light-effects.adoc[Custom light effects (legacy)] -- write a function that returns a color for each drone directly.
+* xref:advanced-topics/custom-light-effects-experimental.adoc[Custom light effects (new)] -- write a function that sets RGBA colors for all drones at once, with access to more information about the scene.
 * xref:advanced-topics/output-functions-legacy.adoc[Custom output functions (legacy)] -- write a function that returns a single number per drone, which is then mapped through a color ramp.
 * xref:advanced-topics/output-functions-experimental.adoc[Custom output functions (new)] -- write a function that sets values for all drones at once, with access to more information about the scene.
