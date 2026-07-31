@@ -38,6 +38,10 @@ from .invalidate_light_effect_pixel_cache import (
     InvalidateLightEffectPixelCacheOperator,
 )
 from .land import LandOperator
+from .move_drone_group import (
+    MoveDroneGroupDownOperator,
+    MoveDroneGroupUpOperator,
+)
 from .move_light_effect import (
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
@@ -117,6 +121,8 @@ __all__ = (
     "LandOperator",
     "KMZExportOperator",
     "LitebeeExportOperator",
+    "MoveDroneGroupDownOperator",
+    "MoveDroneGroupUpOperator",
     "MoveLightEffectDownOperator",
     "MoveLightEffectUpOperator",
     "MoveStoryboardEntryDownOperator",

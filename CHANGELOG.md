@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   function is assumed to take the light effect, the evaluation context, the frame
   index and an output color array as arguments. See the documentation for more details.
 
+- Drone groups can now be rearranged in the "Drone Groups" panel of the Skybrush tab.
+
 ## [5.0.0] - 2026-07-23
 
 ### Breaking change

@@ -111,6 +111,8 @@ from sbstudio.plugin.operators import (
     KMZExportOperator,
     LandOperator,
     LitebeeExportOperator,
+    MoveDroneGroupDownOperator,
+    MoveDroneGroupUpOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     MoveStoryboardEntryDownOperator,
@@ -292,6 +294,8 @@ operators = (
     RemoveDroneGroupOperator,
     ClearDroneGroupOperator,
     SelectDronesFromDroneGroup,
+    MoveDroneGroupDownOperator,
+    MoveDroneGroupUpOperator,
 )
 """Operators in this addon; operators that require other operators must come
 later in the list than their dependencies."""

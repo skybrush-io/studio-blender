@@ -7,6 +7,8 @@ from sbstudio.plugin.operators import (
     AddSelectedDronesToDroneGroupOperator,
     ClearDroneGroupOperator,
     CreateDroneGroupOperator,
+    MoveDroneGroupDownOperator,
+    MoveDroneGroupUpOperator,
     RemoveDroneGroupOperator,
     SelectDronesFromDroneGroup,
 )
@@ -61,6 +63,9 @@ class DroneGroupsPanel(Panel):
         col = row.column(align=True)
         col.operator(CreateDroneGroupOperator.bl_idname, icon="ADD", text="")
         col.operator(RemoveDroneGroupOperator.bl_idname, icon="REMOVE", text="")
+        col.separator()
+        col.operator(MoveDroneGroupUpOperator.bl_idname, icon="TRIA_UP", text="")
+        col.operator(MoveDroneGroupDownOperator.bl_idname, icon="TRIA_DOWN", text="")
 
         row = layout.row(align=True)
         row.operator(

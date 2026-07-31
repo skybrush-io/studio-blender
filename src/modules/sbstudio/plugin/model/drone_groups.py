@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
+
+if TYPE_CHECKING:
+    pass  # exists only for type checking
 
 import bpy
 from bpy.props import IntProperty
@@ -87,6 +90,50 @@ class DroneGroupsProperties(PropertyGroup):
                 added += 1
 
         return added
+
+    def move_active_group_down(self) -> None:
+        """Moves the active drone group one slot down in the collection."""
+        drone_groups = Collections.find_drone_groups(create=False)
+        if not drone_groups:
+            return
+
+        index = self.active_group_index
+        children = drone_groups.children
+        if index >= len(children) - 1:
+            return
+
+        self.active_group_index = index + 1
+        num_steps = len(children) - index - 1
+        current = children[index + 1]
+        children.unlink(current)
+        children.link(current)
+        for _ in range(num_steps):
+            current = children[index]
+            children.unlink(current)
+            children.link(current)
+
+    def move_active_group_up(self) -> None:
+        """Moves the active drone group one slot up in the collection."""
+        drone_groups = Collections.find_drone_groups(create=False)
+        if not drone_groups:
+            return
+
+        index = self.active_group_index
+        children = drone_groups.children
+        if index <= 0:
+            return
+
+        # drone_groups only has link() and unlink() methods. We can only add at
+        # the end with link()
+        self.active_group_index = index - 1
+        num_steps = len(children) - index - 1
+        current = children[index - 1]
+        children.unlink(current)
+        children.link(current)
+        for _ in range(num_steps):
+            current = children[index]
+            children.unlink(current)
+            children.link(current)
 
     def remove_group(self, group: Collection) -> None:
         """Removes the given drone group from the list of drone groups."""
