@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import bpy
 from bpy.types import Image
-from numpy import array, empty, float32, pow
+from numpy import array, empty, float32, power
 from numpy.typing import NDArray
 
 from sbstudio.model.types import RGBAColor
@@ -85,7 +85,7 @@ def convert_pixels_from_srgb_to_linear(
     # This is an approximation, not the standard one. We can live with it for the
     # time being as the differences are mostly in the low intensities and drone LEDs
     # are not able to reproduce those anyways.
-    return pow(colors, _SRGB_TO_LINEAR_EXPONENTS, out=out)
+    return power(colors, _SRGB_TO_LINEAR_EXPONENTS, out=out)
 
 
 def find_image_by_name(name: str) -> Image | None:
