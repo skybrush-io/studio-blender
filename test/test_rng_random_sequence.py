@@ -129,7 +129,7 @@ class TestGetArray:
         arr = seq.get_array(0, 5)
         assert isinstance(arr, np.ndarray)
         assert arr.shape == (5,)
-        assert arr.dtype == np.intp
+        assert arr.dtype == np.int64
         assert list(arr) == [seq[i] for i in range(5)]
 
     def test_get_array_with_offset(self):
@@ -191,8 +191,20 @@ class TestGetArray01:
     def test_get_array_01_matches_get_array_divided(self):
         seq = RandomSequence(seed=42, max=1000)
         arr = seq.get_array_01(3, 7)
-        expected = seq.get_array(3, 7).astype(np.float32) / seq.max
+        expected = (seq.get_array(3, 7).astype(np.float64) / seq.max).astype(np.float32)
         assert arr == pytest.approx(expected)
+
+    def test_get_array_default_max_does_not_overflow(self):
+        # On Windows, storing 0..0xFFFFFFFF in a 32-bit signed dtype raises
+        # OverflowError; int64 storage must accept the default max.
+        seq = RandomSequence(seed=42)
+        arr = seq.get_array(0, 64)
+        assert arr.dtype == np.int64
+        assert (arr >= 0).all()
+        assert (arr <= 0xFFFFFFFF).all()
+        arr01 = seq.get_array_01(0, 64)
+        assert (arr01 >= 0).all()
+        assert (arr01 <= 1).all()
 
     def test_get_array_01_zero_max(self):
         seq = RandomSequence(seed=42, max=0)

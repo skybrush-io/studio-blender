@@ -143,7 +143,10 @@ class PixelsWithColorspace:
         pixel_data = image.pixels
         pixels: NDArray[float32] = empty(len(pixel_data), dtype=float32)
         pixel_data.foreach_get(pixels)
-        pixels = pixels.reshape(tuple(image.size) + (-1,))
+        # image.size is (width, height); Blender stores pixels row-major with
+        # stride=width, so the array must be shaped (height, width, channels).
+        width, height = image.size
+        pixels = pixels.reshape((height, width, -1))
 
         colorspace_settings = image.colorspace_settings
         colorspace = colorspace_settings.name if not colorspace_settings.is_data else ""
