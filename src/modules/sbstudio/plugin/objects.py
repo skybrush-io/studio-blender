@@ -12,6 +12,7 @@ from .utils import with_context, with_scene
 __all__ = (
     "create_object",
     "duplicate_object",
+    "ensure_direct_scene_child",
     "get_axis_aligned_bounding_box_of_object",
     "get_derived_object_after_applying_modifiers",
     "get_vertices_of_object",
@@ -19,6 +20,7 @@ __all__ = (
     "get_vertices_of_object_in_vertex_group_by_name",
     "link_to_scene",
     "object_contains_vertex",
+    "order_child_collections",
     "remove_objects",
 )
 
@@ -109,6 +111,71 @@ def get_vertices_of_object_in_vertex_group_by_name(
     return get_vertices_of_object_in_vertex_group(object, group) if group else []
 
 
+def _is_in_scene_collection_tree(collection: Collection, scene: Scene) -> bool:
+    """Returns whether ``collection`` appears anywhere under the scene's
+    master collection (including nested children).
+    """
+
+    def walk(coll: Collection) -> bool:
+        if coll == collection:
+            return True
+        return any(walk(child) for child in coll.children)
+
+    return walk(scene.collection)
+
+
+def ensure_direct_scene_child(
+    collection: Collection, *, scene: Scene | None = None
+) -> None:
+    """Ensure ``collection`` is a direct child of the scene master collection.
+
+    Unlinks it from any nested parents first. Unlike ``link_to_scene(...,
+    allow_nested=True)``, this actively promotes nested collections to the
+    scene root.
+    """
+    if scene is None:
+        scene = bpy.context.scene
+    assert scene is not None
+
+    root = scene.collection
+
+    for parent in list(bpy.data.collections):
+        if collection in parent.children.values():
+            parent.children.unlink(collection)
+
+    for other_scene in bpy.data.scenes:
+        if collection in other_scene.collection.children.values():
+            other_scene.collection.children.unlink(collection)
+
+    root.children.link(collection)
+
+
+def order_child_collections(
+    parent: Collection, ordered: Iterable[Collection]
+) -> None:
+    """Reorder ``parent``'s child collections so ``ordered`` appear in that
+    relative sequence.
+
+    Other children keep their relative order. The block of ordered collections
+    is placed starting at the earliest current index among them.
+    """
+    children = parent.children
+    current = list(children)
+    present = [coll for coll in ordered if coll in children.values()]
+    if len(present) < 2:
+        return
+
+    insert_at = min(current.index(coll) for coll in present)
+    remaining = [coll for coll in current if coll not in present]
+    insert_at = min(insert_at, len(remaining))
+    desired = remaining[:insert_at] + present + remaining[insert_at:]
+
+    for target_index, coll in enumerate(desired):
+        current_index = list(children).index(coll)
+        if current_index != target_index:
+            children.move(current_index, target_index)
+
+
 @with_scene
 def link_to_scene(
     object: Object | Collection,
@@ -134,13 +201,18 @@ def link_to_scene(
     parent = parent.children if is_collection else parent.objects
 
     if allow_nested:
-        # Nested membership is allowed so we simply check whether the scene
-        # already uses the object indirectly
-        num_refs = scene.user_of_id(object)
-        if object is scene.skybrush.settings.drone_collection:
-            # This reference does not count
-            num_refs -= 1
-        should_link = num_refs < 1
+        # Prefer an explicit collection-tree walk over scene.user_of_id().
+        # PointerProperties such as settings.drone_collection inflate
+        # user_of_id even when the collection is not in the scene hierarchy,
+        # which previously prevented re-linking and made newly created drones
+        # unselectable ("not in View Layer").
+        if is_collection:
+            should_link = not _is_in_scene_collection_tree(object, scene)
+        else:
+            should_link = not any(
+                _is_in_scene_collection_tree(coll, scene)
+                for coll in object.users_collection
+            )
     else:
         # We need to check whether the scene references the object directly
         should_link = object not in parent.values()
