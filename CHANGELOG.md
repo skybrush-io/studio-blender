@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Drone groups can now be rearranged in the "Drone Groups" panel of the Skybrush tab.
 
+### Fixed
+
+- Fix image-based light effects for portrait (and other non-square) images that were
+  accidentally broken after the migration to NumPy, thanks to
+  [@VGYO](https://github.com/VGYO). Also restored shared X/Y randomness offsets (same
+  per-drone offset for both axes, matching pre-vectorization / 4.4.x behaviour). See
+  [#76](https://github.com/skybrush-io/studio-blender/pull/76) for more details.
+
+- Fix an `OverflowError` on Windows when generating random number sequences due to the
+  native NumPy `int_` type being 32-bit on that platform. Many thanks to
+  [@VGYO](https://github.com/VGYO). See
+  [#76](https://github.com/skybrush-io/studio-blender/pull/76) for more details.
+
 ## [5.0.0] - 2026-07-23
 
 ### Breaking change
