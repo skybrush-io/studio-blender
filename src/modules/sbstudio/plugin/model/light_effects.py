@@ -984,9 +984,7 @@ class LightEffect(PropertyGroup):
             # Use the same per-drone random offset for X and Y, matching the
             # pre-vectorization behaviour (and 4.4.x). Independent ranges for the
             # two axes made image-based effects look overly scrambled.
-            offsets = (
-                random_seq.get_array_01(0, num_drones) - 0.5
-            ) * self.randomness
+            offsets = (random_seq.get_array_01(0, num_drones) - 0.5) * self.randomness
             if needs_output_x:
                 outputs_x += offsets
                 outputs_x %= 1.0
