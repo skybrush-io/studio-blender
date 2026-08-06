@@ -1,0 +1,60 @@
+name: Release
+
+# Runs only when a tag is pushed. Creates a GitHub release for that tag
+# and attaches the single build artifact (the Blender add-on ZIP) produced
+# by the build step below.
+on:
+  push:
+    tags:
+      - "*"
+
+# Required so softprops/action-gh-release can create the release and
+# upload assets on behalf of the workflow.
+permissions:
+  contents: write
+
+jobs:
+  build_addon:
+    name: Build Blender ZIP add-on
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Build add-on
+        run: etc/scripts/create_blender_dist.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: skybrush-studio-blender
+          path: ./dist/*.zip
+          archive: false
+
+  release:
+    name: Create GitHub release from tag
+    needs: build_addon
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pull the single artifact that the build step produced so we can
+      # attach it to the release.
+      - uses: actions/download-artifact@v7
+        with:
+          name: skybrush-studio-blender
+          path: ./dist
+
+      # softprops/action-gh-release is an actively maintained action for
+      # creating GitHub releases and uploading assets. When triggered from
+      # a tag push, it automatically targets the tag that triggered the run.
+      - name: Create release and upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*.zip
+          generate_release_notes: true
