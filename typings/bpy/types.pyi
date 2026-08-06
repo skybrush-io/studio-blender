@@ -339,7 +339,9 @@ class Action(ID):
     ) -> FCurve: ...
 
 class Collection(ID):
+    all_objects: bpy_prop_collection[Object]
     children: CollectionChildren
+    children_recursive: bpy_prop_collection[Collection]
     objects: CollectionObjects
 
 class ColorManagedInputColorspaceSettings(ID):

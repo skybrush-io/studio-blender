@@ -109,19 +109,6 @@ def get_vertices_of_object_in_vertex_group_by_name(
     return get_vertices_of_object_in_vertex_group(object, group) if group else []
 
 
-def _is_in_scene_collection_tree(collection: Collection, scene: Scene) -> bool:
-    """Returns whether ``collection`` appears anywhere under the scene's
-    master collection (including nested children).
-    """
-
-    def walk(coll: Collection) -> bool:
-        if coll == collection:
-            return True
-        return any(walk(child) for child in coll.children)
-
-    return walk(scene.collection)
-
-
 @with_scene
 def link_to_scene(
     object: Object | Collection,
@@ -142,23 +129,19 @@ def link_to_scene(
     """
     assert scene is not None
 
+    if object is scene.collection:
+        return
+
     parent = scene.collection
     is_collection = isinstance(object, Collection)
     parent = parent.children if is_collection else parent.objects
 
     if allow_nested:
-        # Prefer an explicit collection-tree walk over scene.user_of_id().
-        # PointerProperties such as settings.drone_collection inflate
-        # user_of_id even when the collection is not in the scene hierarchy,
-        # which previously prevented re-linking and made newly created drones
-        # unselectable ("not in View Layer").
+        # we need to check the entire scene collection tree for the object reference
         if is_collection:
-            should_link = not _is_in_scene_collection_tree(object, scene)
+            should_link = object not in scene.collection.children_recursive
         else:
-            should_link = not any(
-                _is_in_scene_collection_tree(coll, scene)
-                for coll in object.users_collection
-            )
+            should_link = object not in scene.collection.all_objects
     else:
         # We need to check whether the scene references the object directly
         should_link = object not in parent.values()
