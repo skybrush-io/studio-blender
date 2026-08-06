@@ -15,7 +15,6 @@ from bpy.types import Collection
 
 from .materials import create_colored_material, create_glowing_material
 from .meshes import create_cone, create_icosphere
-from .objects import link_to_scene
 from .utils import (
     ensure_object_exists_in_collection,
     get_object_in_collection,
@@ -213,7 +212,6 @@ class Collections:
     @classmethod
     def _on_drone_group_collection_created(cls, coll: Collection) -> None:
         bpy.context.scene.skybrush.settings.drone_group_collection = coll
-        link_to_scene(coll)
 
 
 class Formations:

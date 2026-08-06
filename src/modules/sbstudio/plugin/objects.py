@@ -132,9 +132,9 @@ def link_to_scene(
     if object is scene.collection:
         return
 
-    parent = scene.collection
+    root = scene.collection
     is_collection = isinstance(object, Collection)
-    parent = parent.children if is_collection else parent.objects
+    parent = root.children if is_collection else root.objects
 
     if allow_nested:
         # we need to check the entire scene collection tree for the object reference
