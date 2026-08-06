@@ -5,7 +5,7 @@ from random import Random
 from threading import Lock
 from typing import Self, overload
 
-from numpy import array, concatenate, float32, int_
+from numpy import array, concatenate, float32, int64
 from numpy.typing import NDArray
 
 _GROWTH_BLOCK_SIZE = 4096
@@ -17,8 +17,13 @@ class RandomSequence(Sequence[int]):
     can be accessed by indexing.
     """
 
-    _cache: NDArray[int_]
-    """Cached items of the sequence that were already generated."""
+    _cache: NDArray[int64]
+    """Cached items of the sequence that were already generated.
+
+    Stored as ``int64`` rather than the platform ``int_`` / ``int32`` because
+    sequence values may be as large as ``0xFFFFFFFF``, which overflows signed
+    32-bit integers (notably on Windows).
+    """
 
     _max: int
     """Maximum value that can be returned in the sequence."""
@@ -52,7 +57,7 @@ class RandomSequence(Sequence[int]):
                 and that returns an instance of Random_ to use. ``None`` must
                 be interpreted by the function as "use a random seed".
         """
-        self._cache = array([], dtype=int_)
+        self._cache = array([], dtype=int64)
         self._rng_factory = rng_factory
         self._rng = rng_factory(seed)
         self._max = max
@@ -97,7 +102,7 @@ class RandomSequence(Sequence[int]):
                 extra = target - current
                 new_values = array(
                     [self._rng.randint(0, self._max) for _ in range(extra)],
-                    dtype=int_,
+                    dtype=int64,
                 )
                 self._cache = concatenate([self._cache, new_values])
 
@@ -119,7 +124,7 @@ class RandomSequence(Sequence[int]):
         """Returns the random number at the given index in the sequence."""
         return self[index]
 
-    def get_array(self, start: int, length: int) -> NDArray[int_]:
+    def get_array(self, start: int, length: int) -> NDArray[int64]:
         """Returns a NumPy array of the given length containing the random
         numbers from ``start`` onward in the sequence.
 
@@ -128,7 +133,7 @@ class RandomSequence(Sequence[int]):
             length: the number of elements to return
 
         Returns:
-            a NumPy array of shape ``(length,)`` with dtype int
+            a NumPy array of shape ``(length,)`` with dtype int64
         """
         stop = start + length
         if stop > len(self._cache):
@@ -148,10 +153,14 @@ class RandomSequence(Sequence[int]):
             length: the number of elements to return
 
         Returns:
-            a NumPy array of shape ``(length,)`` with dtype float64
+            a NumPy array of shape ``(length,)`` with dtype float32
         """
         if self.max > 0:
-            return self.get_array(start, length).astype(float32) / self.max
+            # Divide in float64 first so values near 0xFFFFFFFF do not lose
+            # precision (or overflow) when cast to float32 before division.
+            return (self.get_array(start, length).astype("float64") / self.max).astype(
+                float32
+            )
         else:
             return self.get_array(start, length).astype(float32) * 0 + 0.5
 

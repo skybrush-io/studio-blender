@@ -981,17 +981,15 @@ class LightEffect(PropertyGroup):
         # TODO(ntamas): if possible, calculate only for the non-masked drones
         if self.randomness != 0:
             random_seq = context.random_seq
+            # Use the same per-drone random offset for X and Y, matching the
+            # pre-vectorization behaviour (and 4.4.x). Independent ranges for the
+            # two axes made image-based effects look overly scrambled.
+            offsets = (random_seq.get_array_01(0, num_drones) - 0.5) * self.randomness
             if needs_output_x:
-                offsets = (
-                    random_seq.get_array_01(0, num_drones) - 0.5
-                ) * self.randomness
                 outputs_x += offsets
                 outputs_x %= 1.0
                 constant_output_x = None
             if needs_output_y:
-                offsets = (
-                    random_seq.get_array_01(num_drones, num_drones) - 0.5
-                ) * self.randomness
                 outputs_y += offsets
                 outputs_y %= 1.0
                 constant_output_y = None
@@ -1022,23 +1020,31 @@ class LightEffect(PropertyGroup):
             # Image based 2D light effect
             assert needs_output_x and needs_output_y
 
-            width, height = color_image.size
             pixels_with_colorspace = self.get_image_pixels()
 
             if pixels_with_colorspace is None:
                 colors.fill(0.0)
             else:
-                xs = (width * outputs_x[active_drones]).astype(int)
-                ys = (height * outputs_y[active_drones]).astype(int)
-                xs = where(xs < width, xs, width - 1)
-                ys = where(ys < height, ys, height - 1)
+                # Prefer the cached pixel array shape over color_image.size so
+                # portrait/landscape orientation cannot go out of bounds when
+                # the reshape order was wrong or the image size changed.
+                height, width = pixels_with_colorspace.pixels.shape[:2]
+                if width <= 0 or height <= 0:
+                    colors.fill(0.0)
+                else:
+                    xs = (width * outputs_x[active_drones]).astype(int)
+                    ys = (height * outputs_y[active_drones]).astype(int)
+                    xs = xs.clip(0, width - 1)
+                    ys = ys.clip(0, height - 1)
 
-                chosen_pixels: NDArray[float32] = pixels_with_colorspace.pixels[ys, xs]
-                convert_pixels_to_linear_in_place(
-                    chosen_pixels, pixels_with_colorspace.colorspace
-                )
+                    chosen_pixels: NDArray[float32] = pixels_with_colorspace.pixels[
+                        ys, xs
+                    ]
+                    convert_pixels_to_linear_in_place(
+                        chosen_pixels, pixels_with_colorspace.colorspace
+                    )
 
-                colors[active_drones, :] = chosen_pixels
+                    colors[active_drones, :] = chosen_pixels
 
         elif color_function is not None:
             # Custom function based light effect
