@@ -341,7 +341,7 @@ class Action(ID):
 class Collection(ID):
     all_objects: bpy_prop_collection[Object]
     children: CollectionChildren
-    children_recursive: bpy_prop_collection[Collection]
+    children_recursive: list[Collection]
     objects: CollectionObjects
 
 class ColorManagedInputColorspaceSettings(ID):
