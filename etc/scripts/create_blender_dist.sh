@@ -98,3 +98,14 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 echo "Bundle created successfully in ${OUTPUT_DIR}/${ZIP_STEM}.zip"
+
+if [ "x$1" == "x--changelog" ]; then
+  awk '
+    /^## / {
+        count++
+        if (count == 1) { next }
+        if (count == 2) { exit }
+    }
+    count == 1
+  ' CHANGELOG.md >CHANGELOG-last.md
+fi
