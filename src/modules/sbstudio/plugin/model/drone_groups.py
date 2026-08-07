@@ -10,6 +10,7 @@ from bpy.props import IntProperty
 from bpy.types import Collection, Context, Object, PropertyGroup
 
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.objects import link_to_scene
 from sbstudio.plugin.utils import with_context
 
 __all__ = ("DroneGroupsProperties", "get_drone_groups")
@@ -59,6 +60,15 @@ class DroneGroupsProperties(PropertyGroup):
     ) -> Collection:
         """Creates a new drone group and adds it to the list of drone groups."""
         drone_groups = Collections.find_drone_groups(create=True)
+        # Note that the call below might cause performance issues as
+        # searching for a collection hierarchically is O(n); if that
+        # is the case, we need to infer from the call above whether
+        # we have just created the drone groups collection and link
+        # only in that case; also note that if we put the `link_to_scene()`
+        # call inside the `_on_drone_group_collection_created()` callback
+        # of the call above, somehow strangly the collection does not get
+        # linked to the root of the scene but to the first collection
+        link_to_scene(drone_groups, allow_nested=True)
 
         new_group = bpy.data.collections.new(name)
         drone_groups.children.link(new_group)

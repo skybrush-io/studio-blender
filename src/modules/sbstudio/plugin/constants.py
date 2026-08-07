@@ -211,6 +211,12 @@ class Collections:
 
     @classmethod
     def _on_drone_group_collection_created(cls, coll: Collection) -> None:
+        # Note that once the Drone Groups collection is created, we need to link
+        # it to the scene. However, if we do it here, somehow, strangly, it gets
+        # inside the actual/first collection not in the root of the scene; to
+        # workaround that peculiar behavior, we must have a direct call to
+        # `link_to_scene()` after the `Collections.find_drone_groups(create=True)`
+        # call has returned the new collection.
         bpy.context.scene.skybrush.settings.drone_group_collection = coll
 
 
