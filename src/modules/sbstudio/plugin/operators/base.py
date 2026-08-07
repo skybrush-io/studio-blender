@@ -428,7 +428,10 @@ class DynamicMarkerCreationOperator(FormationOperator):
                     pixels.extend(list(color.as_vector()) * (j_next - j_last))
                     j_last = j_next
                     color = next_color
-                pixels.extend(list(color.as_vector()))
+                if j_next < duration:
+                    pixels.extend(list(color.as_vector()))
+                else:
+                    pixels[-4:] = list(color.as_vector())
             image.pixels.foreach_set(pixels)
             image.pack()
 
