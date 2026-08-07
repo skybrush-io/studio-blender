@@ -39,5 +39,5 @@ jobs:
           files: |
             *.zip
           draft: true
-          body_text: ./CHANGELOG-last.md # created by create_blender_dist.sh
+          body_path: ./CHANGELOG-last.md # created by create_blender_dist.sh
           generate_release_notes: true
