@@ -40,4 +40,4 @@ jobs:
             *.zip
           draft: true
           body_path: ./CHANGELOG-last.md # created by create_blender_dist.sh
-          generate_release_notes: true
+          generate_release_notes: false
