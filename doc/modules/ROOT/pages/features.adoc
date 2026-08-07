@@ -35,6 +35,7 @@ Safety::
 Export & Compatibility::
 * Compatible with *Skybrush Viewer* (standalone interactive 3D preview with music, verification, VR and cloud/browser support for easy and clean client previews)
 * Compatible with *Skybrush Live* for professional drone show management (2D map, 3D view, list view, compressed view, individual and fleet-level details and checks, RTK support, geofence, auto mapping and a lot more)
-* Shows can be exported in Skybrush compiled show format (preferred) or as sampled positions and RGB colors with a fixed FPS in CSV format for further post-processing with external tools
+* Shows can be exported in Skybrush compiled show format (`.skyc`, preferred), which supports export of trajectories, lights, yaw control, pyro control, cues, audio file, cameras, and even arbitrary terrain objects.
+* Simple `.csv` export option of sampled positions and RGB colors with a fixed FPS is available for further post-processing with external tools.
 * Shows can also be exported into most of the known drone show formats on the market
 * Additional export options for fireworks and event visualization software
