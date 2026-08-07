@@ -201,7 +201,7 @@ def export_show_to_file_using_api(
         if terrain is not None:
             log.info(f"Temporary terrain file exported to: {terrain.file_path}")
         else:
-            log.info("No terrain found")
+            log.info("No terrain found or export failed")
     else:
         terrain = None
 
