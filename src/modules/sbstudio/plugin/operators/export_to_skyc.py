@@ -67,7 +67,7 @@ class SkybrushExportOperator(ExportOperator):
         default=False,
     )
 
-    # camera export enable/disable
+    # terrain export enable/disable
     export_terrain = BoolProperty(
         name="Export terrain",
         description="Specifies whether terrain objects from the Terrain collection should be exported into the show file",
