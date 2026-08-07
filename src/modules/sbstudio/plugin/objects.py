@@ -129,18 +129,19 @@ def link_to_scene(
     """
     assert scene is not None
 
-    parent = scene.collection
+    if object is scene.collection:
+        return
+
+    root = scene.collection
     is_collection = isinstance(object, Collection)
-    parent = parent.children if is_collection else parent.objects
+    parent = root.children if is_collection else root.objects
 
     if allow_nested:
-        # Nested membership is allowed so we simply check whether the scene
-        # already uses the object indirectly
-        num_refs = scene.user_of_id(object)
-        if object is scene.skybrush.settings.drone_collection:
-            # This reference does not count
-            num_refs -= 1
-        should_link = num_refs < 1
+        # we need to check the entire scene collection tree for the object reference
+        if is_collection:
+            should_link = object not in scene.collection.children_recursive
+        else:
+            should_link = object not in scene.collection.all_objects
     else:
         # We need to check whether the scene references the object directly
         should_link = object not in parent.values()

@@ -10,6 +10,7 @@ from bpy.props import IntProperty
 from bpy.types import Collection, Context, Object, PropertyGroup
 
 from sbstudio.plugin.constants import Collections
+from sbstudio.plugin.objects import link_to_scene
 from sbstudio.plugin.utils import with_context
 
 __all__ = ("DroneGroupsProperties", "get_drone_groups")
@@ -58,7 +59,14 @@ class DroneGroupsProperties(PropertyGroup):
         self, name: str = "New Drone Group", *, select: bool = False
     ) -> Collection:
         """Creates a new drone group and adds it to the list of drone groups."""
-        drone_groups = Collections.find_drone_groups(create=True)
+        # Note that we have the double call below to make sure `link_to_scene()` is
+        # only called if the Drone Groups collection is just created, as it performs
+        # an O(n) search in the scenes collection tree.
+        drone_groups = Collections.find_drone_groups(create=False)
+        if drone_groups is None:
+            drone_groups = Collections.find_drone_groups(create=True)
+            link_to_scene(drone_groups, allow_nested=True)
+        assert drone_groups is not None
 
         new_group = bpy.data.collections.new(name)
         drone_groups.children.link(new_group)

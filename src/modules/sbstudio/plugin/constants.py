@@ -15,7 +15,6 @@ from bpy.types import Collection
 
 from .materials import create_colored_material, create_glowing_material
 from .meshes import create_cone, create_icosphere
-from .objects import link_to_scene
 from .utils import (
     ensure_object_exists_in_collection,
     get_object_in_collection,
@@ -212,8 +211,15 @@ class Collections:
 
     @classmethod
     def _on_drone_group_collection_created(cls, coll: Collection) -> None:
+        # We deliberately do NOT link the new collection to the scene here. The
+        # collection was just created via `bpy.data.collections.new()`, so it has
+        # no parent yet; linking such an unparented datablock into the scene's
+        # hierarchy from within this callback makes Blender place it under the
+        # currently active (first) top-level collection instead of the scene
+        # root, since its parent is not yet resolved in the same evaluation
+        # frame. `link_to_scene()` is therefore called on the caller side, only
+        # after `find_drone_groups(create=True)` has returned.
         bpy.context.scene.skybrush.settings.drone_group_collection = coll
-        link_to_scene(coll)
 
 
 class Formations:
