@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Added
+
+- Added "Export terrain" option to the SKYC and SKYC+PDF renderers. This option will 
+  create a temporary .glb file from all objects present in the new automatically 
+  created Terrain root collection of the scene and embed that to the .skyc files to
+  be visualized in latest versions of Skybrush Viewer.
+
 ### Fixed
 
 - Fixed zipped .csv light effect import in some edge cases when the .csv sampling FPS
