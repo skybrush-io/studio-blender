@@ -50,6 +50,7 @@ from sbstudio.plugin.utils.sampling import (
     sample_positions_colors_and_yaw_of_objects,
     sample_positions_of_objects,
 )
+from sbstudio.plugin.utils.terrain import get_terrain_from_context
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
 from sbstudio.utils import get_ends
 
@@ -191,6 +192,18 @@ def export_show_to_file_using_api(
         cameras = get_cameras_from_context(context)
     else:
         cameras = None
+
+    # get terrain
+    export_terrain = settings.get("export_terrain", False)
+    if export_terrain:
+        log.info("Exporting terrain, please wait...")
+        terrain = get_terrain_from_context(context)
+        if terrain is not None:
+            log.info(f"Temporary terrain file exported to: {terrain.file_path}")
+        else:
+            log.info("No terrain found")
+    else:
+        terrain = None
 
     # get validation parameters
     safety_check = getattr(context.scene.skybrush, "safety_check", None)
@@ -346,6 +359,7 @@ def export_show_to_file_using_api(
             time_markers=time_markers,
             audio=audio,
             cameras=cameras,
+            terrain=terrain,
             renderer=renderer,
             renderer_params=renderer_params,
         )

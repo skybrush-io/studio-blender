@@ -18,3 +18,17 @@ class skybrush:
     def refresh_file_formats() -> None: ...
     def run_all_migrations(*args, **kwargs) -> None: ...
     def update_time_markers_from_storyboard() -> None: ...
+
+class import_scene:
+    def gltf(
+        *,
+        filepath: str = "",
+    ) -> None: ...
+
+class export_scene:
+    def gltf(
+        *,
+        filepath: str = "",
+        check_existing: bool = True,
+        collection: str = "",
+    ) -> None: ...

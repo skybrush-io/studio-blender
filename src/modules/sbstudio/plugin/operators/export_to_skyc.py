@@ -67,6 +67,13 @@ class SkybrushExportOperator(ExportOperator):
         default=False,
     )
 
+    # camera export enable/disable
+    export_terrain = BoolProperty(
+        name="Export terrain",
+        description="Specifies whether terrain objects from the Terrain collection should be exported into the show file",
+        default=False,
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -82,6 +89,7 @@ class SkybrushExportOperator(ExportOperator):
         column = layout.column(align=True)
         column.prop(self, "export_audio")
         column.prop(self, "export_cameras")
+        column.prop(self, "export_terrain")
         column.prop(self, "use_pyro_control")
         column.prop(self, "use_yaw_control")
 
@@ -99,4 +107,5 @@ class SkybrushExportOperator(ExportOperator):
             "use_yaw_control": self.use_yaw_control,
             "export_audio": self.export_audio,
             "export_cameras": self.export_cameras,
+            "export_terrain": self.export_terrain,
         }
