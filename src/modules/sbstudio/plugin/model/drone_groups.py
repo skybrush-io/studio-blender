@@ -64,10 +64,13 @@ class DroneGroupsProperties(PropertyGroup):
         # searching for a collection hierarchically is O(n); if that
         # is the case, we need to infer from the call above whether
         # we have just created the drone groups collection and link
-        # only in that case; also note that if we put the `link_to_scene()`
-        # call inside the `_on_drone_group_collection_created()` callback
-        # of the call above, somehow strangly the collection does not get
-        # linked to the root of the scene but to the first collection
+        # only in that case; also, we must link the collection here on the
+        # caller side and NOT inside the `_on_drone_group_collection_created()`
+        # callback: the collection is brand new and has no parent yet, so
+        # linking it from within the callback makes Blender place it under the
+        # currently active (first) top-level collection instead of the scene
+        # root, because its parent is not yet resolved in the same evaluation
+        # frame.
         link_to_scene(drone_groups, allow_nested=True)
 
         new_group = bpy.data.collections.new(name)
