@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed zipped .csv light effect import in some edge cases when the .csv sampling FPS 
-  and the target Blender FPS were not divisors of each other. 
-  Many thanks to @MartinM for the bug report.
+- Fixed zipped .csv light effect import in some edge cases when the .csv sampling FPS
+  and the target Blender FPS were not divisors of each other. Many thanks to Martin M.
+  on Discord for the bug report.
 
 - Linking the main permanent collections (Drones, Drone Groups etc.) to the scene
   got fixed (no crash now on creating takeoff grids on non-empty template files),
