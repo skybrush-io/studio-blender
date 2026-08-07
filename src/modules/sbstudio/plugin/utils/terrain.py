@@ -37,6 +37,14 @@ def get_terrain_from_context(context: Context) -> Terrain | None:
 
     # Note that calling .glb export might take a while if there are many objects
     # in the Terrain collection
-    bpy.ops.export_scene.gltf(filepath=glb_file, collection=terrain_collection.name)
+    try:
+        retval = bpy.ops.export_scene.gltf(
+            filepath=glb_file, collection=terrain_collection.name
+        )
+    except RuntimeError:
+        return None
+
+    if "FINISHED" not in retval:
+        return None
 
     return Terrain(file_path=glb_file)

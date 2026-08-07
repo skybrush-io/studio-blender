@@ -23,7 +23,7 @@ class import_scene:
     def gltf(
         *,
         filepath: str = "",
-    ) -> None: ...
+    ) -> set[str]: ...
 
 class export_scene:
     def gltf(
@@ -31,4 +31,4 @@ class export_scene:
         filepath: str = "",
         check_existing: bool = True,
         collection: str = "",
-    ) -> None: ...
+    ) -> set[str]: ...
