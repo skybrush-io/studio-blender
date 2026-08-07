@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the target Blender FPS were not divisors of each other. 
   Many thanks to @MartinM for the bug report.
 
+- Linking the main permanent collections (Drones, Drone Groups etc.) to the scene
+  got fixed (no crash now on creating takeoff grids on non-empty template files),
+  and the Drone Groups collection is now ensured to be a child of the root collection
+  of the scene. Many thanks to [@VGYO](https://github.com/VGYO). See
+  [#77](https://github.com/skybrush-io/studio-blender/pull/77) for more details.
+
 ## [5.0.1] - 2026-08-05
 
 ### Added
