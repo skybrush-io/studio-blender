@@ -367,7 +367,7 @@ wheels = [
 
 [[package]]
 name = "skybrush-studio-for-blender"
-version = "5.0.1"
+version = "5.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "natsort" },
