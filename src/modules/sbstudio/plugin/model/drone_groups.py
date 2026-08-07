@@ -59,19 +59,14 @@ class DroneGroupsProperties(PropertyGroup):
         self, name: str = "New Drone Group", *, select: bool = False
     ) -> Collection:
         """Creates a new drone group and adds it to the list of drone groups."""
-        drone_groups = Collections.find_drone_groups(create=True)
-        # Note that the call below might cause performance issues as
-        # searching for a collection hierarchically is O(n); if that
-        # is the case, we need to infer from the call above whether
-        # we have just created the drone groups collection and link
-        # only in that case; also, we must link the collection here on the
-        # caller side and NOT inside the `_on_drone_group_collection_created()`
-        # callback: the collection is brand new and has no parent yet, so
-        # linking it from within the callback makes Blender place it under the
-        # currently active (first) top-level collection instead of the scene
-        # root, because its parent is not yet resolved in the same evaluation
-        # frame.
-        link_to_scene(drone_groups, allow_nested=True)
+        # Note that we have the double call below to make sure `link_to_scene()` is
+        # only called if the Drone Groups collection is just created, as it performs
+        # an O(n) search in the scenes collection tree.
+        drone_groups = Collections.find_drone_groups(create=False)
+        if drone_groups is None:
+            drone_groups = Collections.find_drone_groups(create=True)
+            link_to_scene(drone_groups, allow_nested=True)
+        assert drone_groups is not None
 
         new_group = bpy.data.collections.new(name)
         drone_groups.children.link(new_group)
