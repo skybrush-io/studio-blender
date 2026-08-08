@@ -64,6 +64,12 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
         default=False,
     )
 
+    export_terrain = BoolProperty(
+        name="Export terrain (PRO)",
+        description="Specifies whether terrain objects from the Terrain collection should be exported into the show file",
+        default=False,
+    )
+
     #####################################################
     # properties inherited from SkybrushPDFExportOperator
 
@@ -146,6 +152,7 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
         column.label(text="SKYC export features:")
         column.prop(self, "export_audio")
         column.prop(self, "export_cameras")
+        column.prop(self, "export_terrain")
         column.prop(self, "use_pyro_control")
         column.prop(self, "use_yaw_control")
 
@@ -190,5 +197,6 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
             "use_yaw_control": self.use_yaw_control,
             "export_audio": self.export_audio,
             "export_cameras": self.export_cameras,
+            "export_terrain": self.export_terrain,
             "plots": plots,
         }

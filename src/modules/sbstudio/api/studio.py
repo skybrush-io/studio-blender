@@ -15,6 +15,7 @@ from sbstudio.model.location import ShowLocation
 from sbstudio.model.point import Point3D
 from sbstudio.model.pyro_markers import PyroMarkers
 from sbstudio.model.safety_check import SafetyCheckParams
+from sbstudio.model.terrain import Terrain
 from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
@@ -145,6 +146,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
         time_markers: TimeMarkers | None = None,
         audio: Audio | None = None,
         cameras: list[Camera] | None = None,
+        terrain: Terrain | None = None,
         renderer: str | list[str] = "skyc",
         renderer_params: dict[str, Any] | list[dict[str, Any] | None] | None = None,
     ) -> bytes | None:
@@ -171,8 +173,9 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
                 Skybrush Viewer.
             time_markers: When specified, time markers will be exported as
                 temporal cues.
-            audio: when specified, a single audio file to include in the output
+            audio: When specified, a single audio file to include in the output.
             cameras: When specified, list of cameras to include in the environment.
+            terrain: When specified, a single (.glb) terrain file to include in the output.
             renderer: The renderer(s) to use to export the show.
             renderer_params: Extra parameters for the renderer(s).
 
@@ -207,6 +210,14 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             environment["cameras"] = [
                 camera.as_dict(ndigits=ndigits) for camera in cameras
             ]
+
+        if terrain:
+            try:
+                environment["terrain"] = terrain.as_dict(ndigits=ndigits)
+            except Exception as ex:
+                raise SkybrushStudioExportWarning(
+                    f"Could not parse terrain file {terrain.file_path!r}"
+                ) from ex
 
         if show_location:
             environment["location"] = show_location.json
