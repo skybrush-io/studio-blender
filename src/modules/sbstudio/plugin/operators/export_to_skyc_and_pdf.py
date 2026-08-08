@@ -65,7 +65,7 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
     )
 
     export_terrain = BoolProperty(
-        name="Export terrain",
+        name="Export terrain (PRO)",
         description="Specifies whether terrain objects from the Terrain collection should be exported into the show file",
         default=False,
     )

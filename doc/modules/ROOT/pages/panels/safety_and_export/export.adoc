@@ -44,7 +44,7 @@ NOTE: Audio export is available since Skybrush Studio Server backend version 2.4
 
 Export cameras:: Enable this checkbox to export Blender cameras into the .skyc file (to be used by Skybrush Viewer).
 
-Export terrain:: Enable this checkbox to export any Blender objects under the persistent "Terrain" scene collection to be embedded into the .skyc file (to be used by Skybrush Viewer).
+Export terrain (PRO):: Enable this checkbox to export any Blender objects under the persistent "Terrain" scene collection to be embedded into the .skyc file (to be used by Skybrush Viewer).
 
 
 == Export to Skybrush .csv
