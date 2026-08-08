@@ -25,7 +25,7 @@ def get_terrain_from_context(context: Context) -> Terrain | None:
     """
 
     terrain_collection = Collections.find_terrain(create=False)
-    if terrain_collection is None:
+    if terrain_collection is None or not terrain_collection.all_objects:
         return None
 
     with TemporaryDirectory() as tmp_dir:
