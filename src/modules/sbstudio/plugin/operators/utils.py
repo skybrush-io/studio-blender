@@ -197,11 +197,16 @@ def export_show_to_file_using_api(
     export_terrain = settings.get("export_terrain", False)
     if export_terrain:
         log.info("Exporting terrain, please wait...")
-        terrain = get_terrain_from_context(context)
-        if terrain is not None:
-            log.info(f"Temporary terrain file exported to: {terrain.file_path}")
+        try:
+            terrain = get_terrain_from_context(context)
+        except RuntimeError as ex:
+            log.error(f"Failed to export terrain: {ex}")
+            terrain = None
         else:
-            log.info("No terrain found or export failed")
+            if terrain is None:
+                log.warning("No terrain found")
+            else:
+                log.info("Terrain export successful.")
     else:
         terrain = None
 

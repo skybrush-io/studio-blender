@@ -14,8 +14,8 @@ __all__ = ("Terrain",)
 class Terrain:
     """Class representing a terrain in the scene."""
 
-    file_path: str
-    """The full path pointing to the (.glb) terrain file."""
+    data: bytes
+    """The full (.glb) binary terrain data object."""
 
     position: Coordinate3D = (0, 0, 0)
     """The position of the terrain in 3D space."""
@@ -36,12 +36,11 @@ class Terrain:
             dictionary representation of the terrain, rounded to
                 the desired precision
         """
-        with open(self.file_path, "rb") as fp:
-            data = b64encode(fp.read()).decode("ascii")
+        encoded_data = b64encode(self.data).decode("ascii")
 
         result = {
             "model": {
-                "data": data,
+                "data": encoded_data,
                 "mediaType": "model/gltf-binary",
             },
             "transform": {

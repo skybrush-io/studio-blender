@@ -31,4 +31,5 @@ class export_scene:
         filepath: str = "",
         check_existing: bool = True,
         collection: str = "",
+        export_format: str = "",
     ) -> set[str]: ...

@@ -1,5 +1,5 @@
 from pathlib import Path
-from tempfile import gettempdir
+from tempfile import TemporaryDirectory
 
 import bpy
 from bpy.types import Context
@@ -20,31 +20,26 @@ def get_terrain_from_context(context: Context) -> Terrain | None:
         terrain object for later use by Skybrush, or `None` if
         no terrain could be gathered.
 
+    Raises:
+        RuntimeError on error
     """
 
     terrain_collection = Collections.find_terrain(create=False)
     if terrain_collection is None:
         return None
 
-    glb_path = (
-        Path(gettempdir())
-        / "skybrush-studio"
-        / Path(bpy.data.filepath).stem
-        / "terrain.glb"
-    )
-    glb_path.parent.mkdir(parents=True, exist_ok=True)
-    glb_file = glb_path.as_posix()
+    with TemporaryDirectory() as tmp_dir:
+        glb_path = Path(tmp_dir) / "terrain.glb"
 
-    # Note that calling .glb export might take a while if there are many objects
-    # in the Terrain collection
-    try:
+        # Note that calling .glb export might take a while if there are
+        # many objects in the Terrain collection
         result = bpy.ops.export_scene.gltf(
-            filepath=glb_file, collection=terrain_collection.name
+            filepath=glb_path.as_posix(),
+            collection=terrain_collection.name,
+            export_format="GLB",
         )
-    except RuntimeError:
-        return None
 
-    if "FINISHED" not in result:
-        return None
+        if "FINISHED" not in result:
+            raise RuntimeError("Could not finish terrain export")
 
-    return Terrain(file_path=glb_file)
+        return Terrain(data=glb_path.read_bytes())
