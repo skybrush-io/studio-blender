@@ -3,18 +3,13 @@ from numpy import empty, float32
 from numpy.typing import NDArray
 
 from sbstudio.model.types import RGBAColor
-from sbstudio.plugin.colors import get_colors_of_drones_fast
+from sbstudio.plugin.colors import get_color_of_drone, get_colors_of_drones_fast
 from sbstudio.plugin.model.light_effects import LightEffectUpdate
 from sbstudio.utils import measure_time
 
 from .session import LightEffectUpdateSession
 
 __all__ = ("LightEffectUpdater",)
-
-WHITE: RGBAColor = (1, 1, 1, 1)
-"""White color, used as a base color when no info is available for a newly added
-drone.
-"""
 
 
 class LightEffectUpdater:
@@ -60,19 +55,29 @@ class LightEffectUpdater:
 
         The returned value is a copy of the color in the cache. It can be modified, but
         the modifications will not affect the cached value.
+
+        Falls back to the evaluated ``object.color`` when the cache has no entry
+        for this drone.
         """
         idx = self._drone_to_row_index.get(drone)
         if idx is not None:
             return tuple(self._base_colors[idx])
-        return WHITE
+        # No light-effect cache (effects disabled, or none active this frame).
+        # Fall back to evaluated object.color so keyed LED colors still export.
+        return get_color_of_drone(drone)
 
     def get_final_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) final color of the drone at the current frame
         after all active light effects are applied on it.
+
+        When no light-effect cache exists for this drone (for example because
+        light effects are disabled, or none are active on the current frame),
+        falls back to the evaluated ``object.color`` so colors keyed directly
+        on the drone are still sampled during skyc / CSV export.
         """
         idx = self._drone_to_row_index.get(drone)
         if idx is None:
-            return WHITE
+            return get_color_of_drone(drone)
 
         final_colors = self._session._final_colors
         return (

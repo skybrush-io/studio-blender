@@ -118,22 +118,18 @@ class LightEffectUpdateSession:
         assert self._scene is not None
         assert self._frame is not None
 
+        had_effects = self._context is not None
         state = self._context
-        if state is None and self._owner._has_base_colors():
-            # No color updates were applied in this session but the user has just turned
-            # off the last color effect so pretend that there were some effects
+        if state is None:
+            # No light effects were applied this frame. Snapshot evaluated
+            # object.color (including F-curves) so skyc / CSV export can sample
+            # colors keyed directly on the drone.
             state = self._ensure_context()
-            clear_base_color_cache_at_end = True
-        else:
-            clear_base_color_cache_at_end = False
 
         if state is None:
-            # No color updates were applied and it has been like this even in the
-            # previous frame so no need to calculate the final colors
             return LightEffectUpdate.NOP
 
         self._final_colors = state.backdrop
-        if clear_base_color_cache_at_end:
-            self._owner._clear_base_colors()
-
-        return LightEffectUpdate(state.drones, state.positions, state.backdrop, True)
+        return LightEffectUpdate(
+            state.drones, state.positions, state.backdrop, had_effects
+        )
