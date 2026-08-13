@@ -37,8 +37,16 @@ class LightEffectUpdater:
     """NumPy array of shape (N, 4) containing the base color of every drone
     that was cached for the current frame."""
 
-    _drone_to_row_index: dict[Object, int]
-    """Mapping from drone object IDs to row indices in `_base_colors_array`."""
+    _drone_to_row_index: dict[Object, int] | None = None
+    """Mapping from drone object IDs to row indices in `_base_colors_array`, or
+    `None` if the base colors have not been cached for the current frame yet.
+    """
+
+    _last_drone_collection: CollectionObjects | None = None
+    """The collection of drones that were last used to produce a mutable array of colors
+    internally. Used by `get_base_color_of_drone()` to populate the base color cache
+    when it is empty.
+    """
 
     _last_frame: int | None = None
     """Index of the last frame that was evaluated with `update_light_effects()`"""
@@ -51,7 +59,7 @@ class LightEffectUpdater:
 
     def __init__(self):
         self._base_colors = empty((0, 4), dtype=float32)
-        self._drone_to_row_index = {}
+        self._drone_to_row_index = None
         self._session = LightEffectUpdateSession(self)
 
     def get_base_color_of_drone(self, drone: Object) -> RGBAColor:
@@ -61,15 +69,30 @@ class LightEffectUpdater:
         The returned value is a copy of the color in the cache. It can be modified, but
         the modifications will not affect the cached value.
         """
+        if not self._drone_to_row_index:
+            # No base colors have been cached yet; populate the cache
+            self._populate_base_color_cache()
+
+            # Assert documented post-condition of self._populate_base_color_cache()
+            assert self._drone_to_row_index is not None
+
         idx = self._drone_to_row_index.get(drone)
-        if idx is not None:
-            return tuple(self._base_colors[idx])
-        return WHITE
+        if idx is None:
+            return WHITE
+
+        return tuple(self._base_colors[idx])
 
     def get_final_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) final color of the drone at the current frame
         after all active light effects are applied on it.
         """
+        if not self._drone_to_row_index:
+            # No base colors have been cached yet; populate the cache
+            self._populate_base_color_cache()
+
+            # Assert documented post-condition of self._populate_base_color_cache()
+            assert self._drone_to_row_index is not None
+
         idx = self._drone_to_row_index.get(drone)
         if idx is None:
             return WHITE
@@ -117,7 +140,7 @@ class LightEffectUpdater:
 
     def _clear_base_colors(self) -> None:
         """Clears the base color cache."""
-        self._drone_to_row_index.clear()
+        self._drone_to_row_index = None
         self._base_colors = empty((0, 4), dtype=float32)
 
     def _create_mutable_color_array_for_drones(
@@ -129,6 +152,7 @@ class LightEffectUpdater:
         The returned array contains as many rows as the number of drones in the input
         collection. The i-th row stores the color of the i-th drone, in RGBA order.
         """
+        self._last_drone_collection = drones
         n = len(drones)
         if not self._drone_to_row_index or n != self._base_colors.shape[0]:
             # Either we have no base colors yet, or the number of drones has changed.
@@ -144,9 +168,7 @@ class LightEffectUpdater:
             # These are shortcomings that we can live with for now as they can easily
             # be fixed by changing to a different frame and then back to the current
             # frame.
-            self._base_colors = empty((n, 4), dtype=float32)
-            get_colors_of_drones_fast(drones, dest=self._base_colors.ravel())
-            self._drone_to_row_index = {drone: i for i, drone in enumerate(drones)}
+            self._populate_base_color_cache()
 
         return self._base_colors.copy()
 
@@ -160,3 +182,29 @@ class LightEffectUpdater:
     def _has_base_colors(self) -> bool:
         """Returns whether there are already some cached base colors in the cache."""
         return bool(self._drone_to_row_index)
+
+    def _populate_base_color_cache(self) -> None:
+        """Populates the base color cache with the colors of the drones in the current
+        frame.
+
+        This method is called when a light effect update session is started and there
+        are no cached base colors yet. It queries the colors of the drones in the
+        current frame and stores them in the cache.
+
+        Upon exiting this function, it is guaranteed that self._drone_to_row_index is
+        not None and self._base_colors has the same number of rows as the number of
+        drones in self._last_drone_collection.
+        """
+        if not self._last_drone_collection:
+            self._base_colors = empty((0, 4), dtype=float32)
+            self._drone_to_row_index = {}
+            return
+
+        n = len(self._last_drone_collection)
+        self._base_colors = empty((n, 4), dtype=float32)
+        get_colors_of_drones_fast(
+            self._last_drone_collection, dest=self._base_colors.ravel()
+        )
+        self._drone_to_row_index = {
+            drone: i for i, drone in enumerate(self._last_drone_collection)
+        }

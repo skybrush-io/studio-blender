@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed a bug in the export of CSV or `.skyc` files when no light effects were used
+  in the project and the colors were simply keyframed on the `color` property of the
+  object. Many thanks to [@VGYO](https://github.com/VGYO).
+
+## [5.0.2] - 2026-08-07
+
+### Fixed
+
 - Fixed zipped .csv light effect import in some edge cases when the .csv sampling FPS
   and the target Blender FPS were not divisors of each other. Many thanks to Martin M.
   on Discord for the bug report.
