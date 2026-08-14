@@ -6,7 +6,6 @@ from bpy.types import Scene
 from numpy import empty, empty_like, float32
 from numpy.typing import NDArray
 
-from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.light_effects import (
     LightEffect,
     LightEffectEvaluationContext,
@@ -67,8 +66,7 @@ class LightEffectUpdateSession:
         assert self._frame is not None
 
         if self._context is None:
-            drones = Collections.find_drones().objects
-            base_colors = self._owner._create_mutable_color_array_for_drones(drones)
+            drones, base_colors = self._owner._create_mutable_color_array_for_drones()
             self._context = LightEffectEvaluationContext(
                 drones=drones,
                 positions=ObjectPositions(drones),

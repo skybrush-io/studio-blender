@@ -1,9 +1,12 @@
+from typing import Callable
+
 from bpy.types import CollectionObjects, Object, Scene
 from numpy import empty, float32
 from numpy.typing import NDArray
 
 from sbstudio.model.types import RGBAColor
 from sbstudio.plugin.colors import get_colors_of_drones_fast
+from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.light_effects import LightEffectUpdate
 from sbstudio.utils import measure_time
 
@@ -37,6 +40,12 @@ class LightEffectUpdater:
     """NumPy array of shape (N, 4) containing the base color of every drone
     that was cached for the current frame."""
 
+    _drone_collection_getter: Callable[[Scene], CollectionObjects]
+    """Function that returns the collection of drones to use for the current frame.
+    This is used to determine which drones to query for base colors when the cache is
+    empty. The default implementation returns the drones in the `Drones`
+    collection of the scene."""
+
     _drone_to_row_index: dict[Object, int] | None = None
     """Mapping from drone object IDs to row indices in `_base_colors_array`, or
     `None` if the base colors have not been cached for the current frame yet.
@@ -57,8 +66,20 @@ class LightEffectUpdater:
     and the color updates to perform at the end.
     """
 
-    def __init__(self):
+    @staticmethod
+    def _get_drone_collection(scene: Scene) -> CollectionObjects:
+        """Returns the collection of drones to use for the current frame."""
+        return Collections.find_drones().objects
+
+    def __init__(
+        self,
+        *,
+        drone_collection_getter: Callable[[Scene], CollectionObjects] | None = None,
+    ):
         self._base_colors = empty((0, 4), dtype=float32)
+        self._drone_collection_getter = (
+            drone_collection_getter or self._get_drone_collection
+        )
         self._drone_to_row_index = None
         self._session = LightEffectUpdateSession(self)
 
@@ -124,6 +145,7 @@ class LightEffectUpdater:
         frame = scene.frame_current
         if self._last_frame != frame:
             self._last_frame = frame
+            self._last_drone_collection = self._drone_collection_getter(scene)
             self._clear_base_colors()
 
         try:
@@ -144,15 +166,26 @@ class LightEffectUpdater:
         self._base_colors = empty((0, 4), dtype=float32)
 
     def _create_mutable_color_array_for_drones(
-        self, drones: CollectionObjects
-    ) -> NDArray[float32]:
-        """Creates a mutable color array from the given collection of drones that can
-        be used during light effect calculations to update the colors.
+        self,
+    ) -> tuple[CollectionObjects, NDArray[float32]]:
+        """Creates a mutable color array from the current collection of drones, set up
+        earlier in `update()`. This color array caan be used during light effect
+        calculations to update the colors.
 
         The returned array contains as many rows as the number of drones in the input
         collection. The i-th row stores the color of the i-th drone, in RGBA order.
+
+        Returns:
+            A tuple of the collection of drones and the mutable color array.
         """
-        self._last_drone_collection = drones
+        drones = self._last_drone_collection
+        if drones is None:
+            raise RuntimeError(
+                "Cannot create a mutable color array for drones because the last "
+                "drone collection is not set. This usually means that the update() "
+                "method has not been called yet."
+            )
+
         n = len(drones)
         if not self._drone_to_row_index or n != self._base_colors.shape[0]:
             # Either we have no base colors yet, or the number of drones has changed.
@@ -170,7 +203,7 @@ class LightEffectUpdater:
             # frame.
             self._populate_base_color_cache()
 
-        return self._base_colors.copy()
+        return drones, self._base_colors.copy()
 
     def _ensure_session_not_running(self) -> None:
         """Ensures that no session is currently active."""
