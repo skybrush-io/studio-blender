@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [main]
+## [5.0.3] - 2026-08-14
+
+### Fixed
+
+- Fixed a bug in the export of CSV or `.skyc` files when no light effects were used
+  in the project and the colors were simply keyframed on the `color` property of the
+  object. Many thanks to [@VGYO](https://github.com/VGYO).
+
+## [5.0.2] - 2026-08-07
 
 ### Added
 
@@ -20,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on Discord for the bug report.
 
 - Linking the main permanent collections (Drones, Drone Groups etc.) to the scene
-  got fixed (no crash now on creating takeoff grids on non-empty template files),
+  was fixed (no crash now on creating takeoff grids on non-empty template files),
   and the Drone Groups collection is now ensured to be a child of the root collection
   of the scene. Many thanks to [@VGYO](https://github.com/VGYO). See
   [#77](https://github.com/skybrush-io/studio-blender/pull/77) for more details.
