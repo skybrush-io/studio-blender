@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [main]
+
+### Added
+
+- Added "Export terrain" PRO option to the SKYC and SKYC+PDF renderers. This option will 
+  embed all objects present in the new automatically created Terrain root collection of 
+  the scene into the .skyc files to be visualized in latest versions of Skybrush Viewer.
+
 ## [5.0.3] - 2026-08-14
 
 ### Fixed
