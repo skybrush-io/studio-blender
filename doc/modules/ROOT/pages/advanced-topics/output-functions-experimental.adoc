@@ -1,6 +1,6 @@
 = Custom output functions (new)
 
-Skybrush Studio includes a newer, more powerful way to write custom output functions. Like the xref:advanced-topics/output-functions-legacy.adoc[legacy version], your function produces a number for each drone that is mapped through the color ramp or color image. However, this version gives you more information about the scene and can be faster for complex effects.
+Dronetara Studio includes a newer, more powerful way to write custom output functions. Like the xref:advanced-topics/output-functions-legacy.adoc[legacy version], your function produces a number for each drone that is mapped through the color ramp or color image. However, this version gives you more information about the scene and can be faster for complex effects.
 
 This guide explains how to write such a function.
 
@@ -12,7 +12,7 @@ NOTE: This feature is currently experimental. The details of how the function wo
 
 == How it works
 
-In the Light Effects panel, set the btn:[Output X] dropdown to btn:[Custom expression (experimental)]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once per frame. Your function writes a number for each drone into an array, and those numbers are mapped through the color ramp or color image to produce the final colors.
+In the Light Effects panel, set the btn:[Output X] dropdown to btn:[Custom expression (experimental)]. Then select a `.py` file that contains your Python function. Dronetara Studio will call your function once per frame. Your function writes a number for each drone into an array, and those numbers are mapped through the color ramp or color image to produce the final colors.
 
 == Function signature
 

@@ -1,9 +1,9 @@
 = Third party tools
 :imagesdir: ../../assets/images
 
-The following third-party tools might be helpful throughout your drone show design process with **Skybrush Studio for Blender**.
+The following third-party tools might be helpful throughout your drone show design process with **Dronetara Studio**.
 
-If you know of any other tool you think should be on this list, please mailto:{contact-email}[let us know].
+If you know of any other tool you think should be on this list, please {project-url}/issues[let us know].
 
 == Blosm for Blender
 
@@ -14,7 +14,7 @@ Blosm for Blender, formerly known as Blender-OSM lets you import Google 3D citie
 
 == Murmur
 
-Murmur is a swarm flocking simulation for Blender and **Skybrush Studio**, based on the https://www.science.org/doi/full/10.1126/scirobotics.aat3536[Vásárhelyi et al. 2018 optimized flocking model].
+Murmur is a swarm flocking simulation for Blender and **Dronetara Studio**, based on the https://www.science.org/doi/full/10.1126/scirobotics.aat3536[Vásárhelyi et al. 2018 optimized flocking model].
 
 The code for the simulation is prepared by our Discord user @envyofthebirds, representing the company https://illuminaero.com/[Illuminaero].
 

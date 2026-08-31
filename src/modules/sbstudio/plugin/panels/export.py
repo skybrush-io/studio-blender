@@ -44,11 +44,13 @@ class ExportPanel(Panel):
         # in-house formats
         if FileFormat.SKYC in formats:
             layout.operator(
-                SkybrushExportOperator.bl_idname, text="Export to Skybrush .skyc"
+                SkybrushExportOperator.bl_idname,
+                text="Export Dronetara show (.skyc)",
             )
         if FileFormat.CSV in formats:
             layout.operator(
-                SkybrushCSVExportOperator.bl_idname, text="Export to Skybrush .csv"
+                SkybrushCSVExportOperator.bl_idname,
+                text="Export Dronetara CSV (.zip)",
             )
         if FileFormat.PDF in formats:
             layout.operator(

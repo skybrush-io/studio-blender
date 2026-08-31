@@ -4,9 +4,7 @@
 
 Once you are finished with your drone show, use the Export panel to export it from Blender to different formats for further processing or direct upload to the drones.
 
-The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/skybrush/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased at the https://shop.skybrush.io[Skybrush Store].
-
-image::panels/export/export.jpg[Export panel]
+The available output formats depend on whether you selected the "Indoor" or "Outdoor" setting in the xref:panels/dronetara/swarm.adoc[Swarm panel]'s btn:[Show type] dropdown, and also on your specific license purchased at the https://shop.skybrush.io[Skybrush Store].
 
 Press the btn:[Refresh file formats] to enable export formats according to your license.
 
@@ -14,7 +12,7 @@ Note that export operations require Blender to sample trajectories and lights wh
 To see the progress or predicted remaining time of the export procedure, run Blender from a terminal window or press "Toggle System Console" in the "Windows" menu to watch its terminal log.
 
 
-== Export to Skybrush .skyc
+== Export Dronetara show (.skyc)
 
 The Skybrush compiled show format is a single-file descriptor of your complete drone show. It is used as the primary drone show format throughout the entire *Skybrush* suite:
 
@@ -22,7 +20,7 @@ The Skybrush compiled show format is a single-file descriptor of your complete d
 
 * If you want to execute your drone show on your real drones, use *Skybrush Live*.
 
-If you press the btn:[Export Skybrush SKYC] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+If you press the btn:[Export Dronetara show (.skyc)] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
 
@@ -45,13 +43,13 @@ NOTE: Audio export is available since Skybrush Studio Server backend version 2.4
 Export cameras:: Enable this checkbox to export Blender cameras into the .skyc file (to be used by Skybrush Viewer).
 
 
-== Export to Skybrush .csv
+== Export Dronetara CSV (.zip)
 
 The trajectories and LED light colors of the drones can also be sampled at regular intervals and exported to CSV files for further post-processing in external tools. This option appears only if you have installed and enabled the CSV export addon that is distributed separately. The CSV export will produce a single ZIP file that contains multiple CSV files, one for each drone, with the following columns: time (milliseconds), X, Y and Z coordinates (meters) and the red, green and blue components of the color of the LED light, in the usual 0-255 range, in linear color space.
 
 TIP: We recommend using Skybrush Live for drone show control, together with the official Skybrush Compiled Format (.skyc), as it contains a lot more information about your show in a more optimized way than this simple CSV representation.
 
-If you press the btn:[Export Skybrush CSV] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
+If you press the btn:[Export Dronetara CSV (.zip)] button, you have to choose the path and filename of your output file. There are also some parameters you can setup conveniently:
 
 Export selected drones only:: Export all or only selected drones
 
@@ -115,7 +113,7 @@ All properties of this multi-export option are the same as the ones for the indi
 
 Upon purchasing a professional license, we provide additional exporters to various external drone show formats, including DSS PATH, DSS PATH3, Drotek, EVSKY, HighGreat DAC, LiteBee, etc.
 
-Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. mailto:{contact-email}[Contact us] if you need any additional exporters that are not on the list yet.
+Visit https://shop.skybrush.io[Skybrush Store] to purchase a professional license with third-party exporters. {project-url}/issues[Contact us] if you need any additional exporters that are not on the list yet.
 
 == Export to external fireworks and show visualization formats
 

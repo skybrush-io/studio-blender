@@ -12,7 +12,7 @@ Drone groups consist of your drone objects separated into drone group collection
 
 Click on the btn:[Drone group collection] dropdown to select the collection that is your primary source of your drone group lists. By default you do not have to change this setting, the btn:[Create Takeoff Grid] button below will create a "Drone Groups" collection and set it as your primary source automatically.
 
-IMPORTANT: Any sub-collection placed in the collection selected here will be treated as a drone group by *Skybrush Studio*. Make sure that there are no other objects in these groups than the ones that you want to consider drones.
+IMPORTANT: Any sub-collection placed in the collection selected here will be treated as a drone group by *Dronetara Studio*. Make sure that there are no other objects in these groups than the ones that you want to consider drones.
 
 === Creating, renaming and deleting drone groups
 

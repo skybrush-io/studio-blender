@@ -3,4 +3,4 @@
 
 We carefully designed the tutorials below to guide you through all main processes involved in drone show design. Please select from the list below:
 
-* xref:tutorials/easy-drone-show-design.adoc[Quick guide to drone show design with Skybrush Studio]
+* xref:tutorials/easy-drone-show-design.adoc[Quick guide to drone show design with Dronetara Studio]

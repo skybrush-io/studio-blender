@@ -24,13 +24,13 @@ log = logging.getLogger(__name__)
 
 
 class AddMarkersFromZippedCSVOperator(DynamicMarkerCreationOperator, ImportHelper):
-    """Adds markers from Skybrush-compatible .zip compressed dynamic .csv files
+    """Adds markers from Dronetara-compatible .zip compressed dynamic .csv files
     (each containing baked animation of a single drone) to the currently
     selected formation.
     """
 
     bl_idname = "skybrush.add_markers_from_zipped_csv"
-    bl_label = "Import Skybrush zipped CSV"
+    bl_label = "Import Zipped CSV"
     bl_options = {"REGISTER", "UNDO"}
 
     update_duration = BoolProperty(

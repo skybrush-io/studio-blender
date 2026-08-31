@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Bash script that creates a single ZIP file containing the full code of
-# Skybrush Studio for Blender so it can simply be extracted in the
+# Dronetara Studio so it can simply be extracted in the
 # Blender addons folder.
 #
 # You need to install Python 3 and uv in order to use this script; both
@@ -40,7 +40,7 @@ echo ""
 # Create virtual environment if it doesn't exist yet
 if [ ! -d .venv ]; then
   echo -n "--> Creating virtual environment... "
-  python3 -m venv .venv
+  uv venv .venv
   echo "done."
 fi
 
@@ -51,15 +51,20 @@ mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
 echo "[>] Installing dependencies"
-.venv/bin/pip install -q -U pip wheel pyclean
-.venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
+if [ ! -x .venv/bin/pyclean ]; then
+  uv pip install --python .venv/bin/python pyclean
+fi
+uv pip install \
+  --python .venv/bin/python \
+  --requirements requirements.txt \
+  --target "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 echo ""
 
 # Copy our code as well
 echo -n "--> Copying addon code... "
 cp -r src/modules/sbstudio ${BUILD_DIR}/vendor/skybrush
-cp src/addons/ui_skybrush_studio.py ${BUILD_DIR}
+cp src/addons/ui_dronetara_studio.py ${BUILD_DIR}
 echo "done."
 
 # Clean any __pycache__ and *.dist-info files

@@ -3,7 +3,7 @@
 :imagesdir: ../../assets/images
 
 [glossary]
-Collection:: Blender objects in a scene can be grouped into collections. Collections are listed in the Outliner editor. *Skybrush Studio for Blender* uses collections to group drones, formations and drone object templates. For more information on collections in general, please read the https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html[official Blender documentation].
+Collection:: Blender objects in a scene can be grouped into collections. Collections are listed in the Outliner editor. *Dronetara Studio* uses collections to group drones, formations and drone object templates. For more information on collections in general, please read the https://docs.blender.org/manual/en/latest/scene_layout/collections/collections.html[official Blender documentation].
 
 Drones collection:: This collection contains all your drone objects. It is created automatically with the "Create Takeoff Grid" operator, and you can re-assign it to a different collection in the Swarm tab if needed.
 
@@ -11,15 +11,15 @@ Formations:: A formation is a collection of _markers_, placed as a sub-collectio
 
 Formations collection:: This collection contains all your formations, which are also collections. A formation contains _markers_ (see below) that specify the desired position of each drone within the formation.
 
-Formations tab:: The Formations tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains one panel that allows you to create formations and another to edit the storyboard.
+Formations tab:: The Formations tab is a Dronetara-specific new tab in the sidebar of the 3D Viewport editor that contains one panel that allows you to create formations and another to edit the storyboard.
 
 Marker:: A marker is an object within a _formation_ that specifies the desired position of a single drone in the formation. A marker may be an empty or non-empty mesh, in which case the position of the mesh (in world coordinates) will be used as the desired position. Non-empty meshes may also contain a dedicated vertex group named `Drones`. When such a vertex group exists in a non-empty mesh, the positions of _all_ the vertices within the vertex group will be treated as markers instead of the position of the mesh itself. You can read more about markers in the xref:concepts.adoc[Key concepts] chapter.
 
-LEDs tab:: The LEDs tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor that contains panels that allows you to add light animation to your drone show easily.
+LEDs tab:: The LEDs tab is a Dronetara-specific new tab in the sidebar of the 3D Viewport editor that contains panels that allows you to add light animation to your drone show easily.
 
-Safety & Export tab:: The Safety & Export tab is a Skybrush-specific new tab in the sidebar of the 3D Viewport editor, containing of two panels: one allows you to perform real-time safety verification of your animation and another to export your drone show in Skybrush Compiled Format (`.skyc`).
+Safety & Export tab:: The Safety & Export tab is a Dronetara-specific new tab in the sidebar of the 3D Viewport editor, containing of two panels: one allows you to perform real-time safety verification of your animation and another to export your drone show in Skybrush Compiled Format (`.skyc`).
 
-SKYC:: `.skyc` stands for *Skybrush Compiled* format. It is our most common show definition file type that contains all information related to a drone show (all drone trajectories and light animations, pyro events, suggested geofence definitions, music, designer notes to the operators etc.). The final output of *Skybrush Studio for Blender* is always a single `.skyc` file that can be opened by other components of the *Skybrush* suite, such as *Skybrush Viewer* and *Skybrush Live*.
+SKYC:: `.skyc` stands for *Skybrush Compiled* format. It is our most common show definition file type that contains all information related to a drone show (all drone trajectories and light animations, pyro events, suggested geofence definitions, music, designer notes to the operators etc.). The final output of *Dronetara Studio* is always a single `.skyc` file that can be opened by other components of the *Skybrush* suite, such as *Skybrush Viewer* and *Skybrush Live*.
 
 Storyboard:: The storyboard is a simple list of formations (static or dynamic) that are organized in time with proper timing to give you the overall structure of your drone show animation. The storyboard can be edited in the "Formations" tab of the sidebar in the 3D Viewport editor.
 

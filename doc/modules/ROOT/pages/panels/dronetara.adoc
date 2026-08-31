@@ -1,0 +1,12 @@
+= Dronetara tab
+:imagesdir: ../../assets/images
+:experimental:
+
+The Dronetara tab in the sidebar of the 3D Viewport editor is the first tab you need to use when starting to design a show in *Dronetara Studio*. This tab contains general configuration options for your show design workflow.
+
+The Dronetara tab contains four panels:
+
+* xref:panels/dronetara/setup.adoc[Setup panel]
+* xref:panels/dronetara/show.adoc[Show panel]
+* xref:panels/dronetara/swarm.adoc[Swarm panel]
+* xref:panels/dronetara/drone_groups.adoc[Drone groups]

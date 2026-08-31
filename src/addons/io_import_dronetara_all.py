@@ -1,16 +1,16 @@
-"""Blender add-on that allows the user to open any supported Skybrush format
+"""Blender add-on that allows the user to open any supported show format
 directly in Blender and let the scene render itself automatically.
 
 Requires the `skybrush-studio` Python module. Contact us if you are interested.
 """
 
 bl_info = {
-    "name": "Import All Skybrush-compatible Formats",
-    "author": "Gabor Vasarhelyi (CollMot Robotics Ltd.)",
-    "description": "Imports a Skybrush-compatible file directly into Blender",
+    "name": "Dronetara Show Importer",
+    "author": "Dronetara",
+    "description": "Imports a supported drone show file directly into Blender",
     "version": (0, 1, 0),
     "blender": (4, 4, 0),
-    "location": "File > Import > Skybrush",
+    "location": "File > Import > Dronetara",
     "category": "Import-Export",
 }
 
@@ -125,10 +125,10 @@ def _run_script(filename, importer_parameters, renderer_parameters):
 
 
 class SkybrushImportAllOperator(Operator, ImportHelper):
-    """Imports a Skybrush-compatible file directly into Blender."""
+    """Imports a Dronetara-compatible show file directly into Blender."""
 
     bl_idname = "import.skybrush_all"
-    bl_label = "Import Skybrush ALL"
+    bl_label = "Import Dronetara Show"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush compatible formats
@@ -141,7 +141,7 @@ class SkybrushImportAllOperator(Operator, ImportHelper):
     # filename_ext = ".zip"
 
     def execute(self, context):
-        """Executes the Skybrush import procedure."""
+        """Executes the Dronetara import procedure."""
         # filepath = ensure_ext(self.filepath, self.filename_ext)
         filepath = self.filepath
         importer_parameters = {
@@ -170,7 +170,7 @@ class SkybrushImportAllOperator(Operator, ImportHelper):
 def menu_func_import(self, context):
     self.layout.operator(
         SkybrushImportAllOperator.bl_idname,
-        text="Skybrush-compatible Formats (.sky/.skyc/.zip)",
+        text="Dronetara Show Formats (.sky/.skyc/.zip)",
     )
 
 

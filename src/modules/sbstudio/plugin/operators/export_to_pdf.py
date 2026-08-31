@@ -18,7 +18,7 @@ class SkybrushPDFExportOperator(ExportOperator):
     """Export object trajectories into validation plots stored in a .pdf file"""
 
     bl_idname = "export_scene.skybrush_pdf"
-    bl_label = "Export Skybrush PDF"
+    bl_label = "Export Dronetara Validation PDF"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to .pdf files

@@ -9,14 +9,14 @@ __all__ = ("PrepareSceneOperator",)
 
 class PrepareSceneOperator(Operator):
     """Blender operator that prepares a Blender file to be used with
-    Skybrush Studio for Blender.
+    Dronetara Studio.
 
     This involves creating the standard "Drones", "Drone Groups" and "Formations"
     collections if they do not exist yet.
     """
 
     bl_idname = "skybrush.prepare"
-    bl_label = "Prepare scene for Skybrush"
+    bl_label = "Prepare Scene for Dronetara"
     bl_options = {"INTERNAL"}
 
     def execute(self, context):

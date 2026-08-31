@@ -1,10 +1,9 @@
-name: skybrush-studio-for-blender
-title: Skybrush Studio for Blender
+name: dronetara-studio-for-blender
+title: Dronetara Studio
 version: latest
 nav:
   - modules/ROOT/nav.adoc
 asciidoc:
   attributes:
-    company-name: CollMot Robotics Ltd.
-    contact-email: hello@skybrush.io
-    doc-root-url: https://docs.skybrush.io
+    company-name: Dronetara
+    project-url: https://github.com/DRONETARA/studio-blender

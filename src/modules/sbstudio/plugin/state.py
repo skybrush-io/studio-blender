@@ -1,4 +1,4 @@
-"""Global and file-specific state of Skybrush Studio for Blender."""
+"""Global and file-specific state of Dronetara Studio."""
 
 import json
 from abc import ABC, abstractmethod
@@ -40,7 +40,7 @@ class StateBase(ABC):
 
 class _SkybrushStudioFileState:
     """Class representing the state of a single .blend file loaded into
-    Skybrush Studio for Blender.
+    Dronetara Studio.
     """
 
     _initialized: bool = False
@@ -77,7 +77,7 @@ _file_specific_state = _SkybrushStudioFileState()
 
 
 def get_file_specific_state() -> _SkybrushStudioFileState:
-    """Returns the file-specific state of Skybrush Studio for Blender."""
+    """Returns the file-specific state of Dronetara Studio."""
     return _file_specific_state
 
 

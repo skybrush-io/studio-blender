@@ -1,9 +1,9 @@
-= Skybrush Studio for Blender User Guide
-{company-name} <{contact-email}>
+= Dronetara Studio User Guide
+{company-name}
 v2.6.0, {docdatetime}
 :doctype: book
 :encoding: utf-8
-:homepage: https://skybrush.io
+:homepage: https://github.com/DRONETARA/studio-blender
 :lang: en
 :sectnums:
 :toc:
@@ -34,17 +34,17 @@ include::pages/panels/index.adoc[]
 
 :leveloffset: +1
 
-include::pages/panels/skybrush.adoc[]
+include::pages/panels/dronetara.adoc[]
 
 :leveloffset: +1
 
-include::pages/panels/skybrush/setup.adoc[]
+include::pages/panels/dronetara/setup.adoc[]
 
-include::pages/panels/skybrush/show.adoc[]
+include::pages/panels/dronetara/show.adoc[]
 
-include::pages/panels/skybrush/swarm.adoc[]
+include::pages/panels/dronetara/swarm.adoc[]
 
-include::pages/panels/skybrush/drone_groups.adoc[]
+include::pages/panels/dronetara/drone_groups.adoc[]
 
 :leveloffset: -1
 

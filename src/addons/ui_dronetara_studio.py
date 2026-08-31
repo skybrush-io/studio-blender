@@ -1,12 +1,12 @@
 bl_info = {
-    "name": "Skybrush Studio",
-    "author": "CollMot Robotics Ltd.",
-    "description": "Extends Blender with UI components for drone show design",
+    "name": "Dronetara Studio",
+    "author": "Dronetara",
+    "description": "Professional drone show design tools for Blender",
     "version": (5, 0, 3),
     "blender": (4, 4, 0),
     "category": "Interface",
-    "doc_url": "https://doc.collmot.com/public/skybrush-studio-for-blender/latest/",
-    "tracker_url": "https://github.com/skybrush-io/studio-blender/issues",
+    "doc_url": "https://github.com/DRONETARA/studio-blender#readme",
+    "tracker_url": "https://github.com/DRONETARA/studio-blender/issues",
 }
 
 __license__ = "GPLv3"

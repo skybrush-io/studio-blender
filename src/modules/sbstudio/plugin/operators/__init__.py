@@ -1,4 +1,4 @@
-"""Blender operators registered by Skybrush Studio for Blender."""
+"""Blender operators registered by Dronetara Studio."""
 
 from .add_drones_selected_to_drone_group import AddSelectedDronesToDroneGroupOperator
 from .add_markers_from_qr_code import AddMarkersFromQRCodeOperator

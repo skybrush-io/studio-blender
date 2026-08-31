@@ -17,7 +17,7 @@ src = "pyproject.toml"
 search = 'version = "{current_version}"'
 
 [[file]]
-src = "src/addons/ui_skybrush_studio.py"
+src = "src/addons/ui_dronetara_studio.py"
 version_template = "({major}, {minor}, {patch})"
 search = '"version": {current_version}'
 

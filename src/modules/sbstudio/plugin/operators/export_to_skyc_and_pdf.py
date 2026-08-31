@@ -18,7 +18,7 @@ class SkybrushSKYCAndPDFExportOperator(ExportOperator):
     """Export object trajectories and light animation into .skyc and .pdf formats in one request"""
 
     bl_idname = "export_scene.skybrush_and_pdf"
-    bl_label = "Export Skybrush SKYC+PDF"
+    bl_label = "Export Dronetara Show + PDF"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to the zipped Skybrush files

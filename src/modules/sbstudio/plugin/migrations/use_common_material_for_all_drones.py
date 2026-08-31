@@ -77,7 +77,7 @@ def upgrade_drone_color_animations_and_drone_materials(log: Logger) -> None:
 
 
 class UseSharedMaterialForAllDronesMigration(Migration):
-    """Upgrades old Skybrush Studio for Blender file content (<=3.13.2)
+    """Upgrades legacy Dronetara Studio file content (<=3.13.2)
     that uses a separate material for all drone objects to a new version
     in which all drones share a common material. This speeds up light effect
     handling substantially.
@@ -85,7 +85,7 @@ class UseSharedMaterialForAllDronesMigration(Migration):
 
     label = "Update file content to speed up light effect rendering"
     description = (
-        "Upgrade your old (<4.0) Skybrush Studio for Blender file content\n"
+        "Upgrade your legacy (<4.0) Dronetara Studio file content\n"
         "to speed up light effect playback and show export, by replacing all\n"
         "drone object materials to a shared template material, modifying its shader\n"
         "node tree and storing color animations in the drone object's 'color' property.\n"

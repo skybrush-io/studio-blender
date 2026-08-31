@@ -3,8 +3,7 @@ _Android Asset Studio_:
 
 https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html
 
-Background color: #fb7e2a ("Skybrush orange", probably from the Bootstrap
-palette)
+Background color: #fb7e2a (Dronetara orange)
 Clipart: all_inclusive
 Font (if we need): Allura
 Padding (if we need text): 0%

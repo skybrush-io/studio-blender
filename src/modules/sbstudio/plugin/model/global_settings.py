@@ -13,6 +13,9 @@ from sbstudio.plugin.utils import with_context
 
 __all__ = ("DroneShowAddonGlobalSettings",)
 
+ADDON_MODULE_ID = "ui_dronetara_studio"
+LEGACY_ADDON_MODULE_ID = "ui_skybrush_studio"
+
 #############################################################################
 # configure logger
 
@@ -58,6 +61,9 @@ def mode_of_operation_updated(
         case "LOCAL":
             self.gateway_url = ""
             self.server_url = DEFAULT_SERVER_URL
+        case "OFFLINE":
+            self.gateway_url = ""
+            self.server_url = ""
         case "CLOUD":
             self.gateway_url = DEFAULT_GATEWAY_URL
             self.server_url = ""
@@ -73,45 +79,51 @@ def mode_of_operation_updated(
 
 
 class DroneShowAddonGlobalSettings(AddonPreferences):
-    """Global settings of the Skybrush Studio addon.
+    """Global settings of the Dronetara Studio add-on.
 
     This is active only when the addon is installed in the Blender add-on manager,
     not when it is provided to Blender dynamically at startup.
     """
 
-    bl_idname = "ui_skybrush_studio"
+    bl_idname = ADDON_MODULE_ID
 
-    operation_mode: Literal["COMMUNITY", "LOCAL", "CLOUD", "ADVANCED"] = EnumProperty(
-        name="Mode of operation",
-        description=(
-            "Specifies whether the user wishes to use the add-on with the community "
-            "server, a local server instance or the cloud version with hardware ID "
-            "based authentication"
-        ),
-        items=[
-            (
-                "COMMUNITY",
-                "Community server",
-                "Provided to the community for free. Limited drone count, no guaranteed uptime",
+    operation_mode: Literal["COMMUNITY", "LOCAL", "CLOUD", "OFFLINE", "ADVANCED"] = (
+        EnumProperty(
+            name="Mode of operation",
+            description=(
+                "Select offline design, the community server, a licensed local or "
+                "cloud service, or an advanced custom configuration"
             ),
-            (
-                "LOCAL",
-                "Local Skybrush Studio Server",
-                "Skybrush Studio Server running on the same machine as Blender itself. License required",
-            ),
-            (
-                "CLOUD",
-                "Skybrush Studio Cloud (experimental)",
-                "Skybrush Studio Server in the cloud, with hardware ID based authentication. License required",
-            ),
-            (
-                "ADVANCED",
-                "Advanced setup",
-                "Fully customizable settings settings, for experts only. No support provided",
-            ),
-        ],
-        default="COMMUNITY",
-        update=mode_of_operation_updated,
+            items=[
+                (
+                    "COMMUNITY",
+                    "Community server",
+                    "Provided to the community for free. Limited drone count, no guaranteed uptime",
+                ),
+                (
+                    "LOCAL",
+                    "Licensed local server",
+                    "Compatible Studio Server running on the same machine as Blender. License required",
+                ),
+                (
+                    "CLOUD",
+                    "Licensed cloud service (experimental)",
+                    "Compatible cloud service with hardware ID based authentication. License required",
+                ),
+                (
+                    "OFFLINE",
+                    "Offline design (experimental)",
+                    "Unlimited local design, transition matching, takeoff and landing planning, and zipped CSV export. Production SKYC export and advanced server tools are unavailable",
+                ),
+                (
+                    "ADVANCED",
+                    "Advanced setup",
+                    "Fully customizable settings for experts only. No support provided",
+                ),
+            ],
+            default="COMMUNITY",
+            update=mode_of_operation_updated,
+        )
     )
 
     # license_file is unused, kept for backward compatibility purposes only
@@ -123,13 +135,13 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
     hardware_id: str = StringProperty(
         name="Hardware ID",
-        description="Hardware ID of the computer running Skybrush Studio for Blender",
+        description="Hardware ID of the computer running Dronetara Studio",
     )
 
     api_key: str = StringProperty(
         name="API Key",
         description=(
-            "API key that is used when communicating with the Skybrush Studio "
+            "API key that is used when communicating with the design "
             "server. Leave empty if you do not know what it is"
         ),
     )
@@ -137,7 +149,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
     server_url: str = StringProperty(
         name="Server URL",
         description=(
-            "URL of a dedicated Skybrush Studio server if you are using a "
+            "URL of a compatible design server if you are using a "
             "local server. Leave it empty to use the cloud server provided "
             "for the community for free and for pro users with signed requests"
         ),
@@ -146,7 +158,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
     gateway_url: str = StringProperty(
         name="Gateway URL",
         description=(
-            "URL of a dedicated Skybrush Studio Gateway for using the online "
+            "URL of a compatible gateway for using the online "
             "cloud server with pro features. Leave it empty if you have a local "
             "server or if you wish to use the free community cloud server"
         ),
@@ -168,13 +180,13 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
 
         # Header: mode of operation. Most other widgets depend on this.
         mode = self.operation_mode
-        if mode not in ("COMMUNITY", "LOCAL", "CLOUD", "ADVANCED"):
+        if mode not in ("COMMUNITY", "LOCAL", "CLOUD", "OFFLINE", "ADVANCED"):
             # Failsafe in case the user somehow managed to screw up this setting
             mode = "ADVANCED"
         layout.prop(self, "operation_mode")
 
         # Top separator not needed for the simple cases
-        if mode not in ("COMMUNITY", "LOCAL"):
+        if mode not in ("COMMUNITY", "LOCAL", "OFFLINE"):
             layout.separator()
 
         # Hardware ID and register button. Needed for the cloud-based solution only.
@@ -187,7 +199,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
             self._draw_gateway_widgets()
 
         # API key. Not needed for local servers.
-        if mode != "LOCAL":
+        if mode not in ("LOCAL", "OFFLINE"):
             layout.prop(self, "api_key")
 
         # Server URL and shortcuts to set to predefined values. Only for advanced use-cases.
@@ -195,7 +207,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
             self._draw_server_url_widgets()
 
         # Bottom separator not needed for the simple cases
-        if mode not in ("COMMUNITY", "LOCAL"):
+        if mode not in ("COMMUNITY", "LOCAL", "OFFLINE"):
             layout.separator()
 
         layout.prop(self, "enable_experimental_features")
@@ -272,5 +284,12 @@ def get_preferences(context: Context | None = None) -> DroneShowAddonGlobalSetti
     """
     assert context is not None
     prefs = context.preferences
-    addon_prefs = prefs.addons[DroneShowAddonGlobalSettings.bl_idname].preferences
-    return cast(DroneShowAddonGlobalSettings, addon_prefs)
+    for addon_id in (ADDON_MODULE_ID, LEGACY_ADDON_MODULE_ID):
+        addon = prefs.addons.get(addon_id)
+        if addon is not None:
+            return cast(DroneShowAddonGlobalSettings, addon.preferences)
+
+    raise KeyError(
+        "Dronetara Studio preferences are unavailable. Disable the legacy "
+        "Skybrush Studio add-on, restart Blender, and enable Dronetara Studio."
+    )

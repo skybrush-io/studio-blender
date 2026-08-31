@@ -11,7 +11,7 @@ __all__ = ("SetupPanel",)
 
 class SetupPanel(Panel):
     """Custom Blender panel containing buttons for the general setup procedure of the
-    Skybrush Studio add-on.
+    Dronetara Studio add-on.
     """
 
     bl_idname = "OBJECT_PT_skybrush_setup_panel"
@@ -21,7 +21,7 @@ class SetupPanel(Panel):
     # added to the sidebar of the 3D view
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Skybrush"
+    bl_category = "Dronetara"
 
     def draw(self, context: Context):
         scene = context.scene

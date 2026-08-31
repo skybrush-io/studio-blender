@@ -1,16 +1,16 @@
-"""Blender add-on that allows the user to open a Skybrush script (.sky) file
+"""Blender add-on that allows the user to open a SKY script (.sky) file
 directly in Blender and let the scene render itself automatically.
 
 Requires the `skybrush-studio` Python module. Contact us if you are interested.
 """
 
 bl_info = {
-    "name": "Import Skybrush Script Format (.sky)",
-    "author": "Tamas Nepusz (CollMot Robotics Ltd.)",
-    "description": "Import a Skybrush file directly into Blender",
+    "name": "Dronetara SKY Script Importer (.sky)",
+    "author": "Dronetara",
+    "description": "Import a SKY script directly into Blender",
     "version": (0, 1, 0),
     "blender": (4, 4, 0),
-    "location": "File > Import > Skybrush",
+    "location": "File > Import > Dronetara",
     "category": "Import-Export",
 }
 
@@ -117,10 +117,10 @@ def _run_script(filename, context, parameters):
 
 
 class SkybrushImportOperator(Operator, ImportHelper):
-    """Imports a Skybrush script file directly into Blender."""
+    """Imports a Dronetara-compatible SKY script directly into Blender."""
 
     bl_idname = "import.skybrush_sky"
-    bl_label = "Import Skybrush SKY"
+    bl_label = "Import Dronetara SKY"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush files
@@ -139,7 +139,7 @@ class SkybrushImportOperator(Operator, ImportHelper):
         ],
         name="Mode",
         default=RenderMode.DRAFT.value,
-        description="Rendering mode to use when executing the Skybrush script",
+        description="Rendering mode to use when executing the SKY script",
     )
 
     # Random seed to use when importing the file
@@ -175,7 +175,7 @@ class SkybrushImportOperator(Operator, ImportHelper):
     )
 
     def execute(self, context):
-        """Executes the Skybrush import procedure."""
+        """Executes the Dronetara import procedure."""
         filepath = ensure_ext(self.filepath, self.filename_ext)
         parameters = {
             "glow_strength": self.glow_strength,
@@ -210,10 +210,10 @@ class SkybrushImportOperator(Operator, ImportHelper):
 
 
 class SkybrushReimportOperator(Operator):
-    """Re-imports the last imported Skybrush script file into Blender."""
+    """Re-imports the last imported SKY script file into Blender."""
 
     bl_idname = "script.skybrush_reimport"
-    bl_label = "Reload Skybrush SKY"
+    bl_label = "Reload Dronetara SKY"
     bl_options = {"REGISTER"}
 
     _last_operation = None
@@ -235,7 +235,7 @@ class SkybrushReimportOperator(Operator):
         if cls._last_operation:
             _run_script(**cls._last_operation)
         else:
-            self.report({"ERROR"}, "No Skybrush script file has been imported yet")
+            self.report({"ERROR"}, "No SKY script file has been imported yet")
         return {"FINISHED"}
 
 
@@ -246,13 +246,13 @@ class SkybrushReimportOperator(Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(
-        SkybrushImportOperator.bl_idname, text="Skybrush Script (.sky)"
+        SkybrushImportOperator.bl_idname, text="Dronetara SKY Script (.sky)"
     )
 
 
 def menu_func_reimport(self, context):
     self.layout.operator(
-        SkybrushReimportOperator.bl_idname, text="Reload Current Skybrush Script"
+        SkybrushReimportOperator.bl_idname, text="Reload Current SKY Script"
     )
 
 

@@ -22,7 +22,7 @@ You can also define a more complex takeoff grid with slots, where each slot cont
 
 TIP: Once the takeoff grid is created, you are free to modify the "Takeoff grid" formation to rearrange the placement of the drones using standard Blender operations, thus you can easily adapt the grid to the requirements of your specific takeoff area. For instance, if there are lampposts, stairs, power lines or any other obstacles in the area, you can move the affected drones to other positions by simply changing the takeoff positions in the "Takeoff grid" formation.
 
-The *Create takeoff grid* operator also creates all Skybrush-specific collections (Drones, Formations, Templates) that you need for your drone show, adds the first "Takeoff grid" entry to the storyboard and initializes your drones in the 3D Viewport editor.
+The *Create takeoff grid* operator also creates all Dronetara-specific collections (Drones, Formations, Templates) that you need for your drone show, adds the first "Takeoff grid" entry to the storyboard and initializes your drones in the 3D Viewport editor.
 
 
 == Takeoff
@@ -37,7 +37,7 @@ image::panels/formations/takeoff.jpg[Takeoff]
 
 The btn:[Takeoff] button should ideally be pressed right after the takeoff grid is created, but before any other formations are added. It is also possible to use the operator later after having defined the first few formations, but you must ensure that there is enough time before the first formation to perform the takeoff _and_ get to the first formation in time.
 
-NOTE: Skybrush requires you to specify the _average_ vertical velocity of the drones during takeoff. This lets you gauge easily how much time the takeoff will need (e.g., taking off to 6 meters with an average velocity of 1.5 m/s takes 4 seconds), but since the drones need time to accelerate and decelerate, their _maximum_ vertical velocity will be higher than the average velocity to compensate for the time lost during acceleration and deceleration. Make sure to take this into account in order not to overshoot the vertical velocity limits of the drones.
+NOTE: Dronetara Studio requires you to specify the _average_ vertical velocity of the drones during takeoff. This lets you gauge easily how much time the takeoff will need (e.g., taking off to 6 meters with an average velocity of 1.5 m/s takes 4 seconds), but since the drones need time to accelerate and decelerate, their _maximum_ vertical velocity will be higher than the average velocity to compensate for the time lost during acceleration and deceleration. Make sure to take this into account in order not to overshoot the vertical velocity limits of the drones.
 
 == Return to home (RTH)
 
@@ -123,11 +123,11 @@ The btn:[Select] button on the Formations panel adds the selected formation to t
 
 Since formations may contain meshes as well as _vertices_ of meshes as markers, you may not necessarily see the result of the selection immediately. If you are in Edit mode and you attempt to select a formation that contains meshes, you need to switch back to Object mode. Similarly, if you are in Object mode and you attempt to select a formation that contains vertices a markers, you need to switch to Edit mode to be able to interact with the selected vertices.
 
-TIP: If you are in Object mode _and_ the formation being selected contains vertices _only_ (i.e. no meshes or empties), *Skybrush Studio* will automatically switch to Edit mode.
+TIP: If you are in Object mode _and_ the formation being selected contains vertices _only_ (i.e. no meshes or empties), *Dronetara Studio* will automatically switch to Edit mode.
 
 == Generating markers for a formation
 
-It is possible to import static formations or animation snippets into **Skybrush Studio for Blender** from external sources, using the btn:[Generate Markers] button applied to empty formation placeholders created beforehand.
+It is possible to import static formations or animation snippets into **Dronetara Studio** from external sources, using the btn:[Generate Markers] button applied to empty formation placeholders created beforehand.
 
 Depending on your external data source, importing formations this way might also create a new baked image-based light effect that is automatically applied on the imported formation to preserve its original color animation.
 
@@ -185,4 +185,4 @@ image::panels/formations/formation_stats.jpg[Formation stats]
 
 == Appending a formation to the storyboard
 
-Press the btn:[Append to Storyboard] button to append the selected formation to the end of the storyboard. *Skybrush Studio* will calculate the time needed to move from the end of the last formation to the newly added formation, according to the current acceleration and velocity limits, and set up the start time of the new formation accordingly.
+Press the btn:[Append to Storyboard] button to append the selected formation to the end of the storyboard. *Dronetara Studio* will calculate the time needed to move from the end of the last formation to the newly added formation, according to the current acceleration and velocity limits, and set up the start time of the new formation accordingly.

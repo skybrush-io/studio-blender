@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added an experimental offline design mode for local formation matching,
+  transition estimates, layered takeoff and landing planning, and zipped CSV
+  export without an add-on-enforced drone-count limit.
+
+### Changed
+
+- White-labelled the end-user Blender add-on, documentation, package metadata,
+  distribution artifact, and UI assets as **Dronetara Studio**.
+- Renamed the installable entry point to `ui_dronetara_studio.py` while retaining
+  legacy `skybrush.*` Blender data and operator identifiers for `.blend` file
+  compatibility.
+
 ## [5.0.3] - 2026-08-14
 
 ### Fixed

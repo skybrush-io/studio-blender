@@ -2,21 +2,21 @@
 :imagesdir: ../assets/images
 :experimental:
 
-*Skybrush Studio for Blender* is a platform independent tool, just like
+*Dronetara Studio* is a platform independent tool, just like
 Blender. The installation procedure is very similar for Linux, macOS and Windows.
 Please follow the steps below.
 
 == Hardware requirements
 
-We suggest following the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Skybrush Studio for Blender*.
+We suggest following the https://www.blender.org/download/requirements/[official Blender recommendation] for choosing your computer on which you want to run Blender and *Dronetara Studio*.
 
-The community and the cloud version of **Skybrush Studio** requires an active Internet connection on your computer as *Skybrush Studio* needs to communicate with our cloud-based server for certain tasks such as planning transitions or creating exports in Skybrush compiled show format.
+The community and licensed cloud modes require an active Internet connection for operations delegated to their configured backend. The offline design mode runs its supported operations locally.
 
 You may use the software without Internet connection, but certain functions that require an Internet connection will not be available until you go online again.
 
 == Install Blender
 
-Blender is the main open-source 3D animation software hosting the *Skybrush Studio for Blender* addon.
+Blender is the main open-source 3D animation software hosting the *Dronetara Studio* addon.
 
 There are many Blender versions available. We aim for compatibility with the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release]. This is version 4.5 at the time of writing. If you are unsure, check the version number of the https://www.blender.org/download/lts/[latest Long Term Support (LTS) release] on the Blender site.
 
@@ -24,7 +24,7 @@ After installing Blender, there are a few general preferences that need to be se
 
 === Enable Online Access
 
-Starting from Blender 4.2, the preferences dialog provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Skybrush Studio for Blender* relies on an external server/backend component in all of its operation modes to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. According to Blender terms it counts as an "online resource" even if it is running locally. So if you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
+Starting from Blender 4.2, the preferences dialog provides an option where the user can explicitly indicate that they wish to allow (or deny) access to online resources. *Dronetara Studio* relies on an external server/backend component in all of its operation modes to calculate transitions, decompose formations, plan takeoffs and landings and export the show into various file formats. According to Blender terms it counts as an "online resource" even if it is running locally. So if you want to use the full capabilities of the add-on, you need to enable online access if you are running Blender 4.2 or later. Earlier versions of Blender are not affected.
 
 To turn on online access, open Blender and go to Edit -> Preferences -> System, scroll down to the "Network" section and then tick the "Allow Online Access" checkbox.
 
@@ -34,10 +34,10 @@ If you use large fleets and/or long and fine-grained shows, make sure that the "
 
 The longest action is usually the show export. During export, most time is taken by the sampling of your show within Blender to form the input of the requests towards *Skybrush Studio Server*. Even though this procedure is _not_ part of the request time, with large shows you may run into cases where you do need more processing time than the default 10 seconds. If such timeout occurs, raise the value as convenient.
 
-[[skybrush-studio-for-blender]]
-== Install Skybrush Studio for Blender
+[[dronetara-studio]]
+== Install Dronetara Studio
 
-*Skybrush Studio for Blender* can be downloaded from https://skybrush.io as a single `.zip` file. Please download it to your computer first and then follow the instructions below.
+Build `dronetara-studio-for-blender-<version>.zip` from this repository or download it from a Dronetara release, then follow the instructions below.
 
 WARNING: Safari on macOS automatically unzips all `.zip` files by default, which will prevent you from selecting the `.zip` file itself when installing the plugin. If you are using Safari on macOS, hold down the kbd:[Option] key when clicking on the download link to prevent this from happening, or turn off the unzipping of "safe" files permanently in menu:Safari[Preferences > General].
 
@@ -47,42 +47,34 @@ image::install_blender_addons.jpg[Install Blender Add-ons]
 
 2. Select btn:[Install from Disk...] from the dropdown menu in the top right corner.
 
-3. In the popup window select the *Skybrush Studio for Blender* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
+3. In the popup window select the *Dronetara Studio* `.zip` file that you have downloaded previously to your computer, and press kbd:[Enter].
 
-4. Once installed, activate the "Skybrush Studio" add-on by clicking on the checkbox next to this item in the add-on list (you may need to scroll down to find the "Skybrush Studio" item, or start typing it into the search box at the top).
+4. Once installed, activate the "Dronetara Studio" add-on by clicking on the checkbox next to this item in the add-on list (you may need to scroll down to find the "Dronetara Studio" item, or start typing it into the search box at the top).
 
-After installation, open add-on preferences by pressing the btn:[>] button on the left side of the "Skybrush Studio" add-on item.
-
-image::skybrush_studio_addon_settings.jpg[Skybrush Studio Add-on settings]
+After installation, open add-on preferences by pressing the btn:[>] button on the left side of the "Dronetara Studio" add-on item.
 
 === Modes of operation
 
-There are four basic modes of operation of **Skybrush Studio**, all of which requiring a slightly different setup. Use the btn:[Mode of operation] dropdown to select your preference from the followings:
+There are five modes of operation in **Dronetara Studio**. Use the btn:[Mode of operation] dropdown to select one:
 
 Community server::
 This is the free community mode of operation that does not require any additional settings or setup.
 +
-image::preferences/mode_of_operation_community.jpg[Community server]
-+
-You can try **Skybrush Studio for Blender** in community mode without any license, but be prepared that it might be limited in drone number, execution time or available features.
+You can try **Dronetara Studio** in community mode without any license, but be prepared that it might be limited in drone number, execution time or available features.
 
-Local Skybrush Studio Server:: Use this mode of operation if you have purchased https://shop.skybrush.io/products/studio[Skybrush Studio] or https://shop.skybrush.io/products/studio-x[Skybrush Studio X] from our webshop.
-+
-image::preferences/mode_of_operation_local.jpg[Local Skybrush Studio Server]
+Licensed local server:: Use this mode if you have purchased a compatible local Skybrush Studio Server license from the upstream vendor.
 +
 This mode of operation requires a local copy of **Skybrush Studio Server** to be installed and running on your machine (see installation procedure at the <<skybrush-studio-server>> section.).
 
-Skybrush Studio Cloud:: Use this mode of operation if you have purchased https://shop.skybrush.io/products/studio-cloud[Skybrush Studio Cloud] or https://shop.skybrush.io/products/studio-x-cloud[Skybrush Studio X Cloud] from our webshop.
-+
-image::preferences/mode_of_operation_cloud.jpg[Skybrush Studio Cloud]
+Licensed cloud service (experimental):: Use this mode if you have purchased a compatible Skybrush Studio Cloud license from the upstream vendor.
 +
 This mode of operation requires **Skybrush Gateway** to be installed and running on your machine (see installation procedure at the <<skybrush-gateway>> section).
 +
 Once you installed and started **Skybrush Gateway**, the unique hardware ID of your machine should appear in the btn:[Hardware ID] field automatically. If you see your hardware ID, press the btn:[Register] button to register it in your https://account.skybrush.io[Skybrush Account] to be able to assign your dynamic cloud-based license to your current machine.
 
-Advanced setup:: Use this mode of operation if you wish to change the default settings for the three standard modes of operation listed above.
-+
-image::preferences/mode_of_operation_advanced.jpg[Advanced setup]
+Offline design (experimental):: Runs supported planning and zipped CSV export operations entirely inside Blender without a configured server or drone-count limit. See the repository's `doc/offline-design.md` guide for its capabilities and safety limitations.
+
+Advanced setup:: Use this mode if you need to set custom server or gateway URLs.
 +
 The btn:[Gateway URL] field shows the URL of **Skybrush Gateway** available for cloud license holders only. By default you do not have to touch this setting manually, change only if you know what you are doing. Press the btn:[Use local gateway] button if you have installed *Skybrush Gateway* and it is already running on your machine locally. This action will fill the btn:[Gateway URL] field automatically. Press the btn:[Do not use gateway] button if you do not want to use *Skybrush Gateway* for your operations. This action will clear the btn:[Gateway URL] field automatically.
 +
@@ -92,12 +84,12 @@ The btn:[Server URL] field shows the URL of your local **Skybrush Studio Server*
 
 === Enable experimental features
 
-Enable this checkbox if you are open to experiment with the latest features of *Skybrush Studio for Blender*.
+Enable this checkbox if you are open to experiment with the latest features of *Dronetara Studio*.
 
 [[skybrush-gateway]]
 == Install Skybrush Gateway
 
-IMPORTANT: You need to install **Skybrush Gateway** only if you have purchased https://shop.skybrush.io/products/studio-cloud[Skybrush Studio Cloud] or https://shop.skybrush.io/products/studio-x-cloud[Skybrush Studio X Cloud] from our webshop.
+IMPORTANT: You need to install **Skybrush Gateway** only if you have purchased a compatible Skybrush Studio Cloud license from the upstream vendor.
 
 *Skybrush Gateway* is a local component running on your machine, responsible for signing your requests towards our cloud server to provide a cryptographic proof about the identity of users. It also shows you real-time progress information for your long lasting Blender tasks.
 
@@ -109,17 +101,16 @@ image::skybrush_gateway.jpg[Skybrush Gateway]
 
 3. Always start **Skybrush Gateway** before starting Blender, and keep it running throughout your entire design process to facilitate trusted signing of your requests towards our online server.
 
-4. Set the btn:[Operation mode] dropdown to "Skybrush Studio Cloud" in the **Skybrush Studio** add-on preferences in Blender and press the btn:[Register] button to register your machine's hardware ID to be used with your cloud-based license automatically.
+4. Set the btn:[Mode of operation] dropdown to "Licensed cloud service (experimental)" in the **Dronetara Studio** add-on preferences in Blender and press the btn:[Register] button.
 
 5. After registering your hardware ID in your https://account.skybrush.donko.hu/licenses[Skybrush Account], also make sure it is assigned to the proper **Skybrush Studio Cloud** product you obtained a license for, using the btn:[Link hardware ID] button in your account. Activation of your cloud based license will be automatic once you assign a hardware ID to it and start to use it.
 
 [[skybrush-studio-server]]
 == Install Skybrush Studio Server
 
-IMPORTANT: You need to install **Skybrush Studio Server** only if you have purchased https://shop.skybrush.io/products/studio[Skybrush Studio] or https://shop.skybrush.io/products/studio-x[Skybrush
-Studio X] from our webshop.
+IMPORTANT: You need to install **Skybrush Studio Server** only if you have purchased a compatible local server license from the upstream vendor.
 
-*Skybrush Studio Server* is the local server backend of *Skybrush Studio for Blender*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin in a completely offline context.
+*Skybrush Studio Server* is the local server backend of *Dronetara Studio*. It is responsible for running all the complicated maths behind the scenes and thus lets you use all the automated smart design tools available in the Blender plugin in a completely offline context.
 
 image::skybrush_studio_server.jpg[Skybrush Studio Server]
 
@@ -129,7 +120,7 @@ image::skybrush_studio_server.jpg[Skybrush Studio Server]
 
 3. Register the hardware ID of your machine at your https://account.skybrush.io/licenses[Skybrush Account].
 
-4. In your https://account.skybrush.io/licenses[Skybrush Account] make sure your registered hardware ID is also assigned to the proper **Skybrush Studio** product you obtained a license for, using the btn:[Link hardware ID] button in your account.
+4. In your https://account.skybrush.io/licenses[Skybrush Account], make sure your registered hardware ID is assigned to the compatible server product you licensed.
 
 5. Activate your offline license with downloading it from your https://account.skybrush.io/licenses[Skybrush Account] using the btn:[Download license] button on the right side of the purchased product listed in your account. Note that offline licenses are _not_ revokable or reassignable. They contain a permenent link to the machine they are assigned to throughout the entire validity of the license period
 +
@@ -139,13 +130,13 @@ TIP: For dynamic seat management use the cloud-based licensing options.
 +
 The terminal log of *Skybrush Studio Server* will give you instant feedback about the presence and content of your currently used license file upon execution of the server.
 
-7. Finally, do not forget to set the btn:[Operation mode] dropdown to "Local Skybrush Studio Server" in the **Skybrush Studio** add-on preferences in Blender.
+7. Set the btn:[Mode of operation] dropdown to "Licensed local server" in the **Dronetara Studio** add-on preferences in Blender.
 
 == Installing updates
 
-*Skybrush Studio for Blender* consists of multiple modules that are interpreted by the Python interpreter built into Blender. To perform an upgrade of the add-on, the previous version needs to be unloaded completely before the new version is installed. Due to how Python's module system works, this is very hard to do without unloading the plugin manually. Therefore, the preferred sequence to update the add-on is as follows:
+*Dronetara Studio* consists of multiple modules that are interpreted by the Python interpreter built into Blender. To perform an upgrade of the add-on, the previous version needs to be unloaded completely before the new version is installed. Due to how Python's module system works, this is very hard to do without unloading the plugin manually. Therefore, the preferred sequence to update the add-on is as follows:
 
-1. Deactivate the add-on in Edit -> Preferences -> Add-ons by unticking the checkbox in front of the btn:[Skybrush Studio] add-on.
+1. Deactivate the add-on in Edit -> Preferences -> Add-ons by unticking the checkbox in front of the btn:[Dronetara Studio] add-on.
 
 2. Install the new version of the add-on using the same procedure as outlined above.
 
@@ -161,11 +152,11 @@ Updates to additional pro components (**Skybrush Studio Server** or **Skybrush G
 
 == Uninstallation
 
-If you decide to uninstall *Skybrush Studio for Blender* for any reason, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Skybrush Studio for Blender*. The full, manual process is as follows:
+If you decide to uninstall *Dronetara Studio* for any reason, you have to do it manually. Removing the add-on from Blender's add-on manager is possible, but it will not remove all files related to *Dronetara Studio*. The full, manual process is as follows:
 
 1. Deactivate the add-on first in Blender's add-on manager.
 2. Open the file manager of your operating system and navigate to the folder containing the Blender add-ons. Refer to https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html[Blender's documentation] to find the add-ons folder.
-3. Remove the file named `ui_skybrush_studio.py`.
+3. Remove the file named `ui_dronetara_studio.py`.
 4. Also remove the `skybrush` folder within the `vendor` folder.
 
 Uninstallation of additional pro components (**Skybrush Studio Server** or **Skybrush Gateway**) are straightforward. Just uninstall them the same way as you uninstall any other standard application from your system.

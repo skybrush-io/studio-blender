@@ -1,22 +1,24 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Protocol
 
 from .constants import MINIMUM_BACKEND_VERSION
 from .errors import BackendVersionMismatchError
 from .types import Version
 
-if TYPE_CHECKING:
-    from sbstudio.plugin.api import SkybrushStudioAPI
-
 __all__ = ("ensure_backend_version", "is_backend_version_at_least")
 
-_backend_version_cache: tuple[SkybrushStudioAPI, Version] | None = None
+
+class VersionedAPI(Protocol):
+    """Structural type implemented by remote and in-process backends."""
+
+    def get_version(self) -> Version: ...
 
 
-def _get_or_query_backend_version(
-    api: SkybrushStudioAPI, *, force: bool = False
-) -> Version:
+_backend_version_cache: tuple[VersionedAPI, Version] | None = None
+
+
+def _get_or_query_backend_version(api: VersionedAPI, *, force: bool = False) -> Version:
     """Returns the version of the server backend, querying it from the server
     using the given API object if needed.
 
@@ -37,7 +39,7 @@ def _get_or_query_backend_version(
     return version
 
 
-def ensure_backend_version(api: SkybrushStudioAPI):
+def ensure_backend_version(api: VersionedAPI):
     """Ensures that the version number of the backend is larger than or equal
     to the minimum required version number.
 
@@ -55,7 +57,7 @@ def ensure_backend_version(api: SkybrushStudioAPI):
         raise BackendVersionMismatchError(version)
 
 
-def is_backend_version_at_least(version: Version, *, api: SkybrushStudioAPI) -> bool:
+def is_backend_version_at_least(version: Version, *, api: VersionedAPI) -> bool:
     """Returns whether the backend version is at least the given version.
 
     This function re-uses the cached version number if we already know the

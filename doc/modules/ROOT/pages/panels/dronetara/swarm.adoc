@@ -10,11 +10,11 @@ image::panels/swarm/swarm.jpg[Swarm panel]
 
 Click on the btn:[Drone collection] dropdown to select the collection that is your primary source of your drone objects. By default you do not have to change this setting, the btn:[Create Takeoff Grid] button below will create a "Drones" collection and set it as your primary source automatically.
 
-IMPORTANT: Any mesh that is placed in the collection selected here will be treated as a drone by *Skybrush Studio*, and it may adjust the constraints and other properties of the mesh as needed when performing certain operations. Make sure that there are no other objects in the collection that you select here, only the ones that you want to consider drones.
+IMPORTANT: Any mesh that is placed in the collection selected here will be treated as a drone by *Dronetara Studio*, and it may adjust the constraints and other properties of the mesh as needed when performing certain operations. Make sure that there are no other objects in the collection that you select here, only the ones that you want to consider drones.
 
 == Preferred acceleration
 
-The btn:[Preferred acceleration] button sets up a preferred acceleration (in all directions) that is used by the automated motion planning functions of *Skybrush Studio*, for example when automatic transitions or transition times are calculated.
+The btn:[Preferred acceleration] button sets up a preferred acceleration (in all directions) that is used by the automated motion planning functions of *Dronetara Studio*, for example when automatic transitions or transition times are calculated.
 
 == Drone template
 

@@ -25,7 +25,7 @@ class AddMarkersFromSVGOperator(StaticMarkerCreationOperator, ImportHelper):
     """
 
     bl_idname = "skybrush.add_markers_from_svg"
-    bl_label = "Import Skybrush SVG"
+    bl_label = "Import SVG"
     bl_description = (
         "Creates a new formation whose points are sampled from an SVG file."
     )

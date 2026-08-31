@@ -1,15 +1,15 @@
 :: Windows bootstrap script for the repository to set up a dev/ folder
 :: inside the repo that can pose as a Blender addon path.
 ::
-:: You should run the script without any arguments, unless you are an
-:: in-house skybrush developer. In the latter case run it with the
+:: You should run the script without any arguments, unless you also have the
+:: optional upstream dependencies. In the latter case run it with the
 :: first argument set to "standalone".
 ::
 :: After running this script, open Blender and add the /dev folder to
 :: Preferences -> "File Paths" -> "Script Directories" to reach the
-:: Skybrush Studio for Blender addon from your local source code.
+:: Dronetara Studio add-on from your local source code.
 ::
-:: You will need to close and reopen Blender to see Skybrush Studio
+:: You will need to close and reopen Blender to see Dronetara Studio
 :: in the list of add-ons. You will also need to close and open Blender
 :: after any code modifications on the source code to take effect.
 ::

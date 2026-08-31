@@ -19,12 +19,12 @@ log = logging.getLogger(__name__)
 
 
 class AddMarkersFromStaticCSVOperator(StaticMarkerCreationOperator, ImportHelper):
-    """Adds markers from a Skybrush-compatible static .csv file (containing a
+    """Adds markers from a Dronetara-compatible static .csv file (containing a
     single formation snapshot) to the currently selected formation.
     """
 
     bl_idname = "skybrush.add_markers_from_static_csv"
-    bl_label = "Import Skybrush static CSV"
+    bl_label = "Import Static CSV"
     bl_options = {"REGISTER"}
 
     import_colors = BoolProperty(

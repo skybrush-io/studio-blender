@@ -48,7 +48,13 @@ def update_supported_file_formats_from_limits(limits: Limits) -> None:
     """
     global _file_formats
 
-    # .skyc and CSV are always supported
+    # Offline design mode provides a local CSV writer, but it deliberately does
+    # not claim to produce production-ready .skyc files.
+    if "offline-design" in limits.features:
+        _file_formats = (FileFormat.CSV,)
+        return
+
+    # .skyc and CSV are always supported by real Studio Server instances.
     formats: list[FileFormat] = [FileFormat.SKYC, FileFormat.CSV]
 
     # Add formats from the server (if any)

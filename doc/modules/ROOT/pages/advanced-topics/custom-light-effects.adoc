@@ -1,6 +1,6 @@
 = Custom light effects
 
-Skybrush Studio lets you write your own Python functions to control the color of each drone at each frame. This is the most direct way to create custom effects: your function picks the exact color for each drone.
+Dronetara Studio lets you write your own Python functions to control the color of each drone at each frame. This is the most direct way to create custom effects: your function picks the exact color for each drone.
 
 This guide explains how to write such a function step by step.
 
@@ -12,7 +12,7 @@ If you are writing a new function from scratch, consider using the xref:advanced
 
 == How it works
 
-In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once for each drone at each frame of the light effect, and the color your function returns is applied directly to that drone.
+In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Dronetara Studio will call your function once for each drone at each frame of the light effect, and the color your function returns is applied directly to that drone.
 
 == Function signature
 

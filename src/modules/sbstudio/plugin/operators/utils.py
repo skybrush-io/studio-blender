@@ -238,7 +238,7 @@ def export_show_to_file_using_api(
 
     # create Skybrush converter object
     if format is FileFormat.SKYC:
-        message = "Exporting show to Skybrush .skyc format"
+        message = "Exporting Dronetara show to .skyc"
         renderer = "skyc"
     elif format is FileFormat.PDF:
         message = "Exporting validation plots to .pdf"
@@ -256,7 +256,7 @@ def export_show_to_file_using_api(
             {"plots": ",".join(plots), "fps": fps, "single_file": True},
         ]
     elif format is FileFormat.CSV:
-        message = "Exporting show to Skybrush .csv format"
+        message = "Exporting Dronetara show to zipped CSV"
         renderer = "csv"
         renderer_params = {
             "fps": settings["output_fps"],
@@ -266,7 +266,7 @@ def export_show_to_file_using_api(
         renderer = "dac"
         renderer_params = {
             "show_id": 1555,
-            "title": "Skybrush show",
+            "title": "Dronetara show",
             "model": settings["drone_model"],
             "gcs": settings["gcs_type"],
         }

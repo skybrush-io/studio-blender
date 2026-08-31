@@ -1,4 +1,4 @@
-"""Built-in light effect output presets for Skybrush Studio.
+"""Built-in light effect output presets for Dronetara Studio.
 
 Functions are referenced by a stable string ID, so projects stay portable
 across machines and operating systems (no .py file paths inside .blend).

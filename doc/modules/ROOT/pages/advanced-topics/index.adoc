@@ -1,6 +1,6 @@
 = Advanced topics
 
-This chapter covers advanced topics for users who want to extend Skybrush Studio with their own custom Python functions. You do not need to be a programmer to follow these guides -- a basic familiarity with Python is sufficient.
+This chapter covers advanced topics for users who want to extend Dronetara Studio with their own custom Python functions. You do not need to be a programmer to follow these guides -- a basic familiarity with Python is sufficient.
 
 The topics in this chapter are organized from simplest to most powerful:
 

@@ -33,7 +33,7 @@ channel.
 Particles of the pyro effect are assumed to be hosted by the _second_ material slot
 in the material list of the drone mesh. The name of the material starts with
 `Pyro of ...` by convention, but this is not enforced -- you can rename the material,
-but you need to keep in mind that *Skybrush Studio for Blender* will always adjust
+but you need to keep in mind that *Dronetara Studio* will always adjust
 the second material.
 
 == Marker size
@@ -67,7 +67,7 @@ Duration:: This parameter defines the length of the pyro visualization. It does 
 
 Prefire time:: Pyro payloads usually need some time after triggering to light up on the
 sky. Define this duration here and put your trigger events exactly at the desired moments
-when they should start to be visible. Skybrush will make sure your pyro payloads will be
+when they should start to be visible. Dronetara Studio will make sure your pyro payloads will be
 triggered this time earlier to have your spectacles right on time.
 
 Yaw:: Defines the yaw angle of the pyro payload relative to the body frame of the drone, in degrees.
@@ -83,7 +83,7 @@ you wish to add pyro to and move your timeline to the exact frame when you wish 
 your pyro effect appear on the sky. Then simply press the btn:[Trigger] button to add
 your pyro event.
 
-Already saved pyro events are stored as a JSON string in the Skybrush-specific
+Already saved pyro events are stored as a JSON string in the Dronetara-specific
 "Drone Show" section of each drone's Object Data Properties. The string can be manually
 edited as well to allow for easy pyro scripting. Alternatively, you can call Python's
 `bpy.ops.skybrush.trigger_pyro_on_selection()` directly to add additional pyro trigger

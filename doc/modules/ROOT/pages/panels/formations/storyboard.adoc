@@ -30,7 +30,7 @@ Purpose:: Shows or sets the purpose of the given formation. The purpose can be "
 
 Custom Name:: Ticking this check box allows you to keep the label of the storyboard entry even if you change the associated formation. Unticking this will change the label of the storyboard entry to the name of the formation when you change the formation.
 
-Transition from previous:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Skybrush Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order (note that you need to turn off alphabetic ordering in the Outliner first). Blender will then map the nth marker in the initial formation to the nth marker in the target formation.
+Transition from previous:: Shows or sets the type of transition between the _previous_ formation and this one. The default is `Auto`, which enables *Dronetara Studio* to find an optimal mapping between the markers of the initial and the target formation. If you want to maintain the mapping yourself, set it to `Manual` instead and then sort the markers of the formation in the Outliner such that they are in the desired order (note that you need to turn off alphabetic ordering in the Outliner first). Blender will then map the nth marker in the initial formation to the nth marker in the target formation.
 +
 The velocity profile of the transition can be selected by the "Profile" setting. Four velocity profiles are supported for each transition: the `Linear` profile keeps a constant speed throughout the entire transition (most probably resulting in a very short acceleration spike at the start and end of the transition); the `Smooth` profile plans an optimal cubic Bézier profile with zero velocity at both edge and a smooth acceleration and deceleration in between; the `Smooth from left` and `Smooth from right` profiles are smooth from left/right and linear on the other side.
 +
@@ -63,9 +63,9 @@ Press the upward pointing thin arrow button next to the formation list in the St
 
 == Changing the order of formations
 
-Press the btn:[▲] button next to the formation list in the storyboard to move the selected entry up by one slot in the storyboard. Similarly, the btn:[▼] button next to the formation list moves the selected entry down by one slot in the storyboard. *Skybrush Studio* will automatically adjust the start times of the entries to ensure that they are in ascending order.
+Press the btn:[▲] button next to the formation list in the storyboard to move the selected entry up by one slot in the storyboard. Similarly, the btn:[▼] button next to the formation list moves the selected entry down by one slot in the storyboard. *Dronetara Studio* will automatically adjust the start times of the entries to ensure that they are in ascending order.
 
-NOTE: It is possible to mess up the order of entries in the storyboard by changing the start times explicitly in a way that they are not in ascending order any more. *Skybrush Studio* will fix the ordering of the entries the next time the transitions are recalculated, or before any operation for which the add-on needs the exact ordering of entries.
+NOTE: It is possible to mess up the order of entries in the storyboard by changing the start times explicitly in a way that they are not in ascending order any more. *Dronetara Studio* will fix the ordering of the entries the next time the transitions are recalculated, or before any operation for which the add-on needs the exact ordering of entries.
 
 == Recalculating transitions
 
@@ -77,4 +77,4 @@ The popup menu that appears when clicking on the button offers various options t
 
 == Updating time markers from the storyboard
 
-The main cues of the storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers related to *Skybrush Studio* and update them based on the current storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel (markers added manually will remain untouched).
+The main cues of the storyboard can be rendered as time markers that appear in the Timeline Editor. To reset all time markers related to *Dronetara Studio* and update them based on the current storyboard entries, press the btn:[Update Time Markers] button at the bottom of the Storyboard panel (markers added manually will remain untouched).

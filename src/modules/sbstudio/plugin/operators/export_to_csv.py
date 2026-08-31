@@ -26,10 +26,10 @@ __all__ = ("SkybrushCSVExportOperator",)
 
 
 class SkybrushCSVExportOperator(ExportOperator):
-    """Export object trajectories and light animation into a Skybrush-compatible simple CSV format"""
+    """Export trajectories and lights to Dronetara's zipped CSV format."""
 
     bl_idname = "export_scene.skybrush_csv"
-    bl_label = "Export Skybrush CSV"
+    bl_label = "Export Dronetara CSV"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush CSV files (zipped)

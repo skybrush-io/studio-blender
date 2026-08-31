@@ -1,6 +1,6 @@
 = Custom light effects (new)
 
-Skybrush Studio includes a newer, more powerful way to write custom light effects that return RGBA colors directly. Like the xref:advanced-topics/custom-light-effects.adoc[legacy version], your function picks the exact color for each drone. However, this version gives you more information about the scene and can be faster for complex effects.
+Dronetara Studio includes a newer, more powerful way to write custom light effects that return RGBA colors directly. Like the xref:advanced-topics/custom-light-effects.adoc[legacy version], your function picks the exact color for each drone. However, this version gives you more information about the scene and can be faster for complex effects.
 
 This guide explains how to write such a function.
 
@@ -12,7 +12,7 @@ NOTE: This feature is currently experimental. The details of how the function wo
 
 == How it works
 
-In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once per frame. Your function writes an RGBA color for each drone into an array, and those colors are applied directly to the drones.
+In the Light Effects panel, set the btn:[Effect Type] to btn:[Function]. Then select a `.py` file that contains your Python function. Dronetara Studio will call your function once per frame. Your function writes an RGBA color for each drone into an array, and those colors are applied directly to the drones.
 
 == Function signature
 
