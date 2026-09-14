@@ -43,7 +43,7 @@ Setup your takeoff grid with any convenient parameters and press btn:[OK].
 
 This will create all Skybrush-specific collections (Drones, Formations and Templates) that you will need for your drone show, will add the first "Takeoff grid" entry to the storyboard and will also initialize your drones in the 3D Viewport editor.
 
-To learn more about the mentioned collections, please read the xref:concepts.adoc[Key concepts] and the xref:glossary.adoc[Glossary].
+To learn more about the mentioned collections, please read the xref:concepts.adoc[Key concepts] and the xref:appendix/glossary.adoc[Glossary].
 
 
 == 2. Create takeoff procedure automatically
