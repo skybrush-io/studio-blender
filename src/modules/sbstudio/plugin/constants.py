@@ -69,6 +69,9 @@ class Collections:
     DRONES: ClassVar[str] = "Drones"
     """Name of the collection that holds the drones"""
 
+    DRONE_GROUPS: ClassVar[str] = "Drone Groups"
+    """Name of the collection that holds the drone groups"""
+
     FORMATIONS: ClassVar[str] = "Formations"
     """Name of the collection that holds the formations"""
 
@@ -100,6 +103,32 @@ class Collections:
 
         return cls._find(
             cls.DRONES, create=create, on_created=cls._on_drone_collection_created
+        )
+
+    @classmethod
+    @overload
+    def find_drone_groups(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_drone_groups(cls, *, create: bool) -> Collection | None: ...
+
+    @classmethod
+    def find_drone_groups(cls, *, create: bool = True):
+        # Return the collection specified in the settings if the user specified
+        # one; otherwise fall back to finding the collection by name.
+        if bpy.context.scene:
+            skybrush: DroneShowAddonProperties | None = getattr(
+                bpy.context.scene, "skybrush", None
+            )
+            collection = skybrush.settings.drone_group_collection if skybrush else None
+            if collection:
+                return collection
+
+        return cls._find(
+            cls.DRONE_GROUPS,
+            create=create,
+            on_created=cls._on_drone_group_collection_created,
         )
 
     @classmethod
@@ -194,8 +223,20 @@ class Collections:
             return get_object_in_collection(coll, key, default=None)
 
     @classmethod
-    def _on_drone_collection_created(cls, obj) -> None:
-        bpy.context.scene.skybrush.settings.drone_collection = obj
+    def _on_drone_collection_created(cls, coll: Collection) -> None:
+        bpy.context.scene.skybrush.settings.drone_collection = coll
+
+    @classmethod
+    def _on_drone_group_collection_created(cls, coll: Collection) -> None:
+        # We deliberately do NOT link the new collection to the scene here. The
+        # collection was just created via `bpy.data.collections.new()`, so it has
+        # no parent yet; linking such an unparented datablock into the scene's
+        # hierarchy from within this callback makes Blender place it under the
+        # currently active (first) top-level collection instead of the scene
+        # root, since its parent is not yet resolved in the same evaluation
+        # frame. `link_to_scene()` is therefore called on the caller side, only
+        # after `find_drone_groups(create=True)` has returned.
+        bpy.context.scene.skybrush.settings.drone_group_collection = coll
 
 
 class Formations:

@@ -1,9 +1,13 @@
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping
+
+from bpy.types import Image
+
+from sbstudio.plugin.utils.image import PixelsWithColorspace
 
 __all__ = ("PixelCache",)
 
 
-class PixelCache(Mapping[str, Sequence[float]]):
+class PixelCache(Mapping[str, PixelsWithColorspace]):
     """Mapping that associates string keys (e.g. light effect UUIDs) to pixel
     data.
 
@@ -22,7 +26,7 @@ class PixelCache(Mapping[str, Sequence[float]]):
     this cache, keyed by the UUIDs, and cleaning it up periodically.
     """
 
-    _items: dict[str, tuple[float, ...]]
+    _items: dict[str, PixelsWithColorspace]
     """The cached pixels, keyed by the UUIDs of the light effects."""
 
     _dynamic_keys: set[str]
@@ -35,22 +39,55 @@ class PixelCache(Mapping[str, Sequence[float]]):
         self._dynamic_keys = set()
         self._items = {}
 
-    def add(self, key: str, value: Sequence[float], *, is_static: bool = False) -> None:
+    def add(
+        self,
+        key: str,
+        value: PixelsWithColorspace,
+        *,
+        is_static: bool = False,
+    ) -> None:
         """Adds a cached pixel-level representation of an image to the cache
         with the given key.
 
         Args:
             key: the key of the entry to add
-            value: the cached pixel-level representation
+            value: the cached pixel-level representation and its color space
             is_static: whether the image is assumed to be static (i.e. the same
                 in every frame). Images not marked as static are invalidated
                 when Blender changes its current frame.
         """
-        self._items[key] = tuple(value)
+        self._items[key] = value
         if is_static:
             self._dynamic_keys.discard(key)
         else:
             self._dynamic_keys.add(key)
+
+    def add_image(
+        self, key: str, image: Image, *, is_static: bool = False
+    ) -> PixelsWithColorspace:
+        """Adds a cached pixel-level representation of an image to the cache
+        with the given key.
+
+        Args:
+            key: the key of the entry to add
+            image: the Blender image to cache
+            is_static: whether the image is assumed to be static (i.e. the same
+                in every frame). Images not marked as static are invalidated
+                when Blender changes its current frame.
+
+        Returns:
+            the pixel data of the image in the form it was stored in the cache
+        """
+        pixels = PixelsWithColorspace.from_image(image)
+        if is_static:
+            # For static images it is probably more performant if we convert the
+            # entire image to linear colorspace once and store it that way in the cache.
+            # Dynamic images are invalidated in every frame so we do not gain much
+            # there.
+            pixels.to_linear()
+
+        self.add(key, pixels, is_static=is_static)
+        return pixels
 
     def clear(self) -> None:
         """Clears all cached pixel-level representations of images."""
@@ -69,7 +106,7 @@ class PixelCache(Mapping[str, Sequence[float]]):
         del self._items[key]
         self._dynamic_keys.discard(key)
 
-    def __getitem__(self, key: str) -> Sequence[float]:
+    def __getitem__(self, key: str) -> PixelsWithColorspace:
         return self._items[key]
 
     def __iter__(self) -> Iterator[str]:

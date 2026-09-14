@@ -9,9 +9,6 @@ from bpy.types import AddonPreferences, Context
 
 from sbstudio.plugin.constants import DEFAULT_GATEWAY_URL, DEFAULT_SERVER_URL
 from sbstudio.plugin.gateway import get_gateway
-from sbstudio.plugin.operators.register_hardware_id import RegisterHardwareIDOperator
-from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
-from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
 from sbstudio.plugin.utils import with_context
 
 __all__ = ("DroneShowAddonGlobalSettings",)
@@ -204,6 +201,11 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         layout.prop(self, "enable_experimental_features")
 
     def _draw_hardware_id_widgets(self) -> None:
+        # avoid circular import
+        from sbstudio.plugin.operators.register_hardware_id import (
+            RegisterHardwareIDOperator,
+        )
+
         layout = self.layout
 
         row = layout.row()
@@ -217,6 +219,9 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         col.operator(RegisterHardwareIDOperator.bl_idname, text="Register")
 
     def _draw_gateway_widgets(self) -> None:
+        # avoid circular import
+        from sbstudio.plugin.operators.set_gateway_url import SetGatewayURLOperator
+
         layout = self.layout
 
         row = layout.row()
@@ -241,6 +246,9 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
         layout.separator()
 
     def _draw_server_url_widgets(self) -> None:
+        # avoid circular import
+        from sbstudio.plugin.operators.set_server_url import SetServerURLOperator
+
         layout = self.layout
 
         layout.prop(self, "server_url")

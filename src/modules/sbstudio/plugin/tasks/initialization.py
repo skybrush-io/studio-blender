@@ -5,7 +5,7 @@ from random import randint
 import bpy
 
 from sbstudio.plugin.constants import RANDOM_SEED_MAX, Collections, TakeoffPods
-from sbstudio.plugin.objects import link_object_to_scene
+from sbstudio.plugin.objects import link_to_scene
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 
@@ -23,6 +23,19 @@ def setup_drone_collection(*args):
 
     if drones and scene and scene.skybrush.settings.drone_collection is None:
         scene.skybrush.settings.drone_collection = drones
+
+
+def setup_drone_group_collection(*args):
+    """Updates the `drone_group_collection` property of the file-specific settings
+    to be equal to whatever `Collections.find_drone_groups()` returns. Used to
+    migrate old files where the `drone_group_collection` property did not exist yet
+    but the user has already created a "Drone Groups" collection.
+    """
+    drones = Collections.find_drone_groups(create=False)
+    scene = bpy.context.scene
+
+    if drones and scene and scene.skybrush.settings.drone_group_collection is None:
+        scene.skybrush.settings.drone_group_collection = drones
 
 
 def remove_legacy_formation_constraints(*args):
@@ -92,7 +105,7 @@ def setup_takeoff_pods(*args):
     """
     takeoff_pods = Collections.find_takeoff_pods(create=True)
     if takeoff_pods:
-        link_object_to_scene(takeoff_pods, allow_nested=True)
+        link_to_scene(takeoff_pods, allow_nested=True)
         TakeoffPods.create_takeoff_pods()
 
 
@@ -120,6 +133,7 @@ class InitializationTask(Task):
         "load_post": [
             update_bloom_effect,
             setup_drone_collection,
+            setup_drone_group_collection,
             remove_legacy_formation_constraints,
             setup_random_seed,
             update_pyro_particles_of_drones,

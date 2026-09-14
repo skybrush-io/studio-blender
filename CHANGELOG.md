@@ -5,7 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [main]
+## [5.0.3] - 2026-08-14
+
+### Fixed
+
+- Fixed a bug in the export of CSV or `.skyc` files when no light effects were used
+  in the project and the colors were simply keyframed on the `color` property of the
+  object. Many thanks to [@VGYO](https://github.com/VGYO).
+
+## [5.0.2] - 2026-08-07
+
+### Fixed
+
+- Fixed zipped .csv light effect import in some edge cases when the .csv sampling FPS
+  and the target Blender FPS were not divisors of each other. Many thanks to Martin M.
+  on Discord for the bug report.
+
+- Linking the main permanent collections (Drones, Drone Groups etc.) to the scene
+  was fixed (no crash now on creating takeoff grids on non-empty template files),
+  and the Drone Groups collection is now ensured to be a child of the root collection
+  of the scene. Many thanks to [@VGYO](https://github.com/VGYO). See
+  [#77](https://github.com/skybrush-io/studio-blender/pull/77) for more details.
+
+## [5.0.1] - 2026-08-05
+
+### Added
+
+- Added support for vectorized light effect functions, similarly to how vectorized
+  light effect _output_ functions were added in the previous version. The signature of
+  the light effect function is auto-detected; if the function has 6 arguments, then it
+  is assumed to be an old-style (non-vectorized) function. In all other cases, the
+  function is assumed to take the light effect, the evaluation context, the frame
+  index and an output color array as arguments. See the documentation for more details.
+
+- Drone groups can now be rearranged in the "Drone Groups" panel of the Skybrush tab.
+
+### Fixed
+
+- Fix image-based light effects for portrait (and other non-square) images that were
+  accidentally broken after the migration to NumPy, thanks to
+  [@VGYO](https://github.com/VGYO). Also restored shared X/Y randomness offsets (same
+  per-drone offset for both axes, matching pre-vectorization / 4.4.x behaviour). See
+  [#76](https://github.com/skybrush-io/studio-blender/pull/76) for more details.
+
+- Fix an `OverflowError` on Windows when generating random number sequences due to the
+  native NumPy `int_` type being 32-bit on that platform. Many thanks to
+  [@VGYO](https://github.com/VGYO). See
+  [#76](https://github.com/skybrush-io/studio-blender/pull/76) for more details.
+
+## [5.0.0] - 2026-07-23
 
 ### Breaking change
 
@@ -27,10 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added audio export option to the .skyc exporter, requiring a single .mp3 music
   file to be added as an audio strip in the VSE.
 
-- The velocity profile of each transitions can now be setup individually through the
-  new "Profile" setting in the "Transition from previos" / "Transition to next" popups.
+- The velocity profile of each transition can now be set up individually through the
+  new "Profile" setting in the "Transition from previous" / "Transition to next" popups.
   Available profiles: "smooth" (previous default), "linear", "smooth from left", and
-  "smmoth from right".
+  "smooth from right".
 
 - Added an experimental set of pre-defined light effects that can be applied to the
   drones without the need of creating custom Python functions. Note that these light
@@ -39,11 +87,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that they may break or their behaviour might change in the future at any time. A
   separate entry will be added in the changelog when they are considered final.
 
+- Added support for drone groups, with a new "Drone Groups" panel on the Skybrush tab
+  and a "Drone group" selector for light effects.
+
 ### Changed
 
 - The default velocity profile of the takeoff operation was changed to "linear",
   while the transition to the first formation is "smooth from right" now. This keeps
-  the speed and the minimum distance of the takeoff prodecure transparent on both
+  the speed and the minimum distance of the takeoff procedure transparent on both
   single and multi-layered takeoffs, but might introduce short acceleration spikes
   at the start and end of the takeoff. If that is disturbing the velocity profile
   can be set back to "smooth" for backward compatibility.
@@ -51,6 +102,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The cone template was simplified to use 12 segments only instead of 32.
 
 - Performance improvements to light effects, thanks to [@jefrau](https://github.com/jefrau).
+
+- Further performance improvements to light effects, by rewriting the entire workflow
+  to use numpy arrays.
+
+- Takeoff layer planner uses downwash minimization through a new dedicated API call.
+  Thanks for the idea to [@PeiYi](https://github.com/UavShow/).
 
 ### Fixed
 

@@ -24,6 +24,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+from numpy import float32
+
 try:
     Image = importlib.import_module("PIL.Image")
     ImageDraw = importlib.import_module("PIL.ImageDraw")
@@ -86,7 +89,67 @@ if str(MODULE_ROOT) not in sys.path:
 
 # Importing the package root registers all built-in presets.
 import sbstudio.plugin.presets.light_effects  # noqa: F401
-from sbstudio.plugin.presets.light_effects.base import iter_preset_mapping
+from sbstudio.plugin.presets.light_effects.base import PresetMeta, iter_preset_mapping
+
+
+class MockObjectPositions:
+    """Mock for ObjectPositions that holds a numpy array."""
+
+    def __init__(self, positions: np.ndarray):
+        self._as_array = positions
+
+    @property
+    def as_array(self) -> np.ndarray:
+        return self._as_array
+
+    def __len__(self) -> int:
+        return len(self._as_array)
+
+
+class MockLightEffect:
+    """Mock for LightEffect with minimal functionality needed for presets."""
+
+    def __init__(self, total_frames: int):
+        self._total_frames = total_frames
+
+    def get_time_fraction_for_frame(self, frame: int) -> float:
+        if self._total_frames <= 1:
+            return 0.0
+        return (frame - FRAME_START) / (self._total_frames - 1)
+
+
+class MockLightEffectEvaluationContext:
+    """Mock for LightEffectEvaluationContext that provides positions and swarm center."""
+
+    def __init__(
+        self,
+        positions: np.ndarray,
+        mapping: list[int] | None = None,
+    ):
+        self._positions = MockObjectPositions(positions)
+        self._mapping = mapping
+        self._cache: dict[str, Any] = {}
+
+    @property
+    def positions(self) -> MockObjectPositions:
+        return self._positions
+
+    @property
+    def mapping(self) -> list[int] | None:
+        return self._mapping
+
+    @property
+    def num_drones(self) -> int:
+        return len(self._positions)
+
+    @property
+    def swarm_center(self) -> np.ndarray:
+        try:
+            return self._cache["swarm_center"]
+        except KeyError:
+            center = self._positions.as_array.mean(axis=0).astype("float32")
+            self._cache["swarm_center"] = center
+            return center
 
 
 def parse_args() -> argparse.Namespace:
@@ -253,7 +316,7 @@ def draw_guides(draw: ImageDraw.ImageDraw) -> None:
 
 
 def render_preset(
-    meta,
+    meta: PresetMeta,
     positions: list[tuple[float, float, float]],
     pixel_positions: list[tuple[float, float]],
     output_dir: Path,
@@ -262,6 +325,14 @@ def render_preset(
 ) -> Path:
     frames: list[Image.Image] = []
     total_frames = FRAME_END - FRAME_START + 1
+
+    positions_array = np.array(positions, dtype=float32)
+    mock_context = MockLightEffectEvaluationContext(
+        positions_array, mapping=list(range(len(positions)))
+    )
+    mock_effect = MockLightEffect(total_frames)
+
+    out = np.zeros(len(positions), dtype=float32)
 
     for frame in range(FRAME_START, FRAME_END + 1):
         time_fraction = (
@@ -273,19 +344,12 @@ def render_preset(
         draw_guides(draw)
         draw_progress_bar(draw, time_fraction)
 
+        out[:] = 0.0
+        meta.function(mock_effect, mock_context, frame, out=out)
+
         colors: list[tuple[int, int, int]] = []
-        for drone_index, position in enumerate(positions):
-            value = clamp01(
-                meta.function(
-                    frame=frame,
-                    time_fraction=time_fraction,
-                    drone_index=drone_index,
-                    formation_index=drone_index,
-                    position=position,
-                    drone_count=len(positions),
-                )
-            )
-            colors.append(color_for_value(value))
+        for value in out:
+            colors.append(color_for_value(clamp01(float(value))))
 
         if draw_connector_line:
             for index in range(len(pixel_positions) - 1):

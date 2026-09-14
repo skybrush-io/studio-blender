@@ -1,4 +1,4 @@
-from bpy.types import Panel
+from bpy.types import Context, Panel
 
 from sbstudio.plugin.constants import Collections
 
@@ -19,10 +19,9 @@ class SwarmPanel(Panel):
     bl_region_type = "UI"
     bl_category = "Skybrush"
 
-    def draw(self, context):
+    def draw(self, context: Context):
         scene = context.scene
         settings = scene.skybrush.settings
-
         if not settings:
             return
 

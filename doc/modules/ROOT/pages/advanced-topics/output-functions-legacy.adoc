@@ -1,0 +1,91 @@
+= Custom output functions (legacy)
+
+Skybrush Studio lets you write a Python function that produces a _number_ for each drone. That number is then mapped through the color ramp or color image to produce the final color. This approach gives you the flexibility of custom logic while still letting you use the color ramp for color design.
+
+This guide explains how to write such a function.
+
+== When to use this
+
+Choose this approach when you want to use a color ramp or color image to define your colors, but need custom logic to decide which part of the color ramp each drone uses. If you want to return a color directly (without a color ramp), see the xref:advanced-topics/custom-light-effects.adoc[custom light effects] guide instead.
+
+If you are writing a new function from scratch, consider using the xref:advanced-topics/output-functions-experimental.adoc[new output function] instead, which provides more information and better performance.
+
+== How it works
+
+In the Light Effects panel, set the btn:[Output X] dropdown to btn:[Custom expression]. Then select a `.py` file that contains your Python function. Skybrush Studio will call your function once for each drone at each frame. The number your function returns is mapped through the color ramp to produce the final color.
+
+== Function signature
+
+Your file must contain a function with this exact name and set of arguments:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    # Your code goes here
+    return 0.5
+```
+
+The function receives six arguments:
+
+frame:: The current frame number (an integer, e.g. 1, 2, 3, ...).
+
+time_fraction:: How far through the light effect we are, as a number between 0 and 1. At the start of the effect this is 0, at the end it is 1.
+
+drone_index:: Which drone this call is for, numbered from 0 to `drone_count - 1`.
+
+formation_index:: Which formation slot the drone is in (numbered from 0), or `None` if no formation information is available.
+
+position:: The 3D position of the drone as a tuple of three numbers `(x, y, z)`.
+
+drone_count:: The total number of drones in the show.
+
+Your function must return a single number (a decimal number like `0.0`, `0.5`, or `1.0`). This number picks a position on the color ramp: 0 is the left edge, 1 is the right edge, and values in between pick a spot in the middle.
+
+== Simple example
+
+The following function maps each drone to a position on the color ramp based on its index, spreading them evenly across the ramp:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    return drone_index / max(drone_count - 1, 1)
+```
+
+== Pulsing effect
+
+This function makes all drones pulse along the color ramp over the duration of the effect:
+
+```python
+import math
+
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    return (math.sin(time_fraction * 4 * math.pi) + 1) / 2
+```
+
+== Gradient based on position
+
+This function maps each drone to a position on the color ramp based on its X coordinate:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    x, y, z = position
+    # Normalize x to a 0-1 range (adjust the numbers to match your scene)
+    t = (x + 5) / 10  # assumes drones are spread across x from -5 to 5
+    return max(0.0, min(1.0, t))  # clamp to 0-1
+```
+
+== Alternating drones
+
+This function makes odd-numbered drones pick the left side of the color ramp and even-numbered drones pick the right side:
+
+```python
+def color_function(frame, time_fraction, drone_index, formation_index, position, drone_count):
+    if drone_index % 2 == 0:
+        return 0.0  # left edge of color ramp
+    else:
+        return 1.0  # right edge of color ramp
+```
+
+== Tips
+
+* You do not need to understand every argument to get started. Many effects only use `time_fraction`, `drone_index`, and `position`.
+* The returned value should typically be between 0 and 1, but values outside this range are handled gracefully (they are clamped to the edges of the color ramp).
+* If you need to map values through both the X and Y axes of a color image, use the btn:[Output X] and btn:[Output Y] dropdowns to select btn:[Custom expression] for each, and provide a function for each axis.

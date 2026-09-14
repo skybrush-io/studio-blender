@@ -3,18 +3,19 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, MutableMapping, Sequence
+from typing import TYPE_CHECKING, Final, MutableMapping, Sequence
 
 if TYPE_CHECKING:
     from bpy.types import Context
 
-    from sbstudio.plugin.model.light_effects import CustomLightEffectFunction
+    from sbstudio.plugin.model.light_effects import LightEffectOutputFunctionV2
 
 __all__ = (
     "get_preset_enum_items",
     "get_preset_function",
     "iter_preset_mapping",
     "register_preset",
+    "NULL_PRESET_ID",
 )
 
 
@@ -22,13 +23,18 @@ __all__ = (
 class PresetMeta:
     id: str
     label: str  # English label (used as the i18n source string)
-    function: CustomLightEffectFunction
+    function: LightEffectOutputFunctionV2
     description: str = ""
     translations: dict[str, str] = field(default_factory=dict)  # language code -> label
 
 
-# Insertion-ordered.  Order here = order in the UI dropdown = circled number.
 _PRESETS: MutableMapping[str, PresetMeta] = OrderedDict()
+"""Insertion-ordered.  Order here = order in the UI dropdown = circled number."""
+
+NULL_PRESET_ID: Final[str] = "_null"
+"""Special preset ID for the case when a preset is not selected. Note that it cannot be
+an empty string because Blender filters those.
+"""
 
 
 def register_preset(
@@ -38,7 +44,7 @@ def register_preset(
     description: str = "",
     translations: Sequence[tuple[str, str]] = (),
 ):
-    def decorator(fn: CustomLightEffectFunction) -> CustomLightEffectFunction:
+    def decorator(fn: LightEffectOutputFunctionV2) -> LightEffectOutputFunctionV2:
         if id in _PRESETS:
             raise ValueError(f"Duplicate light effect preset ID: {id!r}")
         _PRESETS[id] = PresetMeta(
@@ -53,7 +59,7 @@ def register_preset(
     return decorator
 
 
-def get_preset_function(preset_id: str) -> CustomLightEffectFunction | None:
+def get_preset_function(preset_id: str) -> LightEffectOutputFunctionV2 | None:
     meta = _PRESETS.get(preset_id)
     return meta.function if meta is not None else None
 
@@ -85,10 +91,9 @@ def _build_enum_items() -> list[tuple[str, str, str]]:
     Numbering format: 「1」「2」「3」... (full-width brackets)
     Order: v5.1 custom effects first, then original effects (reversed order)
     """
-    items: list[tuple[str, str, str]] = [("", "<None>", "")]
+    items: list[tuple[str, str, str]] = [(NULL_PRESET_ID, "<None>", "None")]
     for index, meta in enumerate(iter_preset_mapping(), 1):
-        # Use full-width brackets 「」 for numbering
-        prefix = f"「{index}」"
+        prefix = f"[{index}] "
         display = f"{prefix}{meta.label}"
         items.append((meta.id, display, meta.description or meta.label))
     return items

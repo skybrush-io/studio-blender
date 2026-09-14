@@ -97,6 +97,12 @@ class DroneShowAddonFileSpecificSettings(PropertyGroup):
         description="The collection that contains all the objects that are to be treated as drones",
     )
 
+    drone_group_collection: Collection = PointerProperty(
+        type=Collection,
+        name="Drone group collection",
+        description="The collection that contains all the collections that are to be treated as drone groups",
+    )
+
     drone_radius: float = FloatProperty(
         name="Drone radius",
         description="The radius of the drone template to create.",

@@ -1,7 +1,22 @@
 from collections.abc import MutableSequence
-from typing import Protocol, Sequence, TypeAlias, overload
+from typing import Generic, Mapping, Protocol, Sequence, TypeAlias, TypeVar, overload
 
-__all__ = ("Coordinate3D", "RGBAColor", "Rotation3D")
+from numpy.typing import NDArray
+
+__all__ = (
+    "Color",
+    "ColorLike",
+    "Coordinate3D",
+    "Jsonable",
+    "MutableRGBColor",
+    "RGBAColor",
+    "RGBColor",
+    "RGBAColorLike",
+    "RGBColorLike",
+    "Rotation3D",
+    "SupportsForEach",
+    "Quaternion",
+)
 
 
 Coordinate3D: TypeAlias = tuple[float, float, float]
@@ -38,7 +53,10 @@ Quaternion: TypeAlias = tuple[float, float, float, float]
 """Type alias for 4D quaternions."""
 
 
-class SupportsForEach(Protocol):
+T = TypeVar("T")
+
+
+class SupportsForEach(Generic[T], Protocol):
     """Protocol for objects that support the `foreach_get()` and `foreach_set()`
     methods.
 
@@ -46,11 +64,17 @@ class SupportsForEach(Protocol):
     """
 
     @overload
-    def foreach_get(self, attr: str, seq: Sequence[float]) -> None: ...
+    def foreach_get(self, attr: str, seq: MutableSequence[T]) -> None: ...
     @overload
-    def foreach_get(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def foreach_get(self, attr: str, seq: NDArray) -> None: ...
     @overload
-    def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
+    def foreach_set(self, attr: str, seq: Sequence[T]) -> None: ...
     @overload
-    def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def foreach_set(self, attr: str, seq: NDArray) -> None: ...
     def __len__(self) -> int: ...
+
+
+Jsonable: TypeAlias = (
+    int | float | bool | None | str | Sequence["Jsonable"] | Mapping[str, "Jsonable"]
+)
+"""Type alias for types that can be stored in a plain JSON file."""

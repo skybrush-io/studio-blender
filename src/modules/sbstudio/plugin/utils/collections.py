@@ -29,6 +29,7 @@ __all__ = (
     "get_object_in_collection",
     "pick_unique_name",
     "sort_collection",
+    "unlink_all_objects_from_collection",
 )
 
 T = TypeVar("T", bound="ID")
@@ -375,3 +376,31 @@ def pick_unique_name(
         new_proposal = prefix + (str(value).rjust(len(suffix), "0"))
         if new_proposal not in existing_names:
             return new_proposal
+
+
+def unlink_all_objects_from_collection(
+    collection: Collection, *, recursive: bool = False
+) -> int:
+    """Unlinks all objects from the given Blender collection.
+
+    Args:
+        collection: the Blender collection to unlink objects from
+        recursive: whether to unlink objects from child collections as well.
+
+    Returns:
+        the number of objects that were unlinked from the collection
+    """
+    to_process: list[Collection] = [collection]
+    removed = 0
+
+    while to_process:
+        current = to_process.pop()
+        if recursive:
+            to_process.extend(current.children)
+
+        objs = collection.objects
+        for obj in list(objs):
+            objs.unlink(obj)
+            removed += 1
+
+    return removed

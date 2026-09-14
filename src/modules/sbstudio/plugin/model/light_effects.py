@@ -2,9 +2,20 @@ from __future__ import annotations
 
 import types
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass, field
 from functools import partial
-from operator import itemgetter
-from typing import Any, Protocol, cast
+from inspect import signature
+from typing import (
+    Any,
+    ClassVar,
+    Literal,
+    Protocol,
+    Type,
+    TypedDict,
+    TypeVar,
+    cast,
+    overload,
+)
 from uuid import uuid4
 
 import bpy
@@ -19,6 +30,8 @@ from bpy.props import (
     StringProperty,
 )
 from bpy.types import (
+    Collection,
+    CollectionObjects,
     ColorRamp,
     Context,
     Image,
@@ -30,33 +43,67 @@ from bpy.types import (
 )
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from numpy import (
+    argsort,
+    array,
+    bool_,
+    divide,
+    empty,
+    empty_like,
+    flatnonzero,
+    float32,
+    int64,
+    isnan,
+    lexsort,
+    linspace,
+    nan,
+    rot90,
+    where,
+    zeros_like,
+)
+from numpy.typing import NDArray
 
+from sbstudio.api.types import Mapping
 from sbstudio.math.colors import BlendMode, blend_in_place
 from sbstudio.math.rng import RandomSequence
 from sbstudio.model.plane import Plane
-from sbstudio.model.types import Coordinate3D, MutableRGBAColor
-from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION
+from sbstudio.model.types import Coordinate3D, Jsonable, RGBAColor
+from sbstudio.plugin.constants import DEFAULT_LIGHT_EFFECT_DURATION, Collections
 from sbstudio.plugin.meshes import use_b_mesh
 from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
 from sbstudio.plugin.presets.light_effects import (
+    NULL_PRESET_ID,
     get_preset_enum_items,
     get_preset_function,
 )
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
 from sbstudio.plugin.utils.color_ramp import update_color_ramp_from
-from sbstudio.plugin.utils.evaluator import get_position_of_object
-from sbstudio.plugin.utils.image import convert_from_srgb_to_linear
+from sbstudio.plugin.utils.evaluator import (
+    ObjectPositions,
+    get_position_of_object,
+    get_positions_of_objects_fast,
+)
+from sbstudio.plugin.utils.image import (
+    PixelsWithColorspace,
+    convert_pixels_to_linear_in_place,
+)
 from sbstudio.plugin.utils.texture import texture_as_dict, update_texture_from_dict
-from sbstudio.utils import constant, distance_sq_of, load_module, negate
+from sbstudio.utils import load_module
 
 from .mixins import ListMixin
 
 __all__ = (
     "ColorFunctionProperties",
+    "CustomLightEffectFunctionV1",
+    "CustomLightEffectFunctionV2",
     "LightEffect",
     "LightEffectCollection",
+    "LightEffectEvaluationContext",
+    "LightEffectOutputFunctionV1",
+    "LightEffectOutputFunctionV2",
+    "LightEffectUpdate",
     "effect_type_supports_randomization",
     "output_type_is_experimental",
     "output_type_supports_mapping_mode",
@@ -66,7 +113,7 @@ __all__ = (
 CONTAINMENT_TEST_AXES = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
 """Pre-constructed vectors for a quick containment test using raycasting and BVH-trees"""
 
-OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
+OUTPUT_TYPE_TO_AXES = {
     "GRADIENT_XYZ": (0, 1, 2),
     "GRADIENT_XZY": (0, 2, 1),
     "GRADIENT_YXZ": (1, 0, 2),
@@ -76,10 +123,6 @@ OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
     "default": (0, 0, 0),
 }
 """Axis mapping for the gradient-based output types"""
-
-OUTPUT_TYPE_TO_AXIS_SORT_KEY = {
-    key: itemgetter(*value) for key, value in OUTPUT_TYPE_TO_AXIS_SORT_KEY.items()
-}
 
 OUTPUT_ITEMS = [
     ("FIRST_COLOR", "First color", "", 1),
@@ -96,21 +139,186 @@ OUTPUT_ITEMS = [
     ("DISTANCE", "Distance from mesh", "", 11),
     (
         "LIGHT_PRESET",
-        "Light preset",
+        "Light preset (experimental)",
         "Built-in light effect preset (portable across machines)",
         14,
     ),
     ("CUSTOM", "Custom expression", "", 12),
+    ("CUSTOM_V2", "Custom expression (experimental)", "", 15),
 ]
 """Output types of light effects, determining the indexing
 of drones to a given axis of the light effect color space"""
 
 
-_always_true = constant(True)
+@dataclass(frozen=True)
+class LightEffectUpdate:
+    """Simple dataclass containing a list of drones to update and the corresponding
+    colors to apply to them, in the same order.
+    """
+
+    NOP: ClassVar[LightEffectUpdate]
+
+    drones: CollectionObjects | None
+    positions: ObjectPositions | None
+    colors: NDArray[float32] | None
+    has_active_effects: bool
+
+    def get_drones_and_colors(self) -> tuple[CollectionObjects, NDArray[float32]]:
+        if not self.has_active_effects:
+            from sbstudio.plugin.colors import get_colors_of_drones_fast
+
+            drones = Collections.find_drones().objects
+            colors: NDArray[float32] = empty((len(drones), 4), dtype=float32)
+            get_colors_of_drones_fast(drones, dest=colors.ravel())
+
+            return drones, colors
+        else:
+            assert self.colors is not None
+            assert self.drones is not None
+            return self.drones, self.colors
+
+    def get_positions_and_colors(
+        self,
+    ) -> tuple[Sequence[Coordinate3D], NDArray[float32]]:
+        if not self.has_active_effects:
+            from sbstudio.plugin.colors import get_colors_of_drones_fast
+
+            drones = Collections.find_drones().objects
+
+            positions: NDArray[float32] = empty((len(drones), 4), dtype=float32)
+            get_positions_of_objects_fast(drones, dest=positions.ravel())
+
+            colors: NDArray[float32] = empty((len(drones), 4), dtype=float32)
+            get_colors_of_drones_fast(drones, dest=colors.ravel())
+
+            return positions, colors  # ty:ignore[invalid-return-type]
+        else:
+            assert self.positions is not None
+            assert self.colors is not None
+            return self.positions.as_coordinate_sequence, self.colors
 
 
-class CustomLightEffectFunction(Protocol):
-    """Type of the custom light effect function, used when the output type of a light
+LightEffectUpdate.NOP = LightEffectUpdate(None, None, None, False)
+
+
+class CustomLightEffectFunctionV1(Protocol):
+    """Type of a completely custom light effect function, used when the light effect
+    type is set to "FUNCTION" and the function has 6 parameters. The function takes the
+    following arguments:
+
+    - frame: the current frame index
+    - time_fraction: the fraction of time passed in the current light effect relative to
+      its total duration, in the [0; 1] range
+    - drone_index: the index of the drone for which the output is being calculated, in
+      the range [0; num_drones - 1]
+    - formation_index: the index of the formation to which the drone belongs, in the
+      range [0; num_formations - 1], or None if there is no formation information available
+    - position: the 3D position of the drone
+    - drone_count: the total number of drones in the show
+
+    The function must return a sequence of 4 float objects, representing the output
+    color. Note that the color ramp or the associated image is not involved in the
+    color calculation.
+    """
+
+    def __call__(
+        self,
+        frame: int,
+        time_fraction: float,
+        drone_index: int,
+        formation_index: int | None,
+        position: Coordinate3D,
+        drone_count: int,
+    ) -> RGBAColor: ...
+
+
+class CustomLightEffectFunctionV2(Protocol):
+    """Type of the v2 custom light effect function, used when the output type of a light
+    effect is set to "FUNCTION" and the function has 3 positional and 1 keyword
+    arguments. The function takes the following arguments:
+
+    - effect: the light effect being evaluated. Can be used to convert the frame index
+      to a relative time fraction of the effect duration.
+    - context: a context object containing the drones in the current frame, their
+      positions, a mask indicating which drones are not targeted by the current effect,
+      and other relevant information
+    - frame: the current frame index
+    - out: the output array
+
+    Each row in the output array represents the associated color of a single drone.
+    The array is pre-sized to have as many rows as the number of drones.
+
+    If the function would return the same color for all drones, it can return the
+    common color instead of writing it in the `out` array.
+    """
+
+    def __call__(
+        self,
+        effect: LightEffect,
+        context: LightEffectEvaluationContext,
+        frame: int,
+        *,
+        out: NDArray[float32],
+    ) -> RGBAColor | None: ...
+
+
+class VersionedCustomLightEffectFunction:
+    """Wrapper for a custom light effect function and its API version."""
+
+    version: Literal[1, 2]
+    function: CustomLightEffectFunctionV1 | CustomLightEffectFunctionV2
+
+    def __init__(
+        self,
+        function: CustomLightEffectFunctionV1 | CustomLightEffectFunctionV2,
+        version: Literal[1, 2],
+    ):
+        self.function = function
+        self.version = version
+
+    def __call__(
+        self,
+        effect: LightEffect,
+        context: LightEffectEvaluationContext,
+        frame: int,
+        *,
+        out: NDArray[float32],
+    ) -> None:
+        match self.version:
+            case 1:
+                func_v1 = cast(CustomLightEffectFunctionV1, self.function)
+
+                time_fraction = effect.get_time_fraction_for_frame(frame)
+                position_seq = context.positions.as_coordinate_sequence
+                mapping = context.mapping
+                num_drones = len(out)
+
+                for index in context.active_drones:
+                    out[index, :] = func_v1(
+                        frame=frame,
+                        time_fraction=time_fraction,
+                        drone_index=index,
+                        formation_index=(
+                            mapping[index] if mapping is not None else None
+                        ),
+                        position=position_seq[index],
+                        drone_count=num_drones,
+                    )
+
+            case 2:
+                func_v2 = cast(CustomLightEffectFunctionV2, self.function)
+                common_color = func_v2(effect, context, frame, out=out)
+                if common_color is not None:
+                    out[context.active_drones, :] = common_color
+
+            case _:
+                raise RuntimeError(
+                    f"unknown custon light effect function API version: {self.version}"
+                )
+
+
+class LightEffectOutputFunctionV1(Protocol):
+    """Type of the v1 custom light effect function, used when the output type of a light
     effect is set to "CUSTOM". The function takes the following arguments:
 
     - frame: the current frame index
@@ -123,8 +331,8 @@ class CustomLightEffectFunction(Protocol):
     - position: the 3D position of the drone
     - drone_count: the total number of drones in the show
 
-    The function returns a sequence of four floats in the [0; 1] range representing the
-    RGBA color on the current color ramp to apply to the drone.
+    The function returns a single float representing the output value, which is then
+    mapped to the color ramp or associated image.
     """
 
     def __call__(
@@ -136,6 +344,122 @@ class CustomLightEffectFunction(Protocol):
         position: Coordinate3D,
         drone_count: int,
     ) -> float: ...
+
+
+class LightEffectOutputFunctionV2(Protocol):
+    """Type of the v2 custom light effect function, used when the output type of a light
+    effect is set to "CUSTOM_V2". The function takes the following arguments:
+
+    - effect: the light effect being evaluated. Can be used to convert the frame index
+      to a relative time fraction of the effect duration.
+    - context: a context object containing the drones in the current frame, their
+      positions, a mask indicating which drones are not targeted by the current effect,
+      and other relevant information
+    - frame: the current frame index
+    - out: the output array
+
+    Each cell in the output array represents the associated output value of a single
+    drone. These output values are mapped to the color ramp or associated image in a
+    subsequent step.
+
+    If the function would return the same value for all drones, it can return the
+    common value instead of writing it in the `out` array. This is slightly more
+    efficient because the color ramp is evaluated only once for this single value
+    instead of evaluating it as many times as the number of drones.
+    """
+
+    def __call__(
+        self,
+        effect: LightEffect,
+        context: LightEffectEvaluationContext,
+        frame: int,
+        *,
+        out: NDArray[float32],
+    ) -> float | None: ...
+
+
+class _ContextCache(TypedDict, total=False):
+    """Cache for the light effect evaluation context, used to implement a mutable part
+    inside an otherwise immutable (frozen) object.
+    """
+
+    swarm_center: NDArray[float32]
+
+
+@dataclass(frozen=True)
+class LightEffectEvaluationContext:
+    """Class that stores the context in which a light effect is being evaluated during
+    the update session.
+    """
+
+    drones: CollectionObjects
+    """The collection of drones being updated in this session."""
+
+    positions: ObjectPositions
+    """The positions of the drones."""
+
+    mapping: Mapping | None
+    """Mapping from drone indices to the indices of the markers in the current
+    formation that is in effect at the given frame. `None` if the frame is not in a
+    formation or if we do not know the mapping for that formation.
+    """
+
+    random_seq: RandomSequence
+    """Random sequence that can be used to generate random numbers in a deterministic
+    way for the given frame.
+
+    Note that "deterministic" only means that the results will be the same for the
+    same frame with the same version of the add-on. We reserve the right to change the
+    underlying implementation, in which case the output may change between versions.
+    """
+
+    mask: NDArray[bool_]
+    """Mask that contains `False` for drones that need to be evaluated further and
+    `True` for drones that are not targeted by the current effect.
+    """
+
+    backdrop: NDArray[float32]
+    """Array in which the current colors of the drones are being stored.
+
+    This is used as a backdrop into which the colors calculated by a light effect are
+    blended. Typically you do not need to modify the backdrop if you are implementing
+    your own light effect function.
+    """
+
+    colors: NDArray[float32]
+    """Array that stores the colors calculated by the current light effect before they
+    are blended into the backdrop.
+    """
+
+    _cache: _ContextCache = field(default_factory=dict)
+    """Internal cache for lazily computed properties."""
+
+    @property
+    def active_drones(self) -> NDArray[int64]:
+        """Returns a NumPy array containing the indices of active (unmasked) drones."""
+        # TODO(ntamas): cache this if it becomes a bottleneck! Invalidation of the
+        # cache will have to be managed carefully then.
+        return flatnonzero(~self.mask)
+
+    @property
+    def num_drones(self) -> int:
+        """Returns the number of drones."""
+        return len(self.positions)
+
+    @property
+    def swarm_center(self) -> NDArray[float32]:
+        """Returns the barycenter of the swarm, cached after first computation."""
+        try:
+            return self._cache["swarm_center"]
+        except KeyError:
+            center = self.positions.as_array.mean(axis=0).astype("float32")
+            self._cache["swarm_center"] = center
+            return center
+
+
+def collection_is_drone_group(self, col: Collection) -> bool:
+    drone_groups = Collections.find_drone_groups(create=False)
+    return drone_groups is not None and col.name in drone_groups.children
 
 
 def effect_type_supports_randomization(type: str) -> bool:
@@ -165,11 +489,11 @@ def get_color_function_names(self, context: Context) -> list[tuple[str, str, str
     return [(name, name, "") for name in names]
 
 
-def object_has_mesh_data(self, obj) -> bool:
+def object_has_mesh_data(self, obj: Object) -> bool:
     """Filter function that accepts only those Blender objects that have a mesh
     as their associated data.
     """
-    return obj.data and isinstance(obj.data, Mesh)
+    return isinstance(obj.data, Mesh)
 
 
 def output_type_is_experimental(type: str) -> bool:
@@ -187,40 +511,56 @@ def output_type_supports_mapping_mode(type: str) -> bool:
     return type == "DISTANCE" or type.startswith("GRADIENT_")
 
 
-def test_containment(bvh_tree: BVHTree | None, point: Coordinate3D) -> bool:
-    """Given a point and a BVH-tree, tests whether the point is _probably_
-    within the mesh represented by the BVH-tree.
+def test_in_front_of(
+    plane: Plane, positions: ObjectPositions, out: NDArray[bool_]
+) -> None:
+    """Tests whether a list of points are in front of a given plane.
 
-    This is done by casting three rays in the X, Y and Z directions. The point
-    is assumed to be within the mesh if all three rays hit the mesh.
-
-    Returns True if the BVH-tree is missing.
+    Args:
+        plane: the plane to test against
+        positions: the points to test
+        out: an array of booleans to write the results to; must have the same length as
+            ``positions``
     """
-    global CONTAINMENT_TEST_AXES
-
-    if not bvh_tree:
-        return True
-
-    for axis in CONTAINMENT_TEST_AXES:
-        _, _, _, dist = bvh_tree.ray_cast(point, axis)
-        if dist is None or dist == -1:
-            return False
-
-    return True
+    points = positions.as_array
+    plane.is_front_many(points, out=out)
 
 
-def test_is_in_front_of(plane: Plane | None, point: Coordinate3D) -> bool:
-    """Given a point and a plane, tests whether the point is on the front side
-    of the plane.
+def test_containment(
+    bvh_tree: BVHTree, points: ObjectPositions, out: NDArray[bool_]
+) -> None:
+    """Given a point and a BVH-tree, tests whether a list of points are _probably_
+    within the mesh represented by the BVH-tree, under the assumption that most points
+    are more likely to be outside than inside.
 
-    Returns:
-        True if the point is on the front side of the plane or if the plane is
-        ``None``
+    For each point, we cast three rays from the point in the positive X, Y and Z
+    directions and check whether they intersect the mesh. If at least one of the rays
+    does not intersect the mesh, we conclude that the point is outside the mesh.
+
+    In all other cases, we assume that the point is inside the mesh. Note that this may
+    lead to a small number of false positives near concave regions on the exterior of
+    the mesh, close to the surface.
+
+    Args:
+        bvh_tree: the BVH-tree representing the mesh
+        points: the points to test for containment
+        out: an array of booleans to write the results to; must have the same length as
+            ``points``
     """
-    if plane:
-        return plane.is_front(point)
-    else:
-        return True
+    # We could do a check for the angle between the vector pointing from the point to
+    # the nearest point on the mesh and the normal vector of the mesh at the nearest
+    # point, but benchmarks have shown that it is actually slower than the simple
+    # multi-axis test done below.
+    out.fill(True)
+    for index, point in enumerate(points.as_vectors):
+        for axis in CONTAINMENT_TEST_AXES:
+            _, _, _, dist = bvh_tree.ray_cast(point, axis)
+            if dist is None or dist < 0:
+                out[index] = False
+                break
+
+
+T = TypeVar("T", bound="Callable[..., Any]")
 
 
 class ColorFunctionProperties(PropertyGroup):
@@ -237,6 +577,41 @@ class ColorFunctionProperties(PropertyGroup):
         default=0,
     )
 
+    @overload
+    def load(self, expected_type: Type[T]) -> T | None: ...
+
+    @overload
+    def load(
+        self, expected_type: None = None
+    ) -> VersionedCustomLightEffectFunction | None: ...
+
+    def load(self, expected_type: Type[T] | None = None):
+        """Loads the function pointed to by the path and name properties and casts it
+        to the indicated expected type.
+
+        Returns:
+            the loaded function or `None` if the object does not point to a function or
+            the module cannot be imported.
+        """
+        if not self.path or not self.name:
+            return None
+
+        absolute_path = abspath(self.path)
+        module = load_module(absolute_path)
+
+        func = getattr(module, self.name, None)
+        if func is None:
+            return None
+
+        if expected_type is not None:
+            return func
+
+        sig = signature(func)
+        if len(sig.parameters) == 6:
+            return VersionedCustomLightEffectFunction(func, version=1)
+        else:
+            return VersionedCustomLightEffectFunction(func, version=2)
+
     def update_from(self, other) -> None:
         self.path = other.path
         if other.name:
@@ -248,7 +623,7 @@ class ColorFunctionProperties(PropertyGroup):
         if name := data.get("name"):
             self.name = name
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> Jsonable:
         # TODO: reading self.name invokes error, but why?:
         # WARN (bpy.rna:1360): pyrna_enum_to_py: current value '0' matches no enum in
         # 'ColorFunctionProperties', '', 'name'
@@ -281,7 +656,8 @@ _pixel_cache = PixelCache()
 
 def invalidate_pixel_cache(static: bool = True, dynamic: bool = True) -> None:
     """Invalidates the cached pixel-based representations. Called when a new
-    file is opened in Blender.
+    file is opened in Blender or when we move between frames or update the
+    deps graph.
     """
     global _pixel_cache
     if static:
@@ -343,33 +719,33 @@ class LightEffect(PropertyGroup):
         description="The internal storage for the storyboard entry/transition attached to this light effect",
     )
 
-    frame_start = IntProperty(
+    frame_start: int = IntProperty(
         name="Start Frame",
         description="Frame when this light effect should start in the show",
         default=0,
         options=set(),
     )
-    duration = IntProperty(
+    duration: int = IntProperty(
         name="Duration",
         description="Duration of this light effect",
         min=1,
         default=1,
         options=set(),
     )
-    frame_end = IntProperty(
+    frame_end: int = IntProperty(
         name="End Frame",
         description="Frame when this light effect should end in the show",
         get=_get_frame_end,
         set=_set_frame_end,
         options=set(),
     )
-    fade_in_duration = IntProperty(
+    fade_in_duration: int = IntProperty(
         name="Fade in",
         description="Duration of the fade-in part of this light effect",
         default=0,
         options=set(),
     )
-    fade_out_duration = IntProperty(
+    fade_out_duration: int = IntProperty(
         name="Fade out",
         description="Duration of the fade-out part of this light effect",
         default=0,
@@ -404,9 +780,9 @@ class LightEffect(PropertyGroup):
 
     preset_id = EnumProperty(
         name="Preset",
-        description="Built-in light effect preset (portable across machines)",
+        description="Built-in light effect preset",
         items=get_preset_enum_items,
-        default=0,
+        default=0,  # needs to be an int, cannot refer to NULL_PRESET_ID directly
         options=set(),
     )
 
@@ -422,7 +798,7 @@ class LightEffect(PropertyGroup):
         items=[("ORDERED", "Ordered", "", 1), ("PROPORTIONAL", "Proportional", "", 2)],
     )
 
-    influence = FloatProperty(
+    influence: float = FloatProperty(
         name="Influence",
         description="Influence of this light effect on the final color of drones",
         default=1,
@@ -448,7 +824,7 @@ class LightEffect(PropertyGroup):
         description="Color function of the light effect",
     )
 
-    mesh = PointerProperty(
+    mesh: Object | None = PointerProperty(
         type=Object,
         name="Mesh",
         description=(
@@ -457,6 +833,16 @@ class LightEffect(PropertyGroup):
             '"Front side of plane" is checked'
         ),
         poll=object_has_mesh_data,
+    )
+
+    drone_group: Collection | None = PointerProperty(
+        type=Collection,
+        name="Drone Group",
+        description=(
+            "Drone group related to the light effect; the light effect will only be "
+            "targeted to the drones in this group"
+        ),
+        poll=collection_is_drone_group,
     )
 
     target = EnumProperty(
@@ -512,343 +898,174 @@ class LightEffect(PropertyGroup):
 
     def apply_on_colors(
         self,
-        colors: Sequence[MutableRGBAColor],
-        positions: Sequence[Coordinate3D],
-        mapping: list[int] | None,
+        context: LightEffectEvaluationContext,
         *,
         frame: int,
-        random_seq: RandomSequence,
     ) -> None:
         """Applies this effect to a given list of colors, each belonging to a
         given spatial position in the given frame.
 
         Parameters:
-            colors: the colors to modify in-place
-            positions: the spatial positions of the drones having the given
-                colors in 3D space
-            mapping: optional mapping of positions to match colors;
-                used only by the ``INDEXED_BY_FORMATION`` output type
+            context: the light effect evaluation context that contains all the input
+                data and output arrays to manipulate during the evaluation.
             frame: the frame index
             random_seq: a random sequence that is used to spread out the items
                 on the color ramp or a principal axis of the image if
                 randomization is turned on
         """
 
-        def get_output_based_on_output_type(
-            output_type: str,
-            mapping_mode: str,
-            output_function,
-        ) -> tuple[list[float | None] | None, float | None]:
-            """Get the float output(s) for color ramp or image indexing based on the output type.
-
-            Args:
-                output_type: the output type used for indexing
-                mapping_mode: mapping mode corresponding to the output type
-
-            Returns:
-                individual and common outputs
-            """
-            outputs: list[float | None] | None = None
-            common_output: float | None = None
-            order: list[int] | None = None
-
-            if output_type == "FIRST_COLOR":
-                common_output = 0.0
-            elif output_type == "LAST_COLOR":
-                common_output = 1.0
-            elif output_type == "TEMPORAL":
-                common_output = time_fraction
-            elif output_type_supports_mapping_mode(output_type):
-                # There are two options here:
-                # 1. Legacy, non-proportional mode. We sort the drones based on the
-                #    sort key derived above and then space them out equally on the
-                #    color ramp or image axis.
-                # 2. Proportional mode. Same as above, but we assign drones to
-                #    positions on the color ramp or image axis in a way that their
-                #    distances on the color ramp or image axis are proportional to
-                #    the differences in their sort keys. Note that this needs a
-                #    _scalar_ sorting key so we ignore all but the principal axis
-                #    for gradient output types.
-                proportional = mapping_mode == "PROPORTIONAL"
-
-                if output_type == "DISTANCE":
-                    if self.mesh:
-                        position_of_mesh = get_position_of_object(self.mesh)
-                        sort_key = lambda index: distance_sq_of(
-                            positions[index], position_of_mesh
-                        )
-                    else:
-                        sort_key = None
-
-                    # sort_key is guaranteed to return a scalar here
-                else:
-                    query_axes = (
-                        OUTPUT_TYPE_TO_AXIS_SORT_KEY.get(output_type)
-                        or OUTPUT_TYPE_TO_AXIS_SORT_KEY["default"]
-                    )
-                    if proportional:
-                        # In proportional mode, we are using the primary axis only
-                        # because we need a scalar
-                        sort_key = lambda index: query_axes(positions[index])[0]
-                    else:
-                        # In non-proportional mode, we are sorting along multiple
-                        # axes
-                        sort_key = lambda index: query_axes(positions[index])
-
-                outputs = [1.0] * num_positions
-                order = list(range(num_positions))
-                if num_positions > 1:
-                    if proportional and sort_key is not None:
-                        # Proportional mode -- calculate the sort key for each item,
-                        # and distribute them along the color axis proportionally
-                        # to the differences between the numeric values of the sort
-                        # keys
-                        evaluated_sort_keys = [sort_key(i) for i in order]
-                        min_value, max_value = (
-                            min(evaluated_sort_keys),
-                            max(evaluated_sort_keys),
-                        )
-                        diff = max_value - min_value
-                        if diff > 0:
-                            outputs = [
-                                (value - min_value) / diff
-                                for value in evaluated_sort_keys
-                            ]
-                    else:
-                        if sort_key is not None:
-                            order.sort(key=sort_key)
-
-                        assert outputs is not None
-                        for u, v in enumerate(order):
-                            outputs[v] = u / (num_positions - 1)
-
-            elif output_type == "INDEXED_BY_DRONES":
-                # Gradient based on drone index
-                if num_positions > 1:
-                    np_m1 = num_positions - 1
-                    outputs = [index / np_m1 for index in range(num_positions)]
-                else:
-                    common_output = 1.0
-
-            elif output_type == "INDEXED_BY_FORMATION":
-                # Gradient based on formation index
-                if mapping is not None:
-                    assert num_positions == len(mapping)
-
-                    # TODO: this now works only if the number of valid entries in the mapping
-                    # is consistent with the number of drones in the given formation;
-                    # e.g., it will not work with two formations of half size at the same time
-                    # for this case, single-formation specific mapping would be needed
-
-                    # reduce mapping of all positions to rank, in case formation size
-                    # is smaller than the number of drones
-                    if None in mapping:
-                        sorted_valid_mapping = sorted(
-                            x for x in mapping if x is not None
-                        )
-                        np_m1 = max(len(sorted_valid_mapping) - 1, 1)
-                        outputs = [
-                            None if x is None else sorted_valid_mapping.index(x) / np_m1
-                            for x in mapping
-                        ]
-                    # otherwise just normalize full mapping to [0, 1]
-                    else:
-                        np_m1 = max(num_positions - 1, 1)
-                        outputs = [None if x is None else x / np_m1 for x in mapping]
-                else:
-                    # if there is no mapping at all, we do not change color of drones
-                    outputs = [None] * num_positions
-
-            elif output_type == "CUSTOM":
-                absolute_path = abspath(output_function.path)
-                module = load_module(absolute_path) if absolute_path else None
-                if output_function.name:
-                    fn = cast(
-                        CustomLightEffectFunction, getattr(module, output_function.name)
-                    )
-                    outputs = [
-                        fn(
-                            frame=frame,
-                            time_fraction=time_fraction,
-                            drone_index=index,
-                            formation_index=(
-                                mapping[index] if mapping is not None else None
-                            ),
-                            position=positions[index],
-                            drone_count=num_positions,
-                        )
-                        for index in range(num_positions)
-                    ]
-                else:
-                    common_output = 1.0
-
-            elif output_type == "LIGHT_PRESET":
-                preset_fn = (
-                    get_preset_function(self.preset_id) if self.preset_id else None
-                )
-                if preset_fn is not None:
-                    outputs = [
-                        preset_fn(
-                            frame=frame,
-                            time_fraction=time_fraction,
-                            drone_index=index,
-                            formation_index=(
-                                mapping[index] if mapping is not None else None
-                            ),
-                            position=positions[index],
-                            drone_count=num_positions,
-                        )
-                        for index in range(num_positions)
-                    ]
-                else:
-                    common_output = 1.0
-
-            else:
-                # Should not get here
-                common_output = 1.0
-
-            return outputs, common_output
-
         # Do some quick checks to decide whether we need to bother at all
         if not self.enabled or not self.contains_frame(frame):
             return
 
-        time_fraction = (frame - self.frame_start) / max(self.duration - 1, 1)
-        num_positions = len(positions)
+        drones = context.drones
+        positions = context.positions
+        mask = context.mask
+        num_drones = context.num_drones
 
         color_ramp = self.color_ramp
         color_image = self.color_image
-        color_function_ref = self.color_function_ref
-        new_color = [0.0] * 4
+        color_function = self.get_versioned_color_function()
 
-        outputs_x, common_output_x = get_output_based_on_output_type(
-            self.output, self.output_mapping_mode, self.output_function
-        )
+        # Calculate the influence of the effect, depending on the fade-in and fade-out
+        # durations and the spatial predicate
+        influence = self.get_influence(frame)
+        if influence <= 0:
+            return
 
-        # Get the additional predicate required to evaluate whether the effect
-        # will be applied at a given position
-        condition = self._get_spatial_effect_predicate()
+        # Clear the mask so all drones are included in the beginning
+        mask.fill(False)
 
-        for index, position in enumerate(positions):
-            # Take the base color to modify
-            color = colors[index]
+        # Mask all the drones that are not in the group being targeted by this effect
+        # or are not matched by the spatial predicate associated to this effect
+        self._mask_drones_not_in_group(mask, drones)
+        self._mask_drones_not_matching_spatial_predicate(mask, positions)
 
-            # Calculate the influence of the effect, depending on the fade-in
-            # and fade-out durations and the optional mesh
-            alpha = max(
-                min(self._evaluate_influence_at(position, frame, condition), 1.0), 0.0
+        # Bail out here if no drones remained
+        if mask.all():
+            return
+
+        # Determine whether we will need the X and the Y output values
+        needs_output_y = color_image is not None
+        needs_output_x = color_ramp is not None or color_image is not None
+
+        # Evaluate the X and Y values for each drone
+        if needs_output_x:
+            outputs_x: NDArray[float32] = zeros_like(mask, dtype=float32)
+            constant_output_x = self._get_output_based_on_output_type(
+                "x", context, frame, out=outputs_x
             )
-
-            if alpha <= 0.0:
-                # Alpha channel is zero so this color will not affect the base color
-                # so we can skip the rest of the calculations
-                new_color[:] = color
-                new_color[3] = 0.0
-                continue
-
-            # Calculate the output value of the effect that goes through the color
-            # ramp or image mapper
-            if common_output_x is not None:
-                output_x = common_output_x
+            if constant_output_x is not None:
+                if isnan(constant_output_x):
+                    # If the output is constant but NaN, we can bail out here
+                    return
+                outputs_x.fill(constant_output_x)
             else:
-                assert outputs_x is not None
-                # if this specific output is disabled, we
-                # skip the effect
-                if outputs_x[index] is None:
-                    continue
-                output_x = outputs_x[index]
-            assert isinstance(output_x, float)
+                mask |= isnan(outputs_x)
 
-            # Randomize the output value if needed
-            if self.randomness != 0:
-                offset_x = (random_seq.get_float(index) - 0.5) * self.randomness
-                output_x = (offset_x + output_x) % 1.0
+        if needs_output_y:
+            outputs_y: NDArray[float32] = zeros_like(outputs_x)
+            constant_output_y = self._get_output_based_on_output_type(
+                "y", context, frame, out=outputs_y
+            )
+            if constant_output_y is not None:
+                if isnan(constant_output_y):
+                    # If the output is constant but NaN, we can bail out here
+                    return
+                outputs_y.fill(constant_output_y)
+            else:
+                mask |= isnan(outputs_y)
 
-            # Apply the color ramp, image or function to get the new color. The order
-            # of conditions below is according to their expected frequency of use, with
-            # the most common case first.
-            #
-            # Note that the getters that these values come from are constructed in a
-            # way that they are set to `None` if they are not applicable, so only one of
-            # the branches will apply below.
-            if color_ramp is not None:
-                new_color[:] = color_ramp.evaluate(output_x)
+        # Randomize the outputs if needed. NaNs in the output arrays are okay, they will
+        # remain NaN.
+        # TODO(ntamas): if possible, calculate only for the non-masked drones
+        if self.randomness != 0:
+            random_seq = context.random_seq
+            # Use the same per-drone random offset for X and Y, matching the
+            # pre-vectorization behaviour (and 4.4.x). Independent ranges for the
+            # two axes made image-based effects look overly scrambled.
+            offsets = (random_seq.get_array_01(0, num_drones) - 0.5) * self.randomness
+            if needs_output_x:
+                outputs_x += offsets
+                outputs_x %= 1.0
+                constant_output_x = None
+            if needs_output_y:
+                outputs_y += offsets
+                outputs_y %= 1.0
+                constant_output_y = None
 
-            elif color_function_ref is not None:
-                try:
-                    new_color[:] = color_function_ref(
-                        frame=frame,
-                        time_fraction=time_fraction,
-                        drone_index=index,
-                        formation_index=(
-                            mapping[index] if mapping is not None else None
-                        ),
-                        position=position,
-                        drone_count=num_positions,
-                    )
-                except Exception as exc:
-                    raise RuntimeError("ERROR_COLOR_FUNCTION") from exc
+        active_drones = context.active_drones
 
-            elif color_image is not None:
-                outputs_y, common_output_y = get_output_based_on_output_type(
-                    self.output, self.output_mapping_mode, self.output_function
-                )
+        # Apply the color ramp, image or function to get the new color. The order
+        # of conditions below is according to their expected frequency of use, with
+        # the most common case first.
+        #
+        # Note that the getters that these values come from are constructed in a
+        # way that they are set to `None` if they are not applicable, so only one of
+        # the branches will apply below.
+        colors = context.colors
+        colors.fill(0.0)
+        if color_ramp is not None:
+            # Color ramp based 1D light effect
+            assert needs_output_x
 
-                if common_output_y is not None:
-                    output_y = common_output_y
+            if constant_output_x is not None and num_drones > 0:
+                # Optimize for the common case when the output is constant
+                colors[active_drones, :] = color_ramp.evaluate(constant_output_x)
+            else:
+                for index in active_drones:
+                    colors[index, :] = color_ramp.evaluate(outputs_x[index])
+
+        elif color_image is not None:
+            # Image based 2D light effect
+            assert needs_output_x and needs_output_y
+
+            pixels_with_colorspace = self.get_image_pixels()
+
+            if pixels_with_colorspace is None:
+                colors.fill(0.0)
+            else:
+                # Prefer the cached pixel array shape over color_image.size so
+                # portrait/landscape orientation cannot go out of bounds when
+                # the reshape order was wrong or the image size changed.
+                height, width = pixels_with_colorspace.pixels.shape[:2]
+                if width <= 0 or height <= 0:
+                    colors.fill(0.0)
                 else:
-                    assert outputs_y is not None
-                    # if this specific output is disabled, we
-                    # skip the effect
-                    if outputs_y[index] is None:
-                        continue
-                    output_y = outputs_y[index]
-                assert isinstance(output_y, float)
+                    xs = (width * outputs_x[active_drones]).astype(int)
+                    ys = (height * outputs_y[active_drones]).astype(int)
+                    xs = xs.clip(0, width - 1)
+                    ys = ys.clip(0, height - 1)
 
-                if self.randomness != 0:
-                    offset_y = (random_seq.get_float(index) - 0.5) * self.randomness
-                    output_y = (offset_y + output_y) % 1.0
+                    chosen_pixels: NDArray[float32] = pixels_with_colorspace.pixels[
+                        ys, xs
+                    ]
+                    convert_pixels_to_linear_in_place(
+                        chosen_pixels, pixels_with_colorspace.colorspace
+                    )
 
-                width, height = color_image.size
-                pixels = self.get_image_pixels()
+                    colors[active_drones, :] = chosen_pixels
 
-                x = int(width * output_x) if output_x < 1 else width - 1
-                y = int(height * output_y) if output_y < 1 else height - 1
-                offset = (x + y * width) * 4
-                pixel_color = pixels[offset : offset + 4]
+        elif color_function is not None:
+            # Custom function based light effect
+            try:
+                color_function(self, context, frame, out=colors)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Error while evaluating custom light effect function for {self.name!r}"
+                ) from exc
 
-                # This check is needed to cater for the cases when the calculated
-                # pixel coordinate is out of the bounds of the image, in which
-                # case get_pixel() returns an empty list or a short list
-                if len(pixel_color) == len(new_color):
-                    # If the conversion to linear space ever becomes a bottleneck,
-                    # we can convert the image in advance when it is stored into
-                    # the pixel cache if we can vectorize the operation somehow
-                    # or offload it to C.
-                    if color_image.colorspace_settings.is_data:
-                        new_color[:] = pixel_color
-                    else:
-                        match color_image.colorspace_settings.name:
-                            case "sRGB":
-                                new_color[:] = convert_from_srgb_to_linear(pixel_color)  # type: ignore
-                            case "Linear Rec.709":
-                                new_color[:] = pixel_color
-                            case _:
-                                # Note that we do NOT handle conversion from other color spaces here,
-                                # just use the colors as they are. If other color spaces are used frequently,
-                                # explicit conversion needs to be implemented for them as well.
-                                new_color[:] = pixel_color
+        else:
+            # should not happen
+            colors.fill(1.0)
 
-            else:
-                # should not happen
-                new_color[:] = (1.0, 1.0, 1.0, 1.0)
+        # Scale the alpha channel of the new colors with the influence
+        colors[:, 3] *= where(mask, 0, influence)
 
-            new_color[3] *= alpha
+        # Apply the new color with alpha blending
+        blend_in_place(colors, context.backdrop, BlendMode[self.blend_mode])
 
-            # Apply the new color with alpha blending
-            blend_in_place(new_color, color, BlendMode[self.blend_mode])  # type: ignore
-
-    def as_dict(self):
+    def as_dict(self) -> Jsonable:
         """Creates a dictionary representation of the light effect."""
         # Hint: synchronize content of this function with self.update_from()
         return {
@@ -861,6 +1078,7 @@ class LightEffect(PropertyGroup):
             "outputY": self.output_y,
             "influence": self.influence,
             "meshName": self.mesh.name if self.mesh else None,
+            "droneGroupName": self.drone_group.name if self.drone_group else None,
             "target": self.target,
             "randomness": self.randomness,
             "outputMappingMode": self.output_mapping_mode,
@@ -910,17 +1128,11 @@ class LightEffect(PropertyGroup):
 
         self.invalidate_color_image()
 
-    @property
-    def color_function_ref(self) -> Callable | None:
-        """The color function used to calculate the effect, if it exists and is being
-        used according to the type of the effect.
+    def get_versioned_color_function(self) -> VersionedCustomLightEffectFunction | None:
+        """The color function used to calculate the effect, if it exists and is
+        being used according to the type of the effect, and its API version.
         """
-        if self.type != "FUNCTION" or not self.color_function:
-            return None
-
-        absolute_path = abspath(self.color_function.path)
-        module = load_module(absolute_path)
-        return getattr(module, self.color_function.name, None)
+        return self.color_function.load() if self.color_function else None
 
     def contains_frame(self, frame: int) -> bool:
         """Returns whether the light effect contains the given frame.
@@ -977,17 +1189,43 @@ class LightEffect(PropertyGroup):
         else:
             return 0
 
-    def get_image_pixels(self) -> Sequence[float]:
+    def get_image_pixels(self) -> PixelsWithColorspace | None:
         """Returns the pixel-level representation of the color image of the light
         effect, caching the result for future use.
         """
         global _pixel_cache
         pixels = _pixel_cache.get(self.id)
         if pixels is None and self.color_image is not None:
-            pixels = self.color_image.pixels[:]
-            _pixel_cache.add(self.id, pixels, is_static=not self.is_animated)
+            pixels = _pixel_cache.add_image(
+                self.id, self.color_image, is_static=not self.is_animated
+            )
 
-        return pixels or ()
+        return pixels
+
+    def get_influence(self, frame: int) -> float:
+        """Returns the common influence value of this effect, modifying it in the
+        fade-in and fade-out periods as needed.
+
+        The returned value is guaranteed to be in [0; 1].
+        """
+        influence = self.influence
+
+        # Apply fade-in
+        if self.fade_in_duration > 0:
+            diff = frame - self.frame_start + 1
+            if diff < self.fade_in_duration:
+                influence *= diff / self.fade_in_duration
+
+        # Apply fade_out
+        if self.fade_out_duration > 0:
+            diff = self.frame_end - frame
+            if diff < self.fade_out_duration:
+                influence *= diff / self.fade_out_duration
+
+        return min(max(influence, 0), 1)
+
+    def get_time_fraction_for_frame(self, frame: int) -> float:
+        return (frame - self.frame_start) / max(self.duration - 1, 1)
 
     @property
     def id(self) -> str:
@@ -1032,6 +1270,7 @@ class LightEffect(PropertyGroup):
         self.output_y = other.output_y
         self.influence = other.influence
         self.mesh = other.mesh
+        self.drone_group = other.drone_group
         self.target = other.target
         self.randomness = other.randomness
         self.output_mapping_mode = other.output_mapping_mode
@@ -1041,7 +1280,13 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
-        self.preset_id = other.preset_id
+        try:
+            self.preset_id = other.preset_id
+        except TypeError:
+            # This happens if other.preset_id is empty or some other unsupported value
+            # that is not present in the enum spec any more
+            self.preset_id = NULL_PRESET_ID
+
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
         self.output_function_y.update_from(other.output_function_y)
@@ -1086,6 +1331,13 @@ class LightEffect(PropertyGroup):
             else:
                 warnings.append(
                     f"Could not import mesh: object {mesh_name!r} is not part of the current file"
+                )
+        if drone_group_name := data.get("droneGroupName"):
+            if drone_group_name in bpy.data.collections:
+                self.drone_group = bpy.data.collections[drone_group_name]
+            else:
+                warnings.append(
+                    f"Could not import drone group: collection {drone_group_name!r} is not part of the current file"
                 )
         if target := data.get("target"):
             self.target = target
@@ -1147,97 +1399,6 @@ class LightEffect(PropertyGroup):
             )
             self.frame_end = self.storyboard_entry_or_transition.frame_end + end_offset
 
-    def _evaluate_influence_at(
-        self, position, frame: int, condition: Callable[[Coordinate3D], bool] | None
-    ) -> float:
-        """Eveluates the effective influence of the effect on the given position
-        in space and at the given frame.
-
-        Parameters:
-            position: the position to evaluate the influence at
-            frame: the frame count
-            condition: additional condition that must evaluate to true when called
-                with the position; otherwise the effect will not be applied at all
-        """
-        # Apply mesh containment constraint
-        if condition and not condition(position):
-            return 0.0
-
-        influence = self.influence
-
-        # Apply fade-in
-        if self.fade_in_duration > 0:
-            diff = frame - self.frame_start + 1
-            if diff < self.fade_in_duration:
-                influence *= diff / self.fade_in_duration
-
-        # Apply fade_out
-        if self.fade_out_duration > 0:
-            diff = self.frame_end - frame
-            if diff < self.fade_out_duration:
-                influence *= diff / self.fade_out_duration
-
-        return influence
-
-    def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
-        """Returns a BVH-tree data structure from the mesh associated to this
-        light effect for easy containment detection, or `None` if the light
-        effect has no associated mesh.
-        """
-        if self.mesh and self.mesh.data:
-            depsgraph = bpy.context.evaluated_depsgraph_get()
-            mesh = self.mesh
-
-            obj = depsgraph.objects.get(mesh.name)
-            if obj and obj.data:
-                # Object is in the evaluated depsgraph so we use the mesh data
-                # from there
-                ev_mesh = cast(Mesh, obj.data)
-                ev_mesh.transform(mesh.matrix_world)
-                tree = BVHTree.FromObject(obj, depsgraph, deform=True)
-                ev_mesh.transform(mesh.matrix_world.inverted())
-            else:
-                # Object is not in the evaluated depsgraph -- maybe it is
-                # hidden? Use self.mesh directly
-                mesh_data = cast(Mesh, mesh.data)
-                with use_b_mesh() as b_mesh:
-                    b_mesh.from_mesh(mesh_data)
-                    b_mesh.transform(mesh.matrix_world)
-                    tree = BVHTree.FromBMesh(b_mesh)
-            return tree
-
-    def _get_plane_from_mesh(self) -> Plane | None:
-        """Returns a plane that is an infinite expansion of the first face of the
-        mesh associated to this light effect, or `None` if the light effect has
-        no associated mesh or it has no faces.
-        """
-        if self.mesh:
-            mesh = cast(Mesh, self.mesh.data)
-            local_to_world = self.mesh.matrix_world
-            for polygon in mesh.polygons:
-                normal = local_to_world.to_3x3() @ polygon.normal
-                center = local_to_world @ polygon.center
-                try:
-                    return Plane.from_normal_and_point(normal, center)  # ty:ignore[invalid-argument-type]
-                except Exception:
-                    # probably all-zero normal vector
-                    pass
-
-    def _get_spatial_effect_predicate(self) -> Callable[[Coordinate3D], bool] | None:
-        if self.target == "INSIDE_MESH":
-            bvh_tree = self._get_bvh_tree_from_mesh()
-            func = partial(test_containment, bvh_tree)
-        elif self.target == "FRONT_SIDE":
-            plane = self._get_plane_from_mesh()
-            func = partial(test_is_in_front_of, plane)
-        else:
-            func = None
-
-        if self.invert_target:
-            func = negate(func or _always_true)
-
-        return func
-
     def _create_texture(self) -> ImageTexture:
         """Creates the texture associated to the light effect."""
         tex = bpy.data.textures.new(
@@ -1263,6 +1424,281 @@ class LightEffect(PropertyGroup):
                 remove_if_unused(self.texture.image, from_=bpy.data.images)
 
         remove_if_unused(self.texture, from_=bpy.data.textures)
+
+    ####################################################################################
+    ## Helper functions for effect evaluation only
+    ####################################################################################
+
+    def _get_bvh_tree_from_mesh(self) -> BVHTree | None:
+        """Returns a BVH-tree data structure from the mesh associated to this
+        light effect for easy containment detection, or `None` if the light
+        effect has no associated mesh.
+        """
+        if self.mesh and self.mesh.data:
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            mesh = self.mesh
+
+            obj = depsgraph.objects.get(mesh.name)
+            if obj and obj.data:
+                # Object is in the evaluated depsgraph so we use the mesh data
+                # from there
+                ev_mesh = cast(Mesh, obj.data)
+                ev_mesh.transform(mesh.matrix_world)
+                tree = BVHTree.FromObject(obj, depsgraph, deform=True)
+                ev_mesh.transform(mesh.matrix_world.inverted())
+            else:
+                # Object is not in the evaluated depsgraph -- maybe it is
+                # hidden? Use self.mesh directly
+                mesh_data = cast(Mesh, mesh.data)
+                with use_b_mesh() as b_mesh:
+                    # We don't request the normals here because we need to update them
+                    # anyway after calling transform(). normal_update() is mandatory,
+                    # otherwise there are slight issues with the containment test such
+                    # that it does not give the same result when the mesh is hidden
+                    # (not in the deps graph).
+                    b_mesh.from_mesh(
+                        mesh_data, vertex_normals=False, face_normals=False
+                    )
+                    b_mesh.transform(mesh.matrix_world)
+                    b_mesh.normal_update()
+                    tree = BVHTree.FromBMesh(b_mesh)
+            return tree
+
+    def _get_plane_from_mesh(self) -> Plane | None:
+        """Returns a plane that is an infinite expansion of the first face of the
+        mesh associated to this light effect, or `None` if the light effect has
+        no associated mesh or it has no faces.
+        """
+        if self.mesh:
+            mesh = cast(Mesh, self.mesh.data)
+            local_to_world = self.mesh.matrix_world
+            for polygon in mesh.polygons:
+                normal = local_to_world.to_3x3() @ polygon.normal
+                center = local_to_world @ polygon.center
+                try:
+                    return Plane.from_normal_and_point(normal, center)
+                except Exception:
+                    # probably all-zero normal vector
+                    pass
+
+    def _get_spatial_effect_predicate(
+        self,
+    ) -> Callable[[ObjectPositions, NDArray[bool_]], None] | None:
+        match self.target:
+            case "INSIDE_MESH":
+                bvh_tree = self._get_bvh_tree_from_mesh()
+                return (
+                    partial(test_containment, bvh_tree)
+                    if bvh_tree is not None
+                    else None
+                )
+
+            case "FRONT_SIDE":
+                plane = self._get_plane_from_mesh()
+                return partial(test_in_front_of, plane) if plane is not None else None
+
+    def _get_output_based_on_output_type(
+        self,
+        axis: Literal["x", "y"],
+        context: LightEffectEvaluationContext,
+        frame: int,
+        *,
+        out: NDArray[float32],
+    ) -> float | None:
+        """Get the float outputs for color ramp or image indexing based on the
+        output type.
+
+        Args:
+            out: destination array to write the result to
+
+        Returns:
+            a constant output to use for all cells in the destination array if the
+            output is constant, or `None` if the output is not constant
+        """
+        output_type = self.output_y if axis == "y" else self.output
+
+        num_drones = context.num_drones
+        positions = context.positions
+        mapping = context.mapping
+
+        if output_type == "FIRST_COLOR":
+            return 0.0
+
+        elif output_type == "LAST_COLOR":
+            return 1.0
+
+        elif output_type == "TEMPORAL":
+            return self.get_time_fraction_for_frame(frame)
+
+        elif output_type_supports_mapping_mode(output_type):
+            # There are two options here:
+            #
+            # 1. Legacy, non-proportional mode. We sort the drones based on a
+            #    sort key and then space them out equally on the color ramp or
+            #    image axis.
+            #
+            # 2. Proportional mode. Same as above, but we assign drones to
+            #    positions on the color ramp or image axis in a way that their
+            #    distances on the color ramp or image axis are proportional to
+            #    the differences in their sort keys. Note that this needs a
+            #    _scalar_ sorting key so we ignore all but the principal axis
+            #    for gradient output types.
+            mapping_mode = (
+                self.output_mapping_mode_y if axis == "y" else self.output_mapping_mode
+            )
+            proportional = mapping_mode == "PROPORTIONAL"
+            sort_keys: NDArray[float32] | None
+
+            if output_type == "DISTANCE":
+                if self.mesh:
+                    position_of_mesh = array(
+                        get_position_of_object(self.mesh), dtype=float32
+                    )
+                    sort_keys = ((positions.as_array - position_of_mesh) ** 2).sum(
+                        axis=1
+                    )
+                else:
+                    sort_keys = None
+
+            else:
+                query_axes = (
+                    OUTPUT_TYPE_TO_AXES.get(output_type)
+                    or OUTPUT_TYPE_TO_AXES["default"]
+                )
+                if proportional:
+                    # In proportional mode, we are using the primary axis only
+                    # because we need a scalar
+                    sort_keys = positions.as_array[:, query_axes[0]]
+                else:
+                    # In non-proportional mode, we are sorting along multiple axes
+                    sort_keys = positions.as_array[:, query_axes]
+
+            if num_drones < 2 or sort_keys is None:
+                # Just assign all drones to the last color of the ramp
+                return 1.0
+
+            if proportional:
+                # In proportional mode, sort_keys is always 1D and we need to just
+                # re-scale the values to the 0-1 range
+                assert sort_keys.ndim == 1
+                if len(sort_keys) > 0:
+                    lo, hi = sort_keys.min(), sort_keys.max()
+                    if hi > lo:
+                        sort_keys -= lo
+                        divide(sort_keys, hi - lo, out=out)
+            else:
+                # In legacy mode, sort_keys is either 1D or 2D
+                if sort_keys.ndim == 2:
+                    # 2D case, we need to do a lexicographic sort
+                    order = lexsort(rot90(sort_keys))
+                else:
+                    assert sort_keys.ndim == 1
+                    order = argsort(sort_keys)
+
+                out[:] = argsort(order)
+                out /= num_drones - 1
+
+        elif output_type == "INDEXED_BY_DRONES":
+            # Gradient based on drone index
+            if num_drones < 2:
+                return 1.0
+
+            out[:] = linspace(0.0, 1.0, num=num_drones)
+
+        elif output_type == "INDEXED_BY_FORMATION":
+            # Gradient based on formation index
+            if mapping is None:
+                # if there is no mapping at all, we do not change color of drones
+                return nan
+
+            assert num_drones == len(mapping)
+
+            # TODO: this now works only if the number of valid entries in the mapping
+            # is consistent with the number of drones in the given formation;
+            # e.g., it will not work with two formations of half size at the same time
+            # for this case, single-formation specific mapping would be needed
+
+            # reduce mapping of all positions to rank, in case formation size
+            # is smaller than the number of drones
+            # TODO(ntamas): this would probably be faster with NumPy
+            if None in mapping:
+                sorted_valid_mapping = sorted(x for x in mapping if x is not None)
+                np_m1 = max(len(sorted_valid_mapping) - 1, 1)
+                out[:] = [
+                    nan if x is None else sorted_valid_mapping.index(x) / np_m1
+                    for x in mapping
+                ]
+            # otherwise just normalize full mapping to [0, 1]
+            else:
+                np_m1 = max(num_drones - 1, 1)
+                divide(cast(Sequence[int], mapping), np_m1, out=out)
+
+        elif output_type == "CUSTOM":
+            position_seq = positions.as_coordinate_sequence
+            fn_spec = self.output_function_y if axis == "y" else self.output_function
+            fn = fn_spec.load(LightEffectOutputFunctionV1)
+            if not fn:
+                return 1.0
+
+            time_fraction = self.get_time_fraction_for_frame(frame)
+            out[:] = [
+                fn(
+                    frame=frame,
+                    time_fraction=time_fraction,
+                    drone_index=index,
+                    formation_index=(mapping[index] if mapping is not None else None),
+                    position=position_seq[index],
+                    drone_count=num_drones,
+                )
+                for index in range(num_drones)
+            ]
+
+        elif output_type == "CUSTOM_V2":
+            fn_spec = self.output_function_y if axis == "y" else self.output_function
+            fn = fn_spec.load(LightEffectOutputFunctionV2)
+            return fn(self, context, frame, out=out) if fn else 1.0
+
+        elif output_type == "LIGHT_PRESET":
+            preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
+            return preset_fn(self, context, frame, out=out) if preset_fn else nan
+
+        else:
+            # Should not get here
+            return 1.0
+
+    def _mask_drones_not_in_group(
+        self, mask: NDArray[bool_], all_drones: Sequence[Object]
+    ) -> None:
+        """Masks all drones that are not in the drone group associated with this effect.
+        No-op if the effect has no associated group.
+        """
+        if self.drone_group is None:
+            return
+
+        drones_in_group = set(self.drone_group.objects)
+        for index, drone in enumerate(all_drones):
+            if drone not in drones_in_group:
+                mask[index] = True
+
+    def _mask_drones_not_matching_spatial_predicate(
+        self, mask: NDArray[bool_], positions: ObjectPositions
+    ) -> None:
+        """Masks all drones that do not match the spatial predicate associated with this
+        effect. No-op if the effect has no spatial predicate.
+        """
+        predicate: Callable[[ObjectPositions, NDArray[bool_]], None] | None = (
+            self._get_spatial_effect_predicate()
+        )
+        if not predicate:
+            if self.invert_target:
+                mask.fill(True)
+            return
+
+        # TODO(ntamas): re-write predicates so they update the mask and do not
+        # even bother testing those drones that are already excluded at this point
+        result = empty_like(mask)
+        predicate(positions, result)
+        mask |= result if self.invert_target else ~result
 
 
 class LightEffectCollection(PropertyGroup, ListMixin[LightEffect]):

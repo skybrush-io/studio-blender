@@ -1,6 +1,5 @@
-from bpy.types import Panel
+from bpy.types import Context, Panel
 
-from sbstudio.plugin.model.storyboard import Storyboard
 from sbstudio.plugin.operators import (
     CreateNewStoryboardEntryOperator,
     MoveStoryboardEntryDownOperator,
@@ -28,13 +27,13 @@ class StoryboardEditor(Panel):
     bl_region_type = "UI"
     bl_category = "Formations"
 
-    def draw(self, context):
+    def draw(self, context: Context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
 
         scene = context.scene
-        storyboard: Storyboard | None = scene.skybrush.storyboard
+        storyboard = scene.skybrush.storyboard
         if not storyboard:
             return
 

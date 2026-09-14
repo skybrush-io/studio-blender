@@ -10,7 +10,9 @@ from sbstudio.plugin.keyframes import set_keyframes
 __all__ = (
     "create_keyframe_for_color_of_drone",
     "get_color_of_drone",
+    "get_colors_of_drones_fast",
     "set_color_of_drone",
+    "set_colors_of_drones_fast",
 )
 
 
@@ -65,7 +67,7 @@ def get_color_of_drone(drone: Object) -> RGBAColor:
 
 
 def get_colors_of_drones_fast(
-    drones: SupportsForEach, *, dest: npt.NDArray | None = None
+    drones: SupportsForEach, *, dest: npt.NDArray[np.float32] | None = None
 ) -> npt.NDArray:
     """Fetches the colors of the LED lights of the drones in the given collection.
 

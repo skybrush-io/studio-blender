@@ -6,7 +6,7 @@ from mathutils import Vector
 
 class BVHTree:
     @classmethod
-    def FromBMesh(cls, bmesh: BMesh, epsilon: float = 0.0): ...
+    def FromBMesh(cls, bmesh: BMesh, epsilon: float = 0.0) -> BVHTree: ...
     @classmethod
     def FromObject(
         cls,
@@ -16,10 +16,14 @@ class BVHTree:
         render: bool = False,
         cage: bool = False,
         epsilon: float = 0.0,
-    ): ...
+    ) -> BVHTree: ...
+    def find_nearest(
+        self, origin: Vector | tuple[float, ...], distance: float = 1.84467e19, /
+    ) -> tuple[Vector, Vector, int, float]: ...
     def ray_cast(
         self,
         origin: Vector | tuple[float, ...],
         direction: Vector | tuple[float, ...],
         distance: float = sys.float_info.max,
-    ) -> tuple[Vector, Vector, int, float]: ...
+        /,
+    ) -> tuple[Vector | None, Vector | None, int | None, float | None]: ...

@@ -17,6 +17,9 @@ from sbstudio.plugin.operators import (
     SetLightEffectEndFrameOperator,
     SetLightEffectStartFrameOperator,
 )
+from sbstudio.plugin.operators.invalidate_light_effect_pixel_cache import (
+    InvalidateLightEffectPixelCacheOperator,
+)
 from sbstudio.plugin.utils.warnings import draw_experimental_feature_warning
 
 
@@ -97,7 +100,13 @@ class LightEffectsPanel(Panel):
                     col.prop_search(entry.texture, "image", bpy.data, "images", text="")
 
                     col = row.column(align=True)
-                    col.operator("image.open", icon="FILE_FOLDER", text="")
+                    subrow = col.row(align=True)
+                    subrow.operator("image.open", icon="FILE_FOLDER", text="")
+                    subrow.operator(
+                        InvalidateLightEffectPixelCacheOperator.bl_idname,
+                        icon="FILE_REFRESH",
+                        text="",
+                    )
                 elif entry.type == "FUNCTION":
                     row = self.layout.box()
                     row.prop(entry.color_function, "path", text="")
@@ -166,11 +175,14 @@ class LightEffectsPanel(Panel):
                     icon="TRIA_LEFT",
                     text="",
                 )
+
             col.separator()
             col.prop(entry, "fade_in_duration")
             col.prop(entry, "fade_out_duration")
+
             col.separator()
             col.prop(entry, "mesh")
+
             col.separator()
             if entry.type == "COLOR_RAMP" or entry.type == "IMAGE":
                 col.prop(entry, "output")
@@ -192,8 +204,13 @@ class LightEffectsPanel(Panel):
                     col.prop(entry.output_function_y, "name", text="Fn name")
                 if output_type_supports_mapping_mode(entry.output_y):
                     col.prop(entry, "output_mapping_mode_y")
+
+            col.separator()
+            col.prop(entry, "drone_group")
             col.prop(entry, "target")
             col.prop(entry, "invert_target")
+
+            col.separator()
             col.prop(entry, "blend_mode")
             col.prop(entry, "influence", slider=True)
 

@@ -1,10 +1,11 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
 from math import inf
 from re import compile, fullmatch
-from typing import Any
+from typing import Any, TypeAlias
 
-Mapping = list[int | None]
+Mapping: TypeAlias = Sequence[int | None]
 """Type alias for mappings from drone indices to the corresponding target
 marker indices.
 """
@@ -19,6 +20,9 @@ class Limits:
 
     features: list[str] = field(default_factory=list)
     """List of feature tags returned by the server."""
+
+    timeout: float | None = None
+    """Request timeout in seconds."""
 
     @classmethod
     def default(cls):
@@ -49,7 +53,15 @@ class Limits:
         else:
             raise TypeError("invalid type for features")
 
-        return cls(num_drones=num_drones, features=sorted(set(features)))
+        timeout = obj.get("timeout")
+        if timeout is None or isinstance(timeout, (int, float)):
+            timeout = float(timeout) if timeout is not None else None
+        else:
+            raise TypeError("invalid type for timeout")
+
+        return cls(
+            num_drones=num_drones, features=sorted(set(features)), timeout=timeout
+        )
 
 
 @dataclass

@@ -2,7 +2,7 @@ bl_info = {
     "name": "Skybrush Studio",
     "author": "CollMot Robotics Ltd.",
     "description": "Extends Blender with UI components for drone show design",
-    "version": (4, 4, 0),
+    "version": (5, 0, 3),
     "blender": (4, 4, 0),
     "category": "Interface",
     "doc_url": "https://doc.collmot.com/public/skybrush-studio-for-blender/latest/",
@@ -48,12 +48,14 @@ for candidate in candidates:
 
 from sbstudio.i18n.translations import translations_dict
 from sbstudio.plugin.lists import (
+    SKYBRUSH_UL_dronegrouplist,
     SKYBRUSH_UL_lightfxlist,
     SKYBRUSH_UL_scheduleoverridelist,
 )
 from sbstudio.plugin.menus import GenerateMarkersMenu
 from sbstudio.plugin.model import (
     ColorFunctionProperties,
+    DroneGroupsProperties,
     DroneShowAddonFileSpecificSettings,
     DroneShowAddonGlobalSettings,
     DroneShowAddonObjectProperties,
@@ -81,8 +83,11 @@ from sbstudio.plugin.operators import (
     AddMarkersFromSVGOperator,
     AddMarkersFromZippedCSVOperator,
     AddMarkersFromZippedDSSOperator,
+    AddSelectedDronesToDroneGroupOperator,
     AppendFormationToStoryboardOperator,
     ApplyColorsToSelectedDronesOperator,
+    ClearDroneGroupOperator,
+    CreateDroneGroupOperator,
     CreateFormationOperator,
     CreateLightEffectOperator,
     CreateNewScheduleOverrideEntryOperator,
@@ -102,9 +107,12 @@ from sbstudio.plugin.operators import (
     FixConstraintOrderingOperator,
     GetFormationStatisticsOperator,
     ImportLightEffectsOperator,
+    InvalidateLightEffectPixelCacheOperator,
     KMZExportOperator,
     LandOperator,
     LitebeeExportOperator,
+    MoveDroneGroupDownOperator,
+    MoveDroneGroupUpOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     MoveStoryboardEntryDownOperator,
@@ -113,6 +121,7 @@ from sbstudio.plugin.operators import (
     RecalculateTransitionsOperator,
     RefreshFileFormatsOperator,
     RegisterHardwareIDOperator,
+    RemoveDroneGroupOperator,
     RemoveFormationOperator,
     RemoveLightEffectOperator,
     RemoveScheduleOverrideEntryOperator,
@@ -121,6 +130,7 @@ from sbstudio.plugin.operators import (
     ReturnToHomeOperator,
     RunAllMigrationOperators,
     RunFullProximityCheckOperator,
+    SelectDronesFromDroneGroup,
     SelectFormationOperator,
     SelectStoryboardEntryForCurrentFrameOperator,
     SetGatewayURLOperator,
@@ -146,6 +156,7 @@ from sbstudio.plugin.operators import (
     VVIZExportOperator,
 )
 from sbstudio.plugin.panels import (
+    DroneGroupsPanel,
     DroneShowAddonObjectPropertiesPanel,
     ExportPanel,
     FormationsPanel,
@@ -190,6 +201,7 @@ from sbstudio.plugin.tasks import (
 
 types = (
     FormationsPanelProperties,
+    DroneGroupsProperties,
     ColorFunctionProperties,
     ScheduleOverride,
     StoryboardEntry,
@@ -231,6 +243,7 @@ operators = (
     DuplicateLightEffectOperator,
     ExportLightEffectsOperator,
     ImportLightEffectsOperator,
+    InvalidateLightEffectPixelCacheOperator,
     MoveLightEffectDownOperator,
     MoveLightEffectUpOperator,
     RemoveLightEffectOperator,
@@ -276,12 +289,23 @@ operators = (
     RegisterHardwareIDOperator,
     RunAllMigrationOperators,
     SetupSceneOperator,
+    AddSelectedDronesToDroneGroupOperator,
+    CreateDroneGroupOperator,
+    RemoveDroneGroupOperator,
+    ClearDroneGroupOperator,
+    SelectDronesFromDroneGroup,
+    MoveDroneGroupDownOperator,
+    MoveDroneGroupUpOperator,
 )
 """Operators in this addon; operators that require other operators must come
 later in the list than their dependencies."""
 
 
-lists = (SKYBRUSH_UL_lightfxlist, SKYBRUSH_UL_scheduleoverridelist)
+lists = (
+    SKYBRUSH_UL_dronegrouplist,
+    SKYBRUSH_UL_lightfxlist,
+    SKYBRUSH_UL_scheduleoverridelist,
+)
 """List widgets in this addon."""
 
 menus = (GenerateMarkersMenu,)
@@ -293,6 +317,7 @@ panels = (
     SwarmPanel,
     FormationsPanel,
     StoryboardEditor,
+    DroneGroupsPanel,
     TransitionEditorFromCurrentFormation,
     TransitionEditorIntoCurrentFormation,
     LEDControlPanel,

@@ -36,7 +36,7 @@ Materials:: Select this option to preserve the default coloring scheme through t
 
 == Marker size
 
-This options defines the size of the LED overlay markers if the visualization type 
+This options defines the size of the LED overlay markers if the visualization type
 is set to Markers. It is hidden otherwise.
 
 == Primary and secondary colors

@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING, Sequence
 import bpy
 import gpu.state
 from gpu_extras.batch import batch_for_shader
+from numpy import float32
+from numpy.typing import NDArray
 
-from sbstudio.model.types import Coordinate3D, RGBColor
+from sbstudio.model.types import Coordinate3D
 
 from .base import ShaderBatchBasedOverlay
 
@@ -20,7 +22,7 @@ __all__ = (
     "LEDsOverlayMarker",
 )
 
-LEDsOverlayMarker = tuple[Coordinate3D, RGBColor]
+LEDsOverlayMarker = tuple[Coordinate3D, NDArray[float32]]
 """Type specification for a single marker on the overlay. A marker requires
 a single coordinate and a Color.
 """

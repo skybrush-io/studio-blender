@@ -3,11 +3,12 @@
 Functions are referenced by a stable string ID, so projects stay portable
 across machines and operating systems (no .py file paths inside .blend).
 
-A preset function returns a float in ``[0, 1]`` for the X/Y axis of the
-color ramp / image lookup, given:
+A preset function satisfies the ``LightEffectOutputFunctionV2`` protocol::
 
-    def my_preset(frame, time_fraction, drone_index, formation_index,
-                  position, drone_count) -> float: ...
+    def my_preset(effect, context, frame, *, out) -> None: ...
+
+and writes per-drone results into the ``out`` array.  See the protocol
+definition for details.
 
 Display names follow the format ``<number><human-readable name>``,
 e.g. ``「1」 Odd-Even Pulse`` (English) / ``①奇偶脉冲`` (Chinese). The number is
@@ -17,6 +18,7 @@ assigned by registration order across all categories.
 from __future__ import annotations
 
 from .base import (
+    NULL_PRESET_ID,
     get_preset_enum_items,
     get_preset_function,
     register_preset,
@@ -29,6 +31,7 @@ __all__ = (
     "register_preset",
     "register",
     "unregister",
+    "NULL_PRESET_ID",
 )
 
 # Import light effect presets to register them and include them in the enum items list.

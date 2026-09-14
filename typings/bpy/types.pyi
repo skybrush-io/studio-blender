@@ -5,6 +5,7 @@ from contextlib import AbstractContextManager
 from typing import Any, Iterable, Literal, TypeAlias, TypeVar, overload
 
 from mathutils import Matrix, Vector
+from numpy.typing import NDArray
 from sbstudio.plugin.model import (
     DroneShowAddonObjectProperties,
     DroneShowAddonProperties,
@@ -62,16 +63,30 @@ EmptyDisplayType: TypeAlias = Literal[
 RGBAColor = MutableSequence[float]
 Vector3 = tuple[float, float, float]
 
+class bpy_prop_array(Sequence[T]):
+    @overload
+    def foreach_get(self, seq: MutableSequence[T]) -> None: ...
+    @overload
+    def foreach_get(self, seq: NDArray) -> None: ...
+    @overload
+    def foreach_set(self, seq: Sequence[T]) -> None: ...
+    @overload
+    def foreach_set(self, seq: NDArray) -> None: ...
+
 class bpy_prop_collection(Sequence[T]):
     def find(self, key: str) -> int: ...
     @overload
-    def foreach_get(self, attr: str, seq: Sequence[float]) -> None: ...
+    def foreach_get(self, attr: str, seq: MutableSequence[T]) -> None: ...
     @overload
-    def foreach_get(self, attr: str, seq: Sequence[bool]) -> None: ...
+    def foreach_get(self, attr: str, seq: MutableSequence[bool]) -> None: ...
     @overload
-    def foreach_set(self, attr: str, seq: Sequence[float]) -> None: ...
+    def foreach_get(self, attr: str, seq: NDArray) -> None: ...
+    @overload
+    def foreach_set(self, attr: str, seq: Sequence[T]) -> None: ...
     @overload
     def foreach_set(self, attr: str, seq: Sequence[bool]) -> None: ...
+    @overload
+    def foreach_set(self, attr: str, seq: NDArray) -> None: ...
     @overload
     def get(self, key: str) -> T | None: ...
     @overload
@@ -79,7 +94,7 @@ class bpy_prop_collection(Sequence[T]):
     def items(self) -> Iterable[tuple[str, T]]: ...
     def keys(self) -> Iterable[str]: ...
     def values(self) -> Iterable[T]: ...
-    def __getitem__(self, key: int | str) -> T: ...  # type: ignore[reportIncompatibleMethodOverride]
+    def __getitem__(self, key: int | str) -> T: ...  # ty:ignore[invalid-method-override]
     def __len__(self) -> int: ...
 
 class bpy_prop_collection_idprop(bpy_prop_collection[T]):
@@ -191,6 +206,8 @@ class ID(bpy_struct):
 
     def animation_data_create(self) -> AnimData | None: ...
     def copy(self: Self) -> Self: ...
+    def update_tag(self) -> None: ...
+    def user_of_id(self, id: ID) -> int: ...
 
 class ActionChannelbag(bpy_struct):
     fcurves: ActionChannelbagFCurves
@@ -322,12 +339,10 @@ class Action(ID):
     ) -> FCurve: ...
 
 class Collection(ID):
+    all_objects: bpy_prop_collection[Object]
     children: CollectionChildren
+    children_recursive: list[Collection]
     objects: CollectionObjects
-
-    def link(self, obj: Object) -> None: ...
-    def unlink(self, obj: Object) -> None: ...
-    def remove(self, obj: Object) -> None: ...
 
 class ColorManagedInputColorspaceSettings(ID):
     is_data: bool
@@ -337,7 +352,7 @@ class Image(ID):
     depth: int
     frame_duration: int
     size: tuple[int, int]
-    pixels: Sequence[float]
+    pixels: bpy_prop_array[float]
     colorspace_settings: ColorManagedInputColorspaceSettings
 
     def pack(self) -> None: ...
@@ -467,7 +482,7 @@ class Preferences(bpy_struct):
     addons: bpy_prop_collection[Addon]
     system: System
 
-class Scene:
+class Scene(ID):
     frame_current: int
     frame_current_final: float
     frame_end: int
@@ -627,7 +642,7 @@ class ActionChannelbagFCurves(bpy_prop_collection[FCurve]):
     def ensure(
         self, data_path: str, *, index: int = 0, group_name: str = ""
     ) -> FCurve: ...
-    def find(self, data_path: str, *, index: int = 0) -> FCurve | None: ...  # type: ignore[reportIncompatibleMethodOverride]
+    def find(self, data_path: str, *, index: int = 0) -> FCurve | None: ...  # ty:ignore[invalid-method-override]
     def new(
         self, data_path: str, *, index: int = 0, group_name: str = ""
     ) -> FCurve: ...
@@ -647,8 +662,8 @@ class ActionStrips(bpy_prop_collection[ActionStrip]):
     def remove(self, anim_strip: ActionStrip) -> None: ...
 
 class CollectionChildren(bpy_prop_collection[Collection]):
-    def link(self, object: Object) -> None: ...
-    def unlink(self, object: Object) -> None: ...
+    def link(self, child: Collection) -> None: ...
+    def unlink(self, child: Collection) -> None: ...
 
 class CollectionObjects(bpy_struct, bpy_prop_collection[Object]):
     def link(self, object: Object) -> None: ...
@@ -880,7 +895,7 @@ class UIList(bpy_struct):
         context: Context,
         layout: UILayout,
         data: bpy_struct,
-        item: bpy_struct,
+        item,  # leave untyped to allow subclasses to add their own type
         icon: int,
         active_data: bpy_struct,
         active_propname: str,
@@ -895,6 +910,7 @@ class UIList(bpy_struct):
 class UILayout(bpy_struct):
     active: bool
     alert: bool
+    alignment: Literal["EXPAND", "LEFT", "CENTER", "RIGHT"]
     emboss: str
     enabled: bool
     scale_x: float
@@ -992,8 +1008,29 @@ class UILayout(bpy_struct):
     def separator(
         self, *, factor: float = 1.0, type: Literal["AUTO", "SPACE", "LINE"] = "AUTO"
     ) -> None: ...
+    def split(
+        self,
+        *,
+        factor: float = 0.0,
+        align: bool = False,
+    ) -> UILayout: ...
     def template_color_ramp(self, *args, **kwargs) -> None: ...
-    def template_list(self, *args, **kwargs) -> None: ...
+    def template_list(
+        self,
+        listtype_name: str,
+        list_id: str,
+        dataptr: Any,
+        propname: str,
+        active_dataptr: Any,
+        active_propname: str,
+        *,
+        item_dyntip_propname: str = "",
+        rows: int = 5,
+        maxrows: int = 5,
+        columns: int = 9,
+        sort_reverse: bool = False,
+        sort_lock: bool = False,
+    ) -> None: ...
 
 class View3DOverlay(bpy_struct):
     show_overlays: bool
