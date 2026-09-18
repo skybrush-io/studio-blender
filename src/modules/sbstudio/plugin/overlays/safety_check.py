@@ -153,7 +153,7 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Min distance: {safety_check.min_distance:.{safety_check.SIGNIFICANT_DIGITS}f} m",
+                f"Min distance: {safety_check.format_float(safety_check.min_distance)} m",
             )
             y -= line_height
 
@@ -166,7 +166,7 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Altitude: {safety_check.min_altitude:.{safety_check.SIGNIFICANT_DIGITS}f} - {safety_check.max_altitude:.{safety_check.SIGNIFICANT_DIGITS}f} m",
+                f"Altitude: {safety_check.format_float(safety_check.min_altitude)} m",
             )
             y -= line_height
 
@@ -182,9 +182,9 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Max velocity XY: {safety_check.max_velocity_xy:.{safety_check.SIGNIFICANT_DIGITS}f} m/s | "
-                f"U: {safety_check.max_velocity_z_up:.{safety_check.SIGNIFICANT_DIGITS}f} m/s | "
-                f"D: {safety_check.max_velocity_z_down:.{safety_check.SIGNIFICANT_DIGITS}f} m/s",
+                f"Max velocity XY: {safety_check.format_float(safety_check.max_velocity_xy)} m/s | "
+                f"U: {safety_check.format_float(safety_check.max_velocity_z_up)} m/s | "
+                f"D: {safety_check.format_float(safety_check.max_velocity_z_down)} m/s",
             )
             y -= line_height
 
@@ -200,7 +200,7 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Max acceleration: {safety_check.max_acceleration:.{safety_check.SIGNIFICANT_DIGITS}f} m/s/s",
+                f"Max acceleration: {safety_check.format_float(safety_check.max_acceleration)} m/s/s",
             )
             y -= line_height
 
@@ -213,7 +213,7 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Max yaw rate: {safety_check.max_yaw_rate:.{safety_check.SIGNIFICANT_DIGITS}f} deg/s",
+                f"Max yaw rate: {safety_check.format_float(safety_check.max_yaw_rate)} deg/s",
             )
             y -= line_height
 

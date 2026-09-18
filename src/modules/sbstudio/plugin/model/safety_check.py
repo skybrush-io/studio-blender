@@ -115,9 +115,9 @@ class SafetyCheckProperties(PropertyGroup):
     they can be modified by the user.
     """
 
-    SIGNIFICANT_DIGITS: Final[int] = 2
-    """Number of significant digits of position, velocity, acceleration and
-    yaw rate safety checks."""
+    DECIMAL_PRECISION: Final[int] = 2
+    """Number of decimal digits to display in position, velocity, acceleration
+    and yaw rate safety checks."""
 
     formation_status = StringProperty(
         name="Formation status",
@@ -380,8 +380,8 @@ class SafetyCheckProperties(PropertyGroup):
     def epsilon(self) -> float:
         """Returns the max tolerable numeric error in position, velocity
         acceleration and yaw rate safety check values, based on the number
-        of significant digits."""
-        return 10 ** (-self.SIGNIFICANT_DIGITS)
+        of decimal digits displayed."""
+        return 10 ** (-self.DECIMAL_PRECISION)
 
     @property
     def min_distance_is_valid(self) -> bool:
@@ -566,6 +566,11 @@ class SafetyCheckProperties(PropertyGroup):
             or self.acceleration_warning_enabled
             or self.yaw_rate_warning_enabled
         )
+
+    def format_float(self, value: float) -> str:
+        """Returns the string representation of a safety check numeric value,
+        based on the number of decimal digits defined for display."""
+        return f"{value:.{self.DECIMAL_PRECISION}f}"
 
     def get_positions_for_proximity_check(
         self, positions: Sequence[Coordinate3D]
