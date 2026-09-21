@@ -166,7 +166,8 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Altitude: {safety_check.format_float(safety_check.min_altitude)} m",
+                f"Altitude: {safety_check.format_float(safety_check.min_altitude)} - "
+                f"{safety_check.format_float(safety_check.max_altitude)} m",
             )
             y -= line_height
 
