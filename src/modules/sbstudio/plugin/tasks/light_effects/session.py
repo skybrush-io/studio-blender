@@ -66,7 +66,12 @@ class LightEffectUpdateSession:
         assert self._frame is not None
 
         if self._context is None:
-            drones, base_colors = self._owner._create_mutable_color_array_for_drones()
+            # Re-fetch Collection.objects for this session. Caching that RNA
+            # wrapper across depsgraph updates (for example after linking many
+            # drones on the same frame) leaves a dangling pointer; len() then
+            # crashes in Collection_objects_begin / RNA_id_pointer_create.
+            drones = self._owner.get_drone_collection(self._scene)
+            base_colors = self._owner._create_mutable_color_array_for_drones(drones)
             self._context = LightEffectEvaluationContext(
                 drones=drones,
                 positions=ObjectPositions(drones),

@@ -1,5 +1,6 @@
 from typing import Callable
 
+import bpy
 from bpy.types import CollectionObjects, Object, Scene
 from numpy import empty, float32
 from numpy.typing import NDArray
@@ -51,14 +52,13 @@ class LightEffectUpdater:
     `None` if the base colors have not been cached for the current frame yet.
     """
 
-    _last_drone_collection: CollectionObjects | None = None
-    """The collection of drones that were last used to produce a mutable array of colors
-    internally. Used by `get_base_color_of_drone()` to populate the base color cache
-    when it is empty.
-    """
-
     _last_frame: int | None = None
     """Index of the last frame that was evaluated with `update_light_effects()`"""
+
+    _running: bool = False
+    """True while `update()` is on the call stack. Writing colors back to drones
+    tags the depsgraph and would otherwise re-enter this callback.
+    """
 
     _session: LightEffectUpdateSession
     """The light effect update session that allows the user to apply light effects
@@ -81,7 +81,17 @@ class LightEffectUpdater:
             drone_collection_getter or self._get_drone_collection
         )
         self._drone_to_row_index = None
+        self._running = False
         self._session = LightEffectUpdateSession(self)
+
+    def get_drone_collection(self, scene: Scene) -> CollectionObjects:
+        """Returns a fresh RNA wrapper for the current drone collection.
+
+        Do not cache the returned `Collection.objects` across depsgraph updates.
+        Blender may free or rebuild that wrapper, and a later `len()` then
+        crashes in `Collection_objects_begin`.
+        """
+        return self._drone_collection_getter(scene)
 
     def get_base_color_of_drone(self, drone: Object) -> RGBAColor:
         """Returns the (cached) base color of the drone at the current frame
@@ -136,6 +146,16 @@ class LightEffectUpdater:
             the updates to apply to the drones in the scene, or `LightEffectUpdate.NOP`
             if no updates are to be applied
         """
+        if self._running:
+            return LightEffectUpdate.NOP
+
+        self._running = True
+        try:
+            return self._update(scene)
+        finally:
+            self._running = False
+
+    def _update(self, scene: Scene) -> LightEffectUpdate:
         light_effects = scene.skybrush.light_effects
         if not light_effects or not light_effects.enabled:
             self._ensure_session_not_running()
@@ -145,7 +165,6 @@ class LightEffectUpdater:
         frame = scene.frame_current
         if self._last_frame != frame:
             self._last_frame = frame
-            self._last_drone_collection = self._drone_collection_getter(scene)
             self._clear_base_colors()
 
         try:
@@ -167,25 +186,14 @@ class LightEffectUpdater:
 
     def _create_mutable_color_array_for_drones(
         self,
-    ) -> tuple[CollectionObjects, NDArray[float32]]:
-        """Creates a mutable color array from the current collection of drones, set up
-        earlier in `update()`. This color array caan be used during light effect
-        calculations to update the colors.
+        drones: CollectionObjects,
+    ) -> NDArray[float32]:
+        """Creates a mutable color array from the given collection of drones that can
+        be used during light effect calculations to update the colors.
 
         The returned array contains as many rows as the number of drones in the input
         collection. The i-th row stores the color of the i-th drone, in RGBA order.
-
-        Returns:
-            A tuple of the collection of drones and the mutable color array.
         """
-        drones = self._last_drone_collection
-        if drones is None:
-            raise RuntimeError(
-                "Cannot create a mutable color array for drones because the last "
-                "drone collection is not set. This usually means that the update() "
-                "method has not been called yet."
-            )
-
         n = len(drones)
         if not self._drone_to_row_index or n != self._base_colors.shape[0]:
             # Either we have no base colors yet, or the number of drones has changed.
@@ -201,9 +209,9 @@ class LightEffectUpdater:
             # These are shortcomings that we can live with for now as they can easily
             # be fixed by changing to a different frame and then back to the current
             # frame.
-            self._populate_base_color_cache()
+            self._populate_base_color_cache(drones)
 
-        return drones, self._base_colors.copy()
+        return self._base_colors.copy()
 
     def _ensure_session_not_running(self) -> None:
         """Ensures that no session is currently active."""
@@ -216,7 +224,9 @@ class LightEffectUpdater:
         """Returns whether there are already some cached base colors in the cache."""
         return bool(self._drone_to_row_index)
 
-    def _populate_base_color_cache(self) -> None:
+    def _populate_base_color_cache(
+        self, drones: CollectionObjects | None = None
+    ) -> None:
         """Populates the base color cache with the colors of the drones in the current
         frame.
 
@@ -226,18 +236,18 @@ class LightEffectUpdater:
 
         Upon exiting this function, it is guaranteed that self._drone_to_row_index is
         not None and self._base_colors has the same number of rows as the number of
-        drones in self._last_drone_collection.
+        drones in the given collection.
         """
-        if not self._last_drone_collection:
+        if drones is None:
+            scene = getattr(bpy.context, "scene", None)
+            drones = self._drone_collection_getter(scene) if scene else None
+
+        if drones is None:
             self._base_colors = empty((0, 4), dtype=float32)
             self._drone_to_row_index = {}
             return
 
-        n = len(self._last_drone_collection)
+        n = len(drones)
         self._base_colors = empty((n, 4), dtype=float32)
-        get_colors_of_drones_fast(
-            self._last_drone_collection, dest=self._base_colors.ravel()
-        )
-        self._drone_to_row_index = {
-            drone: i for i, drone in enumerate(self._last_drone_collection)
-        }
+        get_colors_of_drones_fast(drones, dest=self._base_colors.ravel())
+        self._drone_to_row_index = {drone: i for i, drone in enumerate(drones)}

@@ -326,6 +326,13 @@ class CreateTakeoffGridOperator(Operator):
         return {"FINISHED"}
 
     def _run(self, context):
+        from sbstudio.plugin.tasks.light_effects import suspended_light_effects
+        from sbstudio.plugin.tasks.safety_check import suspended_safety_checks
+
+        with suspended_safety_checks(), suspended_light_effects():
+            self._create_takeoff_grid(context)
+
+    def _create_takeoff_grid(self, context):
         bpy.ops.skybrush.prepare()
 
         points = create_points_of_takeoff_grid(
