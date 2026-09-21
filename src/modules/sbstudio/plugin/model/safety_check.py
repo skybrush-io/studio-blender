@@ -385,7 +385,7 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def min_distance_is_valid(self) -> bool:
-        """Returns whether the minimum distance property can be considered valid.
+        """Returns whether the minimum distance of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
@@ -403,17 +403,19 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def max_altitude_is_valid(self) -> bool:
-        """Returns whether the maximum altitude property can be considered valid.
+        """Returns whether the maximum altitude of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
         return self.max_altitude >= self.epsilon
 
     @property
     def max_velocities_are_valid(self) -> bool:
-        """Returns whether the maximum velocity property can be considered valid.
+        """Returns whether the maximum velocity of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
         return (
             self.max_velocity_xy >= self.epsilon
@@ -423,17 +425,19 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def max_acceleration_is_valid(self) -> bool:
-        """Returns whether the maximum acceleration property can be considered valid.
+        """Returns whether the maximum acceleration of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
         return self.max_acceleration >= self.epsilon
 
     @property
     def max_yaw_rate_is_valid(self) -> bool:
-        """Returns whether the maximum yaw rate property can be considered valid.
+        """Returns whether the maximum yaw rate of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
         return self.max_yaw_rate >= self.epsilon
 
