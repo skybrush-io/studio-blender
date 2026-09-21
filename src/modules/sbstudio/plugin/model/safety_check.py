@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Final, overload
 
 from bpy.props import (
     BoolProperty,
@@ -114,6 +114,10 @@ class SafetyCheckProperties(PropertyGroup):
     to the user. Others represent parameters of the safety checks and hence
     they can be modified by the user.
     """
+
+    DECIMAL_PRECISION: Final[int] = 2
+    """Number of decimal digits to display in position, velocity, acceleration
+    and yaw rate safety checks."""
 
     formation_status = StringProperty(
         name="Formation status",
@@ -373,8 +377,15 @@ class SafetyCheckProperties(PropertyGroup):
         return self.velocity_z_warning_threshold
 
     @property
+    def epsilon(self) -> float:
+        """Returns the max tolerable numeric error in position, velocity
+        acceleration and yaw rate safety check values, based on the number
+        of decimal digits displayed."""
+        return 10 ** (-self.DECIMAL_PRECISION)
+
+    @property
     def min_distance_is_valid(self) -> bool:
-        """Returns whether the minimum distance property can be considered valid.
+        """Returns whether the minimum distance of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
         scene at all.
         """
@@ -392,39 +403,43 @@ class SafetyCheckProperties(PropertyGroup):
 
     @property
     def max_altitude_is_valid(self) -> bool:
-        """Returns whether the maximum altitude property can be considered valid.
+        """Returns whether the maximum altitude of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
-        return self.max_altitude > 0
+        return self.max_altitude >= self.epsilon
 
     @property
     def max_velocities_are_valid(self) -> bool:
-        """Returns whether the maximum velocity property can be considered valid.
+        """Returns whether the maximum velocity of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
         return (
-            self.max_velocity_xy > 0
-            or self.max_velocity_z_up > 0
-            or self.max_velocity_z_down > 0
+            self.max_velocity_xy >= self.epsilon
+            or self.max_velocity_z_up >= self.epsilon
+            or self.max_velocity_z_down >= self.epsilon
         )
 
     @property
     def max_acceleration_is_valid(self) -> bool:
-        """Returns whether the maximum acceleration property can be considered valid.
+        """Returns whether the maximum acceleration of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
-        return self.max_acceleration > 0
+        return self.max_acceleration >= self.epsilon
 
     @property
     def max_yaw_rate_is_valid(self) -> bool:
-        """Returns whether the maximum yaw rate property can be considered valid.
+        """Returns whether the maximum yaw rate of drones can be considered valid.
         Right now we use zero to denote cases when there are no drones in the
-        scene at all.
+        scene at all. We also treat small values close to zero as invalid to avoid
+        showing false-positive warnings caused by numerical noise.
         """
-        return self.max_yaw_rate > 0
+        return self.max_yaw_rate >= self.epsilon
 
     @property
     def should_show_altitude_warning(self) -> bool:
@@ -555,6 +570,11 @@ class SafetyCheckProperties(PropertyGroup):
             or self.acceleration_warning_enabled
             or self.yaw_rate_warning_enabled
         )
+
+    def format_float(self, value: float) -> str:
+        """Returns the string representation of a safety check numeric value,
+        based on the number of decimal digits defined for display."""
+        return f"{value:.{self.DECIMAL_PRECISION}f}"
 
     def get_positions_for_proximity_check(
         self, positions: Sequence[Coordinate3D]
