@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import cos, float32, int32, sin, where
+from numpy import cos, float32, sin, where
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -18,13 +18,19 @@ CHASE_SPEED = 0.12
 CHASE_SPATIAL_K = 0.1
 
 
-def _chasing_tails_core(
-    positions: NDArray[float32], axis: int, frame: int, fi: NDArray[int32]
+def _chasing_tails(
+    context: LightEffectEvaluationContext, axis: int, frame: int
 ) -> NDArray[float32]:
-    coord = positions[:, axis]
+    """Returns a chasing tails pattern travelling along the given axis.
+
+    Even formation indices follow the sine and odd ones the cosine of the travel phase,
+    so that the two interleave into a continuous trail.
+    """
+    coord = get_centered_positions(context)[:, axis]
     travel_phase = frame * CHASE_SPEED - coord * CHASE_SPATIAL_K
     cos_result = (cos(travel_phase) + 1) / 2
     sin_result = (sin(travel_phase) + 1) / 2
+    fi = get_formation_indices(context)
     return where(fi % 2 == 0, sin_result, cos_result)
 
 
@@ -40,8 +46,7 @@ def chasing_tails_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _chasing_tails_core(get_centered_positions(context), 0, frame, fi)
+    out[:] = _chasing_tails(context, 0, frame)
 
 
 @register_preset(
@@ -56,8 +61,7 @@ def chasing_tails_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _chasing_tails_core(get_centered_positions(context), 1, frame, fi)
+    out[:] = _chasing_tails(context, 1, frame)
 
 
 @register_preset(
@@ -72,5 +76,4 @@ def chasing_tails_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _chasing_tails_core(get_centered_positions(context), 2, frame, fi)
+    out[:] = _chasing_tails(context, 2, frame)
