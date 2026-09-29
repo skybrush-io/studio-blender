@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, zeros
+from numpy import abs, clip, float32, floating
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -15,29 +15,38 @@ if TYPE_CHECKING:
     )
 
 
-def _axis_sweep_on(
-    positions: NDArray[float32], axis: int, frame: int, negate: bool = False
-) -> NDArray[float32]:
-    n = len(positions)
-    if n == 0:
-        return zeros(0, dtype=float32)
-    x = positions[:, axis] / 100  # normalize roughly
-    v = (frame * 0.04 + x) % 1.0 if not negate else (frame * 0.04 - x) % 1.0
+def _triangle_wave(phase: NDArray[floating]) -> NDArray[float32]:
+    """Returns a triangle wave for the given per-drone phase."""
+    v = phase % 1.0
     return (1 - abs(2 * v - 1)).astype(float32)
 
 
-def _axis_sweep_off(
-    positions: NDArray[float32], axis: int, frame: int
+def _axis_sweep_on(
+    context: LightEffectEvaluationContext,
+    axis: int,
+    frame: int,
+    *,
+    negate: bool = False,
 ) -> NDArray[float32]:
-    return 1 - _axis_sweep_on(positions, axis, frame, negate=False)
+    x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
+    return _triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
+
+
+def _axis_sweep_off(
+    context: LightEffectEvaluationContext,
+    axis: int,
+    frame: int,
+    *,
+    negate: bool = False,
+) -> NDArray[float32]:
+    return 1 - _axis_sweep_on(context, axis, frame, negate=negate)
 
 
 def _radial_sweep_on(
     context: LightEffectEvaluationContext, frame: int
 ) -> NDArray[float32]:
     relative_distances = get_centered_normalized_xy_distances(context)
-    v = (frame * 0.05 + relative_distances) % 1.0
-    return (1 - abs(2 * v - 1)).astype(float32)
+    return _triangle_wave(frame * 0.05 + relative_distances)
 
 
 def _radial_sweep_off(
@@ -58,7 +67,7 @@ def sweep_positive_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=False)
+    out[:] = _axis_sweep_on(context, 0, frame)
 
 
 @register_preset(
@@ -73,7 +82,7 @@ def sweep_positive_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=False)
+    out[:] = _axis_sweep_on(context, 1, frame)
 
 
 @register_preset(
@@ -88,7 +97,7 @@ def sweep_positive_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=False)
+    out[:] = _axis_sweep_on(context, 2, frame)
 
 
 @register_preset(
@@ -103,7 +112,7 @@ def sweep_negative_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=True)
+    out[:] = _axis_sweep_on(context, 0, frame, negate=True)
 
 
 @register_preset(
@@ -118,7 +127,7 @@ def sweep_negative_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=True)
+    out[:] = _axis_sweep_on(context, 1, frame, negate=True)
 
 
 @register_preset(
@@ -133,7 +142,7 @@ def sweep_negative_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=True)
+    out[:] = _axis_sweep_on(context, 2, frame, negate=True)
 
 
 @register_preset(
@@ -148,7 +157,7 @@ def sweep_positive_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(get_centered_positions(context), 0, frame)
+    out[:] = _axis_sweep_off(context, 0, frame)
 
 
 @register_preset(
@@ -163,7 +172,7 @@ def sweep_positive_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(get_centered_positions(context), 1, frame)
+    out[:] = _axis_sweep_off(context, 1, frame)
 
 
 @register_preset(
@@ -178,7 +187,7 @@ def sweep_positive_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(get_centered_positions(context), 2, frame)
+    out[:] = _axis_sweep_off(context, 2, frame)
 
 
 @register_preset(
@@ -193,8 +202,7 @@ def sweep_negative_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=True)
-    out[:] = 1 - out
+    out[:] = _axis_sweep_off(context, 0, frame, negate=True)
 
 
 @register_preset(
@@ -209,8 +217,7 @@ def sweep_negative_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=True)
-    out[:] = 1 - out
+    out[:] = _axis_sweep_off(context, 1, frame, negate=True)
 
 
 @register_preset(
@@ -225,8 +232,7 @@ def sweep_negative_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=True)
-    out[:] = 1 - out
+    out[:] = _axis_sweep_off(context, 2, frame, negate=True)
 
 
 @register_preset(
