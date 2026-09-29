@@ -59,10 +59,7 @@ def simple_filling(
     *,
     out: NDArray[float32],
 ) -> None:
-    N = len(out)
-    if N == 0:
-        return
-
+    N = context.num_drones
     fi = get_formation_indices(context, dtype=float32)
     time_fraction = effect.get_time_fraction_for_frame(frame)
 
