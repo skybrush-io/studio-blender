@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import array, empty, float32, hypot, int32, subtract
+from numpy import array, empty, float32, hypot, int32, subtract, zeros
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
@@ -40,13 +40,15 @@ def get_centered_normalized_xy_distances(
     """Returns the distance of each drone from the swarm's barycenter in the XY plane,
     normalized to the [0; 1] range such that the farthest drone is at 1.0.
 
-    Returns all zeros if all drones are located exactly at the barycenter.
+    Returns an empty array if there are no drones, and all zeros if all drones are
+    located exactly at the barycenter.
     """
     positions = context.positions.as_array
+    if len(positions) == 0:
+        return zeros(0, dtype=float32)
     center = context.swarm_center
     radii = hypot(positions[:, 0] - center[0], positions[:, 1] - center[1])
-    if len(radii) > 0:
-        max_radius = radii.max()
-        if max_radius > 0:
-            radii /= max_radius
+    max_radius = radii.max()
+    if max_radius > 0:
+        radii /= max_radius
     return radii.astype(float32)
