@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, hypot, sin
+from numpy import abs, clip, float32, sin
 from numpy.typing import NDArray
 
 from .base import register_preset
+from .utils import get_centered_normalized_xy_distances
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -106,17 +107,8 @@ def expanding_pulse(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    dx = positions[:, 0] - context.swarm_center[0]
-    dy = positions[:, 1] - context.swarm_center[1]
-    r = hypot(dx, dy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    v = (frame * 0.04 - r / r_max) % 1.0
+    relative_distances = get_centered_normalized_xy_distances(context)
+    v = (frame * 0.04 - relative_distances) % 1.0
     out[:] = (1 - abs(2 * v - 1)).astype(float32)
 
 
@@ -132,17 +124,8 @@ def sawtooth_pulse(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    dx = positions[:, 0] - context.swarm_center[0]
-    dy = positions[:, 1] - context.swarm_center[1]
-    r = hypot(dx, dy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    v = (frame * 0.04 - r / r_max) % 1.0
+    relative_distances = get_centered_normalized_xy_distances(context)
+    v = (frame * 0.04 - relative_distances) % 1.0
     out[:] = v.astype(float32)
 
 

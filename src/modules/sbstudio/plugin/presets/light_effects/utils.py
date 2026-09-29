@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import array, empty, float32, int32, subtract
+from numpy import array, empty, float32, hypot, int32, subtract
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
@@ -32,3 +32,21 @@ def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[flo
     positions = context.positions.as_array
     center = context.swarm_center
     return subtract(positions, center, dtype=float32)
+
+
+def get_centered_normalized_xy_distances(
+    context: LightEffectEvaluationContext,
+) -> NDArray[float32]:
+    """Returns the distance of each drone from the swarm's barycenter in the XY plane,
+    normalized to the [0; 1] range such that the farthest drone is at 1.0.
+
+    Returns all zeros if all drones are located exactly at the barycenter.
+    """
+    positions = context.positions.as_array
+    center = context.swarm_center
+    radii = hypot(positions[:, 0] - center[0], positions[:, 1] - center[1])
+    if len(radii) > 0:
+        max_radius = radii.max()
+        if max_radius > 0:
+            radii /= max_radius
+    return radii.astype(float32)

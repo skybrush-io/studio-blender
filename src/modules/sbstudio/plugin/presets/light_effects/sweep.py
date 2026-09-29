@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, hypot, zeros
+from numpy import abs, clip, float32, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_centered_positions
+from .utils import get_centered_normalized_xy_distances, get_centered_positions
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -33,25 +33,17 @@ def _axis_sweep_off(
 
 
 def _radial_sweep_on(
-    positions: NDArray[float32], cx: float, cy: float, frame: int
+    context: LightEffectEvaluationContext, frame: int
 ) -> NDArray[float32]:
-    n = len(positions)
-    if n == 0:
-        return zeros(0, dtype=float32)
-    dx = positions[:, 0] - cx
-    dy = positions[:, 1] - cy
-    r = hypot(dx, dy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    v = (frame * 0.05 + r / r_max) % 1.0
+    relative_distances = get_centered_normalized_xy_distances(context)
+    v = (frame * 0.05 + relative_distances) % 1.0
     return (1 - abs(2 * v - 1)).astype(float32)
 
 
 def _radial_sweep_off(
-    positions: NDArray[float32], cx: float, cy: float, frame: int
+    context: LightEffectEvaluationContext, frame: int
 ) -> NDArray[float32]:
-    return 1 - _radial_sweep_on(positions, cx, cy, frame)
+    return 1 - _radial_sweep_on(context, frame)
 
 
 @register_preset(
@@ -249,8 +241,7 @@ def radial_sweep_on(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    out[:] = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
+    out[:] = _radial_sweep_on(context, frame)
 
 
 @register_preset(
@@ -265,8 +256,7 @@ def radial_sweep_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    out[:] = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
+    out[:] = _radial_sweep_off(context, frame)
 
 
 @register_preset(
@@ -281,8 +271,7 @@ def radial_sweep_on_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    v = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
+    v = _radial_sweep_on(context, frame)
     out[:] = clip(2 * (v - 0.25), 0, 1)
 
 
@@ -298,6 +287,5 @@ def radial_sweep_off_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    v = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
+    v = _radial_sweep_off(context, frame)
     out[:] = clip(2 * (v - 0.25), 0, 1)
