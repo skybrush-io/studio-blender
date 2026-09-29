@@ -28,8 +28,13 @@ def get_formation_indices(
 
 
 def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[float32]:
-    """Returns drone positions centered around the swarm's barycenter."""
+    """Returns drone positions centered around the swarm's barycenter.
+
+    Returns an empty array of the same shape if there are no drones.
+    """
     positions = context.positions.as_array
+    if len(positions) == 0:
+        return zeros((0, positions.shape[-1]), dtype=float32)
     center = context.swarm_center
     return subtract(positions, center, dtype=float32)
 
