@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, float32, float64, maximum, pi, sin
+from numpy import float32, float64, maximum, pi, sin
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_formation_indices
+from .waveforms import triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -124,7 +125,7 @@ def lightfx_7(
     out: NDArray[float32],
 ) -> None:
     v = _formation_index_phase(context, frame, wave_length=400)
-    out[:] = (1 - abs(2 * v - 1)).astype(float32)
+    out[:] = triangle_wave(v)
 
 
 @register_preset(

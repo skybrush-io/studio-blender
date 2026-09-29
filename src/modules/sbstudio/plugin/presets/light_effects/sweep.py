@@ -2,23 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, floating
+from numpy import clip, float32
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_centered_normalized_xy_distances, get_centered_positions
+from .waveforms import triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
         LightEffect,
         LightEffectEvaluationContext,
     )
-
-
-def _triangle_wave(phase: NDArray[floating]) -> NDArray[float32]:
-    """Returns a triangle wave for the given per-drone phase."""
-    v = phase % 1.0
-    return (1 - abs(2 * v - 1)).astype(float32)
 
 
 def _axis_sweep_on(
@@ -32,7 +27,7 @@ def _axis_sweep_on(
     barycenter; ``negate`` reverses the direction of travel.
     """
     x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
-    return _triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
+    return triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
 
 
 def _axis_sweep_off(
@@ -53,7 +48,7 @@ def _radial_sweep_on(
 ) -> NDArray[float32]:
     """Returns a triangle wave travelling outward from the swarm barycenter."""
     relative_distances = get_centered_normalized_xy_distances(context)
-    return _triangle_wave(frame * 0.05 + relative_distances)
+    return triangle_wave(frame * 0.05 + relative_distances)
 
 
 def _radial_sweep_off(

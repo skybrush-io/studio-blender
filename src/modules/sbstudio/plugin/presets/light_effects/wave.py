@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_centered_normalized_xy_distances
+from .waveforms import triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -107,7 +108,7 @@ def wave_triangle(
     v = _sine_distorted_phase(
         context.positions.as_array, 0, frame, speed=0.04, spatial_k=0.05, amplitude=1.0
     )
-    out[:] = (1 - abs(2 * v - 1)).astype(float32)
+    out[:] = triangle_wave(v)
 
 
 @register_preset(
@@ -123,8 +124,7 @@ def expanding_pulse(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    v = (frame * 0.04 - relative_distances) % 1.0
-    out[:] = (1 - abs(2 * v - 1)).astype(float32)
+    out[:] = triangle_wave(frame * 0.04 - relative_distances)
 
 
 @register_preset(
