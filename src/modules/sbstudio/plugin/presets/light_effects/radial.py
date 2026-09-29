@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import pi
 from typing import TYPE_CHECKING
 
 from numpy import float32, sin
@@ -29,7 +30,7 @@ def radial_diffusion(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (relative_distances - frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
 
 
 @register_preset(
@@ -46,7 +47,7 @@ def radial_diffusion_2(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (relative_distances + frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
 
 
 @register_preset(
@@ -63,7 +64,7 @@ def radial_diffusion_3(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (relative_distances - frame * 0.005) % 1.0
-    out[:] = ((sin(tau * 4 * 3.14159) + 1) / 2).astype(float32)
+    out[:] = ((sin(tau * 4 * pi) + 1) / 2).astype(float32)
 
 
 @register_preset(
@@ -80,7 +81,7 @@ def radial_convergence(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (1 - relative_distances - frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
 
 
 @register_preset(
@@ -97,7 +98,7 @@ def radial_convergence_2(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (1 - relative_distances + frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
 
 
 @register_preset(
@@ -114,4 +115,4 @@ def radial_convergence_3(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (1 - relative_distances - frame * 0.005) % 1.0
-    out[:] = ((sin(tau * 4 * 3.14159) + 1) / 2).astype(float32)
+    out[:] = ((sin(tau * 4 * pi) + 1) / 2).astype(float32)

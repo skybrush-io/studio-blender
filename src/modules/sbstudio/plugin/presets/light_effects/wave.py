@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import pi
 from typing import TYPE_CHECKING
 
 from numpy import abs, clip, float32, sin
@@ -145,7 +146,7 @@ def spatial_wave(
     if n == 0:
         return
     positions = context.positions.as_array
-    phase = (frame * 0.1 + positions[:, 0] * 0.2 + positions[:, 1] * 0.1) / 6.28
+    phase = (frame * 0.1 + positions[:, 0] * 0.2 + positions[:, 1] * 0.1) / 2 / pi
     v = (phase - phase.astype(int)).astype(float32)
     out[:] = clip(1.5 - abs(v - 0.5) * 4, 0, 1)
 
@@ -166,6 +167,6 @@ def spatial_wave_2(
     if n == 0:
         return
     positions = context.positions.as_array
-    phase = (frame * 0.1 + positions[:, 0] * 0.1 + positions[:, 1] * 0.3) / 6.28
+    phase = (frame * 0.1 + positions[:, 0] * 0.1 + positions[:, 1] * 0.3) / 2 / pi
     v = (phase - phase.astype(int)).astype(float32)
     out[:] = clip(1.5 - abs(v - 0.5) * 4, 0, 1)
