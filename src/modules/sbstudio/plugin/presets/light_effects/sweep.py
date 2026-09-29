@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, sqrt, zeros
+from numpy import abs, clip, float32, hypot, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -40,7 +40,7 @@ def _radial_sweep_on(
         return zeros(0, dtype=float32)
     dx = positions[:, 0] - cx
     dy = positions[:, 1] - cy
-    r = sqrt(dx * dx + dy * dy)
+    r = hypot(dx, dy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
         r_max = 1.0

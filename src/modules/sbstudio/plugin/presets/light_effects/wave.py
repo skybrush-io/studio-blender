@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, sin
+from numpy import abs, clip, float32, hypot, sin
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -112,7 +112,7 @@ def expanding_pulse(
     positions = context.positions.as_array
     dx = positions[:, 0] - context.swarm_center[0]
     dy = positions[:, 1] - context.swarm_center[1]
-    r = (dx * dx + dy * dy) ** 0.5
+    r = hypot(dx, dy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
         r_max = 1.0
@@ -138,7 +138,7 @@ def sawtooth_pulse(
     positions = context.positions.as_array
     dx = positions[:, 0] - context.swarm_center[0]
     dy = positions[:, 1] - context.swarm_center[1]
-    r = (dx * dx + dy * dy) ** 0.5
+    r = hypot(dx, dy)
     r_max = r.max() if len(r) > 0 else 1.0
     if r_max == 0:
         r_max = 1.0
