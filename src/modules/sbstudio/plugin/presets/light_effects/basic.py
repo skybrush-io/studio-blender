@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import clip, float32, pi, sin
+from numpy import clip, float32, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_formation_indices
+from .waveforms import sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -28,7 +29,7 @@ def odd_even_pulse(
     out: NDArray[float32],
 ) -> None:
     fi = get_formation_indices(context)
-    out[:] = (sin(frame * 0.1 + (fi % 2) * pi) + 1) / 2
+    out[:] = sine_wave(frame * 0.1 + (fi % 2) * pi)
 
 
 @register_preset(
@@ -59,10 +60,7 @@ def simple_filling(
     *,
     out: NDArray[float32],
 ) -> None:
-    N = len(out)
-    if N == 0:
-        return
-
+    N = context.num_drones
     fi = get_formation_indices(context, dtype=float32)
     time_fraction = effect.get_time_fraction_for_frame(frame)
 

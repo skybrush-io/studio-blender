@@ -2,17 +2,56 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, float32, maximum, pi, sin
+from numpy import float32, float64, maximum, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_formation_indices
+from .waveforms import sine_wave, triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
         LightEffect,
         LightEffectEvaluationContext,
     )
+
+
+def _formation_index_sine_pulse(
+    context: LightEffectEvaluationContext,
+    frame: int,
+    *,
+    divisor: float,
+    speed: float,
+    span: float,
+) -> NDArray[float32]:
+    """Returns a sine pulse over the formation index.
+
+    The formation index is wrapped into ``divisor`` waves across the whole swarm, so the
+    pattern stretches with the number of drones.
+
+    Args:
+        context: evaluation context for the swarm
+        frame: current frame number
+        divisor: number of waves the formation index is wrapped into
+        speed: phase advance per frame
+        span: phase width of a single wave, in radians
+
+    Returns:
+        per-drone brightness of the sine pulse, in [0, 1].
+    """
+    wave_length = maximum(context.num_drones / divisor, 1e-6)
+    fi = get_formation_indices(context)
+    offset = (fi % wave_length) / wave_length
+    return sine_wave(frame * speed + offset * span)
+
+
+def _formation_index_phase(
+    context: LightEffectEvaluationContext, frame: int, *, wave_length: int
+) -> NDArray[float64]:
+    """Returns the formation index offset by the current frame, wrapped into
+    ``wave_length`` steps and normalized to the [0; 1) range."""
+    fi = get_formation_indices(context)
+    return (frame + fi) % wave_length / wave_length
 
 
 @register_preset(
@@ -27,13 +66,9 @@ def lightfx_0(
     *,
     out: NDArray[float32],
 ) -> None:
-    N = len(out)
-    if N == 0:
-        return
-    fi = get_formation_indices(context)
-    wave_length = maximum(N / 25, 1e-6)
-    offset = (fi % wave_length) / wave_length
-    out[:] = (sin(frame * 0.13 + offset * 3 * pi) + 1) / 2
+    out[:] = _formation_index_sine_pulse(
+        context, frame, divisor=25, speed=0.13, span=3 * pi
+    )
 
 
 @register_preset(
@@ -48,13 +83,9 @@ def lightfx_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    N = len(out)
-    if N == 0:
-        return
-    fi = get_formation_indices(context)
-    wave_length = maximum(N / 5, 1e-6)
-    offset = (fi % wave_length) / wave_length
-    out[:] = (sin(frame * 0.13 + offset * 3 * pi) + 1) / 2
+    out[:] = _formation_index_sine_pulse(
+        context, frame, divisor=5, speed=0.13, span=3 * pi
+    )
 
 
 @register_preset(
@@ -71,7 +102,7 @@ def lightfx_4(
 ) -> None:
     fi = get_formation_indices(context)
     is_odd = fi % 2
-    out[:] = (sin(frame * 0.2 + is_odd * pi) + 1) / 4
+    out[:] = sine_wave(frame * 0.2 + is_odd * pi) / 2
 
 
 @register_preset(
@@ -86,9 +117,7 @@ def lightfx_6(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    wave_length = 50
-    out[:] = ((frame + fi) % wave_length / wave_length).astype(float32)
+    out[:] = _formation_index_phase(context, frame, wave_length=50).astype(float32)
 
 
 @register_preset(
@@ -103,10 +132,8 @@ def lightfx_7(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    wave_length = 400
-    offset = (frame + fi) % wave_length / wave_length
-    out[:] = (1 - abs(2 * offset - 1)).astype(float32)
+    v = _formation_index_phase(context, frame, wave_length=400)
+    out[:] = triangle_wave(v)
 
 
 @register_preset(
@@ -121,11 +148,6 @@ def lightfx_8(
     *,
     out: NDArray[float32],
 ) -> None:
-    N = len(out)
-    if N == 0:
-        return
-    fi = get_formation_indices(context)
-    speed_factor = -0.2
-    wave_length = maximum(N / 1, 1e-6)
-    offset = (fi % wave_length) / wave_length
-    out[:] = (sin(frame * 0.1 * speed_factor + offset * 1.5 * pi) + 1) / 2
+    out[:] = _formation_index_sine_pulse(
+        context, frame, divisor=1, speed=-0.02, span=1.5 * pi
+    )
