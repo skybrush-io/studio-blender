@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, float64, maximum, pi, sin
+from numpy import float32, float64, maximum, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_formation_indices
-from .waveforms import triangle_wave
+from .waveforms import sine_wave, triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -23,18 +23,17 @@ def _formation_index_sine_pulse(
     divisor: float,
     speed: float,
     span: float,
-    scale: float = 0.5,
 ) -> NDArray[float32]:
     """Returns a sine pulse over the formation index.
 
     The formation index is wrapped into ``divisor`` waves across the whole swarm, so the
     pattern stretches with the number of drones. ``span`` is the phase width of a single
-    wave in radians, and ``scale`` the peak brightness.
+    wave in radians.
     """
     wave_length = maximum(context.num_drones / divisor, 1e-6)
     fi = get_formation_indices(context)
     offset = (fi % wave_length) / wave_length
-    return ((sin(frame * speed + offset * span) + 1) * scale).astype(float32)
+    return sine_wave(frame * speed + offset * span)
 
 
 def _formation_index_phase(
@@ -94,7 +93,7 @@ def lightfx_4(
 ) -> None:
     fi = get_formation_indices(context)
     is_odd = fi % 2
-    out[:] = (sin(frame * 0.2 + is_odd * pi) + 1) / 4
+    out[:] = sine_wave(frame * 0.2 + is_odd * pi) / 2
 
 
 @register_preset(

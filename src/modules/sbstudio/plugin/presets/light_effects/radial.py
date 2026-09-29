@@ -3,11 +3,12 @@ from __future__ import annotations
 from math import pi
 from typing import TYPE_CHECKING
 
-from numpy import float32, sin
+from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_centered_normalized_xy_distances
+from .waveforms import sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -30,7 +31,7 @@ def radial_diffusion(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (relative_distances - frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
+    out[:] = sine_wave(tau * 2 * pi)
 
 
 @register_preset(
@@ -47,7 +48,7 @@ def radial_diffusion_2(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (relative_distances + frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
+    out[:] = sine_wave(tau * 2 * pi)
 
 
 @register_preset(
@@ -64,7 +65,7 @@ def radial_diffusion_3(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (relative_distances - frame * 0.005) % 1.0
-    out[:] = ((sin(tau * 4 * pi) + 1) / 2).astype(float32)
+    out[:] = sine_wave(tau * 4 * pi)
 
 
 @register_preset(
@@ -81,7 +82,7 @@ def radial_convergence(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (1 - relative_distances - frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
+    out[:] = sine_wave(tau * 2 * pi)
 
 
 @register_preset(
@@ -98,7 +99,7 @@ def radial_convergence_2(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (1 - relative_distances + frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * pi) + 1) / 2).astype(float32)
+    out[:] = sine_wave(tau * 2 * pi)
 
 
 @register_preset(
@@ -115,4 +116,4 @@ def radial_convergence_3(
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
     tau = (1 - relative_distances - frame * 0.005) % 1.0
-    out[:] = ((sin(tau * 4 * pi) + 1) / 2).astype(float32)
+    out[:] = sine_wave(tau * 4 * pi)

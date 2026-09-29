@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import cos, float32, sin, where
+from numpy import float32, where
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_centered_positions, get_formation_indices
+from .waveforms import cosine_wave, sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -28,8 +29,8 @@ def _chasing_tails(
     """
     coord = get_centered_positions(context)[:, axis]
     travel_phase = frame * CHASE_SPEED - coord * CHASE_SPATIAL_K
-    cos_result = (cos(travel_phase) + 1) / 2
-    sin_result = (sin(travel_phase) + 1) / 2
+    cos_result = cosine_wave(travel_phase)
+    sin_result = sine_wave(travel_phase)
     fi = get_formation_indices(context)
     return where(fi % 2 == 0, sin_result, cos_result)
 

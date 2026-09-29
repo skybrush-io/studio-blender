@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, maximum, pi, sin
+from numpy import float32, maximum, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_formation_indices
+from .waveforms import sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -27,7 +28,7 @@ def _continuous_filling(
     wave_length = maximum(context.num_drones / divisor, 1e-6)
     fi = get_formation_indices(context)
     offset = (fi % wave_length) / wave_length
-    return ((sin(frame * 0.1 * speed_factor + offset * 2 * pi) + 1) / 2).astype(float32)
+    return sine_wave(frame * 0.1 * speed_factor + offset * 2 * pi)
 
 
 @register_preset(
