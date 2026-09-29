@@ -22,6 +22,9 @@ def _group_ranges(
     to evenly spaced brightness levels from 0 to 1.
 
     Returns an empty array if there are no drones.
+
+    Function implicitly assumes that the formation index is smaller
+    than the number of drones.
     """
     num_drones = context.num_drones
     if num_drones == 0:
