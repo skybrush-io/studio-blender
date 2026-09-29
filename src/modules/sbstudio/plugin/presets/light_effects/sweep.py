@@ -28,6 +28,9 @@ def _axis_sweep_on(
     *,
     negate: bool = False,
 ) -> NDArray[float32]:
+    """Returns a triangle wave travelling along the given axis, relative to the swarm
+    barycenter; ``negate`` reverses the direction of travel.
+    """
     x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
     return _triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
 
@@ -39,12 +42,16 @@ def _axis_sweep_off(
     *,
     negate: bool = False,
 ) -> NDArray[float32]:
+    """Returns the inverse of `_axis_sweep_on()`, so the sweep appears dark instead
+    of bright where it passes.
+    """
     return 1 - _axis_sweep_on(context, axis, frame, negate=negate)
 
 
 def _radial_sweep_on(
     context: LightEffectEvaluationContext, frame: int
 ) -> NDArray[float32]:
+    """Returns a triangle wave travelling outward from the swarm barycenter."""
     relative_distances = get_centered_normalized_xy_distances(context)
     return _triangle_wave(frame * 0.05 + relative_distances)
 
@@ -52,6 +59,8 @@ def _radial_sweep_on(
 def _radial_sweep_off(
     context: LightEffectEvaluationContext, frame: int
 ) -> NDArray[float32]:
+    """Returns the inverse of `_radial_sweep_on()`, so the sweep appears dark instead
+    of bright where it passes."""
     return 1 - _radial_sweep_on(context, frame)
 
 
