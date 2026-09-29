@@ -37,7 +37,7 @@ def _formation_index_sine_pulse(
 
 
 def _formation_index_phase(
-    context: LightEffectEvaluationContext, frame: int, wave_length: int
+    context: LightEffectEvaluationContext, frame: int, *, wave_length: int
 ) -> NDArray[float64]:
     """Returns the formation index offset by the current frame, wrapped into
     ``wave_length`` steps and normalized to the [0; 1) range."""
@@ -108,7 +108,7 @@ def lightfx_6(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _formation_index_phase(context, frame, 50).astype(float32)
+    out[:] = _formation_index_phase(context, frame, wave_length=50).astype(float32)
 
 
 @register_preset(
@@ -123,7 +123,7 @@ def lightfx_7(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = _formation_index_phase(context, frame, 400)
+    v = _formation_index_phase(context, frame, wave_length=400)
     out[:] = (1 - abs(2 * v - 1)).astype(float32)
 
 
