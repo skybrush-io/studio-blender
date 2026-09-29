@@ -39,8 +39,17 @@ def _get_fan_phase_and_width(
 def _is_in_fan(
     angles: NDArray[float32], center: float, half_span: float
 ) -> NDArray[bool_]:
-    """Returns which drones fall within the fan that starts at ``center`` and extends
-    ``2 * half_span`` degrees counterclockwise from it.
+    """Returns which drones fall within a fan starting at ``center``.
+
+    The fan extends ``2 * half_span`` degrees counterclockwise from ``center``.
+
+    Args:
+        angles: per-drone angle around the swarm center, in degrees, in [0, 360)
+        center: angle at which the fan starts, in degrees
+        half_span: half of the angular width of the fan, in degrees
+
+    Returns:
+        whether each drone falls within the fan.
     """
     diff = (angles - center) % 360
     return (diff >= 0) & (diff <= 2 * half_span)

@@ -24,7 +24,16 @@ def _axis_sweep_on(
     negate: bool = False,
 ) -> NDArray[float32]:
     """Returns a triangle wave travelling along the given axis, relative to the swarm
-    barycenter; ``negate`` reverses the direction of travel.
+    barycenter.
+
+    Args:
+        context: evaluation context for the swarm
+        axis: index of the axis along which the wave travels
+        frame: current frame number
+        negate: reverse the direction of travel
+
+    Returns:
+        per-drone brightness of the sweep, in [0, 1].
     """
     x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
     return triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
@@ -37,8 +46,17 @@ def _axis_sweep_off(
     *,
     negate: bool = False,
 ) -> NDArray[float32]:
-    """Returns the inverse of `_axis_sweep_on()`, so the sweep appears dark instead
-    of bright where it passes.
+    """Returns the inverse of `_axis_sweep_on()`, so the sweep appears dark instead of
+    bright where it passes.
+
+    Args:
+        context: evaluation context for the swarm
+        axis: index of the axis along which the wave travels
+        frame: current frame number
+        negate: reverse the direction of travel
+
+    Returns:
+        per-drone brightness of the inverted sweep, in [0, 1].
     """
     return 1 - _axis_sweep_on(context, axis, frame, negate=negate)
 

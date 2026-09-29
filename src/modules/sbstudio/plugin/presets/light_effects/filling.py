@@ -23,8 +23,11 @@ def _continuous_filling(
     speed_factor: float,
     divisor: int,
 ) -> NDArray[float32]:
-    """Returns a continuous sine filling pattern over the formation index, with
-    ``divisor`` waves stretched across the whole swarm."""
+    """Returns a continuous sine filling pattern over the formation index.
+
+    ``divisor`` waves are stretched across the whole swarm, and ``speed_factor`` scales how
+    fast the pattern advances per frame.
+    """
     wave_length = maximum(context.num_drones / divisor, 1e-6)
     fi = get_formation_indices(context)
     offset = (fi % wave_length) / wave_length

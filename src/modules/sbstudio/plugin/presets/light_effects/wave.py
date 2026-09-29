@@ -26,8 +26,19 @@ def _sine_distorted_phase(
     spatial_k: float = 0.1,
     amplitude: float = 0.5,
 ) -> NDArray[float32]:
-    """Returns the phase of a wave travelling along the given axis, distorted by a sine
-    of the coordinate along that axis, wrapped to the [0; 1) range.
+    """Returns the phase of a wave travelling along the given axis, distorted by a sine of
+    the coordinate along that axis.
+
+    Args:
+        positions: per-drone XYZ positions
+        axis: index of the axis along which the wave travels
+        frame: current frame number
+        speed: phase advance per frame
+        spatial_k: spatial frequency along the axis
+        amplitude: strength of the spatial distortion, in phase turns
+
+    Returns:
+        per-drone phase, wrapped to [0, 1).
     """
     return (frame * speed + sin(positions[:, axis] * spatial_k) * amplitude) % 1.0
 
@@ -42,6 +53,16 @@ def _spatial_wave(
 ) -> NDArray[float32]:
     """Returns a clipped pulse wave travelling in the XY plane, with its phase advancing
     linearly along the X and Y axes.
+
+    Args:
+        positions: per-drone XYZ positions
+        frame: current frame number
+        kx: spatial frequency along the X axis
+        ky: spatial frequency along the Y axis
+        speed: phase advance per frame
+
+    Returns:
+        per-drone brightness of the clipped pulse, in [0, 1].
     """
     phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / 2 / pi
     v = (phase - phase.astype(int)).astype(float32)

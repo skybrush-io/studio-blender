@@ -12,9 +12,10 @@ if TYPE_CHECKING:
 def get_formation_indices(
     context: LightEffectEvaluationContext, *, default: int = 0, dtype=int32
 ) -> NDArray[int32]:
-    """Returns the formation index for each drone as an int32 array.
+    """Returns the formation index for each drone.
 
-    Drones with no formation mapping get ``default`` (0 by default).
+    ``default`` is used for drones with no formation mapping, and ``dtype`` is the integer
+    type of the result.
     """
     if context.mapping is None:
         result = empty(context.num_drones, dtype=dtype)

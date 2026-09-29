@@ -27,8 +27,17 @@ def _formation_index_sine_pulse(
     """Returns a sine pulse over the formation index.
 
     The formation index is wrapped into ``divisor`` waves across the whole swarm, so the
-    pattern stretches with the number of drones. ``span`` is the phase width of a single
-    wave in radians.
+    pattern stretches with the number of drones.
+
+    Args:
+        context: evaluation context for the swarm
+        frame: current frame number
+        divisor: number of waves the formation index is wrapped into
+        speed: phase advance per frame
+        span: phase width of a single wave, in radians
+
+    Returns:
+        per-drone brightness of the sine pulse, in [0, 1].
     """
     wave_length = maximum(context.num_drones / divisor, 1e-6)
     fi = get_formation_indices(context)
