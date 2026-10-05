@@ -15,6 +15,7 @@ from sbstudio.plugin.utils.evaluator import (
     get_xyz_euler_rotation_of_object,
 )
 from sbstudio.plugin.utils.progress import FrameRange
+from sbstudio.timing import effective_fps
 
 from .decorators import with_context
 
@@ -47,7 +48,7 @@ def frame_range(
     """
     assert context is not None  # injected
 
-    scene_fps = context.scene.render.fps
+    scene_fps = effective_fps(context.scene.render)
     return FrameRange(start, end, scene_fps)
 
 
@@ -67,7 +68,7 @@ def each_frame_in(
     assert context is not None  # injected
 
     scene = context.scene
-    fps = scene.render.fps
+    fps = effective_fps(scene.render)
 
     for frame in frames:
         scene.frame_set(frame)

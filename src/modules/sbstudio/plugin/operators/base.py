@@ -238,10 +238,21 @@ class ExportOperator(Operator, ExportHelper):
                 export_show_to_file_using_api(
                     api, context, settings, filepath, self.get_format()
                 )
+                if not os.path.isfile(filepath) or os.path.getsize(filepath) <= 0:
+                    raise RuntimeError(
+                        f"Exporter did not create a non-empty file at {filepath}"
+                    )
+                report = getattr(api, "last_validation_report", None)
         except Exception:
             return {"CANCELLED"}
 
-        self.report({"INFO"}, "Export successful")
+        if report is not None:
+            from sbstudio.export_policy import offline_export_message
+
+            self.report(*offline_export_message(filepath, report))
+            return {"FINISHED"}
+
+        self.report({"INFO"}, f"Export successful: {filepath}")
         return {"FINISHED"}
 
     def get_format(self) -> FileFormat:

@@ -136,6 +136,7 @@ class bpy_struct:
     ) -> bool: ...
     def keys(self) -> Iterable: ...
     def path_resolve(self, path: str): ...
+    def path_from_id(self, property: str = "") -> str: ...
     def values(self) -> Iterable: ...
 
 class AnimData(bpy_struct):
@@ -158,6 +159,8 @@ class ColorRamp(bpy_struct):
 class Constraint(bpy_struct):
     name: str
     influence: float
+    owner_space: Literal["WORLD", "CUSTOM", "POSE", "LOCAL_WITH_PARENT", "LOCAL"]
+    target_space: Literal["WORLD", "CUSTOM", "POSE", "LOCAL_WITH_PARENT", "LOCAL"]
     type: Literal[
         "CAMERA_SOLVER",
         "FOLLOW_TRACK",
@@ -192,6 +195,7 @@ class Constraint(bpy_struct):
 class CopyLocationConstraint(Constraint):
     target: Object
     subtarget: str
+    use_offset: bool
 
 Self = TypeVar("Self", bound="ID")
 
@@ -205,6 +209,9 @@ class ID(bpy_struct):
     use_fake_user: bool
 
     def animation_data_create(self) -> AnimData | None: ...
+    def animation_data_clear(self) -> None: ...
+    def __getitem__(self, key: str) -> Any: ...
+    def __setitem__(self, key: str, value: Any) -> None: ...
     def copy(self: Self) -> Self: ...
     def update_tag(self) -> None: ...
     def user_of_id(self, id: ID) -> int: ...
@@ -251,6 +258,7 @@ class AttributeGroupPointCloud(bpy_prop_collection[Attribute]): ...
 class FCurve(bpy_struct):
     array_index: int
     data_path: str
+    extrapolation: Literal["CONSTANT", "LINEAR"]
     keyframe_points: FCurveKeyframePoints
     lock: bool
     mute: bool
@@ -349,6 +357,9 @@ class ColorManagedInputColorspaceSettings(ID):
     name: str
 
 class Image(ID):
+    is_dirty: bool
+    packed_file: PackedFile | None
+    source: str
     depth: int
     frame_duration: int
     size: tuple[int, int]
@@ -481,6 +492,7 @@ class Preferences(bpy_struct):
     system: System
 
 class Scene(ID):
+    view_layers: bpy_prop_collection[ViewLayer]
     frame_current: int
     frame_current_final: float
     frame_end: int
@@ -542,6 +554,12 @@ class View3DCursor(bpy_struct):
     location: Vector
     matrix: Matrix
 
+class PackedFile(bpy_struct): ...
+
+class Window(bpy_struct):
+    scene: Scene
+    view_layer: ViewLayer
+
 class WindowManager(ID):
     def fileselect_add(self, operator: Operator) -> None: ...
     def invoke_confirm(
@@ -563,6 +581,7 @@ class WindowManager(ID):
     ) -> None: ...
 
 class Context(bpy_struct):
+    window: Window | None
     area: Area
     active_object: Object
     mode: str

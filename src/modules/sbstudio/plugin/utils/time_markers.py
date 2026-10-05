@@ -1,6 +1,7 @@
 from bpy.types import Context
 
 from sbstudio.model.time_markers import TimeMarkers
+from sbstudio.timing import effective_fps
 
 __all__ = ("get_time_markers_from_context",)
 
@@ -15,7 +16,7 @@ def get_time_markers_from_context(context: Context) -> TimeMarkers:
         time markers basically as a dictionary of (name, time) items in [s]
 
     """
-    fps = context.scene.render.fps
+    fps = effective_fps(context.scene.render)
     markers = context.scene.timeline_markers
     scene_settings = getattr(context.scene.skybrush, "settings", None)
     # if Skybrush markers are defined, use only those. If not, use all.

@@ -14,6 +14,7 @@ from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.model.types import Coordinate3D
 from sbstudio.plugin.api import call_api_from_blender_operator, get_api
 from sbstudio.plugin.constants import Collections, Formations
+from sbstudio.plugin.local_api import LocalSkybrushStudioAPI
 from sbstudio.plugin.model.formation import (
     create_formation,
     ensure_formation_consists_of_points,
@@ -397,7 +398,9 @@ def create_helper_formation_for_takeoff_and_landing(
 
 
 def plan_takeoff_with_api(
-    source: Sequence[Coordinate3D], min_distance: float, api: SkybrushStudioAPI
+    source: Sequence[Coordinate3D],
+    min_distance: float,
+    api: SkybrushStudioAPI | LocalSkybrushStudioAPI,
 ) -> list[int]:
     if is_backend_version_at_least(Version(2, 43, 0), api=api):
         return api.plan_takeoff(source, min_distance=min_distance)

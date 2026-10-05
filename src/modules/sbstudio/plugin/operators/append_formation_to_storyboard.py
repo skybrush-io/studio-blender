@@ -1,4 +1,5 @@
 from math import ceil
+from typing import TypedDict
 
 from bpy.types import Collection, Context
 
@@ -12,6 +13,13 @@ from sbstudio.plugin.utils.evaluator import create_position_evaluator
 from .base import FormationOperator
 
 __all__ = ("AppendFormationToStoryboardOperator",)
+
+
+class _TransitionLimits(TypedDict):
+    max_velocity_xy: float
+    max_velocity_z: float
+    max_velocity_z_up: float | None
+    max_acceleration: float
 
 
 class AppendFormationToStoryboardOperator(FormationOperator):
@@ -62,7 +70,7 @@ class AppendFormationToStoryboardOperator(FormationOperator):
         fps = context.scene.render.fps
 
         # Set up safety check parameters
-        safety_kwds = {
+        safety_kwds: _TransitionLimits = {
             "max_velocity_xy": (
                 safety_check.velocity_xy_warning_threshold if safety_check else 8
             ),

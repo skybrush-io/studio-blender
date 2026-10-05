@@ -8,6 +8,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ImportHelper
 
 from sbstudio.api import SkybrushStudioAPI
+from sbstudio.plugin.local_api import LocalSkybrushStudioAPI
 
 from .add_markers_from_zipped_csv import parse_compressed_csv_zip
 from .base import DynamicMarkerCreationOperator, TrajectoryAndLightProgram
@@ -65,7 +66,7 @@ class AddMarkersFromZippedDSSOperator(DynamicMarkerCreationOperator, ImportHelpe
 def parse_compressed_dss_zip(
     filename: str,
     context,
-    api: SkybrushStudioAPI,
+    api: SkybrushStudioAPI | LocalSkybrushStudioAPI,
     *,
     output_fps: float | None = None,
 ) -> dict[str, TrajectoryAndLightProgram]:

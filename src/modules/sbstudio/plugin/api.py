@@ -9,12 +9,14 @@ from typing import TYPE_CHECKING, TypedDict, TypeVar
 from urllib.error import URLError
 
 from sbstudio.api import SkybrushStudioAPI
+from sbstudio.api.errors import NoOnlineAccessAllowedError
 from sbstudio.api.version import ensure_backend_version
 from sbstudio.errors import SkybrushStudioError
 
 from .constants import DEFAULT_SERVER_URL
 from .errors import SkybrushStudioExportWarning, TaskCancelled
-from .plugin_helpers import only_with_online_access
+from .local_api import LocalSkybrushStudioAPI
+from .plugin_helpers import is_online_access_allowed
 
 if TYPE_CHECKING:
     from bpy.types import Operator
@@ -57,6 +59,11 @@ def _get_api_from_url_and_key(url: str, key: str) -> SkybrushStudioAPI:
     return result
 
 
+@lru_cache(maxsize=1)
+def _get_local_api() -> LocalSkybrushStudioAPI:
+    return LocalSkybrushStudioAPI()
+
+
 class APISettings(TypedDict):
     """Dictionary representing the settings required to construct a SkybrushStudioAPI_
     object instance.
@@ -94,8 +101,9 @@ def _get_api_settings() -> APISettings:
     return {"url": url, "key": key}
 
 
-@only_with_online_access
-def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
+def get_api(
+    *, check_version: bool = True
+) -> SkybrushStudioAPI | LocalSkybrushStudioAPI:
     """Returns the singleton instance of the Skybrush Studio API object.
 
     Optionally also checks the version number of the backend if it is not known
@@ -104,8 +112,16 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
     Args:
         check_version: whether to check the version of the backend
     """
-    settings = _get_api_settings()
-    api = _get_api_from_url_and_key(**settings)
+    from sbstudio.plugin.model.global_settings import get_preferences
+
+    api: SkybrushStudioAPI | LocalSkybrushStudioAPI
+    if get_preferences().operation_mode == "OFFLINE":
+        api = _get_local_api()
+    else:
+        if not is_online_access_allowed():
+            raise NoOnlineAccessAllowedError()
+        settings = _get_api_settings()
+        api = _get_api_from_url_and_key(**settings)
     if check_version:
         ensure_backend_version(api)
 
@@ -115,7 +131,7 @@ def get_api(*, check_version: bool = True) -> SkybrushStudioAPI:
 @contextmanager
 def call_api_from_blender_operator(
     operator: Operator, what: str = "operation", *, check_version: bool = True
-) -> Iterator[SkybrushStudioAPI]:
+) -> Iterator[SkybrushStudioAPI | LocalSkybrushStudioAPI]:
     """Context manager that yields immediately back to the caller from a
     try-except block, catches all exceptions, and calls the ``report()`` method
     of the given Blender operator with an appropriate error message if there
@@ -126,7 +142,7 @@ def call_api_from_blender_operator(
     Args:
         check_version: whether to check the version number of the backend
     """
-    default_message = f"Error while invoking {what} on the Skybrush Studio server"
+    default_message = f"Error while invoking {what} on the Skybrush design backend"
     try:
         # TODO(ntamas): This is not entirely correct here. When an exception happens
         # during get_api(...), we will not yield anything back to the caller. If we
