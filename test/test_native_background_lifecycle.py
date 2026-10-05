@@ -10,6 +10,39 @@ import pytest
 from sbstudio.background_job import BackgroundExportJob
 
 
+@pytest.mark.parametrize(
+    "event_type,value",
+    [
+        ("MOUSEMOVE", "NOTHING"),
+        ("LEFTMOUSE", "PRESS"),
+        ("A", "PRESS"),
+        ("ESC", "RELEASE"),
+    ],
+)
+def test_non_timer_events_pass_through(modal_module, event_type, value):
+    def unexpected():
+        pytest.fail("Non-timer input must not poll or cancel the worker")
+
+    operator = SimpleNamespace(
+        _background_job=SimpleNamespace(cancel=unexpected, poll=unexpected)
+    )
+    assert modal_module.modal(
+        operator, None, SimpleNamespace(type=event_type, value=value)
+    ) == {"PASS_THROUGH"}
+
+
+def test_escape_press_is_consumed_without_polling(modal_module):
+    calls = []
+    job = SimpleNamespace(cancel=lambda: calls.append("cancel"))
+    context = SimpleNamespace(workspace=SimpleNamespace(status_text_set=calls.append))
+    assert modal_module.modal(
+        SimpleNamespace(_background_job=job),
+        context,
+        SimpleNamespace(type="ESC", value="PRESS"),
+    ) == {"RUNNING_MODAL"}
+    assert calls[0] == "cancel"
+
+
 @pytest.fixture
 def modal_module(monkeypatch):
     monkeypatch.setitem(sys.modules, "bpy", ModuleType("bpy"))

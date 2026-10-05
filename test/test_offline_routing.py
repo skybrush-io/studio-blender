@@ -11,6 +11,26 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.parametrize(
+    "options,label",
+    [
+        ({"pyro_programs": {"A": object()}}, "Pyro"),
+        ({"audio": object()}, "Audio"),
+        ({"cameras": [object()]}, "Camera"),
+    ],
+)
+def test_direct_local_api_cannot_silently_drop_unsupported_content(
+    routing, options, label
+):
+    from sbstudio.api.errors import SkybrushStudioAPIError
+
+    api, _ = routing
+    with pytest.raises(SkybrushStudioAPIError, match=label):
+        api.LocalSkybrushStudioAPI().export(
+            trajectories={}, export_policy="PREVIEW", **options
+        )
+
+
 @pytest.fixture
 def routing(monkeypatch):
     # Model annotations reference Vector; these tests never evaluate vectors.

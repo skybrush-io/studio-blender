@@ -104,6 +104,7 @@ class bpy_prop_collection_idprop(bpy_prop_collection[T]):
     def remove(self, index: int) -> None: ...
 
 class bpy_struct:
+    def is_property_set(self, property: str, *, ghost: bool = True) -> bool: ...
     def keyframe_delete(
         self,
         data_path: str,
@@ -438,6 +439,7 @@ class Operator(bpy_struct):
     bl_label: str
     bl_description: str
     layout: UILayout
+    properties: OperatorProperties
 
     @classmethod
     def poll(klass, context: Context) -> bool: ...

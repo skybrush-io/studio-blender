@@ -130,8 +130,9 @@ def modal(operator, context, event):
         context.workspace.status_text_set(
             "Skybrush: cancelling export; destination unchanged."
         )
-    if event.type != "TIMER":
         return {"RUNNING_MODAL"}
+    if event.type != "TIMER":
+        return {"PASS_THROUGH"}
     code = job.poll()
     if code is None:
         return {"RUNNING_MODAL"}

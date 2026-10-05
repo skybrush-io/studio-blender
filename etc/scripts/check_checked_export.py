@@ -8,6 +8,8 @@ import json
 import socket
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 from zipfile import ZipFile
 
 import addon_utils
@@ -18,12 +20,17 @@ assert addon_utils.enable("ui_skybrush_studio", default_set=True) is not None
 import ui_skybrush_studio
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.background_job import BackgroundExportJob
+from sbstudio.model.file_formats import FileFormat
 from sbstudio.model.point import Point4D
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.plugin import background_worker
 from sbstudio.plugin.api import get_api
+from sbstudio.plugin.errors import SkybrushStudioExportWarning
 from sbstudio.plugin.local_api import LocalSkybrushStudioAPI
 from sbstudio.plugin.model.global_settings import get_preferences
+from sbstudio.plugin.operators.base import ExportOperator
+from sbstudio.plugin.operators.export_to_skyc import _export_policy_updated
+from sbstudio.plugin.operators.utils import export_show_to_file_using_api
 
 root = Path(sys.argv[sys.argv.index("--") + 1])
 root.mkdir(parents=True, exist_ok=True)
@@ -62,6 +69,73 @@ for index in range(100):
     objects.append(obj)
 
 outcomes = {}
+
+
+assert (
+    bpy.ops.export_scene.skybrush.get_rna_type().properties["frame_range"].default
+    == "RENDER"
+)
+
+
+def capture_export_range(operator, context):
+    captured_ranges.append(operator.frame_range)
+    return {"FINISHED"}
+
+
+for mode, policy, explicit, expected in (
+    ("COMMUNITY", "CHECKED", None, "RENDER"),
+    ("COMMUNITY", "CHECKED", "STORYBOARD", "STORYBOARD"),
+    ("OFFLINE", "CHECKED", None, "STORYBOARD"),
+    ("OFFLINE", "CHECKED", "RENDER", "RENDER"),
+    ("OFFLINE", "PREVIEW", None, "RENDER"),
+    ("OFFLINE", "PREVIEW", "STORYBOARD", "STORYBOARD"),
+):
+    captured_ranges = []
+    options = {"export_policy": policy}
+    if explicit is not None:
+        options["frame_range"] = explicit
+    with (
+        patch(
+            "sbstudio.plugin.model.global_settings.get_preferences",
+            return_value=SimpleNamespace(operation_mode=mode),
+        ),
+        patch.object(ExportOperator, "execute", capture_export_range),
+    ):
+        bpy.ops.export_scene.skybrush(**options)
+    assert captured_ranges == [expected], (mode, policy, explicit, captured_ranges)
+outcomes["frame_range_defaults"] = (
+    "RNA defaults and six dispatch cases; server backend mocked"
+)
+
+for policy in ("CHECKED", "PREVIEW"):
+    for option, label in (
+        ("use_pyro_control", "Pyro"),
+        ("export_audio", "Audio"),
+        ("export_cameras", "Camera"),
+    ):
+        with patch(
+            "sbstudio.plugin.operators.utils._get_frame_range_from_export_settings",
+            side_effect=AssertionError("Preflight must precede sampling"),
+        ):
+            try:
+                export_show_to_file_using_api(
+                    LocalSkybrushStudioAPI(),
+                    None,
+                    {
+                        "export_policy": policy,
+                        "frame_range": "STORYBOARD",
+                        option: True,
+                    },
+                    root / "unsupported.skyc",
+                    FileFormat.SKYC,
+                )
+            except SkybrushStudioExportWarning as exc:
+                assert label in str(exc), str(exc)
+            else:
+                raise AssertionError("Unsupported option was not rejected")
+        outcomes[f"early_{policy}_{option}"] = (
+            "rejected before sampling, including empty payload"
+        )
 
 
 def inspect_archive(destination, policy):
@@ -105,9 +179,12 @@ properties.export_policy = "PREVIEW"
 properties.export_selected = True
 properties.frame_range = "RENDER"
 properties.export_policy = "CHECKED"
+_export_policy_updated(
+    properties, SimpleNamespace(space_data=SimpleNamespace(type="FILE_BROWSER"))
+)
 assert properties.export_selected is False and properties.frame_range == "STORYBOARD"
 outcomes["checked_policy_reset"] = (
-    "switching from preview resets all-drones/full-storyboard controls"
+    "simulated file-browser policy switch resets all-drones/full-storyboard controls"
 )
 
 assert bpy.ops.wm.save_as_mainfile(

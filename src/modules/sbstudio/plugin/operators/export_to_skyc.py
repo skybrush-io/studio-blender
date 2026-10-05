@@ -11,7 +11,6 @@ from bpy.props import (
 
 from sbstudio.export_policy import CHECKED, DEFAULT_MAX_EXPORT_DEVIATION
 from sbstudio.model.file_formats import FileFormat
-from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
 from .base import ExportOperator
 
@@ -19,7 +18,17 @@ __all__ = ("SkybrushExportOperator",)
 
 
 def _export_policy_updated(self, context):
-    if self.export_policy == CHECKED:
+    from sbstudio.plugin.model.global_settings import get_preferences
+
+    # RNA updates also run while bpy.ops keyword arguments are being assigned.
+    # Only the interactive file-browser policy switch may reset explicit ranges.
+    if (
+        self.export_policy == CHECKED
+        and get_preferences().operation_mode == "OFFLINE"
+        and context is not None
+        and context.space_data is not None
+        and context.space_data.type == "FILE_BROWSER"
+    ):
         self.export_selected = False
         self.frame_range = "STORYBOARD"
 
@@ -40,8 +49,6 @@ class SkybrushExportOperator(ExportOperator):
     # List of file extensions that correspond to Skybrush files
     filter_glob = StringProperty(default="*.skyc", options={"HIDDEN"})
     filename_ext = ".skyc"
-
-    frame_range = FrameRangeProperty(default="STORYBOARD")
 
     export_policy = EnumProperty(
         name="Offline export",
@@ -77,6 +84,13 @@ class SkybrushExportOperator(ExportOperator):
 
     def execute(self, context):
         from sbstudio.plugin.model.global_settings import get_preferences
+
+        if (
+            get_preferences().operation_mode == "OFFLINE"
+            and self.export_policy == CHECKED
+            and not self.properties.is_property_set("frame_range")
+        ):
+            self.frame_range = "STORYBOARD"
 
         if (
             get_preferences().operation_mode == "OFFLINE"

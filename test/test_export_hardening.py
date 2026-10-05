@@ -1,3 +1,7 @@
+import os
+import stat
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -36,7 +40,7 @@ def test_atomic_replace(tmp_path):
     assert list(tmp_path.iterdir()) == [target]
 
 
-@pytest.mark.parametrize("operation", ["fsync", "replace"])
+@pytest.mark.parametrize("operation", ["chmod", "fsync", "replace"])
 def test_failed_commit_preserves_original(tmp_path, monkeypatch, operation):
     target = tmp_path / "show.skyc"
     target.write_bytes(b"old")
@@ -49,6 +53,49 @@ def test_failed_commit_preserves_original(tmp_path, monkeypatch, operation):
         atomic_write_bytes(target, b"new")
     assert target.read_bytes() == b"old"
     assert list(tmp_path.iterdir()) == [target]
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits")
+@pytest.mark.parametrize("mode", [0o600, 0o640, 0o664])
+def test_atomic_replace_preserves_existing_mode(tmp_path, mode):
+    target = tmp_path / "show.skyc"
+    target.write_bytes(b"old")
+    target.chmod(mode)
+    atomic_write_bytes(target, b"new")
+    assert target.read_bytes() == b"new"
+    assert stat.S_IMODE(target.stat().st_mode) == mode
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX umask")
+@pytest.mark.parametrize("mask", [0o022, 0o027, 0o077])
+def test_new_atomic_file_uses_umask(tmp_path, mask):
+    target = tmp_path / "new.skyc"
+    # Change umask only in a subprocess, never in the test runner/Blender.
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import os,sys; from sbstudio.atomic_file import atomic_write_bytes; "
+            "os.umask(int(sys.argv[2])); atomic_write_bytes(sys.argv[1], b'new')",
+            str(target),
+            str(mask),
+        ],
+        check=True,
+    )
+    assert stat.S_IMODE(target.stat().st_mode) == 0o666 & ~mask
+
+
+def test_exclusive_temporary_creation_never_removes_another_file(tmp_path, monkeypatch):
+    target = tmp_path / "show.skyc"
+    candidate = tmp_path / ".show.skyc.collision"
+    candidate.write_bytes(b"another writer")
+    monkeypatch.setattr(
+        "sbstudio.atomic_file.uuid4", lambda: SimpleNamespace(hex="collision")
+    )
+    with pytest.raises(FileExistsError):
+        atomic_write_bytes(target, b"new")
+    assert candidate.read_bytes() == b"another writer"
+    assert not target.exists()
 
 
 def test_empty_phase_does_not_discard_valid_show():

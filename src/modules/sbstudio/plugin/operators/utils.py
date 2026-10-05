@@ -118,6 +118,16 @@ def export_show_to_file_using_api(
     offline_skyc = isinstance(api, LocalSkybrushStudioAPI) and format is FileFormat.SKYC
     export_policy = settings.get("export_policy", CHECKED)
     checked_export = offline_skyc and export_policy == CHECKED
+    if offline_skyc:
+        for option, label in (
+            ("use_pyro_control", "Pyro"),
+            ("export_audio", "Audio"),
+            ("export_cameras", "Camera"),
+        ):
+            if settings.get(option):
+                raise SkybrushStudioExportWarning(
+                    f"{label}-enabled SKYC export is not available in Offline design mode"
+                )
     if checked_export:
         if (
             settings.get("export_selected")
