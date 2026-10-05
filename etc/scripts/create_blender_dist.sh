@@ -29,7 +29,7 @@ VERSION=$(cat pyproject.toml | grep ^version | head -1 | cut -d '"' -f 2)
 rm -f requirements*.txt
 
 # Generate requirements.txt from uv
-uv export --no-dev --no-hashes --no-emit-project --format requirements-txt >requirements.txt
+uv export --locked --no-dev --no-hashes --no-emit-project --format requirements-txt >requirements.txt
 trap "rm -f requirements.txt" EXIT
 
 # Log requirements for debugging purposes
@@ -37,12 +37,8 @@ echo "[>] List of requirements"
 cat requirements.txt
 echo ""
 
-# Create virtual environment if it doesn't exist yet
-if [ ! -d .venv ]; then
-  echo -n "--> Creating virtual environment... "
-  python3 -m venv .venv
-  echo "done."
-fi
+# Install the locked build tools; uv-created environments need not contain pip.
+uv sync --locked
 
 # Create build folder
 BUILD_DIR="${OUTPUT_DIR}/build"
@@ -51,8 +47,7 @@ mkdir -p "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/vendor/skybrush"
 
 echo "[>] Installing dependencies"
-.venv/bin/pip install -q -U pip wheel pyclean
-.venv/bin/pip install -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
+uv pip install --python .venv/bin/python -r requirements.txt -t "${BUILD_DIR}/vendor/skybrush"
 rm -rf "${BUILD_DIR}/vendor/skybrush/bin"
 echo ""
 
@@ -60,6 +55,7 @@ echo ""
 echo -n "--> Copying addon code... "
 cp -r src/modules/sbstudio ${BUILD_DIR}/vendor/skybrush
 cp src/addons/ui_skybrush_studio.py ${BUILD_DIR}
+cp LICENSE.txt README.md "${BUILD_DIR}"
 echo "done."
 
 # Clean any __pycache__ and *.dist-info files
