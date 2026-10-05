@@ -15,6 +15,7 @@ from sbstudio.plugin.actions import (
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation, get_markers_from_formation
+from sbstudio.plugin.model.global_settings import get_preferences
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.model.storyboard import (
     Storyboard,
@@ -22,6 +23,7 @@ from sbstudio.plugin.model.storyboard import (
     get_storyboard,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
+from sbstudio.plugin.utils.safe_maneuvers import run_offline_maneuver
 
 from .base import StoryboardOperator
 from .takeoff import create_helper_formation_for_takeoff_and_landing
@@ -114,17 +116,17 @@ class ReturnToHomeOperator(StoryboardOperator):
     )
 
     use_smart_rth = BoolProperty(
-        name="Use smart RTH (PRO)",
+        name="Use smart RTH",
         description=(
-            "Enable the smart return to home function that ensures that "
-            "all drones return to their own home position with an optimal "
-            "collision free smart transition"
+            "Plan a return to each drone's own home. Offline mode always uses "
+            "checked layered paths and rejects layouts without a checked route. "
+            "This is an authored maneuver, not emergency flight-controller RTH"
         ),
         default=False,
     )
 
     to_aerial_grid = BoolProperty(
-        name="Return to aerial grid (PRO)",
+        name="Return to aerial grid",
         description=(
             "If enabled, drones will use a special planner to return to an "
             "aerial grid above home and will not land automatically afterwards. "
@@ -179,7 +181,13 @@ class ReturnToHomeOperator(StoryboardOperator):
             row.label(text="", icon="ERROR")
 
         if is_smart_rth_enabled_globally():
-            layout.prop(self, "use_smart_rth")
+            if get_preferences().operation_mode == "OFFLINE":
+                layout.label(text="Checked offline RTH is always enabled", icon="INFO")
+                layout.label(
+                    text="Checks centre paths, not obstacles or flight readiness"
+                )
+            else:
+                layout.prop(self, "use_smart_rth")
             if use_smart_rth:
                 layout.prop(self, "to_aerial_grid")
 
@@ -187,6 +195,8 @@ class ReturnToHomeOperator(StoryboardOperator):
         self.start_frame = max(
             context.scene.frame_current, get_storyboard(context=context).frame_end
         )
+        if get_preferences().operation_mode == "OFFLINE":
+            self.start_frame = get_storyboard(context=context).frame_end
         if not self.use_custom_spacing:
             self.spacing = get_proximity_warning_threshold(context)
 
@@ -201,12 +211,18 @@ class ReturnToHomeOperator(StoryboardOperator):
         return {"FINISHED"} if success else {"CANCELLED"}
 
     def _should_use_smart_rth(self) -> bool:
-        return self.use_smart_rth and is_smart_rth_enabled_globally()
+        return get_preferences().operation_mode == "OFFLINE" or (
+            self.use_smart_rth and is_smart_rth_enabled_globally()
+        )
 
     def _should_return_to_aerial_grid(self) -> bool:
         return self._should_use_smart_rth() and self.to_aerial_grid
 
     def _run(self, storyboard: Storyboard, *, context: Context) -> bool:
+        if get_preferences().operation_mode == "OFFLINE":
+            return run_offline_maneuver(
+                self, storyboard, context=context, return_home=True
+            )
         bpy.ops.skybrush.prepare()
 
         if not self._validate_start_frame(context):
@@ -242,7 +258,8 @@ class ReturnToHomeOperator(StoryboardOperator):
         result = run_rth(storyboard, source=source, target=target, context=context)
 
         # Recalculate the transition leading to the target formation
-        bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
+        if result:
+            bpy.ops.skybrush.recalculate_transitions(scope="TO_SELECTED")
         return result
 
     def _run_base_rth(

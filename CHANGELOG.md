@@ -7,19 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Offline landing / Smart RTH — 5.10.0
+
+- Add local identity-preserving layered RTH and synchronized eased landing,
+  with analytical full-phase separation and speed/acceleration bounds for the
+  generated cubic paths, including Blender float32 handle/frame timing.
+- Check source/target feasibility, waiting/landed drones, climb, transfer,
+  complete descent, actual home Z, configured altitude ceiling and finite limits.
+  Infeasible routes fail closed; no motor-off spacing exemption is assumed.
+- Install locked manual-mapped formations with world-space tracking and rollback
+  of partial installation; ordinary recalculation does not overwrite the route.
+- Add adversarial, seeded, 100/500-drone and packaged Blender regressions,
+  save/reopen checks and a complete checked-export integration case.
+- Supply a Windows acceptance bundle and remove the Unix-only memory-measurement
+  dependency from the stress test. Windows execution is not yet verified.
+- Other unfinished work is excluded by request. This version is a scoped design
+  release, not full paid-backend parity, aircraft acceptance or flight approval.
+
+### Offline review hardening — 5.0.10
+
+- Checked SKYC drafts are now the default: full storyboard/all drones, required
+  dense audit, and fail-closed saving on known path or sampled-motion violations.
+- Reject incomplete audit coverage, excessive sampled export deviation, invalid
+  phase metadata, nonpositive checked limits and unvalidated checked yaw export.
+- Preview-only drafts remain explicit and carry their status in both validation
+  and show metadata. Neither mode grants flight approval.
+- Foreground/background messages distinguish checked drafts and preview-only
+  output; preflight failures clear stale cached validation reports.
+- Shorter offline checkbox labels and an explicit export tooltip survive packaging.
+- Reject non-finite JSON metadata, include the GPL text in the installer, and add
+  generic Blender acceptance tests for successful and rejected foreground/worker
+  exports without opening the user's show or contacting drones.
+
 ### Added
+
+- Optional process-isolated offline export with native modal cancellation,
+  temporary scene snapshots, worker-failure reporting and guarded atomic saving.
+  Headless workers avoid GPU overlays and create their own add-on preferences.
+- Offline exported-path and dense-motion validation cancellation checkpoints,
+  throttled progress, and a final cancellation check before saving.
+- Regression checks that cancellation leaves existing exports unchanged and
+  does not publish a successful validation report.
+- Optional offline SKYC dense-motion audit with half-frame evaluated positions,
+  embedded sampled diagnostics, export-deviation measurements and Blender warnings.
+- Blender audit regressions for cancellation, evaluation failure, negative
+  frames and frame/subframe restoration, plus sparse-motion and landing tests.
+- Half-frame evaluated Blender motion audit and a 500-drone, ten-minute
+  synthetic offline export integration benchmark.
+- Regression tests for fractional frame rates, clipped/empty/malformed phases,
+  interrupted export commits, and between-sample collisions in a 500-drone swarm.
+
+### Fixed
+
+- Offline grouping and landing reject invalid numeric inputs. Landing no longer
+  silently treats a target above the starting height as a zero-duration descent.
+- Export timing now uses `fps / fps_base` consistently for sampled motion,
+  lights, cues, phase intervals and export origin; audio timing also uses it.
+- Empty authored phases no longer discard other valid phases. Phase intervals
+  are clipped to the export range, and invalid intervals are omitted from SKYC
+  metadata rather than presented as valid.
+- Offline exports now flush a sibling temporary file before atomic replacement;
+  write/commit errors preserve the previous destination and propagate to Blender.
+
+### Earlier offline additions
+
+- Validation v2 identifies affected drones and speed-peak time intervals, and
+  separates initial-layout spacing from height-based ground/mixed-air minima.
+
+- Added continuous separation, altitude and directional speed checks to offline
+  SKYC export, embedded as `validation.json`, with visible export warnings.
 
 - Added an experimental offline design mode for local formation matching,
   transition estimates, layered takeoff and landing planning, and zipped CSV
   export without an add-on-enforced drone-count limit.
+- Added local, unoptimized draft `.skyc` export for trajectories, lights, cues,
+  validation settings, show location, segments, and optional yaw control.
 
 ### Changed
 
+- Reuse pairwise-validation working arrays to reduce allocation and copying
+  without pruning pairs or reducing time-interval coverage.
 - White-labelled the end-user Blender add-on, documentation, package metadata,
   distribution artifact, and UI assets as **Dronetara Studio**.
 - Renamed the installable entry point to `ui_dronetara_studio.py` while retaining
   legacy `skybrush.*` Blender data and operator identifiers for `.blend` file
   compatibility.
+
+### Fixed
+
+- Offline SKYC now compiles RGB keyframes into LED bytecode; verified with the
+  public native player and a 100-drone show in Skybrush Viewer.
+- Offline transition duration now bounds cubic smoothstep speed/acceleration
+  rather than using a trapezoidal-motion estimate.
+
+- Export failures are no longer swallowed by console progress reporting, so
+  Blender cannot report a successful export when no output file was created.
+- Successful export messages now include the exact output path, and every export
+  verifies that the destination exists and is non-empty.
 
 ## [5.0.3] - 2026-08-14
 

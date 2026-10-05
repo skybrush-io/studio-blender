@@ -113,7 +113,7 @@ class DroneShowAddonGlobalSettings(AddonPreferences):
                 (
                     "OFFLINE",
                     "Offline design (experimental)",
-                    "Unlimited local design, transition matching, takeoff and landing planning, and zipped CSV export. Production SKYC export and advanced server tools are unavailable",
+                    "Unlimited local design, transition matching, takeoff and landing planning, zipped CSV export, and draft SKYC export. Production validation and advanced server tools are unavailable",
                 ),
                 (
                     "ADVANCED",

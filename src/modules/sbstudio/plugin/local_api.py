@@ -14,14 +14,28 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from sbstudio.api.errors import SkybrushStudioAPIError
 from sbstudio.api.types import Limits, Version
+from sbstudio.atomic_file import atomic_write_bytes
+from sbstudio.export_policy import (
+    CHECKED,
+    DEFAULT_MAX_EXPORT_DEVIATION,
+    evaluate_export_gate,
+    validate_export_policy,
+)
 from sbstudio.math.local_planner import (
     decompose_points_locally,
     match_points_locally,
+    plan_landing_locally,
     plan_transition_locally,
 )
+from sbstudio.math.motion_audit import audit_sampled_motion
+from sbstudio.math.safe_maneuvers import plan_checked_landing, plan_checked_rth
+from sbstudio.math.trajectory_validation import validate_trajectories
 from sbstudio.model.light_program import LightProgram
+from sbstudio.model.safety_check import SafetyCheckParams
+from sbstudio.model.time_markers import TimeMarkers
 from sbstudio.model.trajectory import Trajectory
 from sbstudio.model.types import Coordinate3D
+from sbstudio.skyc import render_skyc_archive
 
 __all__ = ("LocalSkybrushStudioAPI",)
 
@@ -113,18 +127,18 @@ def _sample_times(trajectory: Trajectory, fps: float) -> list[float]:
     return result
 
 
-def _safe_filenames(names: Sequence[str]) -> dict[str, str]:
+def _safe_filenames(names: Sequence[str], *, suffix: str = ".csv") -> dict[str, str]:
     result: dict[str, str] = {}
     used: set[str] = set()
     for index, name in enumerate(names, start=1):
         stem = _SAFE_FILENAME_PART.sub("_", name).strip("._") or f"Drone_{index}"
         candidate = stem
-        suffix = 2
+        duplicate_index = 2
         while candidate.casefold() in used:
-            candidate = f"{stem}_{suffix}"
-            suffix += 1
+            candidate = f"{stem}_{duplicate_index}"
+            duplicate_index += 1
         used.add(candidate.casefold())
-        result[name] = f"{candidate}.csv"
+        result[name] = f"{candidate}{suffix}"
     return result
 
 
@@ -163,12 +177,14 @@ def _render_csv_zip(
 class LocalSkybrushStudioAPI:
     """Limited in-process implementation of the API needed for local design.
 
-    This backend deliberately does not claim to generate production-ready
-    ``.skyc`` files or perform the licensed server's advanced safety planning.
+    SKYC output from this backend is an unoptimized draft archive. It does not
+    replace server-grade validation or production flight preparation.
     """
 
     def get_limits(self) -> Limits:
         return Limits(features=["offline-design"])
+
+    last_validation_report: dict | None = None
 
     def get_version(self) -> Version:
         # New enough to select plan_takeoff() instead of the legacy endpoint.
@@ -209,32 +225,16 @@ class LocalSkybrushStudioAPI:
         target_altitude: float = 0,
         spindown_time: float = 5,
     ) -> tuple[list[float], list[float]]:
-        if velocity <= 0:
-            raise SkybrushStudioAPIError("landing velocity must be positive")
-
-        target = [(x, y, target_altitude) for x, y, _ in points]
-        groups = decompose_points_locally(target, min_distance=min_distance)
-        durations = [
-            max(0.0, point[2] - target_altitude) / velocity for point in points
-        ]
-        group_ids = sorted(
-            set(groups),
-            key=lambda group: min(
-                point[2]
-                for point, item_group in zip(points, groups)
-                if item_group == group
-            ),
-        )
-        group_start: dict[int, float] = {}
-        cursor = 0.0
-        for group in group_ids:
-            group_start[group] = cursor
-            cursor += max(
-                duration
-                for duration, item_group in zip(durations, groups)
-                if item_group == group
-            ) + max(0.0, spindown_time)
-        return [group_start[group] for group in groups], durations
+        try:
+            return plan_landing_locally(
+                points,
+                min_distance=min_distance,
+                velocity=velocity,
+                target_altitude=target_altitude,
+                spindown_time=spindown_time,
+            )
+        except ValueError as exc:
+            raise SkybrushStudioAPIError(str(exc)) from exc
 
     def plan_transition(
         self,
@@ -256,8 +256,19 @@ class LocalSkybrushStudioAPI:
             max_velocity_z_up=max_velocity_z_up,
         )
 
+    def plan_checked_landing(self, *args, **kwargs):
+        """Offline synchronized cubic plan, not a remote API polyline response."""
+        try:
+            return plan_checked_landing(*args, **kwargs)
+        except ValueError as exc:
+            raise SkybrushStudioAPIError(str(exc)) from exc
+
     def plan_smart_rth(self, *args, **kwargs):
-        raise _unsupported("Smart return-to-home planning")
+        """Offline synchronized cubic plan, consumed by the offline UI path."""
+        try:
+            return plan_checked_rth(*args, **kwargs)
+        except ValueError as exc:
+            raise SkybrushStudioAPIError(str(exc)) from exc
 
     def create_formation_from_svg(self, *args, **kwargs):
         raise _unsupported("SVG formation sampling")
@@ -273,19 +284,144 @@ class LocalSkybrushStudioAPI:
         output: str | Path | None = None,
         renderer: str | list[str] = "skyc",
         renderer_params: dict[str, Any] | list[dict[str, Any] | None] | None = None,
+        validation: SafetyCheckParams | None = None,
+        show_title: str | None = None,
+        show_type: str = "outdoor",
+        show_location: Any | None = None,
+        show_segments: dict[str, tuple[float, float]] | None = None,
+        time_markers: TimeMarkers | None = None,
+        pyro_programs: dict[str, Any] | None = None,
+        yaw_setpoints: dict[str, Any] | None = None,
+        audio: Any | None = None,
+        cameras: list[Any] | None = None,
+        evaluated_motion: dict | None = None,
+        evaluated_motion_sample_interval: float | None = None,
+        export_policy: str = CHECKED,
+        max_export_deviation: float = DEFAULT_MAX_EXPORT_DEVIATION,
+        validation_progress=None,
         **kwargs,
     ) -> bytes | None:
-        if renderer != "csv":
+        self.last_validation_report = None
+        report = None
+        if renderer not in ("csv", "skyc"):
             raise _unsupported("This export format")
-        if renderer_params is not None and not isinstance(renderer_params, dict):
-            raise SkybrushStudioAPIError("invalid CSV renderer parameters")
-
-        fps = float((renderer_params or {}).get("fps", 4))
-        data = _render_csv_zip(trajectories, lights, fps=fps)
+        if renderer == "csv":
+            if renderer_params is not None and not isinstance(renderer_params, dict):
+                raise SkybrushStudioAPIError("invalid CSV renderer parameters")
+            fps = float((renderer_params or {}).get("fps", 4))
+            data = _render_csv_zip(trajectories, lights, fps=fps)
+        else:
+            validate_export_policy(export_policy, max_export_deviation)
+            if export_policy == CHECKED and evaluated_motion is None:
+                raise SkybrushStudioAPIError(
+                    "Checked export requires a dense motion audit. Destination unchanged. "
+                    "Preview-only export is available for inspecting unfinished designs."
+                )
+            if export_policy == CHECKED and yaw_setpoints:
+                raise SkybrushStudioAPIError(
+                    "Checked offline export does not yet validate yaw control"
+                )
+            if pyro_programs:
+                raise _unsupported("Pyro-enabled SKYC export")
+            if audio is not None:
+                raise _unsupported("Audio-enabled SKYC export")
+            if cameras:
+                raise _unsupported("Camera-enabled SKYC export")
+            if not trajectories:
+                raise SkybrushStudioAPIError("cannot export an empty show")
+            empty_trajectory = next(
+                (
+                    name
+                    for name, trajectory in trajectories.items()
+                    if not trajectory.points
+                ),
+                None,
+            )
+            if empty_trajectory is not None:
+                raise SkybrushStudioAPIError(
+                    f"cannot export an empty trajectory for {empty_trajectory!r}"
+                )
+            limits = validation or SafetyCheckParams()
+            exported_paths = {
+                name: [
+                    [time, *position]
+                    for time, position, _ in trajectory.as_dict(version=1)["points"]
+                ]
+                for name, trajectory in trajectories.items()
+            }
+            report = validate_trajectories(
+                exported_paths,
+                min_distance=limits.min_distance,
+                max_altitude=limits.max_altitude,
+                max_velocity_xy=limits.max_velocity_xy,
+                max_velocity_z=limits.max_velocity_z,
+                max_velocity_z_up=limits.max_velocity_z_up,
+                max_acceleration=limits.max_acceleration,
+                show_segments=show_segments,
+                on_progress=(
+                    lambda done, total: validation_progress(
+                        "Exported path validation", done, total
+                    )
+                )
+                if validation_progress
+                else None,
+            )
+            if evaluated_motion is not None:
+                audit = audit_sampled_motion(
+                    evaluated_motion,
+                    exported_paths,
+                    expected_sample_interval=evaluated_motion_sample_interval,
+                    min_distance=limits.min_distance,
+                    max_altitude=limits.max_altitude,
+                    max_velocity_xy=limits.max_velocity_xy,
+                    max_velocity_z=limits.max_velocity_z,
+                    max_velocity_z_up=limits.max_velocity_z_up,
+                    max_acceleration=limits.max_acceleration,
+                    show_segments=show_segments,
+                    on_progress=(
+                        lambda done, total: validation_progress(
+                            "Dense motion validation", done, total
+                        )
+                    )
+                    if validation_progress
+                    else None,
+                )
+                report["evaluated_motion_audit"] = audit
+                report["diagnostic_warnings"].extend(
+                    "evaluated_motion_" + check
+                    for check in audit["validation"]["failed_checks"]
+                    + audit["validation"]["diagnostic_warnings"]
+                )
+            report["export_gate"] = evaluate_export_gate(
+                report,
+                exported_paths,
+                policy=export_policy,
+                max_export_deviation=max_export_deviation,
+            )
+            if report["export_gate"]["status"] == "blocked":
+                raise SkybrushStudioAPIError(
+                    "Checked export blocked; destination unchanged: "
+                    + ", ".join(report["export_gate"]["blocking_reasons"])
+                    + ". Fix the design/settings, or explicitly choose Preview only to inspect the report."
+                )
+            data = render_skyc_archive(
+                trajectories,
+                lights,
+                validation=validation or SafetyCheckParams(),
+                show_title=show_title,
+                show_type=show_type,
+                show_location=show_location,
+                show_segments=show_segments,
+                time_markers=time_markers or TimeMarkers(),
+                yaw_setpoints=yaw_setpoints,
+                validation_report=report,
+            )
+        if validation_progress:
+            validation_progress("Ready to save export", 1, 1)
         if output is None:
+            self.last_validation_report = report
             return data
 
-        destination = Path(output)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(data)
+        atomic_write_bytes(output, data)
+        self.last_validation_report = report
         return None

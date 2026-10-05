@@ -1,5 +1,7 @@
 """Utility functions for operators."""
 
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -7,7 +9,7 @@ from itertools import groupby
 from math import degrees
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from bpy.path import basename
 from bpy.types import Context
@@ -51,7 +53,11 @@ from sbstudio.plugin.utils.sampling import (
     sample_positions_of_objects,
 )
 from sbstudio.plugin.utils.time_markers import get_time_markers_from_context
+from sbstudio.timing import effective_fps, export_segments
 from sbstudio.utils import get_ends
+
+if TYPE_CHECKING:
+    from sbstudio.plugin.local_api import LocalSkybrushStudioAPI
 
 __all__ = (
     "export_show_to_file_using_api",
@@ -74,7 +80,7 @@ class _default_settings:
 
 
 def export_show_to_file_using_api(
-    api: SkybrushStudioAPI,
+    api: SkybrushStudioAPI | LocalSkybrushStudioAPI,
     context: Context,
     settings: dict[str, Any],
     filepath: str | Path,
@@ -101,6 +107,30 @@ def export_show_to_file_using_api(
     """
 
     log.info(f"Exporting show content to {filepath}")
+
+    from sbstudio.export_policy import CHECKED, DEFAULT_MAX_EXPORT_DEVIATION
+    from sbstudio.plugin.local_api import LocalSkybrushStudioAPI
+
+    if isinstance(api, LocalSkybrushStudioAPI):
+        # Preflight/sampling failures must not leave the previous export's
+        # successful report available to callers of the cached local API.
+        api.last_validation_report = None
+    offline_skyc = isinstance(api, LocalSkybrushStudioAPI) and format is FileFormat.SKYC
+    export_policy = settings.get("export_policy", CHECKED)
+    checked_export = offline_skyc and export_policy == CHECKED
+    if checked_export:
+        if (
+            settings.get("export_selected")
+            or settings.get("frame_range") != "STORYBOARD"
+        ):
+            raise SkybrushStudioExportWarning(
+                "Checked export requires all drones and the full Storyboard range. "
+                "Use Preview only for selected drones or clips."
+            )
+        if settings.get("use_yaw_control"):
+            raise SkybrushStudioExportWarning(
+                "Checked offline export does not yet validate yaw control"
+            )
 
     # get framerange
     log.info(f"Getting frame range from {settings.get('frame_range')}")
@@ -217,7 +247,7 @@ def export_show_to_file_using_api(
 
     # shift all time-dependent items so that the time axis of the exported show
     # starts at 0
-    delta = -frame_range[0] / context.scene.render.fps
+    delta = -frame_range[0] / effective_fps(context.scene.render)
     if delta != 0:
         for trajectory in trajectories.values():
             trajectory.shift_time_in_place(delta)
@@ -230,9 +260,9 @@ def export_show_to_file_using_api(
             for yaw_setpoint in yaw_setpoints.values():
                 yaw_setpoint.shift_time_in_place(delta)
         time_markers.shift_time_in_place(delta)
-        show_segments = {
-            k: (v[0] + delta, v[1] + delta) for k, v in show_segments.items()
-        }
+    show_segments = export_segments(
+        show_segments, -delta, frame_range[1] / effective_fps(context.scene.render)
+    )
 
     renderer_params = {}
 
@@ -331,7 +361,39 @@ def export_show_to_file_using_api(
 
     log.info(message)
 
-    with report_progress_during_api_operation(message):
+    extra_options: dict[str, Any] = {}
+    if settings.get("audit_motion") or checked_export:
+        from sbstudio.plugin.utils.motion_audit import sample_audit_positions
+
+        if not isinstance(api, LocalSkybrushStudioAPI) or format is not FileFormat.SKYC:
+            raise SkybrushStudioExportWarning(
+                "Dense motion audit requires offline SKYC export"
+            )
+        with (
+            suspended_safety_checks(),
+            suspended_color_update_callbacks(),
+            report_progress_during_api_operation("Dense motion audit") as on_progress,
+        ):
+            extra_options["evaluated_motion"] = sample_audit_positions(
+                context, drones, frame_range, on_progress=on_progress
+            )
+            extra_options["evaluated_motion_sample_interval"] = 1 / (
+                2 * effective_fps(context.scene.render)
+            )
+
+    from sbstudio.plugin.utils.validation_progress import validation_progress_callback
+
+    if offline_skyc:
+        extra_options["export_policy"] = export_policy
+        extra_options["max_export_deviation"] = settings.get(
+            "max_export_deviation", DEFAULT_MAX_EXPORT_DEVIATION
+        )
+
+    with report_progress_during_api_operation(message) as on_progress:
+        if isinstance(api, LocalSkybrushStudioAPI):
+            extra_options["validation_progress"] = validation_progress_callback(
+                on_progress
+            )
         api.export(
             show_title=show_title,
             show_type=show_type,
@@ -348,6 +410,7 @@ def export_show_to_file_using_api(
             cameras=cameras,
             renderer=renderer,
             renderer_params=renderer_params,
+            **extra_options,
         )
 
     log.info("Export finished")
@@ -430,7 +493,7 @@ def _get_segments(context: Context | None = None) -> dict[str, tuple[float, floa
     assert context is not None
     result: dict[str, tuple[float, float]] = {}
     storyboard = get_storyboard(context=context)
-    fps = context.scene.render.fps
+    fps = effective_fps(context.scene.render)
 
     entry_purpose_groups = groupby(storyboard.entries, lambda e: cast(str, e.purpose))
 
@@ -716,9 +779,11 @@ def _report_progress_on_console(title: str = "") -> Iterator[ProgressHandler]:
     except (KeyboardInterrupt, TaskCancelled):
         print("Operation cancelled by user.")
         failed = True
+        raise
     except Exception as ex:
         print(f"Operation failed: {ex}")
         failed = True
+        raise
     finally:
         print(f"{title}: {'failed' if failed else 'done'}.")
 

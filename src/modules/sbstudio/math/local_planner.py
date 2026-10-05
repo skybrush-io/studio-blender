@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from math import hypot, inf, sqrt
+from math import hypot, inf, isfinite, sqrt
 
 import numpy as np
 
@@ -220,6 +220,8 @@ def decompose_points_locally(
 ) -> list[int]:
     """Color the proximity graph so points in one group are safely separated."""
 
+    if not isfinite(min_distance) or min_distance < 0:
+        raise ValueError("minimum distance must be finite and nonnegative")
     point_array = _as_point_array(points)
     count = len(point_array)
     if count == 0:
@@ -262,6 +264,42 @@ def decompose_points_locally(
     return colors
 
 
+def plan_landing_locally(
+    points, *, min_distance, velocity, target_altitude=0, spindown_time=5
+):
+    """Constant-speed vertical landing with strict endpoint-hold separation.
+
+    Close landing slots cannot be made separated by waiting for motors to stop.
+    Without an explicit physical ground exemption, reject them. With separated
+    XY columns, every waiting, moving and landed pair stays separated.
+    The Blender offline operator uses the smooth checked-maneuver planner instead.
+    """
+    points = _as_point_array(points)
+    if not isfinite(velocity) or velocity <= 0:
+        raise ValueError("landing velocity must be finite and positive")
+    if not isfinite(target_altitude):
+        raise ValueError("landing altitude must be finite")
+    if not isfinite(spindown_time) or spindown_time < 0:
+        raise ValueError("spindown time must be finite and nonnegative")
+    if not isfinite(min_distance) or min_distance <= 0:
+        raise ValueError("landing minimum distance must be finite and positive")
+    if len(points) and (points[:, 2] < target_altitude).any():
+        raise ValueError("landing target cannot be above a drone's starting altitude")
+    target = [(x, y, target_altitude) for x, y, _ in points]
+    target_array = _as_point_array(target)
+    separation = _calculate_clearance(
+        target_array, target_array, list(range(len(points))), radius=0
+    )
+    if separation is not None and separation + 1e-9 < min_distance:
+        raise ValueError(
+            "Landing layout violates minimum separation; landed drones are not exempt"
+        )
+    durations = [float(point[2] - target_altitude) / velocity for point in points]
+    if not all(isfinite(value) for value in durations):
+        raise ValueError("landing schedule exceeds finite numeric range")
+    return [0.0] * len(points), durations
+
+
 def estimate_transition_duration(
     source: Coordinate3D,
     target: Coordinate3D,
@@ -271,10 +309,24 @@ def estimate_transition_duration(
     max_acceleration: float,
     max_velocity_z_up: float | None = None,
 ) -> float:
-    """Estimate a conservative point-to-point duration with speed/accel limits."""
+    """Bound speed/acceleration for a cubic smoothstep transition.
 
-    if max_velocity_xy <= 0 or max_velocity_z <= 0 or max_acceleration <= 0:
+    For position d*(3*u**2 - 2*u**3), peak speed is 1.5*d/T and
+    peak acceleration is 6*d/T**2. Bounds apply separately to XY and Z.
+    """
+
+    if any(
+        not isfinite(v) or v <= 0
+        for v in (
+            max_velocity_xy,
+            max_velocity_z,
+            max_acceleration,
+        )
+    ):
         raise ValueError("velocity and acceleration limits must be positive")
+
+    if any(not isfinite(v) for v in (*source, *target)):
+        raise ValueError("point coordinates must be finite")
 
     dx = float(target[0]) - float(source[0])
     dy = float(target[1]) - float(source[1])
@@ -284,15 +336,12 @@ def estimate_transition_duration(
         if dz > 0 and max_velocity_z_up is not None
         else max_velocity_z
     )
-    if vertical_velocity <= 0:
+    if not isfinite(vertical_velocity) or vertical_velocity <= 0:
         raise ValueError("vertical velocity limit must be positive")
 
     def duration_for(distance: float, velocity: float) -> float:
         distance = abs(distance)
-        ramp_distance = velocity * velocity / max_acceleration
-        if distance <= ramp_distance:
-            return 2 * sqrt(distance / max_acceleration)
-        return distance / velocity + velocity / max_acceleration
+        return max(1.5 * distance / velocity, sqrt(6 * distance / max_acceleration))
 
     return max(
         duration_for(hypot(dx, dy), max_velocity_xy),

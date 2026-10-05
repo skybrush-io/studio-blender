@@ -295,14 +295,14 @@ class FrameRange:
     evenly.
     """
 
-    _fps: int
+    _fps: float
     """Number of frames per second."""
 
     def __init__(
         self,
         start: int,
         end: int,
-        fps: int,
+        fps: float,
     ):
         self._start = start
         self._end = max(start, end)

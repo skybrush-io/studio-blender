@@ -2,6 +2,7 @@ from bpy.path import abspath
 from bpy.types import Context
 
 from sbstudio.model.audio import Audio
+from sbstudio.timing import effective_fps
 
 __all__ = ("get_audio_from_context",)
 
@@ -27,7 +28,7 @@ def get_audio_from_context(context: Context) -> Audio | None:
             and strip.sound.filepath.lower().endswith(".mp3")
         ):
             file_path = abspath(strip.sound.filepath)
-            fps = context.scene.render.fps
+            fps = effective_fps(context.scene.render)
             start_time = strip.frame_start / fps
 
             return Audio(file_path=file_path, start_time=start_time)

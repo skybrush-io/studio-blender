@@ -22,3 +22,6 @@ online_access: bool
 online_access_override: bool
 
 tempdir: str
+background: bool
+binary_path: str
+autoexec_fail: bool

@@ -2,7 +2,7 @@ bl_info = {
     "name": "Dronetara Studio",
     "author": "Dronetara",
     "description": "Professional drone show design tools for Blender",
-    "version": (5, 0, 3),
+    "version": (5, 10, 0),
     "blender": (4, 4, 0),
     "category": "Interface",
     "doc_url": "https://github.com/DRONETARA/studio-blender#readme",

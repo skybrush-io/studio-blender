@@ -1,6 +1,6 @@
 [project]
 name = "dronetara-studio-for-blender"
-version = "5.0.3"
+version = "5.10.0"
 description = "Dronetara Studio is a professional drone show designer integrated into Blender"
 license = "GPL-3.0-or-later"
 authors = [{ name = "Dronetara" }]

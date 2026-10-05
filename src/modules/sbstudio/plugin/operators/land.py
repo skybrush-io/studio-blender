@@ -9,6 +9,7 @@ from sbstudio.math.nearest_neighbors import find_nearest_neighbors
 from sbstudio.plugin.api import call_api_from_blender_operator
 from sbstudio.plugin.constants import Collections
 from sbstudio.plugin.model.formation import create_formation
+from sbstudio.plugin.model.global_settings import get_preferences
 from sbstudio.plugin.model.safety_check import get_proximity_warning_threshold
 from sbstudio.plugin.model.storyboard import (
     Storyboard,
@@ -16,6 +17,7 @@ from sbstudio.plugin.model.storyboard import (
     get_storyboard,
 )
 from sbstudio.plugin.utils.evaluator import create_position_evaluator
+from sbstudio.plugin.utils.safe_maneuvers import run_offline_maneuver
 from sbstudio.plugin.utils.transition import find_transition_constraint_between
 
 from .base import StoryboardOperator
@@ -115,12 +117,19 @@ class LandOperator(StoryboardOperator):
         if self.spacing < get_proximity_warning_threshold(context):
             row.alert = True
             row.label(text="", icon="ERROR")
-        layout.prop(self, "spindown_time")
+        row = layout.row()
+        row.prop(self, "spindown_time")
+        row.enabled = get_preferences().operation_mode != "OFFLINE"
+        if get_preferences().operation_mode == "OFFLINE":
+            layout.label(text="Checked paths; no ground-spacing exemption", icon="INFO")
+            layout.label(text="Speed is a maximum; spindown does not waive spacing")
 
     def invoke(self, context: Context, event):
         self.start_frame = max(
             context.scene.frame_current, get_storyboard(context=context).frame_end
         )
+        if get_preferences().operation_mode == "OFFLINE":
+            self.start_frame = get_storyboard(context=context).frame_end
 
         if not self.use_custom_spacing:
             self.spacing = get_proximity_warning_threshold(context)
@@ -136,6 +145,8 @@ class LandOperator(StoryboardOperator):
         return {"FINISHED"} if success else {"CANCELLED"}
 
     def _run(self, storyboard: Storyboard, *, context: Context) -> bool:
+        if get_preferences().operation_mode == "OFFLINE":
+            return run_offline_maneuver(self, storyboard, context=context)
         bpy.ops.skybrush.prepare()
 
         if not self._validate_start_frame(context):

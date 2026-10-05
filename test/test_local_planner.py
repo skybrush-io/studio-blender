@@ -38,8 +38,7 @@ def test_decompose_points_separates_all_close_neighbors():
 
 
 def test_estimate_transition_duration_honors_velocity_and_acceleration():
-    # 10m with v=2m/s and a=1m/s^2: 2s acceleration/deceleration ramps and
-    # 3s at full speed, for 7s total.
+    # Smoothstep peaks: speed=1.5*d/T, acceleration=6*d/T**2.
     duration = estimate_transition_duration(
         (0, 0, 0),
         (10, 0, 0),
@@ -48,7 +47,33 @@ def test_estimate_transition_duration_honors_velocity_and_acceleration():
         max_acceleration=1,
     )
 
-    assert isclose(duration, 7)
+    assert isclose(duration, 60**0.5)
+
+
+def test_transition_matches_licensed_vertical_reference():
+    duration = estimate_transition_duration(
+        (0, 0, 0),
+        (0, 0, 6),
+        max_velocity_xy=4,
+        max_velocity_z=2,
+        max_acceleration=2,
+    )
+    assert isclose(duration, 4.5)
+
+
+def test_smoothstep_derivatives_respect_limits():
+    for distance in (0.001, 1, 6, 100):
+        duration = estimate_transition_duration(
+            (0, 0, 0),
+            (distance, 0, distance),
+            max_velocity_xy=4,
+            max_velocity_z=2,
+            max_acceleration=2,
+        )
+        for step in range(101):
+            u = step / 100
+            assert distance * 6 * u * (1 - u) / duration <= 2 + 1e-10
+            assert abs(distance * (6 - 12 * u) / duration**2) <= 2 + 1e-10
 
 
 def test_plan_transition_uses_target_to_source_mapping():

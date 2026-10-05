@@ -65,6 +65,8 @@ echo ""
 echo -n "--> Copying addon code... "
 cp -r src/modules/sbstudio ${BUILD_DIR}/vendor/skybrush
 cp src/addons/ui_dronetara_studio.py ${BUILD_DIR}
+cp LICENSE.txt ${BUILD_DIR}/LICENSE.txt
+cp README.md ${BUILD_DIR}/README.md
 echo "done."
 
 # Clean any __pycache__ and *.dist-info files

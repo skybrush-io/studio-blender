@@ -1,12 +1,27 @@
 from typing import Any
 
-from bpy.props import BoolProperty, IntProperty, StringProperty
+import bpy
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    FloatProperty,
+    IntProperty,
+    StringProperty,
+)
 
+from sbstudio.export_policy import CHECKED, DEFAULT_MAX_EXPORT_DEVIATION
 from sbstudio.model.file_formats import FileFormat
+from sbstudio.plugin.props.frame_range import FrameRangeProperty
 
 from .base import ExportOperator
 
 __all__ = ("SkybrushExportOperator",)
+
+
+def _export_policy_updated(self, context):
+    if self.export_policy == CHECKED:
+        self.export_selected = False
+        self.frame_range = "STORYBOARD"
 
 
 #############################################################################
@@ -19,16 +34,86 @@ class SkybrushExportOperator(ExportOperator):
 
     bl_idname = "export_scene.skybrush"
     bl_label = "Export Dronetara Show"
+    bl_description = "Export a show draft; checked offline export blocks known violations but is not flight approval"
     bl_options = {"REGISTER"}
 
     # List of file extensions that correspond to Skybrush files
     filter_glob = StringProperty(default="*.skyc", options={"HIDDEN"})
     filename_ext = ".skyc"
 
+    frame_range = FrameRangeProperty(default="STORYBOARD")
+
+    export_policy = EnumProperty(
+        name="Offline export",
+        items=[
+            (
+                "CHECKED",
+                "Checked draft",
+                "Require full storyboard, all drones, dense audit and passing implemented checks; not flight approval",
+            ),
+            (
+                "PREVIEW",
+                "Preview only",
+                "Allow unfinished designs and validation warnings for inspection; not for flight",
+            ),
+        ],
+        default=CHECKED,
+        update=_export_policy_updated,
+    )
+
+    max_export_deviation = FloatProperty(
+        name="Export tolerance (m)",
+        description="Maximum sampled difference between Blender motion and exported paths; authoring fidelity only, not a flight tracking margin",
+        default=DEFAULT_MAX_EXPORT_DEVIATION,
+        min=0.001,
+        precision=3,
+    )
+
+    background_export = BoolProperty(
+        name="Background export",
+        description="Export a temporary scene snapshot in another Blender process; press Esc to cancel. Snapshot creation itself is synchronous",
+        default=False,
+    )
+
+    def execute(self, context):
+        if self.background_export and not bpy.app.background:
+            from .native_background import start
+
+            return start(self, context)
+        return super().execute(context)
+
+    def modal(self, context, event):
+        from .native_background import modal
+
+        return modal(self, context, event)
+
+    def cancel(self, context):
+        from .native_background import cleanup
+
+        cleanup(self, context)
+
+    def invoke(self, context, event):
+        from sbstudio.plugin.model.global_settings import get_preferences
+
+        # A preview exception from an earlier dialog must not silently become
+        # the next designer's default export policy.
+        if get_preferences().operation_mode == "OFFLINE":
+            self.export_policy = CHECKED
+            self.export_selected = False
+            self.frame_range = "STORYBOARD"
+        return super().invoke(context, event)
+
+    audit_motion = BoolProperty(
+        name="Dense motion audit",
+        description="Sample evaluated positions every half-frame and include diagnostics; slower and not a continuous safety guarantee",
+        default=False,
+    )
+
     # output trajectory frame rate
     output_fps = IntProperty(
         name="Trajectory FPS",
         default=4,
+        min=1,
         description="Number of samples to take from trajectories per second",
     )
 
@@ -36,6 +121,7 @@ class SkybrushExportOperator(ExportOperator):
     light_output_fps = IntProperty(
         name="Light FPS",
         default=4,
+        min=1,
         description="Number of samples to take from light programs per second",
     )
 
@@ -68,14 +154,34 @@ class SkybrushExportOperator(ExportOperator):
     )
 
     def draw(self, context):
+        from sbstudio.plugin.model.global_settings import get_preferences
+
         layout = self.layout
         layout.use_property_split = True
 
-        layout.prop(self, "export_selected")
-        layout.prop(self, "frame_range")
+        offline = get_preferences().operation_mode == "OFFLINE"
+        checked = offline and self.export_policy == CHECKED
+        if offline:
+            layout.prop(self, "export_policy")
+            box = layout.box()
+            box.label(text="Flight review still required", icon="ERROR")
+            if checked:
+                box.label(text="All drones / full storyboard")
+                box.label(text="Half-frame motion audit required")
+            else:
+                box.label(text="PREVIEW ONLY - not for flight")
+        column = layout.column()
+        column.enabled = not checked
+        column.prop(self, "export_selected")
+        column.prop(self, "frame_range")
         layout.prop(self, "redraw")
         layout.prop(self, "output_fps")
         layout.prop(self, "light_output_fps")
+        if offline:
+            if not checked:
+                layout.prop(self, "audit_motion")
+            layout.prop(self, "max_export_deviation")
+            layout.prop(self, "background_export")
 
         layout.separator()
 
@@ -93,6 +199,9 @@ class SkybrushExportOperator(ExportOperator):
 
     def get_settings(self) -> dict[str, Any]:
         return {
+            "export_policy": self.export_policy,
+            "max_export_deviation": self.max_export_deviation,
+            "audit_motion": self.audit_motion,
             "output_fps": self.output_fps,
             "light_output_fps": self.light_output_fps,
             "use_pyro_control": self.use_pyro_control,

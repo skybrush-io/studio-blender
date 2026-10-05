@@ -53,7 +53,7 @@ class Overlay(ABC):
 
     @enabled.setter
     def enabled(self, value):
-        value = bool(value)
+        value = bool(value) and not bpy.app.background
 
         if self._enabled == value:
             return

@@ -45,7 +45,7 @@ class ExportPanel(Panel):
         if FileFormat.SKYC in formats:
             layout.operator(
                 SkybrushExportOperator.bl_idname,
-                text="Export Dronetara show (.skyc)",
+                text="Export Dronetara show (.skyc draft)",
             )
         if FileFormat.CSV in formats:
             layout.operator(
