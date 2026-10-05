@@ -61,6 +61,18 @@ Note that you might still need to exit Blender and restart it again if you
 make a modification to the plugin code to ensure that your modifications are
 picked up by Blender.
 
+## Experimental offline design
+
+An opt-in **Offline design (experimental)** mode is available in the add-on
+preferences. It performs local formation matching, takeoff planning, checked
+landing/return-to-home authoring, and CSV/draft SKYC export without a server.
+The existing Community, local server, and Cloud modes remain available, and
+Community remains the default.
+
+Offline exports are not flight approval or a replacement for production flight
+preparation. See [offline design](doc/offline-design.md) for the supported subset,
+limitations, and reproducible tests.
+
 ## Support
 
 For any support questions please contact us on our [Discord server](https://skybrush.io/r/discord).
