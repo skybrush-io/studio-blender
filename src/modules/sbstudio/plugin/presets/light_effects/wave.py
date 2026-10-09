@@ -1,17 +1,72 @@
 from __future__ import annotations
 
+from math import pi
 from typing import TYPE_CHECKING
 
 from numpy import abs, clip, float32, sin
 from numpy.typing import NDArray
 
 from .base import register_preset
+from .utils import get_centered_normalized_xy_distances
+from .waveforms import triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
         LightEffect,
         LightEffectEvaluationContext,
     )
+
+
+def _sine_distorted_phase(
+    positions: NDArray[float32],
+    axis: int,
+    frame: int,
+    *,
+    speed: float = 0.05,
+    spatial_k: float = 0.1,
+    amplitude: float = 0.5,
+) -> NDArray[float32]:
+    """Returns the phase of a wave travelling along the given axis, distorted by a sine of
+    the coordinate along that axis.
+
+    Args:
+        positions: per-drone XYZ positions
+        axis: index of the axis along which the wave travels
+        frame: current frame number
+        speed: phase advance per frame
+        spatial_k: spatial frequency along the axis
+        amplitude: strength of the spatial distortion, in phase turns
+
+    Returns:
+        per-drone phase, wrapped to [0, 1).
+    """
+    return (frame * speed + sin(positions[:, axis] * spatial_k) * amplitude) % 1.0
+
+
+def _spatial_wave(
+    positions: NDArray[float32],
+    frame: int,
+    *,
+    kx: float,
+    ky: float,
+    speed: float = 0.1,
+) -> NDArray[float32]:
+    """Returns a clipped pulse wave travelling in the XY plane, with its phase advancing
+    linearly along the X and Y axes.
+
+    Args:
+        positions: per-drone XYZ positions
+        frame: current frame number
+        kx: spatial frequency along the X axis
+        ky: spatial frequency along the Y axis
+        speed: phase advance per frame
+
+    Returns:
+        per-drone brightness of the clipped pulse, in [0, 1].
+    """
+    phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / 2 / pi
+    v = (phase - phase.astype(int)).astype(float32)
+    return clip(1.5 - abs(v - 0.5) * 4, 0, 1)
 
 
 @register_preset(
@@ -26,12 +81,7 @@ def wave_sawtooth(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    v = (frame * 0.05 + sin(positions[:, 0] * 0.1) * 0.5) % 1.0
-    out[:] = v.astype(float32)
+    out[:] = _sine_distorted_phase(context.positions.as_array, 0, frame).astype(float32)
 
 
 @register_preset(
@@ -46,12 +96,7 @@ def wave_sawtooth_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    v = (frame * 0.05 + sin(positions[:, 1] * 0.1) * 0.5) % 1.0
-    out[:] = v.astype(float32)
+    out[:] = _sine_distorted_phase(context.positions.as_array, 1, frame).astype(float32)
 
 
 @register_preset(
@@ -66,12 +111,7 @@ def wave_sawtooth_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    v = (frame * 0.05 + sin(positions[:, 2] * 0.1) * 0.5) % 1.0
-    out[:] = v.astype(float32)
+    out[:] = _sine_distorted_phase(context.positions.as_array, 2, frame).astype(float32)
 
 
 @register_preset(
@@ -86,12 +126,10 @@ def wave_triangle(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    v = (frame * 0.04 + sin(positions[:, 0] * 0.05)) % 1.0
-    out[:] = (1 - abs(2 * v - 1)).astype(float32)
+    v = _sine_distorted_phase(
+        context.positions.as_array, 0, frame, speed=0.04, spatial_k=0.05, amplitude=1.0
+    )
+    out[:] = triangle_wave(v)
 
 
 @register_preset(
@@ -106,18 +144,8 @@ def expanding_pulse(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    dx = positions[:, 0] - context.swarm_center[0]
-    dy = positions[:, 1] - context.swarm_center[1]
-    r = (dx * dx + dy * dy) ** 0.5
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    v = (frame * 0.04 - r / r_max) % 1.0
-    out[:] = (1 - abs(2 * v - 1)).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = triangle_wave(frame * 0.04 - relative_distances)
 
 
 @register_preset(
@@ -132,17 +160,8 @@ def sawtooth_pulse(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    dx = positions[:, 0] - context.swarm_center[0]
-    dy = positions[:, 1] - context.swarm_center[1]
-    r = (dx * dx + dy * dy) ** 0.5
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    v = (frame * 0.04 - r / r_max) % 1.0
+    relative_distances = get_centered_normalized_xy_distances(context)
+    v = (frame * 0.04 - relative_distances) % 1.0
     out[:] = v.astype(float32)
 
 
@@ -158,13 +177,7 @@ def spatial_wave(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    phase = (frame * 0.1 + positions[:, 0] * 0.2 + positions[:, 1] * 0.1) / 6.28
-    v = (phase - phase.astype(int)).astype(float32)
-    out[:] = clip(1.5 - abs(v - 0.5) * 4, 0, 1)
+    out[:] = _spatial_wave(context.positions.as_array, frame, kx=0.2, ky=0.1)
 
 
 @register_preset(
@@ -179,10 +192,4 @@ def spatial_wave_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    positions = context.positions.as_array
-    phase = (frame * 0.1 + positions[:, 0] * 0.1 + positions[:, 1] * 0.3) / 6.28
-    v = (phase - phase.astype(int)).astype(float32)
-    out[:] = clip(1.5 - abs(v - 0.5) * 4, 0, 1)
+    out[:] = _spatial_wave(context.positions.as_array, frame, kx=0.1, ky=0.3)
