@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def _sine_distorted_phase(
-    positions: NDArray[float32],
+    context: LightEffectEvaluationContext,
     axis: int,
     frame: int,
     *,
@@ -30,7 +30,7 @@ def _sine_distorted_phase(
     the coordinate along that axis.
 
     Args:
-        positions: per-drone XYZ positions
+        context: evaluation context for the swarm
         axis: index of the axis along which the wave travels
         frame: current frame number
         speed: phase advance per frame
@@ -40,11 +40,12 @@ def _sine_distorted_phase(
     Returns:
         per-drone phase, wrapped to [0, 1).
     """
+    positions = context.positions.as_array
     return (frame * speed + sin(positions[:, axis] * spatial_k) * amplitude) % 1.0
 
 
 def _spatial_wave(
-    positions: NDArray[float32],
+    context: LightEffectEvaluationContext,
     frame: int,
     *,
     kx: float,
@@ -55,7 +56,7 @@ def _spatial_wave(
     linearly along the X and Y axes.
 
     Args:
-        positions: per-drone XYZ positions
+        context: evaluation context for the swarm
         frame: current frame number
         kx: spatial frequency along the X axis
         ky: spatial frequency along the Y axis
@@ -64,6 +65,7 @@ def _spatial_wave(
     Returns:
         per-drone brightness of the clipped pulse, in [0, 1].
     """
+    positions = context.positions.as_array
     phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / 2 / pi
     v = (phase - phase.astype(int)).astype(float32)
     return clip(1.5 - abs(v - 0.5) * 4, 0, 1)
@@ -81,7 +83,7 @@ def wave_sawtooth(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _sine_distorted_phase(context.positions.as_array, 0, frame).astype(float32)
+    out[:] = _sine_distorted_phase(context, 0, frame).astype(float32)
 
 
 @register_preset(
@@ -96,7 +98,7 @@ def wave_sawtooth_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _sine_distorted_phase(context.positions.as_array, 1, frame).astype(float32)
+    out[:] = _sine_distorted_phase(context, 1, frame).astype(float32)
 
 
 @register_preset(
@@ -111,7 +113,7 @@ def wave_sawtooth_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _sine_distorted_phase(context.positions.as_array, 2, frame).astype(float32)
+    out[:] = _sine_distorted_phase(context, 2, frame).astype(float32)
 
 
 @register_preset(
@@ -127,7 +129,7 @@ def wave_triangle(
     out: NDArray[float32],
 ) -> None:
     v = _sine_distorted_phase(
-        context.positions.as_array, 0, frame, speed=0.04, spatial_k=0.05, amplitude=1.0
+        context, 0, frame, speed=0.04, spatial_k=0.05, amplitude=1.0
     )
     out[:] = triangle_wave(v)
 
@@ -177,7 +179,7 @@ def spatial_wave(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _spatial_wave(context.positions.as_array, frame, kx=0.2, ky=0.1)
+    out[:] = _spatial_wave(context, frame, kx=0.2, ky=0.1)
 
 
 @register_preset(
@@ -192,4 +194,4 @@ def spatial_wave_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _spatial_wave(context.positions.as_array, frame, kx=0.1, ky=0.3)
+    out[:] = _spatial_wave(context, frame, kx=0.1, ky=0.3)
