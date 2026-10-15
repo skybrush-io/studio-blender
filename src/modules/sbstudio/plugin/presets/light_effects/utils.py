@@ -80,11 +80,10 @@ def get_centered_normalized_xy_distances(
     Returns an empty array if there are no drones, and all zeros if all drones are
     located exactly at the barycenter.
     """
-    positions = context.positions.as_array
-    if len(positions) == 0:
+    centered = get_centered_positions(context)
+    if len(centered) == 0:
         return zeros(0, dtype=float32)
-    center = context.swarm_center
-    radii = hypot(positions[:, 0] - center[0], positions[:, 1] - center[1])
+    radii = hypot(centered[:, 0], centered[:, 1])
     max_radius = radii.max()
     if max_radius > 0:
         radii /= max_radius

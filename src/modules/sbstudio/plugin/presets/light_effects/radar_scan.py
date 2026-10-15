@@ -6,7 +6,7 @@ from numpy import arctan2, bool_, degrees, float32, where, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import get_centered_positions, get_formation_indices
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -23,16 +23,12 @@ def _get_fan_phase_and_width(
 
     Returns an empty array and a zero width if there are no drones.
     """
-    n = context.num_drones
+    centered = get_centered_positions(context)
+    n = len(centered)
     if n == 0:
         return zeros(0, dtype=float32), 0.0
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    dx = positions[:, 0] - cx
-    dy = positions[:, 1] - cy
-    angles = degrees(arctan2(dy, dx)) % 360
-    span = 360.0 / n
-    half_span = span / 2
+    angles = degrees(arctan2(centered[:, 1], centered[:, 0])) % 360
+    half_span = 180.0 / n
     return angles, half_span
 
 
