@@ -1353,6 +1353,15 @@ class LightEffect(PropertyGroup):
             self.type = effect_type
         if invert_target := data.get("invertTarget"):
             self.invert_target = invert_target
+        if preset_id := data.get("presetId"):
+            try:
+                self.preset_id = preset_id
+            except TypeError:
+                # the preset is not available in this version of the add-on any more
+                self.preset_id = NULL_PRESET_ID
+                warnings.append(
+                    f"Could not import light effect preset: {preset_id!r} is not available"
+                )
 
         if color_function := data.get("colorFunction"):
             self.color_function.update_from_dict(color_function)
