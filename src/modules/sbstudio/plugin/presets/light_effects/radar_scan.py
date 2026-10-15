@@ -219,24 +219,3 @@ def paint_on_test_2(
     progress = frame / 100
     active_count = int(n * min(progress, 1))
     out[:] = where(fi < active_count, (fi % 3 + 1) / 3.0, 0.0)
-
-
-@register_preset(
-    id="paint_on_test_3",
-    label="Paint on Test 3",
-    translations=(("zh", "飞入测试3"), ("ja", "ペイントオンテスト3")),
-)
-def paint_on_test_3(
-    effect: LightEffect,
-    context: LightEffectEvaluationContext,
-    frame: int,
-    *,
-    out: NDArray[float32],
-) -> None:
-    n = context.num_drones
-    fi = get_formation_indices(context)
-    out[:] = where(
-        fi < int(n * min(frame / 100, 1)),
-        (2 - abs(fi - n // 2) / (n // 2)).clip(0, 1),
-        0.0,
-    )
