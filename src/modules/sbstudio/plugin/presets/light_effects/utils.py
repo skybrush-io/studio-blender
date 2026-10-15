@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import array, empty, float32, hypot, int32, maximum, pi, subtract, zeros
+from numpy import (
+    array,
+    empty,
+    float32,
+    float64,
+    hypot,
+    int32,
+    maximum,
+    pi,
+    subtract,
+    zeros,
+)
 from numpy.typing import NDArray
 
 from .waveforms import sine_wave
@@ -30,6 +41,27 @@ def get_formation_indices(
     return result
 
 
+def formation_index_phase(
+    context: LightEffectEvaluationContext,
+    frame: int,
+    *,
+    wave_length: float,
+) -> NDArray[float64]:
+    """Returns the formation index offset by the current frame, wrapped into
+    ``wave_length`` steps and normalized to the [0; 1) range.
+
+    Args:
+        context: evaluation context for the swarm
+        frame: current frame number
+        wave_length: number of formation indices in a single wave
+
+    Returns:
+        per-drone phase of a wave over the formation index, in [0, 1).
+    """
+    fi = get_formation_indices(context)
+    return (frame + fi) % wave_length / wave_length
+
+
 def formation_index_sine_pulse(
     context: LightEffectEvaluationContext,
     frame: int,
@@ -54,8 +86,7 @@ def formation_index_sine_pulse(
         per-drone brightness of the sine pulse, in [0, 1].
     """
     wave_length = maximum(context.num_drones / divisor, 1e-6)
-    fi = get_formation_indices(context)
-    offset = (fi % wave_length) / wave_length
+    offset = formation_index_phase(context, 0, wave_length=wave_length)
     return sine_wave(frame * speed + offset * span)
 
 

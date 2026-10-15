@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, float64, pi
+from numpy import float32, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import formation_index_sine_pulse, get_formation_indices
+from .utils import (
+    formation_index_phase,
+    formation_index_sine_pulse,
+    get_formation_indices,
+)
 from .waveforms import sine_wave, triangle_wave
 
 if TYPE_CHECKING:
@@ -14,15 +18,6 @@ if TYPE_CHECKING:
         LightEffect,
         LightEffectEvaluationContext,
     )
-
-
-def _formation_index_phase(
-    context: LightEffectEvaluationContext, frame: int, *, wave_length: int
-) -> NDArray[float64]:
-    """Returns the formation index offset by the current frame, wrapped into
-    ``wave_length`` steps and normalized to the [0; 1) range."""
-    fi = get_formation_indices(context)
-    return (frame + fi) % wave_length / wave_length
 
 
 @register_preset(
@@ -88,7 +83,7 @@ def lightfx_6(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _formation_index_phase(context, frame, wave_length=50).astype(float32)
+    out[:] = formation_index_phase(context, frame, wave_length=50).astype(float32)
 
 
 @register_preset(
@@ -103,7 +98,7 @@ def lightfx_7(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = _formation_index_phase(context, frame, wave_length=400)
+    v = formation_index_phase(context, frame, wave_length=400)
     out[:] = triangle_wave(v)
 
 
