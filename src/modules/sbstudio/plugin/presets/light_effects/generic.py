@@ -73,7 +73,7 @@ def lightfx_4(
 ) -> None:
     fi = get_formation_indices(context)
     is_odd = fi % 2
-    out[:] = sine_wave(frame * 0.2 + is_odd * pi) / 2
+    out[:] = sine_wave(frame * 0.2 + is_odd * pi)
 
 
 @register_preset(
