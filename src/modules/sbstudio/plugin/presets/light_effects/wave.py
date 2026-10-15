@@ -67,7 +67,7 @@ def _spatial_wave(
     """
     positions = get_centered_positions(context)
     phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / 2 / pi
-    v = (phase - phase.astype(int)).astype(float32)
+    v = (phase % 1.0).astype(float32)
     return clip(1.5 - abs(v - 0.5) * 4, 0, 1)
 
 
