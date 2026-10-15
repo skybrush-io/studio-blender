@@ -48,7 +48,7 @@ def _is_in_fan(
         whether each drone falls within the fan.
     """
     diff = (angles - center) % 360
-    return (diff >= 0) & (diff <= 2 * half_span)
+    return diff <= 2 * half_span
 
 
 @register_preset(
