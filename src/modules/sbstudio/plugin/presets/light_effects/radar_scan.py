@@ -87,13 +87,13 @@ def radar_scan_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = context.num_drones
     angles, half_span = _get_fan_phase_and_width(context)
     center_angle = (-frame * 2) % 360
+    fi = get_formation_indices(context)
+    half = (int(fi.max()) + 1) // 2 if context.num_drones else 0
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
-        (n // 2 - abs(get_formation_indices(context) - n // 2)).astype(float32)
-        / (n // 2),
+        (half - abs(fi - half)).astype(float32) / max(half, 1),
         0.0,
     )
 

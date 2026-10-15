@@ -21,16 +21,17 @@ def _group_ranges(
     """Splits the formation index into ``num_groups`` equally sized ranges and maps them
     to evenly spaced brightness levels from 0 to 1.
 
-    Returns an empty array if there are no drones.
+    The ranges span the actual formation index range, so the output stays within [0, 1]
+    even when the formation is larger than the swarm.
 
-    Function implicitly assumes that the formation index is smaller
-    than the number of drones.
+    Returns an empty array if there are no drones.
     """
     num_drones = context.num_drones
     if num_drones == 0:
         return zeros(0, dtype=float32)
     fi = get_formation_indices(context)
-    group = (fi * num_groups) // num_drones
+    span = int(fi.max()) + 1
+    group = (fi * num_groups) // span
     return (group / (num_groups - 1)).astype(float32)
 
 
