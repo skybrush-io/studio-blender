@@ -301,9 +301,9 @@ class StoryboardEntry(PropertyGroup):
     mapping = StringProperty(
         name="Mapping",
         description=(
-            "Mapping where the i-th element is the index of the drone that "
-            "marker i was matched to in the storyboard entry, or -1 if the "
-            "marker is unmatched."
+            "Mapping where the i-th element is the index of the marker that "
+            "the i-th drone was matched to in the storyboard entry, or None "
+            "if the drone is unmatched."
         ),
         default="",
         options={"HIDDEN"},
@@ -403,8 +403,8 @@ class StoryboardEntry(PropertyGroup):
         return result
 
     def get_mapping(self) -> Mapping | None:
-        """Returns the mapping of the markers in the storyboard entry to drone
-        indices, or ``None`` if there is no mapping yet.
+        """Returns the mapping of drone indices to the indices of the markers in the
+        storyboard entry, or ``None`` if there is no mapping yet.
         """
         if self._decoded_mapping is None:
             encoded_mapping = self.mapping.strip()
@@ -435,13 +435,13 @@ class StoryboardEntry(PropertyGroup):
         )
 
     def update_mapping(self, mapping: Mapping | None) -> None:
-        """Updates the mapping of the markers in the storyboard entry to drone
-        indices.
+        """Updates the mapping of drone indices to the indices of the markers in the
+        storyboard entry.
 
         Arguments:
-            mapping: mapping where the i-th item contains the index of the drone
-                that the i-th marker was mapped to, or -1 if the marker is
-                 unmapped. You can also pass ``None`` to clear the entire mapping.
+            mapping: mapping where the i-th item contains the index of the marker
+                that the i-th drone was mapped to, or ``None`` if the drone is
+                unmapped. You can also pass ``None`` to clear the entire mapping.
         """
         if mapping is None:
             self.mapping = ""

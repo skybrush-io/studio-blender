@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, sqrt, zeros
+from numpy import clip, float32
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_centered_positions
+from .utils import get_centered_normalized_xy_distances, get_centered_positions
+from .waveforms import triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -15,43 +16,51 @@ if TYPE_CHECKING:
     )
 
 
-def _axis_sweep_on(
-    positions: NDArray[float32], axis: int, frame: int, negate: bool = False
+def _axis_sweep(
+    context: LightEffectEvaluationContext,
+    axis: int,
+    frame: int,
+    *,
+    negate: bool = False,
+    invert: bool = False,
 ) -> NDArray[float32]:
-    n = len(positions)
-    if n == 0:
-        return zeros(0, dtype=float32)
-    x = positions[:, axis] / 100  # normalize roughly
-    v = (frame * 0.04 + x) % 1.0 if not negate else (frame * 0.04 - x) % 1.0
-    return (1 - abs(2 * v - 1)).astype(float32)
+    """Returns a triangle wave travelling along the given axis, relative to the swarm
+    barycenter.
+
+    Args:
+        context: evaluation context for the swarm
+        axis: index of the axis along which the wave travels
+        frame: current frame number
+        negate: reverse the direction of travel
+        invert: make the sweep dark instead of bright where it passes
+
+    Returns:
+        per-drone brightness of the sweep, in [0, 1].
+    """
+    x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
+    v = triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
+    return 1 - v if invert else v
 
 
-def _axis_sweep_off(
-    positions: NDArray[float32], axis: int, frame: int
+def _radial_sweep(
+    context: LightEffectEvaluationContext,
+    frame: int,
+    *,
+    invert: bool = False,
 ) -> NDArray[float32]:
-    return 1 - _axis_sweep_on(positions, axis, frame, negate=False)
+    """Returns a triangle wave travelling outward from the swarm barycenter.
 
+    Args:
+        context: evaluation context for the swarm
+        frame: current frame number
+        invert: make the sweep dark instead of bright where it passes
 
-def _radial_sweep_on(
-    positions: NDArray[float32], cx: float, cy: float, frame: int
-) -> NDArray[float32]:
-    n = len(positions)
-    if n == 0:
-        return zeros(0, dtype=float32)
-    dx = positions[:, 0] - cx
-    dy = positions[:, 1] - cy
-    r = sqrt(dx * dx + dy * dy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    v = (frame * 0.05 + r / r_max) % 1.0
-    return (1 - abs(2 * v - 1)).astype(float32)
-
-
-def _radial_sweep_off(
-    positions: NDArray[float32], cx: float, cy: float, frame: int
-) -> NDArray[float32]:
-    return 1 - _radial_sweep_on(positions, cx, cy, frame)
+    Returns:
+        per-drone brightness of the sweep, in [0, 1].
+    """
+    relative_distances = get_centered_normalized_xy_distances(context)
+    v = triangle_wave(frame * 0.05 + relative_distances)
+    return 1 - v if invert else v
 
 
 @register_preset(
@@ -66,7 +75,7 @@ def sweep_positive_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=False)
+    out[:] = _axis_sweep(context, 0, frame)
 
 
 @register_preset(
@@ -81,7 +90,7 @@ def sweep_positive_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=False)
+    out[:] = _axis_sweep(context, 1, frame)
 
 
 @register_preset(
@@ -96,7 +105,7 @@ def sweep_positive_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=False)
+    out[:] = _axis_sweep(context, 2, frame)
 
 
 @register_preset(
@@ -111,7 +120,7 @@ def sweep_negative_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=True)
+    out[:] = _axis_sweep(context, 0, frame, negate=True)
 
 
 @register_preset(
@@ -126,7 +135,7 @@ def sweep_negative_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=True)
+    out[:] = _axis_sweep(context, 1, frame, negate=True)
 
 
 @register_preset(
@@ -141,7 +150,7 @@ def sweep_negative_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=True)
+    out[:] = _axis_sweep(context, 2, frame, negate=True)
 
 
 @register_preset(
@@ -156,7 +165,7 @@ def sweep_positive_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(get_centered_positions(context), 0, frame)
+    out[:] = _axis_sweep(context, 0, frame, invert=True)
 
 
 @register_preset(
@@ -171,7 +180,7 @@ def sweep_positive_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(get_centered_positions(context), 1, frame)
+    out[:] = _axis_sweep(context, 1, frame, invert=True)
 
 
 @register_preset(
@@ -186,7 +195,7 @@ def sweep_positive_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(get_centered_positions(context), 2, frame)
+    out[:] = _axis_sweep(context, 2, frame, invert=True)
 
 
 @register_preset(
@@ -201,8 +210,7 @@ def sweep_negative_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 0, frame, negate=True)
-    out[:] = 1 - out
+    out[:] = _axis_sweep(context, 0, frame, negate=True, invert=True)
 
 
 @register_preset(
@@ -217,8 +225,7 @@ def sweep_negative_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 1, frame, negate=True)
-    out[:] = 1 - out
+    out[:] = _axis_sweep(context, 1, frame, negate=True, invert=True)
 
 
 @register_preset(
@@ -233,8 +240,7 @@ def sweep_negative_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(get_centered_positions(context), 2, frame, negate=True)
-    out[:] = 1 - out
+    out[:] = _axis_sweep(context, 2, frame, negate=True, invert=True)
 
 
 @register_preset(
@@ -249,8 +255,7 @@ def radial_sweep_on(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    out[:] = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
+    out[:] = _radial_sweep(context, frame)
 
 
 @register_preset(
@@ -265,8 +270,7 @@ def radial_sweep_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    out[:] = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
+    out[:] = _radial_sweep(context, frame, invert=True)
 
 
 @register_preset(
@@ -281,8 +285,7 @@ def radial_sweep_on_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    v = _radial_sweep_on(context.positions.as_array, cx, cy, frame)
+    v = _radial_sweep(context, frame)
     out[:] = clip(2 * (v - 0.25), 0, 1)
 
 
@@ -298,6 +301,5 @@ def radial_sweep_off_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    cx, cy, _ = context.swarm_center
-    v = _radial_sweep_off(context.positions.as_array, cx, cy, frame)
+    v = _radial_sweep(context, frame, invert=True)
     out[:] = clip(2 * (v - 0.25), 0, 1)
