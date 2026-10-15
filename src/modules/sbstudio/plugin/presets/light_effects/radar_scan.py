@@ -37,11 +37,13 @@ def _is_in_fan(
 ) -> NDArray[bool_]:
     """Returns which drones fall within a fan starting at ``center``.
 
-    The fan extends ``2 * half_span`` degrees counterclockwise from ``center``.
+    The fan is one-sided: it starts at ``center`` and extends ``2 * half_span`` degrees
+    counterclockwise, so it is not symmetric around ``center``; a drone just clockwise
+    of ``center`` is outside the fan.
 
     Args:
         angles: per-drone angle around the swarm center, in degrees, in [0, 360)
-        center: angle at which the fan starts, in degrees
+        center: angle at which the fan starts (its counterclockwise edge), in degrees
         half_span: half of the angular width of the fan, in degrees
 
     Returns:
