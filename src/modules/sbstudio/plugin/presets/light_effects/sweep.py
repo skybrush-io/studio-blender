@@ -16,12 +16,13 @@ if TYPE_CHECKING:
     )
 
 
-def _axis_sweep_on(
+def _axis_sweep(
     context: LightEffectEvaluationContext,
     axis: int,
     frame: int,
     *,
     negate: bool = False,
+    invert: bool = False,
 ) -> NDArray[float32]:
     """Returns a triangle wave travelling along the given axis, relative to the swarm
     barycenter.
@@ -31,50 +32,35 @@ def _axis_sweep_on(
         axis: index of the axis along which the wave travels
         frame: current frame number
         negate: reverse the direction of travel
+        invert: make the sweep dark instead of bright where it passes
 
     Returns:
         per-drone brightness of the sweep, in [0, 1].
     """
     x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
-    return triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
+    v = triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
+    return 1 - v if invert else v
 
 
-def _axis_sweep_off(
+def _radial_sweep(
     context: LightEffectEvaluationContext,
-    axis: int,
     frame: int,
     *,
-    negate: bool = False,
+    invert: bool = False,
 ) -> NDArray[float32]:
-    """Returns the inverse of `_axis_sweep_on()`, so the sweep appears dark instead of
-    bright where it passes.
+    """Returns a triangle wave travelling outward from the swarm barycenter.
 
     Args:
         context: evaluation context for the swarm
-        axis: index of the axis along which the wave travels
         frame: current frame number
-        negate: reverse the direction of travel
+        invert: make the sweep dark instead of bright where it passes
 
     Returns:
-        per-drone brightness of the inverted sweep, in [0, 1].
+        per-drone brightness of the sweep, in [0, 1].
     """
-    return 1 - _axis_sweep_on(context, axis, frame, negate=negate)
-
-
-def _radial_sweep_on(
-    context: LightEffectEvaluationContext, frame: int
-) -> NDArray[float32]:
-    """Returns a triangle wave travelling outward from the swarm barycenter."""
     relative_distances = get_centered_normalized_xy_distances(context)
-    return triangle_wave(frame * 0.05 + relative_distances)
-
-
-def _radial_sweep_off(
-    context: LightEffectEvaluationContext, frame: int
-) -> NDArray[float32]:
-    """Returns the inverse of `_radial_sweep_on()`, so the sweep appears dark instead
-    of bright where it passes."""
-    return 1 - _radial_sweep_on(context, frame)
+    v = triangle_wave(frame * 0.05 + relative_distances)
+    return 1 - v if invert else v
 
 
 @register_preset(
@@ -89,7 +75,7 @@ def sweep_positive_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context, 0, frame)
+    out[:] = _axis_sweep(context, 0, frame)
 
 
 @register_preset(
@@ -104,7 +90,7 @@ def sweep_positive_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context, 1, frame)
+    out[:] = _axis_sweep(context, 1, frame)
 
 
 @register_preset(
@@ -119,7 +105,7 @@ def sweep_positive_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context, 2, frame)
+    out[:] = _axis_sweep(context, 2, frame)
 
 
 @register_preset(
@@ -134,7 +120,7 @@ def sweep_negative_x(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context, 0, frame, negate=True)
+    out[:] = _axis_sweep(context, 0, frame, negate=True)
 
 
 @register_preset(
@@ -149,7 +135,7 @@ def sweep_negative_y(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context, 1, frame, negate=True)
+    out[:] = _axis_sweep(context, 1, frame, negate=True)
 
 
 @register_preset(
@@ -164,7 +150,7 @@ def sweep_negative_z(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_on(context, 2, frame, negate=True)
+    out[:] = _axis_sweep(context, 2, frame, negate=True)
 
 
 @register_preset(
@@ -179,7 +165,7 @@ def sweep_positive_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context, 0, frame)
+    out[:] = _axis_sweep(context, 0, frame, invert=True)
 
 
 @register_preset(
@@ -194,7 +180,7 @@ def sweep_positive_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context, 1, frame)
+    out[:] = _axis_sweep(context, 1, frame, invert=True)
 
 
 @register_preset(
@@ -209,7 +195,7 @@ def sweep_positive_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context, 2, frame)
+    out[:] = _axis_sweep(context, 2, frame, invert=True)
 
 
 @register_preset(
@@ -224,7 +210,7 @@ def sweep_negative_x_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context, 0, frame, negate=True)
+    out[:] = _axis_sweep(context, 0, frame, negate=True, invert=True)
 
 
 @register_preset(
@@ -239,7 +225,7 @@ def sweep_negative_y_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context, 1, frame, negate=True)
+    out[:] = _axis_sweep(context, 1, frame, negate=True, invert=True)
 
 
 @register_preset(
@@ -254,7 +240,7 @@ def sweep_negative_z_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _axis_sweep_off(context, 2, frame, negate=True)
+    out[:] = _axis_sweep(context, 2, frame, negate=True, invert=True)
 
 
 @register_preset(
@@ -269,7 +255,7 @@ def radial_sweep_on(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _radial_sweep_on(context, frame)
+    out[:] = _radial_sweep(context, frame)
 
 
 @register_preset(
@@ -284,7 +270,7 @@ def radial_sweep_off(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _radial_sweep_off(context, frame)
+    out[:] = _radial_sweep(context, frame, invert=True)
 
 
 @register_preset(
@@ -299,7 +285,7 @@ def radial_sweep_on_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = _radial_sweep_on(context, frame)
+    v = _radial_sweep(context, frame)
     out[:] = clip(2 * (v - 0.25), 0, 1)
 
 
@@ -315,5 +301,5 @@ def radial_sweep_off_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = _radial_sweep_off(context, frame)
+    v = _radial_sweep(context, frame, invert=True)
     out[:] = clip(2 * (v - 0.25), 0, 1)
