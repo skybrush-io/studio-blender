@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, float64, maximum, pi
+from numpy import float32, float64, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import formation_index_sine_pulse, get_formation_indices
 from .waveforms import sine_wave, triangle_wave
 
 if TYPE_CHECKING:
@@ -14,35 +14,6 @@ if TYPE_CHECKING:
         LightEffect,
         LightEffectEvaluationContext,
     )
-
-
-def _formation_index_sine_pulse(
-    context: LightEffectEvaluationContext,
-    frame: int,
-    *,
-    divisor: float,
-    speed: float,
-    span: float,
-) -> NDArray[float32]:
-    """Returns a sine pulse over the formation index.
-
-    The formation index is wrapped into ``divisor`` waves across the whole swarm, so the
-    pattern stretches with the number of drones.
-
-    Args:
-        context: evaluation context for the swarm
-        frame: current frame number
-        divisor: number of waves the formation index is wrapped into
-        speed: phase advance per frame
-        span: phase width of a single wave, in radians
-
-    Returns:
-        per-drone brightness of the sine pulse, in [0, 1].
-    """
-    wave_length = maximum(context.num_drones / divisor, 1e-6)
-    fi = get_formation_indices(context)
-    offset = (fi % wave_length) / wave_length
-    return sine_wave(frame * speed + offset * span)
 
 
 def _formation_index_phase(
@@ -66,7 +37,7 @@ def lightfx_0(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _formation_index_sine_pulse(
+    out[:] = formation_index_sine_pulse(
         context, frame, divisor=25, speed=0.13, span=3 * pi
     )
 
@@ -83,7 +54,7 @@ def lightfx_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _formation_index_sine_pulse(
+    out[:] = formation_index_sine_pulse(
         context, frame, divisor=5, speed=0.13, span=3 * pi
     )
 
@@ -148,6 +119,6 @@ def lightfx_8(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _formation_index_sine_pulse(
+    out[:] = formation_index_sine_pulse(
         context, frame, divisor=1, speed=-0.02, span=1.5 * pi
     )

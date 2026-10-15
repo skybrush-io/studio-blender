@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import array, empty, float32, hypot, int32, subtract, zeros
+from numpy import array, empty, float32, hypot, int32, maximum, pi, subtract, zeros
 from numpy.typing import NDArray
+
+from .waveforms import sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import LightEffectEvaluationContext
@@ -26,6 +28,35 @@ def get_formation_indices(
         )
 
     return result
+
+
+def formation_index_sine_pulse(
+    context: LightEffectEvaluationContext,
+    frame: int,
+    *,
+    divisor: float,
+    speed: float,
+    span: float = 2 * pi,
+) -> NDArray[float32]:
+    """Returns a sine pulse over the formation index.
+
+    The formation index is wrapped into ``divisor`` waves across the whole swarm,
+    so the pattern stretches with the number of drones.
+
+    Args:
+        context: evaluation context for the swarm
+        frame: current frame number
+        divisor: number of waves the formation index is wrapped into
+        speed: phase advance per frame
+        span: phase width of a single wave, in radians
+
+    Returns:
+        per-drone brightness of the sine pulse, in [0, 1].
+    """
+    wave_length = maximum(context.num_drones / divisor, 1e-6)
+    fi = get_formation_indices(context)
+    offset = (fi % wave_length) / wave_length
+    return sine_wave(frame * speed + offset * span)
 
 
 def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[float32]:
