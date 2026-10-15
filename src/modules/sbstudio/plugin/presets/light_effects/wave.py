@@ -7,7 +7,7 @@ from numpy import abs, clip, float32, sin
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_centered_normalized_xy_distances
+from .utils import get_centered_normalized_xy_distances, get_centered_positions
 from .waveforms import triangle_wave
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ def _sine_distorted_phase(
     Returns:
         per-drone phase, wrapped to [0, 1).
     """
-    positions = context.positions.as_array
+    positions = get_centered_positions(context)
     return (frame * speed + sin(positions[:, axis] * spatial_k) * amplitude) % 1.0
 
 
@@ -65,7 +65,7 @@ def _spatial_wave(
     Returns:
         per-drone brightness of the clipped pulse, in [0, 1].
     """
-    positions = context.positions.as_array
+    positions = get_centered_positions(context)
     phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / 2 / pi
     v = (phase - phase.astype(int)).astype(float32)
     return clip(1.5 - abs(v - 0.5) * 4, 0, 1)
