@@ -17,7 +17,8 @@ def triangle_wave(phase: NDArray[floating]) -> NDArray[float32]:
     """Returns a triangle wave for the given per-drone phase.
 
     Args:
-        phase: per-drone input phase, in radians
+        phase: per-drone input phase, in cycles (one full period is 1.0);
+            the phase is wrapped into [0, 1), so e.g. 1.25 behaves like 0.25
 
     Returns:
         per-drone brightness according to a triangle wave, in [0, 1].
