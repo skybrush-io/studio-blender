@@ -83,7 +83,7 @@ def wave_sawtooth(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _sine_distorted_phase(context, 0, frame).astype(float32)
+    out[:] = _sine_distorted_phase(context, 0, frame)
 
 
 @register_preset(
@@ -98,7 +98,7 @@ def wave_sawtooth_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _sine_distorted_phase(context, 1, frame).astype(float32)
+    out[:] = _sine_distorted_phase(context, 1, frame)
 
 
 @register_preset(
@@ -113,7 +113,7 @@ def wave_sawtooth_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = _sine_distorted_phase(context, 2, frame).astype(float32)
+    out[:] = _sine_distorted_phase(context, 2, frame)
 
 
 @register_preset(
