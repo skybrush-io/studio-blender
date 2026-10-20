@@ -38,7 +38,7 @@ def _axis_sweep(
         per-drone brightness of the sweep, in [0, 1].
     """
     x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
-    v = triangle_wave(frame * 0.04 + x * (-1 if negate else 1))
+    v = triangle_wave(frame * 0.04 + (-x if negate else x))
     return 1 - v if invert else v
 
 
