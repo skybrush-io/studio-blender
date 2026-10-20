@@ -26,8 +26,7 @@ def _group_ranges(
 
     Returns an empty array if there are no drones.
     """
-    num_drones = context.num_drones
-    if num_drones == 0:
+    if not context.num_drones:
         return zeros(0, dtype=float32)
     fi = get_formation_indices(context)
     span = get_formation_index_span(fi)
