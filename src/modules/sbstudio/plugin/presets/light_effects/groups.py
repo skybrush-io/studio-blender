@@ -6,7 +6,7 @@ from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import get_formation_index_span, get_formation_indices
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -15,13 +15,21 @@ if TYPE_CHECKING:
     )
 
 
-def _group_ranges(num_groups: int, out: NDArray[float32], context) -> None:
-    N = len(out)
-    if N == 0:
-        return
+def _group_ranges(
+    context: LightEffectEvaluationContext, num_groups: int
+) -> NDArray[float32]:
+    """Splits the formation index into ``num_groups`` equally sized ranges and maps them
+    to evenly spaced brightness levels from 0 to 1.
+
+    The ranges span the actual formation index range, so the output stays within [0, 1]
+    even when the formation is larger than the swarm.
+
+    Returns an empty array if there are no drones.
+    """
     fi = get_formation_indices(context)
-    group = (fi * num_groups) // N
-    out[:] = group / (num_groups - 1)
+    span = get_formation_index_span(fi)
+    group = (fi * num_groups) // span
+    return (group / (num_groups - 1)).astype(float32)
 
 
 @register_preset(
@@ -37,7 +45,7 @@ def group_ranges_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    _group_ranges(3, out, context)
+    out[:] = _group_ranges(context, 3)
 
 
 @register_preset(
@@ -53,4 +61,4 @@ def group_ranges_5(
     *,
     out: NDArray[float32],
 ) -> None:
-    _group_ranges(5, out, context)
+    out[:] = _group_ranges(context, 5)

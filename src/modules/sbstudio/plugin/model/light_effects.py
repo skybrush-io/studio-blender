@@ -1256,6 +1256,23 @@ class LightEffect(PropertyGroup):
         except KeyError:
             pass  # this is OK
 
+    def _set_preset_id_or_null(self, preset_id: str) -> bool:
+        """Sets the preset ID of this light effect, falling back to the null preset
+        if the given ID is empty or not available in this version of the add-on.
+
+        Returns:
+            whether the preset ID was available
+        """
+        try:
+            self.preset_id = preset_id
+        except TypeError:
+            # This happens if the ID is empty or refers to a preset that is not
+            # present in the enum spec any more
+            self.preset_id = NULL_PRESET_ID
+            return False
+
+        return True
+
     def update_from(self, other: "LightEffect") -> None:
         """Updates the properties of this light effect from another one,
         _except_ its name.
@@ -1280,12 +1297,7 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
-        try:
-            self.preset_id = other.preset_id
-        except TypeError:
-            # This happens if other.preset_id is empty or some other unsupported value
-            # that is not present in the enum spec any more
-            self.preset_id = NULL_PRESET_ID
+        self._set_preset_id_or_null(other.preset_id)
 
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
@@ -1353,6 +1365,11 @@ class LightEffect(PropertyGroup):
             self.type = effect_type
         if invert_target := data.get("invertTarget"):
             self.invert_target = invert_target
+        if preset_id := data.get("presetId"):
+            if not self._set_preset_id_or_null(preset_id):
+                warnings.append(
+                    f"Could not import light effect preset: {preset_id!r} is not available"
+                )
 
         if color_function := data.get("colorFunction"):
             self.color_function.update_from_dict(color_function)

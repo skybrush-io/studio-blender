@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, hypot, sin
+from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
+from .utils import get_centered_normalized_xy_distances
+from .waveforms import sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -26,14 +28,8 @@ def radial_diffusion(
     *,
     out: NDArray[float32],
 ) -> None:
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    tau = (r / r_max - frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = sine_wave(relative_distances - frame * 0.01)
 
 
 @register_preset(
@@ -48,14 +44,8 @@ def radial_diffusion_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    tau = (r / r_max + frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = sine_wave(relative_distances + frame * 0.01)
 
 
 @register_preset(
@@ -70,14 +60,8 @@ def radial_diffusion_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    tau = (r / r_max - frame * 0.005) % 1.0
-    out[:] = ((sin(tau * 4 * 3.14159) + 1) / 2).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = sine_wave(2 * (relative_distances - frame * 0.005))
 
 
 @register_preset(
@@ -92,14 +76,8 @@ def radial_convergence(
     *,
     out: NDArray[float32],
 ) -> None:
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    tau = (1 - r / r_max - frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = sine_wave(1 - relative_distances - frame * 0.01)
 
 
 @register_preset(
@@ -114,14 +92,8 @@ def radial_convergence_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    tau = (1 - r / r_max + frame * 0.01) % 1.0
-    out[:] = ((sin(tau * 2 * 3.14159) + 1) / 2).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = sine_wave(1 - relative_distances + frame * 0.01)
 
 
 @register_preset(
@@ -136,11 +108,5 @@ def radial_convergence_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    positions = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    r = hypot(positions[:, 0] - cx, positions[:, 1] - cy)
-    r_max = r.max() if len(r) > 0 else 1.0
-    if r_max == 0:
-        r_max = 1.0
-    tau = (1 - r / r_max - frame * 0.005) % 1.0
-    out[:] = ((sin(tau * 4 * 3.14159) + 1) / 2).astype(float32)
+    relative_distances = get_centered_normalized_xy_distances(context)
+    out[:] = sine_wave(2 * (1 - relative_distances - frame * 0.005))
