@@ -3,12 +3,12 @@ from __future__ import annotations
 from math import pi
 from typing import TYPE_CHECKING
 
-from numpy import abs, clip, float32, sin
+from numpy import float32, sin
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_centered_normalized_xy_distances, get_centered_positions
-from .waveforms import triangle_wave
+from .waveforms import steepen, triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -66,9 +66,8 @@ def _spatial_wave(
         per-drone brightness of the clipped pulse, in [0, 1].
     """
     positions = get_centered_positions(context)
-    phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / 2 / pi
-    v = (phase % 1.0).astype(float32)
-    return clip(1.5 - abs(v - 0.5) * 4, 0, 1)
+    phase = (frame * speed + positions[:, 0] * kx + positions[:, 1] * ky) / (2 * pi)
+    return steepen(triangle_wave(phase))
 
 
 @register_preset(

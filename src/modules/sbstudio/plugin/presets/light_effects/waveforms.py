@@ -7,10 +7,10 @@ This module holds these commonly used waveform shapes.
 
 from __future__ import annotations
 
-from numpy import abs, cos, float32, floating, pi, sin
+from numpy import abs, clip, cos, float32, floating, pi, sin
 from numpy.typing import NDArray
 
-__all__ = ("cosine_wave", "sine_wave", "triangle_wave")
+__all__ = ("cosine_wave", "sine_wave", "steepen", "triangle_wave")
 
 
 def triangle_wave(phase: NDArray[floating]) -> NDArray[float32]:
@@ -49,3 +49,18 @@ def cosine_wave(phase: NDArray[floating]) -> NDArray[float32]:
         per-drone brightness according to a cosine wave, in [0, 1].
     """
     return ((cos(2 * pi * phase) + 1) / 2).astype(float32)
+
+
+def steepen(brightness: NDArray[floating]) -> NDArray[float32]:
+    """Steepens a brightness ramp into a pulse with flat dark and bright edges.
+
+    The [0.25; 0.75] part of the input range is mapped linearly onto [0; 1], so the
+    ramp becomes twice as steep, and everything outside that range is clipped.
+
+    Args:
+        brightness: per-drone brightness, in [0, 1]
+
+    Returns:
+        per-drone brightness of the steepened pulse, in [0, 1].
+    """
+    return clip(2 * (brightness - 0.25), 0, 1).astype(float32)

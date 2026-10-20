@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import clip, float32
+from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
 from .utils import get_centered_normalized_xy_distances, get_centered_positions
-from .waveforms import triangle_wave
+from .waveforms import steepen, triangle_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -285,8 +285,7 @@ def radial_sweep_on_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = _radial_sweep(context, frame)
-    out[:] = clip(2 * (v - 0.25), 0, 1)
+    out[:] = steepen(_radial_sweep(context, frame))
 
 
 @register_preset(
@@ -301,5 +300,4 @@ def radial_sweep_off_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = _radial_sweep(context, frame, invert=True)
-    out[:] = clip(2 * (v - 0.25), 0, 1)
+    out[:] = steepen(_radial_sweep(context, frame, invert=True))
