@@ -7,7 +7,7 @@ This module holds these commonly used waveform shapes.
 
 from __future__ import annotations
 
-from numpy import abs, cos, float32, floating, sin
+from numpy import abs, cos, float32, floating, pi, sin
 from numpy.typing import NDArray
 
 __all__ = ("cosine_wave", "sine_wave", "triangle_wave")
@@ -31,21 +31,21 @@ def sine_wave(phase: NDArray[floating]) -> NDArray[float32]:
     """Returns a sine wave for the given per-drone phase.
 
     Args:
-        phase: per-drone input phase, in radians
+        phase: per-drone input phase, in cycles (one full period is 1.0)
 
     Returns:
         per-drone brightness according to a sine wave, in [0, 1].
     """
-    return ((sin(phase) + 1) / 2).astype(float32)
+    return ((sin(2 * pi * phase) + 1) / 2).astype(float32)
 
 
 def cosine_wave(phase: NDArray[floating]) -> NDArray[float32]:
     """Returns a cosine wave for the given per-drone phase.
 
     Args:
-        phase: per-drone input phase, in radians
+        phase: per-drone input phase, in cycles (one full period is 1.0)
 
     Returns:
         per-drone brightness according to a cosine wave, in [0, 1].
     """
-    return ((cos(phase) + 1) / 2).astype(float32)
+    return ((cos(2 * pi * phase) + 1) / 2).astype(float32)

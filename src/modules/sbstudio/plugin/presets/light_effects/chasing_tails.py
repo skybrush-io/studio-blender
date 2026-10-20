@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import tau
 from typing import TYPE_CHECKING
 
 from numpy import float32, where
@@ -28,7 +29,7 @@ def _chasing_tails(
     so that the two interleave into a continuous trail.
     """
     coord = get_centered_positions(context)[:, axis]
-    travel_phase = frame * CHASE_SPEED - coord * CHASE_SPATIAL_K
+    travel_phase = (frame * CHASE_SPEED - coord * CHASE_SPATIAL_K) / tau
     cos_result = cosine_wave(travel_phase)
     sin_result = sine_wave(travel_phase)
     fi = get_formation_indices(context)

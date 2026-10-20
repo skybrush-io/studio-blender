@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import tau
 from typing import TYPE_CHECKING
 
 from numpy import (
@@ -10,7 +11,6 @@ from numpy import (
     hypot,
     int32,
     maximum,
-    pi,
     subtract,
     zeros,
 )
@@ -82,7 +82,7 @@ def formation_index_sine_pulse(
     *,
     divisor: float,
     speed: float,
-    span: float = 2 * pi,
+    span: float = 1.0,
 ) -> NDArray[float32]:
     """Returns a sine pulse over the formation index.
 
@@ -93,16 +93,19 @@ def formation_index_sine_pulse(
         context: evaluation context for the swarm
         frame: current frame number
         divisor: number of waves the formation index is wrapped into
-        speed: phase advance per frame
-        span: phase width of a single wave, in radians
+        speed: phase advance per frame, in radians
+        span: phase width of a single wave, in cycles
 
     Returns:
         per-drone brightness of the sine pulse, in [0, 1].
     """
+    # TOOD: express speed in cycles, not radians, but also use
+    # render.FPS for normalization of the temporal axis so that we
+    # get understandable hard-coded param values in callers
     fi = get_formation_indices(context)
     wave_length = maximum(get_formation_index_span(fi) / divisor, 1e-6)
     offset = formation_index_phase(context, 0, wave_length=wave_length, fi=fi)
-    return sine_wave(frame * speed + offset * span)
+    return sine_wave(frame * speed / tau + offset * span)
 
 
 def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[float32]:

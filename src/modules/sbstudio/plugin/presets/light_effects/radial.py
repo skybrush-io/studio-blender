@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import pi
 from typing import TYPE_CHECKING
 
 from numpy import float32
@@ -30,8 +29,7 @@ def radial_diffusion(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    tau = (relative_distances - frame * 0.01) % 1.0
-    out[:] = sine_wave(tau * 2 * pi)
+    out[:] = sine_wave(relative_distances - frame * 0.01)
 
 
 @register_preset(
@@ -47,8 +45,7 @@ def radial_diffusion_2(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    tau = (relative_distances + frame * 0.01) % 1.0
-    out[:] = sine_wave(tau * 2 * pi)
+    out[:] = sine_wave(relative_distances + frame * 0.01)
 
 
 @register_preset(
@@ -64,8 +61,7 @@ def radial_diffusion_3(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    tau = (relative_distances - frame * 0.005) % 1.0
-    out[:] = sine_wave(tau * 4 * pi)
+    out[:] = sine_wave(2 * (relative_distances - frame * 0.005))
 
 
 @register_preset(
@@ -81,8 +77,7 @@ def radial_convergence(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    tau = (1 - relative_distances - frame * 0.01) % 1.0
-    out[:] = sine_wave(tau * 2 * pi)
+    out[:] = sine_wave(1 - relative_distances - frame * 0.01)
 
 
 @register_preset(
@@ -98,8 +93,7 @@ def radial_convergence_2(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    tau = (1 - relative_distances + frame * 0.01) % 1.0
-    out[:] = sine_wave(tau * 2 * pi)
+    out[:] = sine_wave(1 - relative_distances + frame * 0.01)
 
 
 @register_preset(
@@ -115,5 +109,4 @@ def radial_convergence_3(
     out: NDArray[float32],
 ) -> None:
     relative_distances = get_centered_normalized_xy_distances(context)
-    tau = (1 - relative_distances - frame * 0.005) % 1.0
-    out[:] = sine_wave(tau * 4 * pi)
+    out[:] = sine_wave(2 * (1 - relative_distances - frame * 0.005))

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import tau
 from typing import TYPE_CHECKING
 
 from numpy import float32, pi
@@ -33,7 +34,7 @@ def lightfx_0(
     out: NDArray[float32],
 ) -> None:
     out[:] = formation_index_sine_pulse(
-        context, frame, divisor=25, speed=0.13, span=3 * pi
+        context, frame, divisor=25, speed=0.13, span=1.5
     )
 
 
@@ -49,9 +50,7 @@ def lightfx_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(
-        context, frame, divisor=5, speed=0.13, span=3 * pi
-    )
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.13, span=1.5)
 
 
 @register_preset(
@@ -68,7 +67,7 @@ def lightfx_4(
 ) -> None:
     fi = get_formation_indices(context)
     is_odd = fi % 2
-    out[:] = sine_wave(frame * 0.2 + is_odd * pi)
+    out[:] = sine_wave((frame * 0.2 + is_odd * pi) / tau)
 
 
 @register_preset(
@@ -115,5 +114,5 @@ def lightfx_8(
     out: NDArray[float32],
 ) -> None:
     out[:] = formation_index_sine_pulse(
-        context, frame, divisor=1, speed=-0.02, span=1.5 * pi
+        context, frame, divisor=1, speed=-0.02, span=0.75
     )
