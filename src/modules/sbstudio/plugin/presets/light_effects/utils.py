@@ -140,4 +140,5 @@ def get_centered_normalized_xy_distances(
     max_radius = radii.max()
     if max_radius > 0:
         radii /= max_radius
-    return radii.astype(float32)
+
+    return radii
