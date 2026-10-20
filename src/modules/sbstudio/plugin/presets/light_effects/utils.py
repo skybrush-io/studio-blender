@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from math import tau
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from numpy import (
     array,
     empty,
     float32,
     float64,
+    generic,
     hypot,
     int32,
     maximum,
@@ -23,11 +24,14 @@ if TYPE_CHECKING:
 
 
 def get_formation_indices(
-    context: LightEffectEvaluationContext, *, default: int = 0, dtype=int32
-) -> NDArray[int32]:
+    context: LightEffectEvaluationContext,
+    *,
+    default: int = 0,
+    dtype: type[generic] = int32,
+) -> NDArray[Any]:
     """Returns the formation index for each drone.
 
-    ``default`` is used for drones with no formation mapping, and ``dtype`` is the integer
+    ``default`` is used for drones with no formation mapping, and ``dtype`` is the numeric
     type of the result.
     """
     if context.mapping is None:
