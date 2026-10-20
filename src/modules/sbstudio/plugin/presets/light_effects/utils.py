@@ -56,6 +56,7 @@ def formation_index_phase(
     frame: int,
     *,
     wave_length: float,
+    fi: NDArray[int32] | None = None,
 ) -> NDArray[float64]:
     """Returns the formation index offset by the current frame, wrapped into
     ``wave_length`` steps and normalized to the [0; 1) range.
@@ -64,11 +65,14 @@ def formation_index_phase(
         context: evaluation context for the swarm
         frame: current frame number
         wave_length: number of formation indices in a single wave
+        fi: the formation indices to use; computed from ``context`` when omitted
 
     Returns:
         per-drone phase of a wave over the formation index, in [0, 1).
     """
-    fi = get_formation_indices(context)
+    if fi is None:
+        fi = get_formation_indices(context)
+
     return (frame + fi) % wave_length / wave_length
 
 
@@ -82,8 +86,8 @@ def formation_index_sine_pulse(
 ) -> NDArray[float32]:
     """Returns a sine pulse over the formation index.
 
-    The formation index is wrapped into ``divisor`` waves across the whole swarm,
-    so the pattern stretches with the number of drones.
+    The formation index is wrapped into ``divisor`` waves across the formation, so
+    the pattern stretches with the size of the formation.
 
     Args:
         context: evaluation context for the swarm
@@ -95,8 +99,9 @@ def formation_index_sine_pulse(
     Returns:
         per-drone brightness of the sine pulse, in [0, 1].
     """
-    wave_length = maximum(context.num_drones / divisor, 1e-6)
-    offset = formation_index_phase(context, 0, wave_length=wave_length)
+    fi = get_formation_indices(context)
+    wave_length = maximum(get_formation_index_span(fi) / divisor, 1e-6)
+    offset = formation_index_phase(context, 0, wave_length=wave_length, fi=fi)
     return sine_wave(frame * speed + offset * span)
 
 
