@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, zeros
+from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -26,8 +26,6 @@ def _group_ranges(
 
     Returns an empty array if there are no drones.
     """
-    if not context.num_drones:
-        return zeros(0, dtype=float32)
     fi = get_formation_indices(context)
     span = get_formation_index_span(fi)
     group = (fi * num_groups) // span

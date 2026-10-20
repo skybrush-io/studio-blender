@@ -94,7 +94,7 @@ def radar_scan_2(
     angles, half_span = _get_fan_phase_and_width(context)
     center_angle = (-frame * 2) % 360
     fi = get_formation_indices(context)
-    half = get_formation_index_span(fi) // 2 if context.num_drones else 0
+    half = get_formation_index_span(fi) // 2
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         (half - abs(fi - half)).astype(float32) / max(half, 1),

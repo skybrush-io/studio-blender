@@ -11,7 +11,6 @@ from numpy import (
     generic,
     hypot,
     int32,
-    maximum,
     subtract,
     zeros,
 )
@@ -103,11 +102,11 @@ def formation_index_sine_pulse(
     Returns:
         per-drone brightness of the sine pulse, in [0, 1].
     """
-    # TOOD: express speed in cycles, not radians, but also use
+    # TODO: express speed in cycles, not radians, but also use
     # render.FPS for normalization of the temporal axis so that we
     # get understandable hard-coded param values in callers
     fi = get_formation_indices(context)
-    wave_length = maximum(get_formation_index_span(fi) / divisor, 1e-6)
+    wave_length = get_formation_index_span(fi) / divisor
     offset = formation_index_phase(context, 0, wave_length=wave_length, fi=fi)
     return sine_wave(frame * speed / tau + offset * span)
 

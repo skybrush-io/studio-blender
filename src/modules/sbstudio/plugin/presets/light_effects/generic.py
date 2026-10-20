@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import tau
 from typing import TYPE_CHECKING
 
-from numpy import float32, pi
+from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -67,7 +67,7 @@ def lightfx_4(
 ) -> None:
     fi = get_formation_indices(context)
     is_odd = fi % 2
-    out[:] = sine_wave((frame * 0.2 + is_odd * pi) / tau)
+    out[:] = sine_wave(frame * 0.2 / tau + is_odd / 2)
 
 
 @register_preset(

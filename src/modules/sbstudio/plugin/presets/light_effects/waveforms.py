@@ -36,7 +36,7 @@ def sine_wave(phase: NDArray[floating]) -> NDArray[float32]:
     Returns:
         per-drone brightness according to a sine wave, in [0, 1].
     """
-    return ((sin(2 * pi * phase) + 1) / 2).astype(float32)
+    return ((sin(2 * pi * (phase % 1.0)) + 1) / 2).astype(float32)
 
 
 def cosine_wave(phase: NDArray[floating]) -> NDArray[float32]:
@@ -48,7 +48,7 @@ def cosine_wave(phase: NDArray[floating]) -> NDArray[float32]:
     Returns:
         per-drone brightness according to a cosine wave, in [0, 1].
     """
-    return ((cos(2 * pi * phase) + 1) / 2).astype(float32)
+    return ((cos(2 * pi * (phase % 1.0)) + 1) / 2).astype(float32)
 
 
 def steepen(brightness: NDArray[floating]) -> NDArray[float32]:

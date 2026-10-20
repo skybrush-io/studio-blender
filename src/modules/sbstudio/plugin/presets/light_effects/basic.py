@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import tau
 from typing import TYPE_CHECKING
 
-from numpy import clip, float32, pi
+from numpy import clip, float32
 from numpy.typing import NDArray
 
 from .base import register_preset
@@ -30,7 +30,7 @@ def odd_even_pulse(
     out: NDArray[float32],
 ) -> None:
     fi = get_formation_indices(context)
-    out[:] = sine_wave((frame * 0.1 + (fi % 2) * pi) / tau)
+    out[:] = sine_wave(frame * 0.1 / tau + (fi % 2) / 2)
 
 
 @register_preset(
