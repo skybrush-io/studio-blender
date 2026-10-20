@@ -6,7 +6,7 @@ from numpy import clip, float32, pi
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import get_formation_index_span, get_formation_indices
 from .waveforms import sine_wave
 
 if TYPE_CHECKING:
@@ -60,12 +60,12 @@ def simple_filling(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = context.num_drones
     fi = get_formation_indices(context, dtype=float32)
+    span = get_formation_index_span(fi)
     time_fraction = effect.get_time_fraction_for_frame(frame)
 
-    if n > 1:
-        out[:] = 2 * time_fraction - fi / (n - 1)
-        clip(out, 0, 1)
+    if span > 1:
+        out[:] = 2 * time_fraction - fi / (span - 1)
+        clip(out, 0, 1, out=out)
     else:
         out[:] = time_fraction

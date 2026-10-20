@@ -6,7 +6,11 @@ from numpy import arctan2, bool_, degrees, float32, where, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_centered_positions, get_formation_indices
+from .utils import (
+    get_centered_positions,
+    get_formation_index_span,
+    get_formation_indices,
+)
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -90,7 +94,7 @@ def radar_scan_2(
     angles, half_span = _get_fan_phase_and_width(context)
     center_angle = (-frame * 2) % 360
     fi = get_formation_indices(context)
-    half = (int(fi.max()) + 1) // 2 if context.num_drones else 0
+    half = get_formation_index_span(fi) // 2 if context.num_drones else 0
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         (half - abs(fi - half)).astype(float32) / max(half, 1),
@@ -193,10 +197,10 @@ def paint_on_test_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = context.num_drones
     fi = get_formation_indices(context)
+    span = get_formation_index_span(fi)
     progress = frame / 100
-    active_count = int(n * min(progress, 1))
+    active_count = int(span * min(progress, 1))
     out[:] = where(fi < active_count, 1.0, 0.0)
 
 
@@ -212,8 +216,8 @@ def paint_on_test_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = context.num_drones
     fi = get_formation_indices(context)
+    span = get_formation_index_span(fi)
     progress = frame / 100
-    active_count = int(n * min(progress, 1))
+    active_count = int(span * min(progress, 1))
     out[:] = where(fi < active_count, (fi % 3 + 1) / 3.0, 0.0)

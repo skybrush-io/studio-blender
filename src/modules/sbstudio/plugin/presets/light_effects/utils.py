@@ -41,6 +41,16 @@ def get_formation_indices(
     return result
 
 
+def get_formation_index_span(fi: NDArray) -> int:
+    """Returns the range spanned by the given formation indices.
+
+    The result is the highest formation index in use plus one, or 1 if there are no
+    drones, so it is never zero and can be used as a divisor when the formation index
+    is normalized into the [0; 1] range.
+    """
+    return int(fi.max()) + 1 if fi.size else 1
+
+
 def formation_index_phase(
     context: LightEffectEvaluationContext,
     frame: int,

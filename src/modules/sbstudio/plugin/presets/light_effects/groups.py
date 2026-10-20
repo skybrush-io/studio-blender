@@ -6,7 +6,7 @@ from numpy import float32, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import get_formation_index_span, get_formation_indices
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -30,7 +30,7 @@ def _group_ranges(
     if num_drones == 0:
         return zeros(0, dtype=float32)
     fi = get_formation_indices(context)
-    span = int(fi.max()) + 1
+    span = get_formation_index_span(fi)
     group = (fi * num_groups) // span
     return (group / (num_groups - 1)).astype(float32)
 
