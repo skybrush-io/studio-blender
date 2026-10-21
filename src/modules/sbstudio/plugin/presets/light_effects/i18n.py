@@ -33,7 +33,7 @@ def _build_translation_dict() -> dict[str, BlenderTranslationDict]:
 
     # Translate each preset's display string.
     for index, meta in enumerate(iter_preset_mapping(), 1):
-        prefix = f"[{index}]"
+        prefix = f"[{index}] "
         en_display = f"{prefix}{meta.label}"
         zh_display = f"{prefix}{meta.translations.get('zh', meta.label)}"
         ja_display = f"{prefix}{meta.translations.get('ja', meta.label)}"
