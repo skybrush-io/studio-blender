@@ -37,8 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the phase of the `spatial_wave` light effect presets wrapping
   incorrectly for negative phase values.
 
-- Fixed importing `.sky` files not restoring the preset selection of light
-  effects from the JSON.
+- Fixed importing light effect JSON files not restoring the preset selection.
 
 ### Removed
 
