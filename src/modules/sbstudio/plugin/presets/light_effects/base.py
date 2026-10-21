@@ -11,9 +11,11 @@ if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import LightEffectOutputFunctionV2
 
 __all__ = (
+    "get_preset_enum_index",
     "get_preset_enum_items",
     "get_preset_function",
     "iter_preset_mapping",
+    "preset_id_exists",
     "register_preset",
     "NULL_PRESET_ID",
 )
@@ -70,6 +72,12 @@ def iter_preset_mapping() -> Iterator[PresetMeta]:
     return iter(_PRESETS.values())
 
 
+def preset_id_exists(preset_id: str) -> bool:
+    """Return whether the given preset ID is known to this version of the add-on;
+    either the null preset or the ID of a registered preset."""
+    return preset_id == NULL_PRESET_ID or preset_id in _PRESETS
+
+
 # ---------------------------------------------------------------------------
 # UI items list (built ONCE, kept alive at module level forever)
 # ---------------------------------------------------------------------------
@@ -91,26 +99,43 @@ def _build_enum_items() -> list[tuple[str, str, str]]:
     Numbering format: 「1」「2」「3」... (full-width brackets)
     Order: v5.1 custom effects first, then original effects (reversed order)
     """
-    items: list[tuple[str, str, str]] = [(NULL_PRESET_ID, "<None>", "None")]
+    items: list[tuple[str, str, str]] = []
     for index, meta in enumerate(iter_preset_mapping(), 1):
         prefix = f"[{index}] "
         display = f"{prefix}{meta.label}"
         items.append((meta.id, display, meta.description or meta.label))
+    # The null preset must come last: Blender's number-key navigation in the
+    # dropdown is positional, so a leading <None> entry would shift every
+    # preset down and pressing "5" would select the preset labeled "[4]".
+    items.append((NULL_PRESET_ID, "<None>", "None"))
     return items
 
 
 # Module-level cache.  *** DO NOT *** rebuild this per call.
 _CACHED_ENUM_ITEMS: list[tuple[str, str, str]] | None = None
+_CACHED_ENUM_INDEXES: dict[str, int] | None = None
 
 
-def get_preset_enum_items(self, context: Context) -> Sequence[tuple[str, str, str]]:
-    """``items`` callback for the ``preset_id`` EnumProperty.
-
-    Returns the same cached list every call.  Strings inside the list stay
-    alive as long as the module is loaded, which prevents the well-known
-    Blender crash / freeze caused by GC'd item strings (very visible on
-    macOS in Material Preview mode)."""
+def get_preset_enum_items() -> list[tuple[str, str, str]]:
+    """Returns the (cached) enum items list, building it on first access."""
     global _CACHED_ENUM_ITEMS
     if _CACHED_ENUM_ITEMS is None:
         _CACHED_ENUM_ITEMS = _build_enum_items()
     return _CACHED_ENUM_ITEMS
+
+
+def get_preset_enum_index(preset_id: str) -> int:
+    """Returns the index of the given preset ID in the cached enum items list.
+
+    Returns the index of the null preset (the last item) when the ID is empty
+    or unknown to this version of the add-on, so unknown IDs are displayed as
+    ``<None>`` in the UI dropdown instead of raising or resetting the stored
+    string.
+    """
+    global _CACHED_ENUM_INDEXES
+    if _CACHED_ENUM_INDEXES is None:
+        _CACHED_ENUM_INDEXES = {
+            item_id: index
+            for index, (item_id, _, _) in enumerate(get_preset_enum_items())
+        }
+    return _CACHED_ENUM_INDEXES.get(preset_id, _CACHED_ENUM_INDEXES[NULL_PRESET_ID])

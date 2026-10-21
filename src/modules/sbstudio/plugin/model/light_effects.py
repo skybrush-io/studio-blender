@@ -74,8 +74,10 @@ from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
 from sbstudio.plugin.presets.light_effects import (
     NULL_PRESET_ID,
+    get_preset_enum_index,
     get_preset_enum_items,
     get_preset_function,
+    preset_id_exists,
 )
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
@@ -650,6 +652,41 @@ def texture_updated(self: LightEffect, context):
     self.invalidate_color_image()
 
 
+def _get_preset_enum_index(self: LightEffect) -> int:
+    """Get callback for the UI-only dropdown of the light effect preset.
+
+    Translates the stable preset ID string stored in `preset_id` into the
+    index of the corresponding item of the dropdown. Unknown IDs are shown
+    as the null preset without touching the stored string.
+    """
+    return get_preset_enum_index(self.preset_id)
+
+
+def _get_preset_enum_items(
+    self: LightEffect, context: Context
+) -> Sequence[tuple[str, str, str]]:
+    """Items callback for the UI-only dropdown of the light effect preset."""
+    return get_preset_enum_items()
+
+
+def _set_preset_enum_index(self: LightEffect, value: str | int) -> None:
+    """Set callback for the UI-only dropdown of the light effect preset.
+
+    Stores the selected dropdown item as a stable string in `preset_id`.
+    Blender passes the index of the selected item as an integer (not the
+    item identifier as a string).
+    """
+    if isinstance(value, int):
+        # Map the selected item index back to its identifier
+        items = get_preset_enum_items()
+        if 0 <= value < len(items):
+            self.preset_id = items[value][0]
+        else:
+            self.preset_id = NULL_PRESET_ID
+    else:
+        self.preset_id = value or NULL_PRESET_ID
+
+
 _pixel_cache = PixelCache()
 """Global cache for the pixels of images in image-based light effects."""
 
@@ -778,12 +815,19 @@ class LightEffect(PropertyGroup):
         description="Custom function for the output Y",
     )
 
-    preset_id = EnumProperty(
+    preset_id = StringProperty(
+        name="Preset",
+        description=("Identifier of the built-in light effect preset."),
+        default=NULL_PRESET_ID,  # not an empty string: Blender filters those out
+        options=set(),
+    )
+
+    preset_id_enum = EnumProperty(
         name="Preset",
         description="Built-in light effect preset",
-        items=get_preset_enum_items,
-        default=0,  # needs to be an int, cannot refer to NULL_PRESET_ID directly
-        options=set(),
+        items=_get_preset_enum_items,
+        get=_get_preset_enum_index,
+        set=_set_preset_enum_index,
     )
 
     output_mapping_mode = EnumProperty(
@@ -1263,14 +1307,11 @@ class LightEffect(PropertyGroup):
         Returns:
             whether the preset ID was available
         """
-        try:
-            self.preset_id = preset_id
-        except TypeError:
-            # This happens if the ID is empty or refers to a preset that is not
-            # present in the enum spec any more
+        if not preset_id or not preset_id_exists(preset_id):
             self.preset_id = NULL_PRESET_ID
             return False
 
+        self.preset_id = preset_id
         return True
 
     def update_from(self, other: "LightEffect") -> None:
