@@ -5,24 +5,10 @@ from random import randint
 import bpy
 
 from sbstudio.plugin.constants import RANDOM_SEED_MAX, Collections
-from sbstudio.plugin.presets.light_effects import migrate_legacy_preset_id
 from sbstudio.plugin.utils.bloom import enable_bloom_effect_if_needed
 from sbstudio.plugin.utils.pyro_markers import update_pyro_particles_of_object
 
 from .base import Task
-
-
-def migrate_legacy_light_effect_preset_ids(*args):
-    """Migrates the legacy integer ``preset_id`` values (Skybrush Studio for
-    Blender 5.0.4 and earlier) of all light effects in all scenes to the
-    string storage; see :func:`migrate_legacy_preset_id` for details.
-    """
-    for scene in bpy.data.scenes:
-        show = getattr(scene, "skybrush", None)
-        if show is None:
-            continue
-        for effect in show.light_effects.entries:
-            migrate_legacy_preset_id(effect)
 
 
 def setup_drone_collection(*args):
@@ -130,7 +116,6 @@ class InitializationTask(Task):
 
     functions = {
         "load_post": [
-            migrate_legacy_light_effect_preset_ids,
             update_bloom_effect,
             setup_drone_collection,
             setup_drone_group_collection,

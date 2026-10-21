@@ -22,18 +22,17 @@ from .base import (
     get_preset_enum_index,
     get_preset_enum_items,
     get_preset_function,
+    get_preset_id_from_legacy_enum_value,
     preset_id_exists,
     register_preset,
 )
 from .i18n import register, unregister
-from .migration import get_preset_id_from_legacy_enum_value, migrate_legacy_preset_id
 
 __all__ = (
     "get_preset_function",
     "get_preset_enum_index",
     "get_preset_enum_items",
     "get_preset_id_from_legacy_enum_value",
-    "migrate_legacy_preset_id",
     "preset_id_exists",
     "register_preset",
     "register",

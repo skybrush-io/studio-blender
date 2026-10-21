@@ -77,6 +77,7 @@ from sbstudio.plugin.presets.light_effects import (
     get_preset_enum_index,
     get_preset_enum_items,
     get_preset_function,
+    get_preset_id_from_legacy_enum_value,
     preset_id_exists,
 )
 from sbstudio.plugin.utils import remove_if_unused, with_context
@@ -652,14 +653,28 @@ def texture_updated(self: LightEffect, context):
     self.invalidate_color_image()
 
 
+def _get_raw_preset_id(effect) -> Any:
+    """Returns the raw value stored under the ``preset_id`` id property of the
+    given light effect, or ``None`` when there is no such id property.
+
+    The RNA ``preset_id`` property must not be read to obtain this value:
+    when a file saved by an old version still stores a legacy integer, reading
+    the RNA property makes Blender delete the mismatched integer id property
+    before the file-format migration can convert it.
+    """
+    return effect.get("preset_id")
+
+
 def _get_preset_enum_index(self: LightEffect) -> int:
     """Get callback for the UI-only dropdown of the light effect preset.
 
     Translates the stable preset ID string stored in `preset_id` into the
     index of the corresponding item of the dropdown. Unknown IDs are shown
-    as the null preset without touching the stored string.
+    as the null preset without touching the stored string. The raw, legacy
+    integer storage format is resolved without reading the RNA property
+    because that would destroy it.
     """
-    return get_preset_enum_index(self.preset_id)
+    return get_preset_enum_index(self.get_effective_preset_id())
 
 
 def _get_preset_enum_items(
@@ -940,6 +955,26 @@ class LightEffect(PropertyGroup):
 
     # If you add new properties above, make sure to update update_from()
 
+    def get_effective_preset_id(self) -> str:
+        """Returns the preset ID of this effect, resolving the raw property
+        storage format without touching the RNA ``preset_id`` property.
+
+        Files saved by Skybrush Studio for Blender 5.0.4 and earlier store a
+        legacy integer here, and reading the RNA property on such a file makes
+        Blender _delete_ the mismatched integer id property, destroying the
+        stored preset reference before the file-format migration gets a chance
+        to convert it. This method therefore reads the raw id property only
+        (see :func:`_get_raw_preset_id`), translating any legacy integer to
+        the corresponding stable preset ID; strings are returned unchanged and
+        missing values resolve to the null preset.
+        """
+        raw = _get_raw_preset_id(self)
+        if raw is None:
+            return NULL_PRESET_ID
+        if isinstance(raw, bool) or not isinstance(raw, int):
+            return raw
+        return get_preset_id_from_legacy_enum_value(raw)
+
     def apply_on_colors(
         self,
         context: LightEffectEvaluationContext,
@@ -1131,7 +1166,7 @@ class LightEffect(PropertyGroup):
             "type": self.type,
             "invertTarget": self.invert_target,
             "colorFunction": self.color_function.as_dict(),
-            "presetId": self.preset_id,
+            "presetId": self.get_effective_preset_id(),
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
             "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
@@ -1338,7 +1373,7 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
-        self._set_preset_id_or_null(other.preset_id)
+        self._set_preset_id_or_null(other.get_effective_preset_id())
 
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
@@ -1717,7 +1752,16 @@ class LightEffect(PropertyGroup):
             return fn(self, context, frame, out=out) if fn else 1.0
 
         elif output_type == "LIGHT_PRESET":
-            preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
+            # The RNA "preset_id" property must not be read here: when a file
+            # saved by an old version still stores a legacy integer, reading
+            # the RNA property destroys the integer id property before the
+            # file-format migration can convert it.
+            effective_preset_id = self.get_effective_preset_id()
+            preset_fn = (
+                get_preset_function(effective_preset_id)
+                if effective_preset_id
+                else None
+            )
             return preset_fn(self, context, frame, out=out) if preset_fn else nan
 
         else:
