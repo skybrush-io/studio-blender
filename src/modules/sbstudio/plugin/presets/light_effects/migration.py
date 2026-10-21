@@ -121,5 +121,10 @@ def migrate_legacy_preset_id(effect: Any) -> bool:
     value = effect.get("preset_id")
     if isinstance(value, bool) or not isinstance(value, int):
         return False
-    effect["preset_id"] = get_preset_id_from_legacy_enum_value(value)
+    preset_id = get_preset_id_from_legacy_enum_value(value)
+    # The legacy value is stored as an integer ID property;
+    # the fresh string ID property must be created from scratch
+    # after removing the legacy one.
+    del effect["preset_id"]
+    effect["preset_id"] = preset_id
     return True
