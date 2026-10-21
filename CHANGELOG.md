@@ -7,7 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Changed
+
+- Light effects store their preset reference in `.blend` files by stable string
+  identifiers now instead of indices into the preset registration order.
+  Index-based references broke silently whenever the set of available presets
+  changed between releases. Files saved by Skybrush Studio for Blender 5.0.4 or
+  earlier are updated the first time they are opened (migration from version 2 to 3).
+
+- Light effect presets were refactored to remove code duplication, replacing
+  hard-coded approximations of pi with the exact value. The behavior of the
+  presets is unchanged apart from the fixes listed below. See
+  [#85](https://github.com/skybrush-io/studio-blender/pull/85) for more details.
+
+### Fixed
+
+- Fixed the `lightfx_4` light effect preset being scaled down to half brightness;
+  it uses the full brightness range like all other presets now.
+
+- Wave-based light effect presets (`wave_sawtooth`, `wave_triangle`,
+  `spatial_wave` etc.) are centered around the barycenter of the drones like
+  all other presets now.
+
+- Fixed the `group_ranges` and `radar_scan_2` light effect presets going out of
+  the unit brightness range when the number of drones is smaller than the
+  largest formation index; the outputs are normalized with the formation index
+  span instead of the number of drones.
+
+- Fixed the phase of the `spatial_wave` light effect presets wrapping
+  incorrectly for negative phase values.
+
+- Fixed importing `.sky` files not restoring the preset selection of light
+  effects from the JSON.
+
 ### Removed
+
+- Removed the `paint_on_test_3` light effect preset; it was a mathematical
+  duplicate of `paint_on_test_1`.
 
 - Removed documentation source, it will be stored in a separate dedicated repo from now on.
   Compiled documentation is still available at https://docs.skybrush.io/.
