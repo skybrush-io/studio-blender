@@ -70,8 +70,11 @@ _LEGACY_PRESET_IDS_5_0_4: tuple[str, ...] = (
     "spatial_wave_2",
 )
 """Registration order of the presets in Skybrush Studio for Blender 5.0.4
-(tag ``5.0.4``, commit ``4df6a1e``, dated 2026-09-22), the last released
-version that stored ``LightEffect.preset_id`` as an enum value.
+(tag ``5.0.4``, commit ``4df6a1e``, dated 2026-09-22). This is therefore the
+last released version that stored ``LightEffect.preset_id`` as an enum value.
+Every release that stored ``preset_id`` as an integer (5.0.0 to 5.0.4
+inclusive) registered the presets in exactly this order; earlier releases
+never saved ``preset_id`` at all.
 
 This is a frozen record of history; do not update it when the registration
 order of the presets changes.  Note that ``paint_on_test_3`` was removed
@@ -89,8 +92,15 @@ def get_preset_id_from_legacy_enum_value(value: int) -> str:
     (one-based) = the k-th registered preset.  The mapping goes through the
     frozen registration order of 5.0.4 (see :data:`_LEGACY_PRESET_IDS_5_0_4`)
     because presets have been removed since, which shifted the later slots.
-    The mapping is not reliable for files saved by releases older than 5.0.4,
-    which may have registered the presets in yet another order.
+
+    The table covers every release that stored ``preset_id`` as an integer:
+    all of 5.0.0 to 5.0.4 used this exact order, and the integer storage did
+    not exist before 5.0.0 because the preset system was introduced by commit
+    ``69304996`` (2026-07-17), first shipped in ``5.0.0`` (2026-07-24). Files
+    saved by older releases therefore contain no ``preset_id`` values at all,
+    and such files are left untouched by the migration. Files saved by
+    unreleased development revisions in between may have registered the
+    presets in another order and are not mapped reliably either.
 
     Legacy values that refer to a preset that no longer exists (e.g. the
     removed ``paint_on_test_3``) map to the null preset, mirroring the old
