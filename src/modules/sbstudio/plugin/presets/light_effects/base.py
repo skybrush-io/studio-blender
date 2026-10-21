@@ -6,8 +6,6 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, MutableMapping, Sequence
 
 if TYPE_CHECKING:
-    from bpy.types import Context
-
     from sbstudio.plugin.model.light_effects import LightEffectOutputFunctionV2
 
 __all__ = (
@@ -143,3 +141,4 @@ def get_preset_enum_index(preset_id: str) -> int:
             for index, (item_id, _, _) in enumerate(get_preset_enum_items())
         }
     return _CACHED_ENUM_INDEXES.get(preset_id, _CACHED_ENUM_INDEXES[NULL_PRESET_ID])
+
