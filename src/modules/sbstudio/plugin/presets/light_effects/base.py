@@ -49,6 +49,10 @@ def register_preset(
     def decorator(fn: LightEffectOutputFunctionV2) -> LightEffectOutputFunctionV2:
         if id in _PRESETS:
             raise ValueError(f"Duplicate light effect preset ID: {id!r}")
+        if id == NULL_PRESET_ID:
+            raise ValueError(f"Preset ID {id!r} is reserved for the null preset")
+        if any(meta.label == label for meta in _PRESETS.values()):
+            raise ValueError(f"Duplicate light effect preset label: {label!r}")
         _PRESETS[id] = PresetMeta(
             id=id,
             label=label,
