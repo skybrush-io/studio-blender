@@ -19,15 +19,21 @@ from __future__ import annotations
 
 from .base import (
     NULL_PRESET_ID,
+    get_preset_enum_index,
     get_preset_enum_items,
     get_preset_function,
+    get_preset_id_from_legacy_enum_value,
+    preset_id_exists,
     register_preset,
 )
 from .i18n import register, unregister
 
 __all__ = (
     "get_preset_function",
+    "get_preset_enum_index",
     "get_preset_enum_items",
+    "get_preset_id_from_legacy_enum_value",
+    "preset_id_exists",
     "register_preset",
     "register",
     "unregister",

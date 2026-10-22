@@ -74,8 +74,11 @@ from sbstudio.plugin.model.pixel_cache import PixelCache
 from sbstudio.plugin.model.storyboard import StoryboardEntryOrTransition, get_storyboard
 from sbstudio.plugin.presets.light_effects import (
     NULL_PRESET_ID,
+    get_preset_enum_index,
     get_preset_enum_items,
     get_preset_function,
+    get_preset_id_from_legacy_enum_value,
+    preset_id_exists,
 )
 from sbstudio.plugin.utils import remove_if_unused, with_context
 from sbstudio.plugin.utils.collections import pick_unique_name
@@ -650,6 +653,100 @@ def texture_updated(self: LightEffect, context):
     self.invalidate_color_image()
 
 
+def _get_raw_preset_id(effect) -> Any:
+    """Returns the raw value stored under the ``preset_id`` id property of the
+    given light effect, or ``None`` when there is no such id property.
+
+    The RNA ``preset_id`` property must not be read to obtain this value:
+    when a file saved by an old version still stores a legacy integer, reading
+    the RNA property makes Blender delete the mismatched integer id property
+    before the file-format migration can convert it.
+    """
+    return effect.get("preset_id")
+
+
+_UNKNOWN_PRESET_ENUM_ITEMS: dict[str, tuple[str, str, str]] = {}
+"""Cache of the ``<Unknown> {id}`` enum items built for dormant preset IDs.
+
+Blender may still reference the strings returned by a dynamic
+``EnumProperty`` items callback after the callback has returned, so every
+such string must be retained by Python; see the notes on the items callback
+of ``bpy.props.EnumProperty`` in the Blender documentation. This cache
+retains the item tuples (and hence their strings), keyed by the preset ID.
+The cache never shrinks during a session; it is rebuilt when the add-on is
+reloaded, which resets the module.
+"""
+
+
+def _get_effect_preset_enum_items(
+    effect: LightEffect,
+) -> Sequence[tuple[str, str, str]]:
+    """Returns the enum items of the preset dropdown for the given light
+    effect: the standard item list (see :func:`get_preset_enum_items`),
+    extended with an ``<Unknown> {id}`` entry when the effect refers to a
+    preset that is not available in this version of the add-on. Such presets
+    render as nothing during evaluation.
+    """
+    preset_id = effect.get_effective_preset_id()
+    if not isinstance(preset_id, str) or not preset_id or preset_id_exists(preset_id):
+        return get_preset_enum_items()
+    items = list(get_preset_enum_items())
+    item = _UNKNOWN_PRESET_ENUM_ITEMS.get(preset_id)
+    if item is None:
+        item = _UNKNOWN_PRESET_ENUM_ITEMS[preset_id] = (
+            preset_id,
+            f"<Unknown> {preset_id}",
+            "Preset not available in this version of the add-on",
+        )
+    items.append(item)
+    return items
+
+
+def _get_preset_enum_index(self: LightEffect) -> int:
+    """Get callback for the UI-only dropdown of the light effect preset.
+
+    Translates the stable preset ID string stored in `preset_id` into the
+    index of the corresponding item of the dropdown. Unknown IDs are shown
+    in an ``<Unknown> {id}`` entry (``<None>`` is still the fallback for
+    values that cannot be interpreted at all) without touching the stored
+    string. The raw, legacy integer storage format is resolved without
+    reading the RNA property because that would destroy it.
+    """
+    preset_id = self.get_effective_preset_id()
+    for index, (item_id, _, _) in enumerate(_get_effect_preset_enum_items(self)):
+        if item_id == preset_id:
+            return index
+    return get_preset_enum_index(preset_id)
+
+
+def _get_preset_enum_items(
+    self: LightEffect, context: Context
+) -> Sequence[tuple[str, str, str]]:
+    """Items callback for the UI-only dropdown of the light effect preset."""
+    return _get_effect_preset_enum_items(self)
+
+
+def _set_preset_enum_index(self: LightEffect, value: str | int) -> None:
+    """Set callback for the UI-only dropdown of the light effect preset.
+
+    Stores the selected dropdown item as a stable string in `preset_id`.
+    Blender passes the index of the selected item as an integer (not the
+    item identifier as a string). Re-selecting the ``<Unknown> {id}`` entry
+    keeps the stored, dormant identifier unmodified.
+    """
+    if isinstance(value, int):
+        # Map the selected item index back to its identifier; the item list
+        # must be the same one the items callback shows for this effect
+        # (including its unknown preset entry, if any)
+        items = _get_effect_preset_enum_items(self)
+        if 0 <= value < len(items):
+            self.preset_id = items[value][0]
+        else:
+            self.preset_id = NULL_PRESET_ID
+    else:
+        self.preset_id = value or NULL_PRESET_ID
+
+
 _pixel_cache = PixelCache()
 """Global cache for the pixels of images in image-based light effects."""
 
@@ -778,11 +875,19 @@ class LightEffect(PropertyGroup):
         description="Custom function for the output Y",
     )
 
-    preset_id = EnumProperty(
+    preset_id = StringProperty(
+        name="Preset",
+        description=("Identifier of the built-in light effect preset."),
+        default=NULL_PRESET_ID,  # not an empty string: Blender filters those out
+        options=set(),
+    )
+
+    preset_id_enum = EnumProperty(
         name="Preset",
         description="Built-in light effect preset",
-        items=get_preset_enum_items,
-        default=0,  # needs to be an int, cannot refer to NULL_PRESET_ID directly
+        items=_get_preset_enum_items,
+        get=_get_preset_enum_index,
+        set=_set_preset_enum_index,
         options=set(),
     )
 
@@ -895,6 +1000,30 @@ class LightEffect(PropertyGroup):
     )
 
     # If you add new properties above, make sure to update update_from()
+
+    def get_effective_preset_id(self) -> str:
+        """Returns the preset ID of this effect, resolving the raw property
+        storage format without touching the RNA ``preset_id`` property.
+
+        Files saved by Skybrush Studio for Blender 5.0.4 and earlier store a
+        legacy integer here, and reading the RNA property on such a file makes
+        Blender _delete_ the mismatched integer id property, destroying the
+        stored preset reference before the file-format migration gets a chance
+        to convert it. This method therefore reads the raw id property only
+        (see :func:`_get_raw_preset_id`), translating any legacy integer to
+        the corresponding stable preset ID; strings are returned unchanged,
+        while missing values and raw id properties of any other type resolve
+        to the null preset. A legacy integer may also map to a preset that is
+        no longer registered in the current version of the add-on; such
+        references are returned as-is and kept instead of being replaced by
+        the null preset.
+        """
+        raw = _get_raw_preset_id(self)
+        if isinstance(raw, str):
+            return raw
+        if isinstance(raw, int):
+            return get_preset_id_from_legacy_enum_value(raw)
+        return NULL_PRESET_ID
 
     def apply_on_colors(
         self,
@@ -1087,7 +1216,7 @@ class LightEffect(PropertyGroup):
             "type": self.type,
             "invertTarget": self.invert_target,
             "colorFunction": self.color_function.as_dict(),
-            "presetId": self.preset_id,
+            "presetId": self.get_effective_preset_id(),
             "outputFunction": self.output_function.as_dict(),
             "outputFunctionY": self.output_function_y.as_dict(),
             "storyboardEntryOrTransition": self.storyboard_entry_or_transition_selection,
@@ -1257,21 +1386,22 @@ class LightEffect(PropertyGroup):
             pass  # this is OK
 
     def _set_preset_id_or_null(self, preset_id: str) -> bool:
-        """Sets the preset ID of this light effect, falling back to the null preset
-        if the given ID is empty or not available in this version of the add-on.
+        """Sets the preset ID of this light effect.
+
+        Empty IDs are replaced with the null preset ID; nonempty IDs are
+        stored as-is, _even_ if the preset is not available in this version
+        of the add-on.
 
         Returns:
-            whether the preset ID was available
+            whether the preset ID refers to a preset that is available in
+            this version of the add-on
         """
-        try:
-            self.preset_id = preset_id
-        except TypeError:
-            # This happens if the ID is empty or refers to a preset that is not
-            # present in the enum spec any more
+        if not preset_id:
             self.preset_id = NULL_PRESET_ID
-            return False
+        else:
+            self.preset_id = preset_id
 
-        return True
+        return preset_id_exists(preset_id)
 
     def update_from(self, other: "LightEffect") -> None:
         """Updates the properties of this light effect from another one,
@@ -1297,7 +1427,7 @@ class LightEffect(PropertyGroup):
         self.color_image = other.color_image
         self.invert_target = other.invert_target
 
-        self._set_preset_id_or_null(other.preset_id)
+        self._set_preset_id_or_null(other.get_effective_preset_id())
 
         self.color_function.update_from(other.color_function)
         self.output_function.update_from(other.output_function)
@@ -1368,7 +1498,8 @@ class LightEffect(PropertyGroup):
         if preset_id := data.get("presetId"):
             if not self._set_preset_id_or_null(preset_id):
                 warnings.append(
-                    f"Could not import light effect preset: {preset_id!r} is not available"
+                    f"Could not import light effect preset: {preset_id!r} is not "
+                    f"available; its reference was kept"
                 )
 
         if color_function := data.get("colorFunction"):
@@ -1676,7 +1807,16 @@ class LightEffect(PropertyGroup):
             return fn(self, context, frame, out=out) if fn else 1.0
 
         elif output_type == "LIGHT_PRESET":
-            preset_fn = get_preset_function(self.preset_id) if self.preset_id else None
+            # The RNA "preset_id" property must not be read here: when a file
+            # saved by an old version still stores a legacy integer, reading
+            # the RNA property destroys the integer id property before the
+            # file-format migration can convert it.
+            effective_preset_id = self.get_effective_preset_id()
+            preset_fn = (
+                get_preset_function(effective_preset_id)
+                if effective_preset_id
+                else None
+            )
             return preset_fn(self, context, frame, out=out) if preset_fn else nan
 
         else:

@@ -165,6 +165,22 @@ class LightEffectUpdater:
         self._drone_to_row_index = None
         self._base_colors = empty((0, 4), dtype=float32)
 
+    def forget_file_data(self) -> None:
+        """Drops every cached reference to Blender data blocks of the file that
+        is currently loaded in Blender.
+
+        Some caches (most notably `_last_drone_collection`, which holds the
+        ``CollectionObjects`` view of the Drones collection) refer to parts of
+        the file that Blender frees when another file is loaded; using them
+        afterwards crashes Blender with an access violation. Call this method
+        from a ``load_pre`` handler so the caches are dropped before the data
+        blocks they refer to go away.
+        """
+        self._last_frame = None
+        self._last_drone_collection = None
+        self._session.reset()
+        self._clear_base_colors()
+
     def _create_mutable_color_array_for_drones(
         self,
     ) -> tuple[CollectionObjects, NDArray[float32]]:
