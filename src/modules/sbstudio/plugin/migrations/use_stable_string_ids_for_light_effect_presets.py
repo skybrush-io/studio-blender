@@ -5,7 +5,6 @@ from __future__ import annotations
 from logging import Logger
 from typing import Any, Iterator
 
-import bpy
 from bpy.types import Context
 
 from sbstudio.plugin.presets.light_effects.base import (
@@ -21,14 +20,13 @@ __all__ = (
 )
 
 
-def _iter_light_effects() -> Iterator[Any]:
-    """Iterates over all light effects in all loaded scenes."""
-    for scene in bpy.data.scenes:
-        show = getattr(scene, "skybrush", None)
-        if show is None:
-            continue
-        for effect in show.light_effects.entries:
-            yield effect
+def _iter_light_effects(scene: Any) -> Iterator[Any]:
+    """Iterates over all light effects in the given scene."""
+    show = getattr(scene, "skybrush", None)
+    if show is None:
+        return
+    for effect in show.light_effects.entries:
+        yield effect
 
 
 def _get_legacy_integer_preset_id(effect: Any) -> int | None:
@@ -95,13 +93,13 @@ class UseStableStringIdsForLightEffectPresetsMigration(Migration):
         irrespective of the current plugin version."""
         return any(
             _get_legacy_integer_preset_id(effect) is not None
-            for effect in _iter_light_effects()
+            for effect in _iter_light_effects(context.scene)
         )
 
     def execute(self, context: Context, *, log: Logger):
         """Executes the migration on the current Blender content."""
         converted = 0
-        for effect in _iter_light_effects():
+        for effect in _iter_light_effects(context.scene):
             try:
                 preset_id = migrate_legacy_preset_id(effect)
             except Exception:
