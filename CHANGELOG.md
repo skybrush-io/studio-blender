@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [main]
 
+### Fixed
+
+- Fixed the yaw rate safety check to be modulo-360 aware: a drone turning through
+  yaw = ±180 degrees is no longer reported as a huge yaw rate violation anymore.
+
 ### Removed
 
 - Removed documentation source, it will be stored in a separate dedicated repo from now on.
