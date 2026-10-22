@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from math import tau
 from typing import TYPE_CHECKING
 
 from numpy import float32, where
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_centered_positions, get_formation_indices
+from .utils import get_centered_positions, get_formation_indices, get_time
 from .waveforms import cosine_wave, sine_wave
 
 if TYPE_CHECKING:
@@ -15,9 +14,6 @@ if TYPE_CHECKING:
         LightEffect,
         LightEffectEvaluationContext,
     )
-
-CHASE_SPEED = 0.12
-CHASE_SPATIAL_K = 0.1
 
 
 def _chasing_tails(
@@ -29,7 +25,7 @@ def _chasing_tails(
     so that the two interleave into a continuous trail.
     """
     coord = get_centered_positions(context)[:, axis]
-    travel_phase = (frame * CHASE_SPEED - coord * CHASE_SPATIAL_K) / tau
+    travel_phase = get_time(context, frame) * 0.46 - coord * 0.016
     cos_result = cosine_wave(travel_phase)
     sin_result = sine_wave(travel_phase)
     fi = get_formation_indices(context)

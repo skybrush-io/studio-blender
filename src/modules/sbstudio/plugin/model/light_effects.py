@@ -434,6 +434,14 @@ class LightEffectEvaluationContext:
     are blended into the backdrop.
     """
 
+    fps: float
+    """Render FPS of the scene in which the effect is being evaluated.
+
+    Light effect presets use it to convert the frame index into a time in seconds so
+    that patterns that advance with time keep their temporal speed when the user
+    changes the render FPS of the scene.
+    """
+
     _cache: _ContextCache = field(default_factory=dict)
     """Internal cache for lazily computed properties."""
 

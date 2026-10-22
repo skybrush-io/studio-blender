@@ -6,7 +6,11 @@ from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_centered_normalized_xy_distances, get_centered_positions
+from .utils import (
+    get_centered_normalized_xy_distances,
+    get_centered_positions,
+    get_time,
+)
 from .waveforms import steepen, triangle_wave
 
 if TYPE_CHECKING:
@@ -38,7 +42,7 @@ def _axis_sweep(
         per-drone brightness of the sweep, in [0, 1].
     """
     x = get_centered_positions(context)[:, axis] / 100  # normalize roughly
-    v = triangle_wave(frame * 0.04 + (-x if negate else x))
+    v = triangle_wave(get_time(context, frame) * 0.96 + (-x if negate else x))
     return 1 - v if invert else v
 
 
@@ -59,7 +63,7 @@ def _radial_sweep(
         per-drone brightness of the sweep, in [0, 1].
     """
     relative_distances = get_centered_normalized_xy_distances(context)
-    v = triangle_wave(frame * 0.05 + relative_distances)
+    v = triangle_wave(get_time(context, frame) * 1.2 + relative_distances)
     return 1 - v if invert else v
 
 
