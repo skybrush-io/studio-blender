@@ -678,7 +678,9 @@ reloaded, which resets the module.
 """
 
 
-def _get_effect_preset_enum_items(effect: LightEffect) -> list[tuple[str, str, str]]:
+def _get_effect_preset_enum_items(
+    effect: LightEffect,
+) -> Sequence[tuple[str, str, str]]:
     """Returns the enum items of the preset dropdown for the given light
     effect: the standard item list (see :func:`get_preset_enum_items`),
     extended with an ``<Unknown> {id}`` entry when the effect refers to a
