@@ -665,6 +665,19 @@ def _get_raw_preset_id(effect) -> Any:
     return effect.get("preset_id")
 
 
+_UNKNOWN_PRESET_ENUM_ITEMS: dict[str, tuple[str, str, str]] = {}
+"""Cache of the ``<Unknown> {id}`` enum items built for dormant preset IDs.
+
+Blender may still reference the strings returned by a dynamic
+``EnumProperty`` items callback after the callback has returned, so every
+such string must be retained by Python; see the notes on the items callback
+of ``bpy.props.EnumProperty`` in the Blender documentation. This cache
+retains the item tuples (and hence their strings), keyed by the preset ID.
+The cache never shrinks during a session; it is rebuilt when the add-on is
+reloaded, which resets the module.
+"""
+
+
 def _get_effect_preset_enum_items(effect: LightEffect) -> list[tuple[str, str, str]]:
     """Returns the enum items of the preset dropdown for the given light
     effect: the standard item list (see :func:`get_preset_enum_items`),
@@ -676,13 +689,14 @@ def _get_effect_preset_enum_items(effect: LightEffect) -> list[tuple[str, str, s
     if not isinstance(preset_id, str) or not preset_id or preset_id_exists(preset_id):
         return get_preset_enum_items()
     items = list(get_preset_enum_items())
-    items.append(
-        (
+    item = _UNKNOWN_PRESET_ENUM_ITEMS.get(preset_id)
+    if item is None:
+        item = _UNKNOWN_PRESET_ENUM_ITEMS[preset_id] = (
             preset_id,
             f"<Unknown> {preset_id}",
             "Preset not available in this version of the add-on",
         )
-    )
+    items.append(item)
     return items
 
 
