@@ -886,6 +886,7 @@ class LightEffect(PropertyGroup):
         items=_get_preset_enum_items,
         get=_get_preset_enum_index,
         set=_set_preset_enum_index,
+        options=set(),
     )
 
     output_mapping_mode = EnumProperty(

@@ -43,7 +43,7 @@ def _get_legacy_integer_preset_id(effect: Any) -> int | None:
     return value
 
 
-def migrate_legacy_preset_id(effect: Any) -> bool:
+def migrate_legacy_preset_id(effect: Any) -> str | None:
     """Replaces a legacy integer ``preset_id`` of a light effect with the
     corresponding preset ID string, in place; see
     :func:`get_preset_id_from_legacy_enum_value` for the legacy format
@@ -55,11 +55,12 @@ def migrate_legacy_preset_id(effect: Any) -> bool:
     a string or missing.
 
     Returns:
-        whether a conversion was performed
+        the preset ID that the effect refers to after the migration, or
+        ``None`` when no conversion was performed
     """
     legacy_value = _get_legacy_integer_preset_id(effect)
     if legacy_value is None:
-        return False
+        return None
     preset_id = get_preset_id_from_legacy_enum_value(legacy_value)
     # The legacy value is stored as an integer ID property; assigning a string
     # to it in one step raises "Cannot assign a 'str' value to the existing
@@ -67,7 +68,7 @@ def migrate_legacy_preset_id(effect: Any) -> bool:
     # created from scratch after removing the legacy one.
     del effect["preset_id"]
     effect["preset_id"] = preset_id
-    return True
+    return preset_id
 
 
 class UseStableStringIdsForLightEffectPresetsMigration(Migration):
@@ -101,32 +102,28 @@ class UseStableStringIdsForLightEffectPresetsMigration(Migration):
         """Executes the migration on the current Blender content."""
         converted = 0
         for effect in _iter_light_effects():
-            legacy_value = _get_legacy_integer_preset_id(effect)
-            if legacy_value is None:
-                continue
-            preset_id = get_preset_id_from_legacy_enum_value(legacy_value)
             try:
-                migrated = migrate_legacy_preset_id(effect)
+                preset_id = migrate_legacy_preset_id(effect)
             except Exception:
                 log.error(
-                    f"Failed to convert the legacy preset with index {legacy_value} "
-                    f"to {preset_id!r} in light effect {effect.name!r}",
+                    f"Failed to migrate the preset reference in light effect "
+                    f"{effect.name!r}",
                     exc_info=True,
                 )
             else:
-                if migrated:
+                if preset_id is not None:
                     converted += 1
                     if preset_id_exists(preset_id):
                         log.info(
-                            f"Converted the legacy preset with index {legacy_value} "
-                            f"to {preset_id!r} in light effect {effect.name!r}."
+                            f"Converted the legacy preset of light effect "
+                            f"{effect.name!r} to {preset_id!r}."
                         )
                     else:
                         log.warning(
-                            f"Converted the legacy preset with index {legacy_value} "
-                            f"to {preset_id!r} in light effect {effect.name!r}, "
-                            f"but that preset is not available in this version of "
-                            f"the add-on; its reference was kept anyway."
+                            f"Converted the legacy preset of light effect "
+                            f"{effect.name!r} to {preset_id!r}, but that preset "
+                            f"is not available in this version of the add-on; "
+                            f"its reference was kept anyway."
                         )
         if converted:
             log.info(f"Converted the legacy presets of {converted} light effects.")
