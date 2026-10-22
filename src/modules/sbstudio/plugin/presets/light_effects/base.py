@@ -237,7 +237,11 @@ def get_preset_id_from_legacy_enum_value(value: int) -> str:
     frozen registration order of 5.0.4 (see :data:`LEGACY_PRESET_IDS_5_0_4`)
     because presets have been removed since, which shifted the later slots.
 
-    Unknown or out-of-range values map to the null preset.
+    Values outside the range of the table map to the null preset. Values
+    inside the range are returned as-is, _even_ if the mapped preset is not
+    registered in the current version of the add-on (e.g. because it was
+    removed at a later point), so the migration keeps the original preset
+    reference instead of losing it.
 
     The table covers every release that stored ``preset_id`` as an integer:
     all of 5.0.0 to 5.0.4 used this exact order, and the integer storage did
@@ -251,5 +255,4 @@ def get_preset_id_from_legacy_enum_value(value: int) -> str:
     legacy = LEGACY_PRESET_IDS_5_0_4
     if value <= 0 or value > len(legacy):
         return NULL_PRESET_ID
-    preset_id = legacy[value - 1]
-    return preset_id if preset_id_exists(preset_id) else NULL_PRESET_ID
+    return legacy[value - 1]

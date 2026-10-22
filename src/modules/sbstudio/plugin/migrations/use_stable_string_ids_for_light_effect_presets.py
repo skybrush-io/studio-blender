@@ -10,6 +10,7 @@ from bpy.types import Context
 
 from sbstudio.plugin.presets.light_effects.base import (
     get_preset_id_from_legacy_enum_value,
+    preset_id_exists,
 )
 
 from .base import Migration
@@ -37,7 +38,7 @@ def _get_legacy_integer_preset_id(effect: Any) -> int | None:
     storage format).
     """
     value = effect.get("preset_id")
-    if isinstance(value, bool) or not isinstance(value, int):
+    if not isinstance(value, int):
         return None
     return value
 
@@ -115,10 +116,18 @@ class UseStableStringIdsForLightEffectPresetsMigration(Migration):
             else:
                 if migrated:
                     converted += 1
-                    log.info(
-                        f"Converted the legacy preset with index {legacy_value} "
-                        f"to {preset_id!r} in light effect {effect.name!r}."
-                    )
+                    if preset_id_exists(preset_id):
+                        log.info(
+                            f"Converted the legacy preset with index {legacy_value} "
+                            f"to {preset_id!r} in light effect {effect.name!r}."
+                        )
+                    else:
+                        log.warning(
+                            f"Converted the legacy preset with index {legacy_value} "
+                            f"to {preset_id!r} in light effect {effect.name!r}, "
+                            f"but that preset is not available in this version of "
+                            f"the add-on; its reference was kept anyway."
+                        )
         if converted:
             log.info(f"Converted the legacy presets of {converted} light effects.")
 

@@ -665,23 +665,49 @@ def _get_raw_preset_id(effect) -> Any:
     return effect.get("preset_id")
 
 
+def _get_effect_preset_enum_items(effect: LightEffect) -> list[tuple[str, str, str]]:
+    """Returns the enum items of the preset dropdown for the given light
+    effect: the standard item list (see :func:`get_preset_enum_items`),
+    extended with an ``<Unknown> {id}`` entry when the effect refers to a
+    preset that is not available in this version of the add-on. Such presets
+    render as nothing during evaluation.
+    """
+    preset_id = effect.get_effective_preset_id()
+    if not isinstance(preset_id, str) or not preset_id or preset_id_exists(preset_id):
+        return get_preset_enum_items()
+    items = list(get_preset_enum_items())
+    items.append(
+        (
+            preset_id,
+            f"<Unknown> {preset_id}",
+            "Preset not available in this version of the add-on",
+        )
+    )
+    return items
+
+
 def _get_preset_enum_index(self: LightEffect) -> int:
     """Get callback for the UI-only dropdown of the light effect preset.
 
     Translates the stable preset ID string stored in `preset_id` into the
     index of the corresponding item of the dropdown. Unknown IDs are shown
-    as the null preset without touching the stored string. The raw, legacy
-    integer storage format is resolved without reading the RNA property
-    because that would destroy it.
+    in an ``<Unknown> {id}`` entry (``<None>`` is still the fallback for
+    values that cannot be interpreted at all) without touching the stored
+    string. The raw, legacy integer storage format is resolved without
+    reading the RNA property because that would destroy it.
     """
-    return get_preset_enum_index(self.get_effective_preset_id())
+    preset_id = self.get_effective_preset_id()
+    for index, (item_id, _, _) in enumerate(_get_effect_preset_enum_items(self)):
+        if item_id == preset_id:
+            return index
+    return get_preset_enum_index(preset_id)
 
 
 def _get_preset_enum_items(
     self: LightEffect, context: Context
 ) -> Sequence[tuple[str, str, str]]:
     """Items callback for the UI-only dropdown of the light effect preset."""
-    return get_preset_enum_items()
+    return _get_effect_preset_enum_items(self)
 
 
 def _set_preset_enum_index(self: LightEffect, value: str | int) -> None:
@@ -689,11 +715,14 @@ def _set_preset_enum_index(self: LightEffect, value: str | int) -> None:
 
     Stores the selected dropdown item as a stable string in `preset_id`.
     Blender passes the index of the selected item as an integer (not the
-    item identifier as a string).
+    item identifier as a string). Re-selecting the ``<Unknown> {id}`` entry
+    keeps the stored, dormant identifier unmodified.
     """
     if isinstance(value, int):
-        # Map the selected item index back to its identifier
-        items = get_preset_enum_items()
+        # Map the selected item index back to its identifier; the item list
+        # must be the same one the items callback shows for this effect
+        # (including its unknown preset entry, if any)
+        items = _get_effect_preset_enum_items(self)
         if 0 <= value < len(items):
             self.preset_id = items[value][0]
         else:
@@ -965,15 +994,19 @@ class LightEffect(PropertyGroup):
         stored preset reference before the file-format migration gets a chance
         to convert it. This method therefore reads the raw id property only
         (see :func:`_get_raw_preset_id`), translating any legacy integer to
-        the corresponding stable preset ID; strings are returned unchanged and
-        missing values resolve to the null preset.
+        the corresponding stable preset ID; strings are returned unchanged,
+        while missing values and raw id properties of any other type resolve
+        to the null preset. A legacy integer may also map to a preset that is
+        no longer registered in the current version of the add-on; such
+        references are returned as-is and kept instead of being replaced by
+        the null preset.
         """
         raw = _get_raw_preset_id(self)
-        if raw is None:
-            return NULL_PRESET_ID
-        if isinstance(raw, bool) or not isinstance(raw, int):
+        if isinstance(raw, str):
             return raw
-        return get_preset_id_from_legacy_enum_value(raw)
+        if isinstance(raw, int):
+            return get_preset_id_from_legacy_enum_value(raw)
+        return NULL_PRESET_ID
 
     def apply_on_colors(
         self,
@@ -1336,18 +1369,22 @@ class LightEffect(PropertyGroup):
             pass  # this is OK
 
     def _set_preset_id_or_null(self, preset_id: str) -> bool:
-        """Sets the preset ID of this light effect, falling back to the null preset
-        if the given ID is empty or not available in this version of the add-on.
+        """Sets the preset ID of this light effect.
+
+        Empty IDs are replaced with the null preset ID; nonempty IDs are
+        stored as-is, _even_ if the preset is not available in this version
+        of the add-on.
 
         Returns:
-            whether the preset ID was available
+            whether the preset ID refers to a preset that is available in
+            this version of the add-on
         """
-        if not preset_id or not preset_id_exists(preset_id):
+        if not preset_id:
             self.preset_id = NULL_PRESET_ID
-            return False
+        else:
+            self.preset_id = preset_id
 
-        self.preset_id = preset_id
-        return True
+        return preset_id_exists(preset_id)
 
     def update_from(self, other: "LightEffect") -> None:
         """Updates the properties of this light effect from another one,
@@ -1444,7 +1481,8 @@ class LightEffect(PropertyGroup):
         if preset_id := data.get("presetId"):
             if not self._set_preset_id_or_null(preset_id):
                 warnings.append(
-                    f"Could not import light effect preset: {preset_id!r} is not available"
+                    f"Could not import light effect preset: {preset_id!r} is not "
+                    f"available; its reference was kept"
                 )
 
         if color_function := data.get("colorFunction"):

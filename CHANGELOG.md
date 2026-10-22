@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Index-based references broke silently whenever the set of available presets
   changed between releases. Files saved by Skybrush Studio for Blender 5.0.4 or
   earlier are updated the first time they are opened (migration from version 2 to 3).
+  Preset references that are not available in the current version of the add-on
+  are kept in the effect and displayed as `<Unknown> {id}` in the effect
+  dropdown.
 
 - Light effect presets were refactored to remove code duplication, replacing
   hard-coded approximations of pi with the exact value. The behavior of the
