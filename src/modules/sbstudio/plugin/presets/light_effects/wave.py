@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import tau
 from typing import TYPE_CHECKING
 
 from numpy import float32, sin
@@ -46,7 +47,7 @@ def _sine_distorted_phase(
     positions = get_centered_positions(context)
     return (
         get_time(context, frame) * speed
-        + sin(positions[:, axis] * spatial_k) * amplitude
+        + sin(positions[:, axis] * spatial_k * tau) * amplitude
     ) % 1.0
 
 
@@ -56,7 +57,7 @@ def _spatial_wave(
     *,
     kx: float,
     ky: float,
-    speed: float = 2.4,
+    speed: float = 0.38,
 ) -> NDArray[float32]:
     """Returns a clipped pulse wave travelling in the XY plane, with its phase advancing
     linearly along the X and Y axes.
