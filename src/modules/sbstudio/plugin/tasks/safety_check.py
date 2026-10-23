@@ -58,6 +58,12 @@ sparsely populated than the position cache.
 _rotation_snapshot_cache: LRUCache[int, RotationSnapshot] = LRUCache(5)
 """Cache that stores the Euler rotation angles in the last few frames visited by the user
 in the hope that we can estimate the yaw rates from it in the current frame.
+
+Euler angles from Blender wrap at ±180 degrees, so the yaw rate estimator is
+modulo-360 aware (it treats a turn continuing across the ±180 degree boundary
+as a small, continuous rotation). Consequently the highest yaw rate that this
+check can detect is roughly 180° × fps (about 4320 deg/s at 24 fps), which is
+still far above any rate that conforming drones can achieve.
 """
 
 _ZERO = (0.0, 0.0, 0.0)
@@ -96,6 +102,7 @@ def estimate_derivatives_at_frame(
     *,
     frame: int,
     scene: Scene,
+    unwrap: float | None = None,
 ) -> tuple[VectorSnapshot, bool]:
     """Attempts to estimate the derivatives of some quantity in the given frame,
     given a cache mapping frame indices to values of the same quantity in
@@ -104,6 +111,12 @@ def estimate_derivatives_at_frame(
     When the input is a position snapshot, this function can be used to
     estimate velocities. When the input is a velocity snapshot, this function
     can be used to estimate accelerations.
+
+    When ``unwrap`` is given, differences of the components are reduced modulo
+    ``unwrap`` and wrapped into the (−unwrap/2, +unwrap/2] range before being
+    divided by the elapsed time. This is useful for angular quantities such as
+    rotations, whose components wrap at ±180 degrees: it makes the estimate
+    continuous across the wrap boundary instead of producing huge spikes.
 
     When no suitable frame candidate is found in the cache, an all-zero snapshot
     is returned.
@@ -149,11 +162,13 @@ def estimate_derivatives_at_frame(
             result[drone_name] = _ZERO
             should_cache = False
         else:
-            result[drone_name] = (
-                (curr[0] - prev[0]) / diff,
-                (curr[1] - prev[1]) / diff,
-                (curr[2] - prev[2]) / diff,
-            )
+            delta = []
+            for k in range(3):
+                dk = curr[k] - prev[k]
+                if unwrap is not None:
+                    dk = (dk + unwrap / 2) % unwrap - unwrap / 2
+                delta.append(dk / diff)
+            result[drone_name] = (delta[0], delta[1], delta[2])
 
     return result, should_cache
 
@@ -223,7 +238,11 @@ def run_safety_check(scene: Scene, depsgraph: Depsgraph) -> None:
     _rotation_snapshot_cache[frame] = rotation_snapshot
     rotation_rate_snapshot, rotation_rate_snapshot_valid = (
         estimate_derivatives_at_frame(
-            rotation_snapshot, _rotation_snapshot_cache, frame=frame, scene=scene
+            rotation_snapshot,
+            _rotation_snapshot_cache,
+            frame=frame,
+            scene=scene,
+            unwrap=360,
         )
     )
 
