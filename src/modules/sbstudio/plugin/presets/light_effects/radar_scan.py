@@ -10,6 +10,7 @@ from .utils import (
     get_centered_positions,
     get_formation_index_span,
     get_formation_indices,
+    get_time,
 )
 
 if TYPE_CHECKING:
@@ -71,7 +72,7 @@ def radar_scan(
 ) -> None:
     angles, half_span = _get_fan_phase_and_width(context)
     indices = get_formation_indices(context)
-    center_angle = (frame * 2) % 360
+    center_angle = (get_time(context, frame) * 48) % 360
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         (indices % 2 + 0.5).astype(float32),
@@ -92,7 +93,7 @@ def radar_scan_2(
     out: NDArray[float32],
 ) -> None:
     angles, half_span = _get_fan_phase_and_width(context)
-    center_angle = (-frame * 2) % 360
+    center_angle = (-get_time(context, frame) * 48) % 360
     fi = get_formation_indices(context)
     half = get_formation_index_span(fi) // 2
     out[:] = where(
@@ -115,7 +116,7 @@ def radar_scan_3(
     out: NDArray[float32],
 ) -> None:
     angles, half_span = _get_fan_phase_and_width(context)
-    center_angle = (frame * 2) % 360
+    center_angle = (get_time(context, frame) * 48) % 360
     fi = get_formation_indices(context)
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
@@ -137,7 +138,7 @@ def radar_scan_4(
     out: NDArray[float32],
 ) -> None:
     angles, half_span = _get_fan_phase_and_width(context)
-    center_angle = (frame * 3) % 360
+    center_angle = (get_time(context, frame) * 72) % 360
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         0.8,
@@ -158,7 +159,7 @@ def radar_scan_5(
     out: NDArray[float32],
 ) -> None:
     angles, half_span = _get_fan_phase_and_width(context)
-    center_angle = (-frame * 3) % 360
+    center_angle = (-get_time(context, frame) * 72) % 360
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         0.8,
@@ -179,7 +180,7 @@ def continuous_radar_scan_test(
     out: NDArray[float32],
 ) -> None:
     angles, _ = _get_fan_phase_and_width(context)
-    center_angle = (frame * 2) % 360
+    center_angle = (get_time(context, frame) * 48) % 360
     diff = ((angles - center_angle + 180) % 360) - 180
     brightness = (1 - abs(diff / 30)).clip(0, 1)
     out[:] = brightness.astype(float32)
@@ -199,7 +200,7 @@ def paint_on_test_1(
 ) -> None:
     fi = get_formation_indices(context)
     span = get_formation_index_span(fi)
-    progress = frame / 100
+    progress = get_time(context, frame) * 0.24
     active_count = int(span * min(progress, 1))
     out[:] = where(fi < active_count, 1.0, 0.0)
 
@@ -218,6 +219,6 @@ def paint_on_test_2(
 ) -> None:
     fi = get_formation_indices(context)
     span = get_formation_index_span(fi)
-    progress = frame / 100
+    progress = get_time(context, frame) * 0.24
     active_count = int(span * min(progress, 1))
     out[:] = where(fi < active_count, (fi % 3 + 1) / 3.0, 0.0)

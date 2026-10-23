@@ -79,6 +79,7 @@ class LightEffectUpdateSession:
                 random_seq=self._scene.skybrush.settings.random_sequence_root,
                 backdrop=base_colors,
                 colors=empty_like(base_colors),
+                fps=float(self._scene.render.fps) / self._scene.render.fps_base,
             )
 
         return self._context

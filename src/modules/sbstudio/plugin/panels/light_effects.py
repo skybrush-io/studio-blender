@@ -192,7 +192,7 @@ class LightEffectsPanel(Panel):
                     col.prop(entry.output_function, "path", text="Fn file")
                     col.prop(entry.output_function, "name", text="Fn name")
                 elif entry.output == "LIGHT_PRESET":
-                    col.prop(entry, "preset_id")
+                    col.prop(entry, "preset_id_enum")
             if output_type_supports_mapping_mode(entry.output):
                 col.prop(entry, "output_mapping_mode")
             if entry.type == "IMAGE":

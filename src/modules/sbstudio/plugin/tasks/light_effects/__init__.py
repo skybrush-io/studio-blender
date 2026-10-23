@@ -79,6 +79,13 @@ Useful when sampling the LED colors of the drones in a manner that does not requ
 """
 
 
+def _drop_light_effect_caches_pre_load(*args):
+    """Called before a new file is loaded into Blender to drop the caches of
+    the light effect updater, which refer to data blocks of the file that is
+    being unloaded right now and would crash Blender after the load."""
+    _light_effect_updater.forget_file_data()
+
+
 def _update_light_effects_post_load(*args):
     context = bpy.context
     update_light_effects(context.scene, context.evaluated_depsgraph_get())
@@ -92,6 +99,7 @@ class UpdateLightEffectsTask(Task):
     """
 
     functions = {
+        "load_pre": _drop_light_effect_caches_pre_load,
         "depsgraph_update_post": update_light_effects,
         "frame_change_post": update_light_effects,
         "load_post": _update_light_effects_post_load,

@@ -5,12 +5,16 @@ from bpy.types import Context
 
 from .base import Migration
 from .use_common_material_for_all_drones import UseSharedMaterialForAllDronesMigration
+from .use_stable_string_ids_for_light_effect_presets import (
+    UseStableStringIdsForLightEffectPresetsMigration,
+)
 
 __all__ = ("get_migration_details", "is_migration_needed", "migrate")
 
 migrations: dict[int, Type[Migration]] = {}
 candidates: list[Type[Migration]] = [
-    UseSharedMaterialForAllDronesMigration  # version 1 -> 2
+    UseSharedMaterialForAllDronesMigration,  # version 1 -> 2
+    UseStableStringIdsForLightEffectPresetsMigration,  # version 2 -> 3
 ]
 LATEST_VERSION: int = 1
 

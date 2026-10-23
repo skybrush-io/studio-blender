@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import tau
 from typing import TYPE_CHECKING, Any
 
 from numpy import (
@@ -20,6 +19,11 @@ from .waveforms import sine_wave
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import LightEffectEvaluationContext
+
+
+def get_time(context: LightEffectEvaluationContext, frame: int) -> float:
+    """Returns the elapsed time in seconds since frame 0 at the given frame."""
+    return frame / context.fps
 
 
 def get_formation_indices(
@@ -59,15 +63,17 @@ def formation_index_phase(
     frame: int,
     *,
     wave_length: float,
+    speed: float,
     fi: NDArray[int32] | None = None,
 ) -> NDArray[float64]:
-    """Returns the formation index offset by the current frame, wrapped into
-    ``wave_length`` steps and normalized to the [0; 1) range.
+    """Returns the per-drone phase of a wave over the formation index, in cycles
+    (wrapped to the [0; 1) range).
 
     Args:
         context: evaluation context for the swarm
         frame: current frame number
-        wave_length: number of formation indices in a single wave
+        wave_length: spatial period of the wave, in formation index steps
+        speed: temporal speed in cycles per second
         fi: the formation indices to use; computed from ``context`` when omitted
 
     Returns:
@@ -76,7 +82,7 @@ def formation_index_phase(
     if fi is None:
         fi = get_formation_indices(context)
 
-    return (frame + fi) % wave_length / wave_length
+    return (fi / wave_length + get_time(context, frame) * speed) % 1.0
 
 
 def formation_index_sine_pulse(
@@ -96,19 +102,18 @@ def formation_index_sine_pulse(
         context: evaluation context for the swarm
         frame: current frame number
         divisor: number of waves the formation index is wrapped into
-        speed: phase advance per frame, in radians
+        speed: temporal speed of the wave in cycles per second
         span: phase width of a single wave, in cycles
 
     Returns:
         per-drone brightness of the sine pulse, in [0, 1].
     """
-    # TODO: express speed in cycles, not radians, but also use
-    # render.FPS for normalization of the temporal axis so that we
-    # get understandable hard-coded param values in callers
     fi = get_formation_indices(context)
     wave_length = get_formation_index_span(fi) / divisor
-    offset = formation_index_phase(context, 0, wave_length=wave_length, fi=fi)
-    return sine_wave(frame * speed / tau + offset * span)
+    spatial_offset = formation_index_phase(
+        context, frame, wave_length=wave_length, speed=0, fi=fi
+    )
+    return sine_wave(get_time(context, frame) * speed + spatial_offset * span)
 
 
 def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[float32]:

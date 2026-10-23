@@ -27,7 +27,7 @@ def clover_fill(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=3, speed=0.06)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=3, speed=0.23)
 
 
 @register_preset(
@@ -42,7 +42,7 @@ def continuous_filling_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=3, speed=0.1)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=3, speed=0.38)
 
 
 @register_preset(
@@ -57,7 +57,7 @@ def continuous_filling_1_5(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=10, speed=0.15)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=10, speed=0.57)
 
 
 @register_preset(
@@ -72,7 +72,7 @@ def continuous_filling_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.2)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.76)
 
 
 @register_preset(
@@ -87,7 +87,7 @@ def continuous_filling_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.3)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=1.15)
 
 
 @register_preset(
@@ -102,7 +102,7 @@ def continuous_filling_4(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.4)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=1.53)
 
 
 @register_preset(
@@ -117,7 +117,7 @@ def continuous_filling_5(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=1.91)
 
 
 @register_preset(
@@ -132,4 +132,4 @@ def continuous_filling_stripes(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.1)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.38)

@@ -125,9 +125,11 @@ class MockLightEffectEvaluationContext:
         self,
         positions: np.ndarray,
         mapping: list[int] | None = None,
+        fps: float = 24.0,
     ):
         self._positions = MockObjectPositions(positions)
         self._mapping = mapping
+        self.fps = fps
         self._cache: dict[str, Any] = {}
 
     @property
