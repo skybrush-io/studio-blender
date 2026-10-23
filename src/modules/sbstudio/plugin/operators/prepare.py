@@ -32,12 +32,14 @@ class PrepareSceneOperator(Operator):
         formations = Collections.find_formations()
         takeoff_pods = Collections.find_takeoff_pods()
         templates = Collections.find_templates()
+        terrain = Collections.find_terrain()
 
         link_to_scene(drones, allow_nested=True)
         link_to_scene(drone_groups, allow_nested=True)
         link_to_scene(formations, allow_nested=True)
         link_to_scene(takeoff_pods, allow_nested=True)
         link_to_scene(templates, allow_nested=True)
+        link_to_scene(terrain, allow_nested=True)
 
         # generate takeoff pods (if they are not generated already)
         TakeoffPods.create_takeoff_pods()

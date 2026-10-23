@@ -33,8 +33,8 @@ def EnumProperty(
     default: _T | int = ...,
     options: set[str] = ...,
     update: Callable[[Any, Any], None] | None = ...,
-    get: Callable[[Any], str] | None = ...,
-    set: Callable[[Any, str], None] | None = ...,
+    get: Callable[[Any], int] | None = ...,
+    set: Callable[[Any, int], None] | None = ...,
 ) -> _T: ...
 def FloatProperty(
     *,

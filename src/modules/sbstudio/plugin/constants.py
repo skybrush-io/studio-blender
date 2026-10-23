@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from .model import DroneShowAddonProperties
 
-__all__ = ("Collections", "Templates")
+__all__ = ("Collections", "Formations", "Templates")
 
 
 DEFAULT_EMISSION_STRENGTH = 1
@@ -80,6 +80,9 @@ class Collections:
 
     TEMPLATES: ClassVar[str] = "Templates"
     """Name of the collection that holds the object templates"""
+
+    TERRAIN: ClassVar[str] = "Terrain"
+    """Name of the collection that holds the terrain objects"""
 
     @classmethod
     @overload
@@ -166,6 +169,18 @@ class Collections:
     @classmethod
     def find_templates(cls, *, create: bool = True):
         return cls._find(cls.TEMPLATES, create=create)
+
+    @classmethod
+    @overload
+    def find_terrain(cls, *, create: Literal[True] = True) -> Collection: ...
+
+    @classmethod
+    @overload
+    def find_terrain(cls, *, create: bool) -> Collection | None: ...
+
+    @classmethod
+    def find_terrain(cls, *, create: bool = True):
+        return cls._find(cls.TERRAIN, create=create)
 
     @classmethod
     @overload

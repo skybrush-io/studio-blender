@@ -188,18 +188,18 @@ class LightEffectsPanel(Panel):
                 col.prop(entry, "output")
                 if output_type_is_experimental(entry.output):
                     draw_experimental_feature_warning(col)
-                if entry.output == "CUSTOM":
+                if entry.output in ("CUSTOM", "CUSTOM_V2"):
                     col.prop(entry.output_function, "path", text="Fn file")
                     col.prop(entry.output_function, "name", text="Fn name")
                 elif entry.output == "LIGHT_PRESET":
-                    col.prop(entry, "preset_id")
+                    col.prop(entry, "preset_id_enum")
             if output_type_supports_mapping_mode(entry.output):
                 col.prop(entry, "output_mapping_mode")
             if entry.type == "IMAGE":
                 col.prop(entry, "output_y")
                 if output_type_is_experimental(entry.output_y):
                     draw_experimental_feature_warning(col)
-                if entry.output_y == "CUSTOM":
+                if entry.output_y in ("CUSTOM", "CUSTOM_V2"):
                     col.prop(entry.output_function_y, "path", text="Fn file")
                     col.prop(entry.output_function_y, "name", text="Fn name")
                 if output_type_supports_mapping_mode(entry.output_y):
