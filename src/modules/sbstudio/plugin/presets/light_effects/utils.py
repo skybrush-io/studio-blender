@@ -110,10 +110,10 @@ def formation_index_sine_pulse(
     """
     fi = get_formation_indices(context)
     wave_length = get_formation_index_span(fi) / divisor
-    # Spatial offset of each drone within a wave, in cycles; the wave marches
-    # over the formation at ``speed`` from :func:`formation_index_phase`.
-    offset = (fi % wave_length) / wave_length
-    return sine_wave(get_time(context, frame) * speed + offset * span)
+    spatial_offset = formation_index_phase(
+        context, frame, wave_length=wave_length, speed=0, fi=fi
+    )
+    return sine_wave(get_time(context, frame) * speed + spatial_offset * span)
 
 
 def get_centered_positions(context: LightEffectEvaluationContext) -> NDArray[float32]:

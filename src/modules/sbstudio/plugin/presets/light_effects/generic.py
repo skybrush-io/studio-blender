@@ -114,5 +114,5 @@ def lightfx_8(
     out: NDArray[float32],
 ) -> None:
     out[:] = formation_index_sine_pulse(
-        context, frame, divisor=1, speed=-0.075, span=0.75
+        context, frame, divisor=1, speed=-0.0764, span=0.75
     )
