@@ -27,11 +27,13 @@ class PrepareSceneOperator(Operator):
         drone_groups = Collections.find_drone_groups()
         formations = Collections.find_formations()
         templates = Collections.find_templates()
+        terrain = Collections.find_terrain()
 
         link_to_scene(drones, allow_nested=True)
         link_to_scene(drone_groups, allow_nested=True)
         link_to_scene(formations, allow_nested=True)
         link_to_scene(templates, allow_nested=True)
+        link_to_scene(terrain, allow_nested=True)
 
         # Note that we do not create the drone template here yet as
         # its size might depend on later takeoff grid parameters
