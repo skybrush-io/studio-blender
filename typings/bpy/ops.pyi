@@ -32,4 +32,6 @@ class export_scene:
         check_existing: bool = True,
         collection: str = "",
         export_format: str = "",
+        export_apply: bool = False,
+        export_yup: bool = True,
     ) -> set[str]: ...

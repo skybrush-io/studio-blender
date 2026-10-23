@@ -21,7 +21,9 @@ def get_terrain_from_context(context: Context) -> Terrain | None:
         no terrain could be gathered.
 
     Raises:
-        RuntimeError on error
+        OSError: when temporary directory cannot be created
+            or terrain file could not be read
+        RuntimeError: on other internal errors specific to terrain export
     """
 
     terrain_collection = Collections.find_terrain(create=False)
@@ -37,6 +39,8 @@ def get_terrain_from_context(context: Context) -> Terrain | None:
             filepath=glb_path.as_posix(),
             collection=terrain_collection.name,
             export_format="GLB",
+            export_apply=True,
+            export_yup=False,
         )
 
         if "FINISHED" not in result:

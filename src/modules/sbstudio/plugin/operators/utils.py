@@ -199,7 +199,7 @@ def export_show_to_file_using_api(
         log.info("Exporting terrain, please wait...")
         try:
             terrain = get_terrain_from_context(context)
-        except RuntimeError as ex:
+        except (OSError, RuntimeError) as ex:
             raise SkybrushStudioExportWarning(
                 "Terrain export failed; no output was generated"
             ) from ex

@@ -215,9 +215,7 @@ class SkybrushStudioAPI(SkybrushStudioBaseAPI):
             try:
                 environment["terrain"] = terrain.as_dict(ndigits=ndigits)
             except Exception as ex:
-                raise SkybrushStudioExportWarning(
-                    f"Could not parse terrain file {terrain.file_path!r}"
-                ) from ex
+                raise SkybrushStudioExportWarning("Could not encode terrain") from ex
 
         if show_location:
             environment["location"] = show_location.json
