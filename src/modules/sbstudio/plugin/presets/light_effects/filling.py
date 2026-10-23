@@ -2,27 +2,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import float32, int32, maximum, pi, sin, zeros
+from numpy import float32
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import formation_index_sine_pulse
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
         LightEffect,
         LightEffectEvaluationContext,
     )
-
-
-def _continuous_filling(
-    fi: NDArray[int32], N: int, frame: int, speed_factor: float, divisor: int
-) -> NDArray[float32]:
-    if N == 0:
-        return zeros(0, dtype=float32)
-    wave_length = maximum(N / divisor, 1e-6)
-    offset = (fi % wave_length) / wave_length
-    return ((sin(frame * 0.1 * speed_factor + offset * 2 * pi) + 1) / 2).astype(float32)
 
 
 @register_preset(
@@ -37,8 +27,7 @@ def clover_fill(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 0.6, 3)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=3, speed=0.23)
 
 
 @register_preset(
@@ -53,8 +42,7 @@ def continuous_filling_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 1.0, 3)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=3, speed=0.38)
 
 
 @register_preset(
@@ -69,8 +57,7 @@ def continuous_filling_1_5(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 1.5, 10)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=10, speed=0.57)
 
 
 @register_preset(
@@ -85,8 +72,7 @@ def continuous_filling_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 2.0, 5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.76)
 
 
 @register_preset(
@@ -101,8 +87,7 @@ def continuous_filling_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 3.0, 5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=1.15)
 
 
 @register_preset(
@@ -117,8 +102,7 @@ def continuous_filling_4(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 4.0, 5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=1.53)
 
 
 @register_preset(
@@ -133,8 +117,7 @@ def continuous_filling_5(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 5.0, 5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=1.91)
 
 
 @register_preset(
@@ -149,5 +132,4 @@ def continuous_filling_stripes(
     *,
     out: NDArray[float32],
 ) -> None:
-    fi = get_formation_indices(context)
-    out[:] = _continuous_filling(fi, len(out), frame, 1.0, 5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.38)

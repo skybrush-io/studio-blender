@@ -151,7 +151,10 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
                 PROXIMITY_WARNING_COLOR,
             )
             blf.position(font_id, left_margin, y, 0)
-            blf.draw(font_id, f"Min distance: {safety_check.min_distance:.2f} m")
+            blf.draw(
+                font_id,
+                f"Min distance: {safety_check.format_float(safety_check.min_distance)} m",
+            )
             y -= line_height
 
         if safety_check.altitude_warning_enabled and safety_check.max_altitude_is_valid:
@@ -163,7 +166,8 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Altitude: {safety_check.min_altitude:.2f} - {safety_check.max_altitude:.2f} m",
+                f"Altitude: {safety_check.format_float(safety_check.min_altitude)} - "
+                f"{safety_check.format_float(safety_check.max_altitude)} m",
             )
             y -= line_height
 
@@ -179,9 +183,9 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
                 font_id,
-                f"Max velocity XY: {safety_check.max_velocity_xy:.1f} m/s | "
-                f"U: {safety_check.max_velocity_z_up:.1f} m/s | "
-                f"D: {safety_check.max_velocity_z_down:.1f} m/s",
+                f"Max velocity XY: {safety_check.format_float(safety_check.max_velocity_xy)} m/s | "
+                f"U: {safety_check.format_float(safety_check.max_velocity_z_up)} m/s | "
+                f"D: {safety_check.format_float(safety_check.max_velocity_z_down)} m/s",
             )
             y -= line_height
 
@@ -196,7 +200,8 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
             )
             blf.position(font_id, left_margin, y, 0)
             blf.draw(
-                font_id, f"Max acceleration: {safety_check.max_acceleration:.1f} m/s/s"
+                font_id,
+                f"Max acceleration: {safety_check.format_float(safety_check.max_acceleration)} m/s/s",
             )
             y -= line_height
 
@@ -207,7 +212,10 @@ class SafetyCheckOverlay(ShaderBatchBasedOverlay):
                 YAW_WARNING_COLOR,
             )
             blf.position(font_id, left_margin, y, 0)
-            blf.draw(font_id, f"Max yaw rate: {safety_check.max_yaw_rate:.1f} deg/s")
+            blf.draw(
+                font_id,
+                f"Max yaw rate: {safety_check.format_float(safety_check.max_yaw_rate)} deg/s",
+            )
             y -= line_height
 
     def _create_shader_batches(self) -> list[GPUBatch]:

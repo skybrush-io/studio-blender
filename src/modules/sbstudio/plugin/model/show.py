@@ -42,7 +42,9 @@ class DroneShowAddonProperties(PropertyGroup):
         description=(
             "Current version of the show content stored in Blender. "
             "Version 1 is the initial version (plugin version <= 3.13.2). "
-            "Version 2 uses a shared material for all drones to speed up light effects."
+            "Version 2 uses a shared material for all drones to speed up light effects. "
+            "Version 3 stores light effect presets by stable string identifiers "
+            "instead of indices (plugin version > 5.0.4)."
         ),
         min=1,
         default=1,

@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import arctan2, degrees, float32, where
+from numpy import arctan2, bool_, degrees, float32, where, zeros
 from numpy.typing import NDArray
 
 from .base import register_preset
-from .utils import get_formation_indices
+from .utils import (
+    get_centered_positions,
+    get_formation_index_span,
+    get_formation_indices,
+    get_time,
+)
 
 if TYPE_CHECKING:
     from sbstudio.plugin.model.light_effects import (
@@ -16,21 +21,41 @@ if TYPE_CHECKING:
 
 
 def _get_fan_phase_and_width(
-    positions: NDArray[float32], cx: float, cy: float, n: int
+    context: LightEffectEvaluationContext,
 ) -> tuple[NDArray[float32], float]:
-    dx = positions[:, 0] - cx
-    dy = positions[:, 1] - cy
-    angles = degrees(arctan2(dy, dx)) % 360
-    span = 360.0 / n
-    half_span = span / 2
+    """Returns the angle of each drone around the swarm center in degrees, and half of
+    the angular width that a single drone occupies in the fan.
+
+    Returns an empty array and a zero width if there are no drones.
+    """
+    centered = get_centered_positions(context)
+    n = len(centered)
+    if n == 0:
+        return zeros(0, dtype=float32), 0.0
+    angles = degrees(arctan2(centered[:, 1], centered[:, 0])) % 360
+    half_span = 180.0 / n
     return angles, half_span
 
 
 def _is_in_fan(
     angles: NDArray[float32], center: float, half_span: float
-) -> NDArray[float32]:
+) -> NDArray[bool_]:
+    """Returns which drones fall within a fan starting at ``center``.
+
+    The fan is one-sided: it starts at ``center`` and extends ``2 * half_span`` degrees
+    counterclockwise, so it is not symmetric around ``center``; a drone just clockwise
+    of ``center`` is outside the fan.
+
+    Args:
+        angles: per-drone angle around the swarm center, in degrees, in [0, 360)
+        center: angle at which the fan starts (its counterclockwise edge), in degrees
+        half_span: half of the angular width of the fan, in degrees
+
+    Returns:
+        whether each drone falls within the fan.
+    """
     diff = (angles - center) % 360
-    return (diff >= 0) & (diff <= 2 * half_span)
+    return diff <= 2 * half_span
 
 
 @register_preset(
@@ -45,14 +70,9 @@ def radar_scan(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
+    angles, half_span = _get_fan_phase_and_width(context)
     indices = get_formation_indices(context)
-    center_angle = (frame * 2) % 360
+    center_angle = (get_time(context, frame) * 48) % 360
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         (indices % 2 + 0.5).astype(float32),
@@ -72,17 +92,13 @@ def radar_scan_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
-    center_angle = (-frame * 2) % 360
+    angles, half_span = _get_fan_phase_and_width(context)
+    center_angle = (-get_time(context, frame) * 48) % 360
+    fi = get_formation_indices(context)
+    half = get_formation_index_span(fi) // 2
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
-        (n // 2 - abs(get_formation_indices(context) - n // 2)).astype(float32)
-        / (n // 2),
+        (half - abs(fi - half)).astype(float32) / max(half, 1),
         0.0,
     )
 
@@ -99,13 +115,8 @@ def radar_scan_3(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
-    center_angle = (frame * 2) % 360
+    angles, half_span = _get_fan_phase_and_width(context)
+    center_angle = (get_time(context, frame) * 48) % 360
     fi = get_formation_indices(context)
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
@@ -126,13 +137,8 @@ def radar_scan_4(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
-    center_angle = (frame * 3) % 360
+    angles, half_span = _get_fan_phase_and_width(context)
+    center_angle = (get_time(context, frame) * 72) % 360
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         0.8,
@@ -152,13 +158,8 @@ def radar_scan_5(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    angles, half_span = _get_fan_phase_and_width(pos, cx, cy, n)
-    center_angle = (-frame * 3) % 360
+    angles, half_span = _get_fan_phase_and_width(context)
+    center_angle = (-get_time(context, frame) * 72) % 360
     out[:] = where(
         _is_in_fan(angles, center_angle, half_span),
         0.8,
@@ -178,13 +179,8 @@ def continuous_radar_scan_test(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    pos = context.positions.as_array
-    cx, cy, _ = context.swarm_center
-    angles, _ = _get_fan_phase_and_width(pos, cx, cy, n)
-    center_angle = (frame * 2) % 360
+    angles, _ = _get_fan_phase_and_width(context)
+    center_angle = (get_time(context, frame) * 48) % 360
     diff = ((angles - center_angle + 180) % 360) - 180
     brightness = (1 - abs(diff / 30)).clip(0, 1)
     out[:] = brightness.astype(float32)
@@ -202,13 +198,10 @@ def paint_on_test_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
     fi = get_formation_indices(context)
-    total_drones = n
-    progress = frame / 100
-    active_count = int(total_drones * min(progress, 1))
+    span = get_formation_index_span(fi)
+    progress = get_time(context, frame) * 0.24
+    active_count = int(span * min(progress, 1))
     out[:] = where(fi < active_count, 1.0, 0.0)
 
 
@@ -224,35 +217,8 @@ def paint_on_test_2(
     *,
     out: NDArray[float32],
 ) -> None:
-    n = len(out)
-    if n == 0:
-        return
     fi = get_formation_indices(context)
-    total_drones = n
-    progress = frame / 100
-    active_count = int(total_drones * min(progress, 1))
+    span = get_formation_index_span(fi)
+    progress = get_time(context, frame) * 0.24
+    active_count = int(span * min(progress, 1))
     out[:] = where(fi < active_count, (fi % 3 + 1) / 3.0, 0.0)
-
-
-@register_preset(
-    id="paint_on_test_3",
-    label="Paint on Test 3",
-    translations=(("zh", "飞入测试3"), ("ja", "ペイントオンテスト3")),
-)
-def paint_on_test_3(
-    effect: LightEffect,
-    context: LightEffectEvaluationContext,
-    frame: int,
-    *,
-    out: NDArray[float32],
-) -> None:
-    n = len(out)
-    if n == 0:
-        return
-    fi = get_formation_indices(context)
-    total_drones = n
-    out[:] = where(
-        fi < int(total_drones * min(frame / 100, 1)),
-        (2 - abs(fi - total_drones // 2) / (total_drones // 2)).clip(0, 1),
-        0.0,
-    )

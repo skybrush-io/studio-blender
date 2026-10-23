@@ -21,6 +21,9 @@ class Limits:
     features: list[str] = field(default_factory=list)
     """List of feature tags returned by the server."""
 
+    timeout: float | None = None
+    """Request timeout in seconds."""
+
     @classmethod
     def default(cls):
         """Returns a limits object to be used at startup."""
@@ -50,7 +53,15 @@ class Limits:
         else:
             raise TypeError("invalid type for features")
 
-        return cls(num_drones=num_drones, features=sorted(set(features)))
+        timeout = obj.get("timeout")
+        if timeout is None or isinstance(timeout, (int, float)):
+            timeout = float(timeout) if timeout is not None else None
+        else:
+            raise TypeError("invalid type for timeout")
+
+        return cls(
+            num_drones=num_drones, features=sorted(set(features)), timeout=timeout
+        )
 
 
 @dataclass
