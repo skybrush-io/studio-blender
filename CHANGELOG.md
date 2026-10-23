@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   presets is unchanged apart from the fixes listed below. See
   [#85](https://github.com/skybrush-io/studio-blender/pull/85) for more details.
 
+- Light effect presets keep their temporal speed in wall-clock time now: when
+  the render FPS of the scene changes, time-based patterns (waves, sweeps,
+  radar scans) advance the same number of cycles per second, only sampled at
+  frame boundaries. Their parameters use explicit units (seconds on the time
+  axis, cycles for phase, wave cycles per unit distance for spatial
+  frequencies, degrees per second for the radar fan rotation); the small
+  re-tuning this required changes the output of some presets by less than 1%.
+
 ### Fixed
 
 - Fixed the `lightfx_4` light effect preset being scaled down to half brightness;

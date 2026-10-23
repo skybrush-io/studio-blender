@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import tau
 from typing import TYPE_CHECKING
 
 from numpy import float32
@@ -11,6 +10,7 @@ from .utils import (
     formation_index_phase,
     formation_index_sine_pulse,
     get_formation_indices,
+    get_time,
 )
 from .waveforms import sine_wave, triangle_wave
 
@@ -33,9 +33,7 @@ def lightfx_0(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(
-        context, frame, divisor=25, speed=0.13, span=1.5
-    )
+    out[:] = formation_index_sine_pulse(context, frame, divisor=25, speed=0.5, span=1.5)
 
 
 @register_preset(
@@ -50,7 +48,7 @@ def lightfx_1(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.13, span=1.5)
+    out[:] = formation_index_sine_pulse(context, frame, divisor=5, speed=0.5, span=1.5)
 
 
 @register_preset(
@@ -67,7 +65,7 @@ def lightfx_4(
 ) -> None:
     fi = get_formation_indices(context)
     is_odd = fi % 2
-    out[:] = sine_wave(frame * 0.2 / tau + is_odd / 2)
+    out[:] = sine_wave(get_time(context, frame) * 0.76 + is_odd / 2)
 
 
 @register_preset(
@@ -82,7 +80,9 @@ def lightfx_6(
     *,
     out: NDArray[float32],
 ) -> None:
-    out[:] = formation_index_phase(context, frame, wave_length=50).astype(float32)
+    out[:] = formation_index_phase(context, frame, wave_length=50, speed=0.48).astype(
+        float32
+    )
 
 
 @register_preset(
@@ -97,7 +97,7 @@ def lightfx_7(
     *,
     out: NDArray[float32],
 ) -> None:
-    v = formation_index_phase(context, frame, wave_length=400)
+    v = formation_index_phase(context, frame, wave_length=400, speed=0.06)
     out[:] = triangle_wave(v)
 
 
@@ -114,5 +114,5 @@ def lightfx_8(
     out: NDArray[float32],
 ) -> None:
     out[:] = formation_index_sine_pulse(
-        context, frame, divisor=1, speed=-0.02, span=0.75
+        context, frame, divisor=1, speed=-0.0764, span=0.75
     )
