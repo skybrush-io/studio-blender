@@ -27,6 +27,7 @@ class _SceneState:
 _states: dict[int, _SceneState] = {}
 _scanning = False
 _draw_handle = None
+_PLAYBACK_CHECK_INTERVAL = 5
 _WARNING_COLORS = {
     "proximity": (1.0, 0.15, 0.15, 0.9),
     "altitude": (1.0, 0.45, 0.1, 0.9),
@@ -91,7 +92,14 @@ def _redraw():
                 area.tag_redraw()
 
 
-def _update(scene, depsgraph):
+def _is_playing(scene):
+    return any(
+        window.scene == scene and window.screen.is_animation_playing
+        for window in bpy.context.window_manager.windows
+    )
+
+
+def _update(scene, depsgraph, *, force=False):
     if _scanning or not hasattr(scene, "drones_anim_safety"):
         return
     state = _states.setdefault(scene.as_pointer(), _SceneState())
@@ -110,6 +118,14 @@ def _update(scene, depsgraph):
             history.clear()
         history.append(snapshot)
         del history[:-3]
+    if (
+        not force
+        and _is_playing(scene)
+        and state.result is not None
+        and abs(snapshot.frame - state.result.frame) < _PLAYBACK_CHECK_INTERVAL
+    ):
+        _redraw()
+        return
     fps = scene.render.fps / scene.render.fps_base
     state.result = evaluate_frame(
         snapshot,
@@ -127,6 +143,11 @@ def _on_scene_update(scene, depsgraph):
 
 
 @persistent
+def _on_playback_stopped(scene, depsgraph):
+    _update(scene, depsgraph, force=True)
+
+
+@persistent
 def _on_load(_unused):
     _states.clear()
     _redraw()
@@ -134,7 +155,7 @@ def _on_load(_unused):
 
 def _settings_changed(self, context):
     if context is not None and context.scene is not None:
-        _update(context.scene, context.evaluated_depsgraph_get())
+        _update(context.scene, context.evaluated_depsgraph_get(), force=True)
 
 
 def _display_changed(self, context):
@@ -354,11 +375,7 @@ def _draw_warnings():
     if not props.enabled:
         return
     state = _states.get(scene.as_pointer())
-    result = (
-        state.result
-        if state and state.result and state.result.frame == scene.frame_current
-        else None
-    )
+    result = state.result if state else None
     messages = warning_messages(result, _limits(props)) if result else []
     if props.validation_summary:
         messages.append((None, "区间检查:"))
@@ -459,6 +476,8 @@ def register():
     for handler in (bpy.app.handlers.frame_change_post, bpy.app.handlers.depsgraph_update_post):
         if _on_scene_update not in handler:
             handler.append(_on_scene_update)
+    if _on_playback_stopped not in bpy.app.handlers.animation_playback_post:
+        bpy.app.handlers.animation_playback_post.append(_on_playback_stopped)
     if _on_load not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(_on_load)
     if _draw_handle is None:
@@ -472,6 +491,8 @@ def unregister():
     for handler in (bpy.app.handlers.frame_change_post, bpy.app.handlers.depsgraph_update_post):
         if _on_scene_update in handler:
             handler.remove(_on_scene_update)
+    if _on_playback_stopped in bpy.app.handlers.animation_playback_post:
+        bpy.app.handlers.animation_playback_post.remove(_on_playback_stopped)
     if _on_load in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.remove(_on_load)
     if _draw_handle is not None:

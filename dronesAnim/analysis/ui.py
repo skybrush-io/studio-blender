@@ -34,13 +34,24 @@ def _settings_changed(self, context):
     _redraw()
 
 
+def _has_drones(scene):
+    """Check button availability without collecting or sorting every drone."""
+    collection = bpy.data.collections.get("Drones")
+    return (
+        collection is not None
+        and collection in scene.collection.children_recursive
+        and any(obj.type == "MESH" for obj in collection.all_objects)
+    )
+
+
 def _drones(scene):
     """Collect scene drones in natural name order."""
     collection = bpy.data.collections.get("Drones")
     if collection is None or collection not in scene.collection.children_recursive:
         return []
+    # All objects in a scene-linked collection already belong to that scene.
     objects = [obj for obj in collection.all_objects
-               if obj.type == "MESH" and obj.name in scene.objects]
+               if obj.type == "MESH"]
     objects.sort(key=lambda obj: [(1, int(part)) if part.isdigit() else (0, part.casefold())
                                   for part in re.split(r"(\d+)", obj.name)])
     return objects
@@ -81,7 +92,7 @@ class DroneMotionCalculateOperator(Operator):
     @classmethod
     def poll(cls, context):
         """Allow calculation when drones exist and no job is running."""
-        return context.scene is not None and not _jobs and bool(_drones(context.scene))
+        return context.scene is not None and not _jobs and _has_drones(context.scene)
 
     def _start(self, context):
         """Save a scene snapshot and launch the worker."""

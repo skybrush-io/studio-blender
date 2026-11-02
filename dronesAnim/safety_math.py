@@ -1,7 +1,9 @@
 """Frame-level drone safety calculations without Blender dependencies."""
 
 from dataclasses import dataclass, field
-from math import atan2, degrees, hypot, sin, cos
+from math import atan2, cos, degrees, hypot, sin
+
+from .nearest_neighbors import find_proximity_pairs
 
 Point = tuple[float, float, float]
 
@@ -97,25 +99,25 @@ def evaluate_frame(
         or point[2] >= limits.min_navigation_altitude
     ]
     candidates.sort(key=lambda item: item[1][0])
-    best_sq = float("inf")
     threshold_sq = limits.proximity**2 if limits.proximity_enabled else 0.0
-    for i, (name, point) in enumerate(candidates):
-        for j in range(i + 1, len(candidates)):
-            other_name, other = candidates[j]
-            dx = other[0] - point[0]
-            # Keep searching past the closest pair to collect every warning pair.
-            if dx * dx > best_sq and (not all_pairs or dx * dx >= threshold_sq):
-                break
-            distance_sq = sum((other[k] - point[k]) ** 2 for k in range(3))
-            if distance_sq < best_sq:
-                best_sq = distance_sq
-                result.closest_pair = (name, other_name)
-            if all_pairs and distance_sq < threshold_sq:
-                result.close_pairs.append((name, other_name))
-    if result.closest_pair is not None:
-        result.min_distance = best_sq**0.5
+    closest, result.min_distance, close_pairs = find_proximity_pairs(
+        [point for _, point in candidates],
+        abs(limits.proximity) if limits.proximity_enabled else 0.0,
+        all_pairs=all_pairs,
+    )
+    if closest is not None:
+        first, second = sorted(closest)
+        result.closest_pair = (candidates[first][0], candidates[second][0])
+        best_sq = sum(
+            (candidates[first][1][i] - candidates[second][1][i]) ** 2
+            for i in range(3)
+        )
         if limits.proximity_enabled and best_sq < threshold_sq:
             result.warnings["proximity"] = set(result.closest_pair)
+    result.close_pairs = [
+        (candidates[first][0], candidates[second][0])
+        for first, second in close_pairs
+    ]
     if result.close_pairs:
         result.warnings["proximity"] = {
             name for pair in result.close_pairs for name in pair
