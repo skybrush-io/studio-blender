@@ -70,7 +70,7 @@ class SkybrushViewerBridge:
             request = Request(url_and_path, *args, **kwds)
 
             try:
-                with urlopen(request) as response:
+                with urlopen(request, timeout=30) as response:
                     result = load(response)
                     if isinstance(result, dict):
                         return result
