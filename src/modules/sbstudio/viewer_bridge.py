@@ -2,14 +2,17 @@
 current machine and for posting data to it.
 """
 
+import ipaddress
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from errno import ECONNREFUSED, ENETUNREACH
-from json import load
+from json import loads
 from socket import (
     AF_INET,
     IPPROTO_UDP,
     SOCK_DGRAM,
+    getaddrinfo,
+    getdefaulttimeout,
     socket,
 )
 from socket import (
@@ -17,9 +20,81 @@ from socket import (
 )
 from time import monotonic
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 __all__ = ("SkybrushViewerBridge",)
+
+
+_VIEWER_TIMEOUT = 30
+"""Maximum number of seconds to wait for a response from Skybrush Viewer."""
+
+_ALLOWED_VIEWER_NETWORKS = (
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+)
+"""Networks a Skybrush Viewer URL may point to; the Viewer runs locally."""
+
+
+def _effective_timeout() -> float:
+    """Returns the per-request timeout, honoring a shorter socket default."""
+    default_timeout = getdefaulttimeout()
+    if default_timeout is None or default_timeout > _VIEWER_TIMEOUT:
+        return _VIEWER_TIMEOUT
+    return default_timeout
+
+
+def _is_allowed_viewer_url(url: str) -> bool:
+    """Returns whether the given URL may be a Skybrush Viewer address.
+
+    Only plain HTTP URLs pointing to a loopback or private (RFC 1918) address
+    are accepted, so a rogue discovery response cannot redirect requests to a
+    public host or a cloud metadata endpoint.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme != "http" or not parsed.hostname:
+        return False
+    try:
+        addresses = [ipaddress.ip_address(parsed.hostname)]
+    except ValueError:
+        try:
+            addresses = [
+                ipaddress.ip_address(info[4][0])
+                for info in getaddrinfo(parsed.hostname, None)
+            ]
+        except Exception:
+            return False
+    return bool(addresses) and all(
+        any(
+            address.version == network.version and address in network
+            for network in _ALLOWED_VIEWER_NETWORKS
+        )
+        for address in addresses
+    )
+
+
+def _load_json_with_deadline(response, timeout: float):
+    """Reads and parses a JSON response, enforcing an overall deadline.
+
+    The per-operation socket timeout alone does not bound the total time: a
+    response trickling in slowly could keep the read going indefinitely. This
+    reads the body a single recv at a time and stops as soon as the overall
+    deadline passes.
+    """
+    deadline = monotonic() + timeout
+    read = getattr(response, "read1", response.read)
+    chunks = []
+    while True:
+        if monotonic() > deadline:
+            raise SocketTimeoutError("timed out")
+        chunk = read(8192)
+        if not chunk:
+            break
+        chunks.append(chunk)
+    return loads(b"".join(chunks))
 
 
 class SkybrushViewerError(RuntimeError):
@@ -55,6 +130,7 @@ class SkybrushViewerBridge:
                 the Skybrush Viewer instance is not running
         """
         force = False
+        timed_out_url = None
 
         while True:
             url = self._discovery.discover(force=force)
@@ -67,11 +143,23 @@ class SkybrushViewerBridge:
                 path = path[1:]
             url_and_path = f"{url}/api/v1/{path}"
 
+            if not _is_allowed_viewer_url(url_and_path):
+                self._discovery.invalidate()
+                raise SkybrushViewerError("Skybrush Viewer URL is not a local address")
+
+            if timed_out_url is not None and url.rstrip("/") == timed_out_url:
+                # rediscovery found the same URL that just timed out, so there
+                # is no different Viewer to retry against
+                raise SkybrushViewerError(
+                    "Timed out while waiting for Skybrush Viewer to respond"
+                )
+
             request = Request(url_and_path, *args, **kwds)
+            timeout = _effective_timeout()
 
             try:
-                with urlopen(request, timeout=30) as response:
-                    result = load(response)
+                with urlopen(request, timeout=timeout) as response:
+                    result = _load_json_with_deadline(response, timeout)
                     if isinstance(result, dict):
                         return result
                     else:
@@ -80,9 +168,14 @@ class SkybrushViewerBridge:
                         )
 
             except SocketTimeoutError:
-                raise SkybrushViewerError(
-                    "Timed out while waiting for Skybrush Viewer to respond"
-                ) from None
+                if force:
+                    raise SkybrushViewerError(
+                        "Timed out while waiting for Skybrush Viewer to respond"
+                    ) from None
+                # the Viewer may have moved; retry once, but only against a
+                # different URL (checked at the top of the loop)
+                timed_out_url = url.rstrip("/")
+                pass
 
             except HTTPError as err:
                 # unrecoverable error; we invalidate the cached URL but we
