@@ -79,6 +79,11 @@ class SkybrushViewerBridge:
                             "Invalid response received from Skybrush Viewer"
                         )
 
+            except SocketTimeoutError:
+                raise SkybrushViewerError(
+                    "Timed out while waiting for Skybrush Viewer to respond"
+                ) from None
+
             except HTTPError as err:
                 # unrecoverable error; we invalidate the cached URL but we
                 # don't try again
