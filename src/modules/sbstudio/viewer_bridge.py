@@ -2,6 +2,7 @@
 current machine and for posting data to it.
 """
 
+import http.client
 import ipaddress
 import threading
 from datetime import datetime
@@ -11,6 +12,7 @@ from json import loads
 from socket import (
     AF_INET,
     IPPROTO_UDP,
+    SHUT_RDWR,
     SOCK_DGRAM,
     getaddrinfo,
     getdefaulttimeout,
@@ -22,7 +24,12 @@ from socket import (
 from time import monotonic
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import HTTPRedirectHandler, Request, build_opener
+from urllib.request import (
+    HTTPHandler,
+    HTTPRedirectHandler,
+    Request,
+    build_opener,
+)
 
 __all__ = ("SkybrushViewerBridge",)
 
@@ -143,22 +150,88 @@ class _ViewerRedirectHandler(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+class _ConnectionTracker:
+    """Tracks live Viewer connections so a timed-out open can stop them.
+
+    Closing a socket from another thread does not unblock a blocked recv(),
+    so the socket is shut down first, which makes the blocked read return.
+    """
+
+    def __init__(self):
+        """Constructor."""
+        self._connections = []
+        self._lock = threading.Lock()
+
+    def add(self, connection) -> None:
+        """Records a connection that may need to be stopped on timeout."""
+        with self._lock:
+            self._connections.append(connection)
+
+    def close_all(self) -> None:
+        """Shuts down and closes every tracked connection."""
+        with self._lock:
+            connections, self._connections = self._connections, []
+        for connection in connections:
+            sock = getattr(connection, "sock", None)
+            if sock is not None:
+                try:
+                    sock.shutdown(SHUT_RDWR)
+                except OSError:
+                    pass
+            try:
+                connection.close()
+            except Exception:
+                pass
+
+
+class _TrackedHTTPConnection(http.client.HTTPConnection):
+    """An HTTP connection that registers itself so it can be stopped."""
+
+    def __init__(self, *args, tracker=None, **kwargs):
+        """Constructor."""
+        super().__init__(*args, **kwargs)
+        self._tracker = tracker
+
+    def connect(self):
+        """Connects, then records the connection for timeout cancellation."""
+        super().connect()
+        if self._tracker is not None:
+            self._tracker.add(self)
+
+
+class _TrackedHTTPHandler(HTTPHandler):
+    """An HTTP handler whose connections can be stopped on timeout."""
+
+    def __init__(self, tracker):
+        """Constructor."""
+        super().__init__()
+        self._tracker = tracker
+
+    def http_open(self, req):
+        """Opens the request over a tracked connection."""
+        return self.do_open(_TrackedHTTPConnection, req, tracker=self._tracker)
+
+
 def _open_viewer_request(request, deadline: float):
     """Opens a Viewer request, bounding connect and header reads by `deadline`.
 
     urlopen reads the response headers inside the call, so a slow Viewer could
     keep the caller waiting past the per-operation socket timeout by trickling
-    header bytes. The open runs in a daemon thread that is abandoned on timeout.
+    header bytes. The open runs in a daemon thread; on timeout the tracked
+    connection is shut down so the blocked read unblocks and no thread, socket
+    or late payload is left behind.
     """
     timeout = max(0.0, deadline - monotonic())
     outcome = []
+    tracker = _ConnectionTracker()
 
     def _open():
         """Opens the request in a daemon thread, capturing the outcome."""
         try:
-            outcome.append(
-                build_opener(_ViewerRedirectHandler()).open(request, timeout=timeout)
+            opener = build_opener(
+                _ViewerRedirectHandler(), _TrackedHTTPHandler(tracker)
             )
+            outcome.append(opener.open(request, timeout=timeout))
         except BaseException as ex:
             outcome.append(ex)
 
@@ -166,6 +239,9 @@ def _open_viewer_request(request, deadline: float):
     thread.start()
     thread.join(timeout)
     if not outcome:
+        # Deadline expired: stop the underlying connection so the blocked
+        # open unblocks instead of lingering in the daemon thread.
+        tracker.close_all()
         raise SocketTimeoutError("timed out")
     if isinstance(outcome[0], BaseException):
         raise outcome[0]
@@ -194,17 +270,21 @@ class SkybrushViewerBridge:
         """
         force = False
         timed_out_url = None
+        stale_url = None
 
         while True:
             # On retry, only drop the cached URL if it is still the one that
-            # timed out; a newer validation may have cached a different URL
-            # since, and a stale worker must not discard it.
+            # failed; a newer validation may have cached a different URL
+            # since, and a stale worker must not discard it. The raw URL is
+            # used here because the cache holds the SSDP LOCATION verbatim,
+            # while the same-URL check below compares normalized URLs.
             url = self._discovery.discover(
-                force=force, expected_url=timed_out_url if force else None
+                force=force, expected_url=stale_url if force else None
             )
             if url is None:
                 raise SkybrushViewerNotFoundError()
 
+            raw_url = url
             if url.endswith("/"):
                 url = url[:-1]
             if path.startswith("/"):
@@ -212,7 +292,7 @@ class SkybrushViewerBridge:
             url_and_path = f"{url}/api/v1/{path}"
 
             if not _is_allowed_viewer_url(url_and_path):
-                self._discovery.invalidate()
+                self._discovery.invalidate(raw_url)
                 raise SkybrushViewerError("Skybrush Viewer URL is not a local address")
 
             if timed_out_url is not None and url.rstrip("/") == timed_out_url:
@@ -246,19 +326,20 @@ class SkybrushViewerBridge:
                 # the Viewer may have moved; retry once, but only against a
                 # different URL (checked at the top of the loop)
                 timed_out_url = url.rstrip("/")
+                stale_url = raw_url
                 pass
 
             except HTTPError as err:
                 # unrecoverable error; we invalidate the cached URL but we
                 # don't try again
-                self._discovery.invalidate(url)
+                self._discovery.invalidate(raw_url)
                 if err.code >= 500:
                     raise SkybrushViewerError(
                         "Skybrush Viewer indicated an unexpected error"
                     ) from None
                 elif err.code == 404:
                     # Not found
-                    self._discovery.invalidate(url)
+                    self._discovery.invalidate(raw_url)
                     raise SkybrushViewerNotFoundError() from None
                 elif err.code == 400:
                     # Bad request
@@ -277,19 +358,22 @@ class SkybrushViewerBridge:
                             "Timed out while waiting for Skybrush Viewer to respond"
                         ) from None
                     timed_out_url = url.rstrip("/")
+                    stale_url = raw_url
                 elif err.reason and getattr(err.reason, "errno", None) == ECONNREFUSED:
-                    # try again
+                    # try again, but only drop the URL that refused; a newer
+                    # validation may have cached a different URL since
+                    stale_url = raw_url
                     pass
                 else:
                     # unrecoverable error; we invalidate the cached URL but we
                     # don't try again
-                    self._discovery.invalidate(url)
+                    self._discovery.invalidate(raw_url)
                     raise
 
             except Exception:
                 # unrecoverable error; we invalidate the cached URL but we
                 # don't try again
-                self._discovery.invalidate(url)
+                self._discovery.invalidate(raw_url)
                 raise
 
             if force:

@@ -7,6 +7,7 @@ stubbed bpy and stubbed sibling modules; the real viewer_bridge is used.
 import importlib.util
 import sys
 import threading
+import time
 import types
 from pathlib import Path
 from unittest import mock
@@ -17,6 +18,7 @@ SRC = Path(__file__).resolve().parent.parent / "src" / "modules"
 
 
 def _load_module(name, path):
+    """Loads a module from a file path."""
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
@@ -25,6 +27,7 @@ def _load_module(name, path):
 
 
 def _stub(name, **attrs):
+    """Creates a stub module with the given attributes."""
     module = types.ModuleType(name)
     for key, value in attrs.items():
         setattr(module, key, value)
@@ -34,6 +37,7 @@ def _stub(name, **attrs):
 
 @pytest.fixture(scope="module")
 def operator_module():
+    """Loads the operator module with stubbed bpy and siblings."""
     names = [
         "bpy",
         "bpy.props",
@@ -62,7 +66,10 @@ def operator_module():
     bpy.data = types.SimpleNamespace(filepath="")
 
     class FakeOperator:
+        """A minimal stand-in for bpy.types.Operator."""
+
         def report(self, level, message):
+            """Records the reported level and message."""
             self._reported = (level, message)
 
     bpy_props = _stub("bpy.props", BoolProperty=lambda **kw: None)
@@ -128,10 +135,12 @@ def operator_module():
 
 
 def _operator(operator_module):
+    """Builds a fresh operator instance."""
     return operator_module.ValidateTrajectoriesOperator()
 
 
 def test_background_load_success(operator_module):
+    """A successful load reports FINISHED."""
     op = _operator(operator_module)
     with mock.patch.object(operator_module.skybrush_viewer, "load_show_for_validation"):
         op._load_show_in_background(b"data", filename=None)
@@ -140,6 +149,7 @@ def test_background_load_success(operator_module):
 
 
 def test_background_load_not_found(operator_module):
+    """A missing Viewer reports CANCELLED with a not-running message."""
     op = _operator(operator_module)
     from sbstudio.viewer_bridge import SkybrushViewerNotFoundError
 
@@ -154,6 +164,7 @@ def test_background_load_not_found(operator_module):
 
 
 def test_background_load_viewer_error(operator_module):
+    """A Viewer error reports CANCELLED with its message."""
     op = _operator(operator_module)
     from sbstudio.viewer_bridge import SkybrushViewerError
 
@@ -167,6 +178,7 @@ def test_background_load_viewer_error(operator_module):
 
 
 def test_modal_reports_when_thread_finishes(operator_module):
+    """modal() reports the outcome once the thread is done."""
     op = _operator(operator_module)
     op._load_outcome = ("FINISHED", "Now switch to the Skybrush Viewer window")
     op._load_thread = threading.Thread(target=lambda: None)
@@ -182,6 +194,7 @@ def test_modal_reports_when_thread_finishes(operator_module):
 
 
 def test_modal_esc_cancels(operator_module):
+    """ESC cancels the load and removes the timer."""
     op = _operator(operator_module)
     op._load_outcome = None
     op._load_thread = threading.Thread(target=lambda: None)
@@ -196,6 +209,7 @@ def test_modal_esc_cancels(operator_module):
 
 
 def test_modal_passes_through_unhandled_events(operator_module):
+    """Unhandled events pass through while the load runs."""
     op = _operator(operator_module)
     op._load_thread = threading.Thread(target=lambda: None)
     op._load_timer = object()
@@ -207,6 +221,7 @@ def test_modal_passes_through_unhandled_events(operator_module):
 
 
 def test_background_load_skipped_when_cancelled(operator_module):
+    """A cancelled load never sends the show."""
     op = _operator(operator_module)
     op._cancelled = threading.Event()
     op._cancelled.set()
@@ -218,7 +233,13 @@ def test_background_load_skipped_when_cancelled(operator_module):
     assert op._load_outcome[0] == "CANCELLED"
 
 
-def _execute(operator_module, window):
+def _execute(operator_module, window, load_blocker=None):
+    """Runs execute() with a mocked Viewer load.
+
+    When load_blocker is given, the mocked load waits on it, so the test can
+    assert execute() returns while the load is still blocked. The wait is
+    bounded so a stuck load cannot hang the suite.
+    """
     op = _operator(operator_module)
     context = mock.Mock()
     context.window = window
@@ -254,16 +275,40 @@ def _execute(operator_module, window):
             operator_module.skybrush_viewer, "load_show_for_validation"
         ) as load,
     ):
+        if load_blocker is not None:
+
+            def _blocked_load(*args, **kwargs):
+                """Blocks until the test releases it."""
+                load_blocker.wait(timeout=5)
+
+            load.side_effect = _blocked_load
         result = op.execute(context)
         if window is not None:
-            op._load_thread.join(timeout=5)
+            if load_blocker is not None:
+                # Wait (bounded) for the background thread to reach the load
+                # while the patch is still active, so the load stays mocked.
+                deadline = time.monotonic() + 2
+                while load.call_count == 0 and time.monotonic() < deadline:
+                    time.sleep(0.01)
+            else:
+                op._load_thread.join(timeout=5)
     return op, context, load, result
 
 
 def test_execute_starts_background_load_and_returns_running_modal(operator_module):
+    """execute() returns RUNNING_MODAL while the load is still blocked."""
     window = mock.Mock()
-    op, context, load, result = _execute(operator_module, window)
-    assert result == {"RUNNING_MODAL"}
+    blocker = threading.Event()
+    op, context, load, result = _execute(operator_module, window, load_blocker=blocker)
+    try:
+        assert result == {"RUNNING_MODAL"}
+        assert load.call_count == 1
+        assert op._load_thread.is_alive()
+        assert op._load_outcome is None
+    finally:
+        blocker.set()
+    op._load_thread.join(timeout=5)
+    assert not op._load_thread.is_alive()
     context.window_manager.event_timer_add.assert_called_once_with(0.1, window=window)
     context.window_manager.modal_handler_add.assert_called_once_with(op)
     load.assert_called_once_with(b"show", filename=None)
@@ -271,6 +316,7 @@ def test_execute_starts_background_load_and_returns_running_modal(operator_modul
 
 
 def test_execute_without_window_runs_synchronously(operator_module):
+    """Without a window the load runs synchronously."""
     op, context, load, result = _execute(operator_module, None)
     assert result == {"FINISHED"}
     assert op._reported == (
