@@ -1,3 +1,5 @@
+import threading
+
 import bpy
 from bpy.props import BoolProperty
 from bpy.types import Context, Operator
@@ -130,24 +132,52 @@ class ValidateTrajectoriesOperator(Operator):
 
         assert show_data is not None
 
+        # Send the show to the Viewer in a background thread so the Blender UI
+        # stays responsive while the request is in flight.
+        self._load_outcome = None
+        self._load_thread = threading.Thread(
+            target=self._load_show_in_background,
+            args=(show_data, filename),
+            daemon=True,
+        )
+        self._load_thread.start()
+        self._load_timer = context.window_manager.event_timer_add(
+            0.1, window=context.window
+        )
+        context.window_manager.modal_handler_add(self)
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context: Context, event):
+        if event.type == "TIMER":
+            if not self._load_thread.is_alive():
+                context.window_manager.event_timer_remove(self._load_timer)
+                status, message = self._load_outcome
+                self.report({"INFO"} if status == "FINISHED" else {"ERROR"}, message)
+                return {status}
+        elif event.type == "ESC":
+            context.window_manager.event_timer_remove(self._load_timer)
+            return {"CANCELLED"}
+        return {"RUNNING_MODAL"}
+
+    def _load_show_in_background(self, show_data: bytes, filename):
         try:
             skybrush_viewer.load_show_for_validation(show_data, filename=filename)
-            self.report(
-                {"INFO"},
+            self._load_outcome = (
+                "FINISHED",
                 "Now switch to the Skybrush Viewer window to view the results",
             )
-            return {"FINISHED"}
         except SkybrushViewerNotFoundError:
-            self.report(
-                {"ERROR"},
+            self._load_outcome = (
+                "CANCELLED",
                 "Skybrush Viewer is not running; please start it and try again",
             )
         except SkybrushViewerError as ex:
-            self.report({"ERROR"}, str(ex))
+            self._load_outcome = ("CANCELLED", str(ex))
         except Exception:
-            self.report({"ERROR"}, "Error while sending show data to Skybrush Viewer")
-
-        return {"CANCELLED"}
+            self._load_outcome = (
+                "CANCELLED",
+                "Error while sending show data to Skybrush Viewer",
+            )
 
     def invoke(self, context: Context, event):
         return context.window_manager.invoke_props_dialog(self)
