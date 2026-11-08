@@ -5,7 +5,7 @@ import time
 from io import BytesIO
 from socket import timeout as SocketTimeoutError
 from unittest import mock
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request
 
 import pytest
@@ -20,7 +20,7 @@ def _bridge(urls):
     bridge = SkybrushViewerBridge()
     urls = list(urls)
 
-    def _discover(force=False):
+    def _discover(force=False, expected_url=None):
         if len(urls) > 1:
             return urls.pop(0)
         return urls[0]
@@ -38,13 +38,16 @@ def _response(payload: bytes):
 
 def test_request_passes_timeout_to_urlopen():
     bridge = _bridge(["http://127.0.0.1:1234"])
+    start = time.monotonic()
     with mock.patch(
         "sbstudio.viewer_bridge._open_viewer_request",
         return_value=_response(b'{"result": true}'),
     ) as open_request:
         assert bridge.check_running() is True
     _, kwargs = open_request.call_args
-    assert kwargs.get("timeout") == 30
+    deadline = open_request.call_args.args[1]
+    assert deadline is not None
+    assert start + 30 <= deadline < start + 32
 
 
 def test_timeout_is_reported_as_viewer_error():
@@ -62,13 +65,16 @@ def test_shorter_socket_default_is_honored():
     socket.setdefaulttimeout(10)
     try:
         bridge = _bridge(["http://127.0.0.1:1234"])
+        start = time.monotonic()
         with mock.patch(
             "sbstudio.viewer_bridge._open_viewer_request",
             return_value=_response(b'{"result": true}'),
         ) as open_request:
             assert bridge.check_running() is True
         _, kwargs = open_request.call_args
-        assert kwargs.get("timeout") == 10
+        deadline = open_request.call_args.args[1]
+        assert deadline is not None
+        assert start + 10 <= deadline < start + 12
     finally:
         socket.setdefaulttimeout(old)
 
@@ -78,13 +84,16 @@ def test_longer_socket_default_is_capped_at_30():
     socket.setdefaulttimeout(60)
     try:
         bridge = _bridge(["http://127.0.0.1:1234"])
+        start = time.monotonic()
         with mock.patch(
             "sbstudio.viewer_bridge._open_viewer_request",
             return_value=_response(b'{"result": true}'),
         ) as open_request:
             assert bridge.check_running() is True
         _, kwargs = open_request.call_args
-        assert kwargs.get("timeout") == 30
+        deadline = open_request.call_args.args[1]
+        assert deadline is not None
+        assert start + 30 <= deadline < start + 32
     finally:
         socket.setdefaulttimeout(old)
 
@@ -93,7 +102,7 @@ def test_timeout_retries_against_a_different_url():
     bridge = _bridge(["http://127.0.0.1:1234", "http://192.168.1.5:1234"])
     calls = []
 
-    def fake_urlopen(request, timeout=None):
+    def fake_urlopen(request, deadline=None):
         calls.append(request.full_url)
         if "127.0.0.1" in request.full_url:
             raise SocketTimeoutError("timed out")
@@ -108,8 +117,8 @@ def test_timeout_retries_against_a_different_url():
         "http://192.168.1.5:1234/api/v1/ping",
     ]
     assert bridge._discovery.discover.call_args_list == [
-        mock.call(force=False),
-        mock.call(force=True),
+        mock.call(force=False, expected_url=None),
+        mock.call(force=True, expected_url="http://127.0.0.1:1234"),
     ]
 
 
@@ -163,7 +172,7 @@ def test_urlerror_wrapping_timeout_retries_against_a_different_url():
     bridge = _bridge(["http://127.0.0.1:1234", "http://192.168.1.5:1234"])
     calls = []
 
-    def fake_urlopen(request, timeout=None):
+    def fake_urlopen(request, deadline=None):
         calls.append(request.full_url)
         if "127.0.0.1" in request.full_url:
             raise URLError(SocketTimeoutError("timed out"))
@@ -220,3 +229,52 @@ def test_slow_hostname_resolution_is_bounded():
         with pytest.raises(SkybrushViewerError, match="not a local address"):
             bridge.check_running()
     assert time.monotonic() - start < 4
+
+
+def test_slow_header_read_hits_the_deadline():
+    from sbstudio.viewer_bridge import _open_viewer_request
+
+    request = Request("http://127.0.0.1:1234/api/v1/ping")
+
+    def slow_open(req, timeout=None):
+        time.sleep(5)
+        return _response(b'{"result": true}')
+
+    opener = mock.Mock()
+    opener.open.side_effect = slow_open
+    start = time.monotonic()
+    with mock.patch("sbstudio.viewer_bridge.build_opener", return_value=opener):
+        with pytest.raises(SocketTimeoutError, match="timed out"):
+            _open_viewer_request(request, time.monotonic() + 0.5)
+    assert time.monotonic() - start < 2
+
+
+def test_invalidate_keeps_newer_cached_url():
+    from sbstudio.viewer_bridge import SSDPAppDiscovery
+
+    discovery = SSDPAppDiscovery("urn:test:1")
+    discovery._url = "http://192.168.1.5:1234"
+    discovery._last_checked_at = time.monotonic()
+    discovery.invalidate("http://127.0.0.1:1234")
+    assert discovery._url == "http://192.168.1.5:1234"
+    discovery.invalidate("http://192.168.1.5:1234")
+    assert discovery._url is None
+
+
+def test_failed_request_keeps_newer_cached_url():
+    bridge = _bridge(["http://127.0.0.1:1234"])
+    bridge._discovery._url = "http://127.0.0.1:1234"
+    bridge._discovery._last_checked_at = time.monotonic()
+
+    def fake_open(request, deadline=None):
+        # A newer validation caches URL2 while this request is in flight
+        bridge._discovery._url = "http://192.168.1.5:1234"
+        bridge._discovery._last_checked_at = time.monotonic()
+        raise HTTPError(request.full_url, 500, "Server Error", {}, None)
+
+    with mock.patch(
+        "sbstudio.viewer_bridge._open_viewer_request", side_effect=fake_open
+    ):
+        with pytest.raises(SkybrushViewerError, match="unexpected error"):
+            bridge.check_running()
+    assert bridge._discovery._url == "http://192.168.1.5:1234"

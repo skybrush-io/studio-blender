@@ -57,6 +57,7 @@ def _resolve_hostname(hostname: str, timeout: float = 2.0) -> list:
     addresses = []
 
     def _lookup():
+        """Runs the lookup; a failed lookup is reported as no addresses."""
         try:
             addresses.extend(info[4][0] for info in getaddrinfo(hostname, None))
         except Exception:
@@ -97,15 +98,15 @@ def _is_allowed_viewer_url(url: str) -> bool:
     )
 
 
-def _load_json_with_deadline(response, timeout: float):
-    """Reads and parses a JSON response, enforcing an overall deadline.
+def _load_json_with_deadline(response, deadline: float):
+    """Reads and parses a JSON response, stopping at the given deadline.
 
     The per-operation socket timeout alone does not bound the total time: a
     response trickling in slowly could keep the read going indefinitely. This
-    reads the body a single recv at a time and stops as soon as the overall
-    deadline passes.
+    reads the body a single recv at a time and stops as soon as the deadline
+    passes. The deadline is an absolute `time.monotonic()` value shared with
+    the request setup, so connect, headers and body share one budget.
     """
-    deadline = monotonic() + timeout
     read = getattr(response, "read1", response.read)
     chunks = []
     while True:
@@ -119,7 +120,7 @@ def _load_json_with_deadline(response, timeout: float):
 
 
 class SkybrushViewerError(RuntimeError):
-    pass
+    """Error thrown when a request to Skybrush Viewer fails."""
 
 
 class SkybrushViewerNotFoundError(SkybrushViewerError):
@@ -134,6 +135,7 @@ class _ViewerRedirectHandler(HTTPRedirectHandler):
     """Rejects Viewer redirects to non-local addresses."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """Follows a redirect only when the new URL is a local Viewer address."""
         if not _is_allowed_viewer_url(newurl):
             raise SkybrushViewerError(
                 "Skybrush Viewer redirected to a non-local address"
@@ -141,9 +143,33 @@ class _ViewerRedirectHandler(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _open_viewer_request(request, timeout):
-    """Opens a Viewer request, validating each redirect target along the way."""
-    return build_opener(_ViewerRedirectHandler()).open(request, timeout=timeout)
+def _open_viewer_request(request, deadline: float):
+    """Opens a Viewer request, bounding connect and header reads by `deadline`.
+
+    urlopen reads the response headers inside the call, so a slow Viewer could
+    keep the caller waiting past the per-operation socket timeout by trickling
+    header bytes. The open runs in a daemon thread that is abandoned on timeout.
+    """
+    timeout = max(0.0, deadline - monotonic())
+    outcome = []
+
+    def _open():
+        """Opens the request in a daemon thread, capturing the outcome."""
+        try:
+            outcome.append(
+                build_opener(_ViewerRedirectHandler()).open(request, timeout=timeout)
+            )
+        except BaseException as ex:
+            outcome.append(ex)
+
+    thread = threading.Thread(target=_open, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    if not outcome:
+        raise SocketTimeoutError("timed out")
+    if isinstance(outcome[0], BaseException):
+        raise outcome[0]
+    return outcome[0]
 
 
 class SkybrushViewerBridge:
@@ -170,7 +196,12 @@ class SkybrushViewerBridge:
         timed_out_url = None
 
         while True:
-            url = self._discovery.discover(force=force)
+            # On retry, only drop the cached URL if it is still the one that
+            # timed out; a newer validation may have cached a different URL
+            # since, and a stale worker must not discard it.
+            url = self._discovery.discover(
+                force=force, expected_url=timed_out_url if force else None
+            )
             if url is None:
                 raise SkybrushViewerNotFoundError()
 
@@ -193,10 +224,13 @@ class SkybrushViewerBridge:
 
             request = Request(url_and_path, *args, **kwds)
             timeout = _effective_timeout()
+            # One deadline covers connect, headers and body; each stage gets
+            # only the remaining budget.
+            deadline = monotonic() + timeout
 
             try:
-                with _open_viewer_request(request, timeout=timeout) as response:
-                    result = _load_json_with_deadline(response, timeout)
+                with _open_viewer_request(request, deadline) as response:
+                    result = _load_json_with_deadline(response, deadline)
                     if isinstance(result, dict):
                         return result
                     else:
@@ -217,14 +251,14 @@ class SkybrushViewerBridge:
             except HTTPError as err:
                 # unrecoverable error; we invalidate the cached URL but we
                 # don't try again
-                self._discovery.invalidate()
+                self._discovery.invalidate(url)
                 if err.code >= 500:
                     raise SkybrushViewerError(
                         "Skybrush Viewer indicated an unexpected error"
                     ) from None
                 elif err.code == 404:
                     # Not found
-                    self._discovery.invalidate()
+                    self._discovery.invalidate(url)
                     raise SkybrushViewerNotFoundError() from None
                 elif err.code == 400:
                     # Bad request
@@ -249,13 +283,13 @@ class SkybrushViewerBridge:
                 else:
                     # unrecoverable error; we invalidate the cached URL but we
                     # don't try again
-                    self._discovery.invalidate()
+                    self._discovery.invalidate(url)
                     raise
 
             except Exception:
                 # unrecoverable error; we invalidate the cached URL but we
                 # don't try again
-                self._discovery.invalidate()
+                self._discovery.invalidate(url)
                 raise
 
             if force:
@@ -314,37 +348,51 @@ class SSDPAppDiscovery:
         self._max_age = float(max_age)
         self._last_checked_at = 0
         self._url = None  # type: str | None
+        self._lock = threading.RLock()
 
-    def discover(self, force: bool = False) -> str | None:
+    def discover(
+        self, force: bool = False, expected_url: str | None = None
+    ) -> str | None:
         """Finds a running service instance on the current machine using SSDP
         and returns its URL.
 
         Parameters:
             force: whether to ensure that a fresh URL is fetched even if we
                 have a cached one
+            expected_url: when forcing a refresh, only drop the cached URL if
+                it still matches this one, so a newer validation's discovery
+                result is not discarded by a stale worker
 
         Returns:
             the URL of the running service instance or `None` if no service with
             the associated URN is running at the moment
         """
         if force:
-            self.invalidate()
-        self._update_url_if_needed()
-        return self._url
-
-    def invalidate(self) -> None:
-        """Invalidates the currently cached instance of the service URL."""
-        self._last_checked_at = 0
-        self._url = None
-
-    def _update_url_if_needed(self) -> None:
-        """Updates the URL of the running service instance on the current
-        machine using SSDP if needed.
-        """
-        now = monotonic()
-        if self._url is None or now - self._last_checked_at > self._max_age:
-            self._url = self._update_url()
+            self.invalidate(expected_url)
+        with self._lock:
+            if (
+                self._url is not None
+                and monotonic() - self._last_checked_at <= self._max_age
+            ):
+                return self._url
+        # The SSDP query runs without the lock so a slow network cannot block
+        # another request's discovery.
+        url = self._update_url()
+        with self._lock:
+            self._url = url
             self._last_checked_at = monotonic()
+        return url
+
+    def invalidate(self, url: str | None = None) -> None:
+        """Invalidates the currently cached instance of the service URL.
+
+        When `url` is given, the cache is cleared only if it still holds that
+        URL, so a stale worker cannot discard a newer validation's discovery.
+        """
+        with self._lock:
+            if url is None or self._url == url:
+                self._last_checked_at = 0
+                self._url = None
 
     def _update_url(self) -> str | None:
         """Updates the URL of the running service instance unconditionally."""

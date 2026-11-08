@@ -45,6 +45,11 @@ class ValidateTrajectoriesOperator(Operator):
     frame_range = FrameRangeProperty()
 
     def execute(self, context: Context):
+        """Exports the trajectories and sends them to Skybrush Viewer.
+
+        The show load itself runs in a background thread so the Blender UI
+        stays responsive; the operator returns RUNNING_MODAL until it finishes.
+        """
         drones = get_drones_to_export(selected_only=self.selected_only)
         frame_range = resolve_frame_range(self.frame_range)
         if frame_range is None:
@@ -161,6 +166,11 @@ class ValidateTrajectoriesOperator(Operator):
         return {"RUNNING_MODAL"}
 
     def modal(self, context: Context, event):
+        """Reports the background load outcome when it finishes, or cancels it.
+
+        Unhandled events pass through so the interface stays usable while the
+        load is in flight.
+        """
         if event.type == "TIMER":
             if not self._load_thread.is_alive():
                 context.window_manager.event_timer_remove(self._load_timer)
@@ -174,6 +184,11 @@ class ValidateTrajectoriesOperator(Operator):
         return {"RUNNING_MODAL", "PASS_THROUGH"}
 
     def _load_show_in_background(self, show_data: bytes, filename):
+        """Sends the show to Skybrush Viewer and stores the outcome for modal().
+
+        Runs in a background thread; it never touches Blender data, only the
+        bridge. A cancelled load is skipped so a stale show is never posted.
+        """
         cancelled = getattr(self, "_cancelled", None)
         if cancelled is not None and cancelled.is_set():
             self._load_outcome = ("CANCELLED", "Validation cancelled")
@@ -198,4 +213,5 @@ class ValidateTrajectoriesOperator(Operator):
             )
 
     def invoke(self, context: Context, event):
+        """Opens the operator's property dialog."""
         return context.window_manager.invoke_props_dialog(self)
