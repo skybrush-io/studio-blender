@@ -132,6 +132,19 @@ class ValidateTrajectoriesOperator(Operator):
 
         assert show_data is not None
 
+        # A load may be cancelled from modal(); the worker checks this before
+        # sending so a cancelled show is never posted after the operator exits.
+        self._cancelled = threading.Event()
+
+        if context.window is None:
+            # No window to attach a modal handler to, e.g. when invoked from
+            # the Python console; run the load synchronously so the caller
+            # still gets the outcome instead of a thread without a report.
+            self._load_show_in_background(show_data, filename)
+            status, message = self._load_outcome
+            self.report({"INFO"} if status == "FINISHED" else {"ERROR"}, message)
+            return {status}
+
         # Send the show to the Viewer in a background thread so the Blender UI
         # stays responsive while the request is in flight.
         self._load_outcome = None
@@ -155,11 +168,16 @@ class ValidateTrajectoriesOperator(Operator):
                 self.report({"INFO"} if status == "FINISHED" else {"ERROR"}, message)
                 return {status}
         elif event.type == "ESC":
+            self._cancelled.set()
             context.window_manager.event_timer_remove(self._load_timer)
             return {"CANCELLED"}
-        return {"RUNNING_MODAL"}
+        return {"RUNNING_MODAL", "PASS_THROUGH"}
 
     def _load_show_in_background(self, show_data: bytes, filename):
+        cancelled = getattr(self, "_cancelled", None)
+        if cancelled is not None and cancelled.is_set():
+            self._load_outcome = ("CANCELLED", "Validation cancelled")
+            return
         try:
             skybrush_viewer.load_show_for_validation(show_data, filename=filename)
             self._load_outcome = (

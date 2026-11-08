@@ -3,6 +3,7 @@ current machine and for posting data to it.
 """
 
 import ipaddress
+import threading
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from errno import ECONNREFUSED, ENETUNREACH
@@ -21,7 +22,7 @@ from socket import (
 from time import monotonic
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 __all__ = ("SkybrushViewerBridge",)
 
@@ -47,6 +48,26 @@ def _effective_timeout() -> float:
     return default_timeout
 
 
+def _resolve_hostname(hostname: str, timeout: float = 2.0) -> list:
+    """Resolves a hostname to IP addresses, giving up after `timeout` seconds.
+
+    getaddrinfo() has no timeout of its own, so the lookup runs in a daemon
+    thread; a stalled DNS server must not freeze the Blender UI thread.
+    """
+    addresses = []
+
+    def _lookup():
+        try:
+            addresses.extend(info[4][0] for info in getaddrinfo(hostname, None))
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=_lookup, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    return addresses
+
+
 def _is_allowed_viewer_url(url: str) -> bool:
     """Returns whether the given URL may be a Skybrush Viewer address.
 
@@ -62,10 +83,10 @@ def _is_allowed_viewer_url(url: str) -> bool:
     except ValueError:
         try:
             addresses = [
-                ipaddress.ip_address(info[4][0])
-                for info in getaddrinfo(parsed.hostname, None)
+                ipaddress.ip_address(address)
+                for address in _resolve_hostname(parsed.hostname)
             ]
-        except Exception:
+        except ValueError:
             return False
     return bool(addresses) and all(
         any(
@@ -107,6 +128,22 @@ class SkybrushViewerNotFoundError(SkybrushViewerError):
     """
 
     pass
+
+
+class _ViewerRedirectHandler(HTTPRedirectHandler):
+    """Rejects Viewer redirects to non-local addresses."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not _is_allowed_viewer_url(newurl):
+            raise SkybrushViewerError(
+                "Skybrush Viewer redirected to a non-local address"
+            )
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _open_viewer_request(request, timeout):
+    """Opens a Viewer request, validating each redirect target along the way."""
+    return build_opener(_ViewerRedirectHandler()).open(request, timeout=timeout)
 
 
 class SkybrushViewerBridge:
@@ -158,7 +195,7 @@ class SkybrushViewerBridge:
             timeout = _effective_timeout()
 
             try:
-                with urlopen(request, timeout=timeout) as response:
+                with _open_viewer_request(request, timeout=timeout) as response:
                     result = _load_json_with_deadline(response, timeout)
                     if isinstance(result, dict):
                         return result
@@ -198,7 +235,15 @@ class SkybrushViewerBridge:
                     raise
 
             except URLError as err:
-                if err.reason and getattr(err.reason, "errno", None) == ECONNREFUSED:
+                if isinstance(err.reason, SocketTimeoutError):
+                    # urlopen wraps a socket timeout in URLError; treat it
+                    # like a bare timeout so the rediscovery retry still applies
+                    if force:
+                        raise SkybrushViewerError(
+                            "Timed out while waiting for Skybrush Viewer to respond"
+                        ) from None
+                    timed_out_url = url.rstrip("/")
+                elif err.reason and getattr(err.reason, "errno", None) == ECONNREFUSED:
                     # try again
                     pass
                 else:

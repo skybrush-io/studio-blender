@@ -186,8 +186,97 @@ def test_modal_esc_cancels(operator_module):
     op._load_outcome = None
     op._load_thread = threading.Thread(target=lambda: None)
     op._load_timer = object()
+    op._cancelled = threading.Event()
 
     context = mock.Mock()
     event = types.SimpleNamespace(type="ESC")
     assert op.modal(context, event) == {"CANCELLED"}
+    assert op._cancelled.is_set()
     context.window_manager.event_timer_remove.assert_called_once_with(op._load_timer)
+
+
+def test_modal_passes_through_unhandled_events(operator_module):
+    op = _operator(operator_module)
+    op._load_thread = threading.Thread(target=lambda: None)
+    op._load_timer = object()
+
+    context = mock.Mock()
+    event = types.SimpleNamespace(type="MOUSEMOVE")
+    assert op.modal(context, event) == {"RUNNING_MODAL", "PASS_THROUGH"}
+    context.window_manager.event_timer_remove.assert_not_called()
+
+
+def test_background_load_skipped_when_cancelled(operator_module):
+    op = _operator(operator_module)
+    op._cancelled = threading.Event()
+    op._cancelled.set()
+    with mock.patch.object(
+        operator_module.skybrush_viewer, "load_show_for_validation"
+    ) as load:
+        op._load_show_in_background(b"data", filename=None)
+    load.assert_not_called()
+    assert op._load_outcome[0] == "CANCELLED"
+
+
+def _execute(operator_module, window):
+    op = _operator(operator_module)
+    context = mock.Mock()
+    context.window = window
+    context.scene.skybrush.safety_check = None
+    context.scene.render.fps = 24
+    context.scene.frame_start = 1
+
+    api = mock.MagicMock()
+    api.export.return_value = b"show"
+    api_context = mock.MagicMock()
+    api_context.__enter__.return_value = api
+    api_context.__exit__.return_value = False
+
+    with (
+        mock.patch.object(operator_module, "resolve_frame_range", return_value=(1, 25)),
+        mock.patch.object(
+            operator_module, "SafetyCheckParams", return_value=mock.Mock()
+        ),
+        mock.patch.object(
+            operator_module,
+            "sample_positions_of_objects_in_frame_range",
+            return_value={},
+        ),
+        mock.patch.object(
+            operator_module.skybrush_viewer, "check_running", return_value=True
+        ),
+        mock.patch.object(
+            operator_module,
+            "call_api_from_blender_operator",
+            return_value=api_context,
+        ),
+        mock.patch.object(
+            operator_module.skybrush_viewer, "load_show_for_validation"
+        ) as load,
+    ):
+        result = op.execute(context)
+        if window is not None:
+            op._load_thread.join(timeout=5)
+    return op, context, load, result
+
+
+def test_execute_starts_background_load_and_returns_running_modal(operator_module):
+    window = mock.Mock()
+    op, context, load, result = _execute(operator_module, window)
+    assert result == {"RUNNING_MODAL"}
+    context.window_manager.event_timer_add.assert_called_once_with(0.1, window=window)
+    context.window_manager.modal_handler_add.assert_called_once_with(op)
+    load.assert_called_once_with(b"show", filename=None)
+    assert op._load_outcome[0] == "FINISHED"
+
+
+def test_execute_without_window_runs_synchronously(operator_module):
+    op, context, load, result = _execute(operator_module, None)
+    assert result == {"FINISHED"}
+    assert op._reported == (
+        {"INFO"},
+        "Now switch to the Skybrush Viewer window to view the results",
+    )
+    context.window_manager.event_timer_add.assert_not_called()
+    context.window_manager.modal_handler_add.assert_not_called()
+    load.assert_called_once_with(b"show", filename=None)
