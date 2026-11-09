@@ -80,6 +80,7 @@ class SkybrushViewerBridge:
                         )
 
             except SocketTimeoutError:
+                self._discovery.invalidate()
                 raise SkybrushViewerError(
                     "Timed out while waiting for Skybrush Viewer to respond"
                 ) from None
@@ -105,6 +106,11 @@ class SkybrushViewerBridge:
                     raise
 
             except URLError as err:
+                if isinstance(err.reason, SocketTimeoutError):
+                    self._discovery.invalidate()
+                    raise SkybrushViewerError(
+                        "Timed out while waiting for Skybrush Viewer to respond"
+                    ) from None
                 if err.reason and getattr(err.reason, "errno", None) == ECONNREFUSED:
                     # try again
                     pass
