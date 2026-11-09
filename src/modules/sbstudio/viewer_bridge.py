@@ -70,7 +70,7 @@ class SkybrushViewerBridge:
             request = Request(url_and_path, *args, **kwds)
 
             try:
-                with urlopen(request) as response:
+                with urlopen(request, timeout=30) as response:
                     result = load(response)
                     if isinstance(result, dict):
                         return result
@@ -78,6 +78,11 @@ class SkybrushViewerBridge:
                         raise SkybrushViewerError(
                             "Invalid response received from Skybrush Viewer"
                         )
+
+            except SocketTimeoutError:
+                raise SkybrushViewerError(
+                    "Timed out while waiting for Skybrush Viewer to respond"
+                ) from None
 
             except HTTPError as err:
                 # unrecoverable error; we invalidate the cached URL but we
