@@ -43,6 +43,27 @@ def sample_pixel(pixels, width, height, uv, *, repeat=True, srgb=False):
     )
 
 
+def sample_pixels_clamped(pixels, uv, *, srgb=False):
+    """Batch equivalent of sample_pixel for bottom-left RGBA arrays."""
+    import numpy as np
+
+    height, width = pixels.shape[:2]
+    coords = np.clip(uv, 0.0, 1.0) * (width, height) - 0.5
+    base = np.floor(coords).astype(np.intp)
+    weights = coords - base
+    rgb = np.zeros((len(uv), 3))
+    for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        x = np.clip(base[:, 0] + dx, 0, width - 1)
+        y = np.clip(base[:, 1] + dy, 0, height - 1)
+        corner = pixels[y, x, :3].astype(np.float64)
+        if srgb:
+            corner = np.where(corner <= 0.04045, corner / 12.92, ((corner + 0.055) / 1.055) ** 2.4)
+        wx = weights[:, 0] if dx else 1 - weights[:, 0]
+        wy = weights[:, 1] if dy else 1 - weights[:, 1]
+        rgb += corner * (wx * wy)[:, None]
+    return np.clip(rgb, 0.0, 1.0)
+
+
 def _attachment(drone):
     constraint = next(
         (

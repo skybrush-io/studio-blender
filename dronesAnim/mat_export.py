@@ -78,7 +78,7 @@ class MATExportResult:
     plan: SamplingPlan
 
 
-def _export_drones(scene):
+def _export_drones(scene, *, ordered=True):
     import bpy
 
     collection = bpy.data.collections.get("Drones")
@@ -87,21 +87,23 @@ def _export_drones(scene):
         drones = [
             obj for obj in collection.all_objects
             if obj.type == "MESH" and "drones_anim_vertex_index" in obj
-            and obj.name in scene.objects
         ]
     # Tagged objects remain exportable even if their attachment is removed.
-    drones.sort(key=lambda obj: [
-        (1, int(part)) if part.isdigit() else (0, part.casefold())
-        for part in re.split(r"(\d+)", obj.name)
-    ])
+    if ordered:
+        drones.sort(key=lambda obj: [
+            (1, int(part)) if part.isdigit() else (0, part.casefold())
+            for part in re.split(r"(\d+)", obj.name)
+        ])
     return drones
 
 
 def _sample_drones(context, drones, plan):
     """Sample world positions and object RGB on the same evaluated frames."""
     from . import safety
+    from .video_projection import active_video_effects, projected_colors
 
     scene = context.scene
+    led = getattr(scene, "drones_anim_led", None)
     samples = {name: array("d") for name in "xyzrgb"}
     original_frame, original_subframe = scene.frame_current, scene.frame_subframe
     previous_scanning = safety._scanning
@@ -111,11 +113,21 @@ def _sample_drones(context, drones, plan):
             integer_frame = floor(frame)
             scene.frame_set(integer_frame, subframe=frame - integer_frame)
             depsgraph = context.evaluated_depsgraph_get()
-            for drone in drones:
-                evaluated = drone.evaluated_get(depsgraph)
-                for axis, value in zip("xyz", evaluated.matrix_world.translation):
+            evaluated = (drone.evaluated_get(depsgraph) for drone in drones)
+            effects = active_video_effects(led, frame)
+            if effects:
+                frame_drones = list(evaluated)
+                positions = [tuple(drone.matrix_world.translation) for drone in frame_drones]
+                colors = [tuple(drone.color) for drone in frame_drones]
+                samples_at_frame = zip(
+                    positions, projected_colors(effects, frame, positions, colors, drones=drones)
+                )
+            else:
+                samples_at_frame = ((drone.matrix_world.translation, drone.color) for drone in evaluated)
+            for drone, (position, color) in zip(drones, samples_at_frame):
+                for axis, value in zip("xyz", position):
                     samples[axis].append(value)
-                for channel, value in zip("rgb", evaluated.color):
+                for channel, value in zip("rgb", color):
                     samples[channel].append(min(1.0, max(0.0, value)) * 255.0)
             context.window_manager.progress_update(column + 1)
     finally:
@@ -148,6 +160,8 @@ def export_mat(context, filepath):
     """Sample exportable drones and write MAT, restoring the scene on failure."""
     import bpy
 
+    from .video_projection import validate_video_export
+
     props = context.scene.drones_anim_panel
     plan = sampling_plan(
         props.start_frame, props.end_frame, props.sampling_mode, props.sampling_fps,
@@ -157,6 +171,7 @@ def export_mat(context, filepath):
         raise ValueError("没有可导出的无人机")
     if len(drones) * plan.count * 8 + 64 >= 2**31:
         raise ValueError("矩阵过大，超出当前 MAT 格式限制")
+    validate_video_export(context, plan)
     destination = Path(bpy.path.abspath(bpy.path.ensure_ext(filepath, ".mat")))
     wm = context.window_manager
     wm.progress_begin(0, plan.count)
