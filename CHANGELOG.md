@@ -59,13 +59,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the yaw rate safety check to be modulo-360 aware: a drone turning through
   yaw = ±180 degrees is no longer reported as a huge yaw rate violation anymore.
 
+- Fixed a crash when the LED visualization type was set to "Markers" and no
+  light effects were active in the current frame.
+
 ### Removed
 
 - Removed the `paint_on_test_3` light effect preset; it was a mathematical
   duplicate of `paint_on_test_1`.
 
 - Removed documentation source, it will be stored in a separate dedicated repo from now on.
-  Compiled documentation is still available at https://docs.skybrush.io/.
+  Compiled documentation is still available at <https://docs.skybrush.io/>.
 
 ## [5.0.4] - 2026-09-22
 

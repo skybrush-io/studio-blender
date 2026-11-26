@@ -188,8 +188,8 @@ class LightEffectUpdate:
 
             drones = Collections.find_drones().objects
 
-            positions: NDArray[float32] = empty((len(drones), 4), dtype=float32)
-            get_positions_of_objects_fast(drones, dest=positions.ravel())
+            positions: NDArray[float32] = empty((len(drones), 3), dtype=float32)
+            get_positions_of_objects_fast(drones, dest=positions)
 
             colors: NDArray[float32] = empty((len(drones), 4), dtype=float32)
             get_colors_of_drones_fast(drones, dest=colors.ravel())

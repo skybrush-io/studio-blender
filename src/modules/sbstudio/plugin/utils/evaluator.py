@@ -154,7 +154,7 @@ def get_positions_of_objects_fast(
     This function uses Blender's optimized `foreach_get()` to fill the positions
     into the provided destination array.
 
-    The destination array must have `len(drones) * 3` elements. The positions will be
+    The destination array must have a shape of `(len(drones), 3)`. The positions will be
     written in XYZ order. For best results, the destination array should have
     `dtype=np.float32`.
 
